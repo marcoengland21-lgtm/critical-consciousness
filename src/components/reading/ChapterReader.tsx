@@ -5,6 +5,10 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import AnnotationPopover from './AnnotationPopover'
 import AnnotationPanel from './AnnotationPanel'
+import SelectionToolbar from './SelectionToolbar'
+import OnboardingHint from './OnboardingHint'
+import ReadingControls from './ReadingControls'
+import Toast from '@/components/ui/Toast'
 
 interface Annotation {
   id: string
@@ -94,6 +98,36 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
   } | null>(null)
   const [activeAnnotation, setActiveAnnotation] = useState<Annotation | null>(null)
   const [showAnnotatePopover, setShowAnnotatePopover] = useState(false)
+  const [showToolbar, setShowToolbar] = useState(false)
+  const [fontSize, setFontSize] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      return parseInt(localStorage.getItem('ccp-font-size') || '18', 10)
+    }
+    return 18
+  })
+  const [focusedMode, setFocusedMode] = useState(false)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+
+  // Scroll position memory
+  useEffect(() => {
+    const key = `ccp-scroll-${chapter.id}`
+    const saved = localStorage.getItem(key)
+    if (saved) {
+      const pos = parseInt(saved, 10)
+      setTimeout(() => window.scrollTo(0, pos), 100)
+    }
+
+    function saveScroll() {
+      localStorage.setItem(key, String(window.scrollY))
+    }
+    window.addEventListener('scroll', saveScroll, { passive: true })
+    return () => window.removeEventListener('scroll', saveScroll)
+  }, [chapter.id])
+
+  // Save font size preference
+  useEffect(() => {
+    localStorage.setItem('ccp-font-size', String(fontSize))
+  }, [fontSize])
 
   // Listen for Supabase realtime annotation changes
   useEffect(() => {
@@ -156,14 +190,14 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     []
   )
 
-  /** Handle text selection */
+  /** Handle text selection — shows floating toolbar first */
   const handleMouseUp = useCallback(() => {
     const sel = window.getSelection()
     if (!sel || sel.isCollapsed || !textRef.current) {
-      // Don't clear selection if annotation panel is open
-      if (!activeAnnotation) {
+      // Don't clear selection if annotation panel or popover is open
+      if (!activeAnnotation && !showAnnotatePopover) {
         setSelection(null)
-        setShowAnnotatePopover(false)
+        setShowToolbar(false)
       }
       return
     }
@@ -183,9 +217,10 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     const rect = range.getBoundingClientRect()
 
     setSelection({ text, start, end, rect })
-    setShowAnnotatePopover(true)
+    setShowToolbar(true)
+    setShowAnnotatePopover(false)
     setActiveAnnotation(null)
-  }, [getCharOffset, activeAnnotation])
+  }, [getCharOffset, activeAnnotation, showAnnotatePopover])
 
   /** Save a new annotation */
   const handleSaveAnnotation = useCallback(
@@ -228,7 +263,11 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         setAnnotations((prev) => [...prev, data])
         setSelection(null)
         setShowAnnotatePopover(false)
+        setShowToolbar(false)
         window.getSelection()?.removeAllRanges()
+        setToast({ message: 'Annotation saved', type: 'success' })
+      } else if (error) {
+        setToast({ message: 'Failed to save annotation', type: 'error' })
       }
     },
     [selection, userId, chapter.id, chapter.content]
@@ -243,17 +282,55 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     }
   }, [])
 
+  /** Open the annotation popover from toolbar */
+  const handleAnnotateFromToolbar = useCallback(() => {
+    setShowToolbar(false)
+    setShowAnnotatePopover(true)
+  }, [])
+
+  /** Navigate to thread creation with selected quote */
+  const handleStartThread = useCallback(() => {
+    if (!selection) return
+    const quote = selection.text.length > 200
+      ? selection.text.slice(0, 200) + '…'
+      : selection.text
+    // Encode selected text as a URL param for the thread form
+    const params = new URLSearchParams({
+      type: 'passage_pick',
+      quote,
+      chapter: String(chapter.chapter_number),
+      section: chapter.title,
+    })
+    router.push(`/threads/new?${params.toString()}`)
+  }, [selection, chapter.chapter_number, chapter.title, router])
+
   // Split text into paragraphs and render with annotations
   const paragraphs = chapter.content.split('\n\n')
   let charOffset = 0
 
+  // Filter annotations in focused mode
+  const displayAnnotations = focusedMode ? [] : annotations
+
   return (
     <div className="relative">
+      {/* Onboarding hint — only shown on first visit */}
+      <OnboardingHint />
+
+      {/* Reading controls (font size, focused mode) */}
+      <ReadingControls
+        fontSize={fontSize}
+        onFontSizeChange={setFontSize}
+        focusedMode={focusedMode}
+        onFocusedModeChange={setFocusedMode}
+        annotationCount={annotations.length}
+      />
+
       {/* The reading text */}
       <div
         ref={textRef}
         className="reading-text"
         onMouseUp={handleMouseUp}
+        style={{ fontSize: `${fontSize / 16}rem` }}
       >
         {paragraphs.map((paragraph, pIdx) => {
           const pStart = charOffset
@@ -261,7 +338,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
           charOffset = pEnd + 2 // +2 for the \n\n
 
           // Get annotations that overlap this paragraph
-          const pAnnotations = annotations.filter(
+          const pAnnotations = displayAnnotations.filter(
             (a) => a.position_start < pEnd && a.position_end > pStart
           )
 
@@ -331,6 +408,20 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         })}
       </div>
 
+      {/* Floating selection toolbar */}
+      {showToolbar && selection && !showAnnotatePopover && (
+        <SelectionToolbar
+          rect={selection.rect}
+          onAnnotate={handleAnnotateFromToolbar}
+          onStartThread={handleStartThread}
+          onClose={() => {
+            setShowToolbar(false)
+            setSelection(null)
+            window.getSelection()?.removeAllRanges()
+          }}
+        />
+      )}
+
       {/* Annotation creation popover */}
       {showAnnotatePopover && selection && (
         <AnnotationPopover
@@ -339,6 +430,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
           onSave={handleSaveAnnotation}
           onCancel={() => {
             setShowAnnotatePopover(false)
+            setShowToolbar(false)
             setSelection(null)
             window.getSelection()?.removeAllRanges()
           }}
@@ -353,6 +445,15 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
           userId={userId}
           chapterId={chapter.id}
           onClose={() => setActiveAnnotation(null)}
+        />
+      )}
+
+      {/* Success/error toast */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
         />
       )}
     </div>

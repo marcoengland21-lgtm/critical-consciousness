@@ -152,6 +152,42 @@ a:hover {
   margin-bottom: 1em;
 }
 
+/* Markdown body styling (threads, replies) */
+.markdown-body {
+  line-height: 1.75;
+  color: var(--color-dark-brown);
+}
+.markdown-body p {
+  margin-bottom: 0.75em;
+}
+.markdown-body p:last-child {
+  margin-bottom: 0;
+}
+.markdown-body blockquote {
+  border-left: 3px solid var(--color-muted-gold);
+  padding: 0.5em 1em;
+  margin: 0.75em 0;
+  border-radius: 0 4px 4px 0;
+  background-color: rgba(196, 163, 90, 0.06);
+  font-style: italic;
+}
+.markdown-body blockquote p {
+  margin-bottom: 0.25em;
+}
+.markdown-body strong {
+  font-weight: 600;
+}
+.markdown-body em {
+  font-style: italic;
+}
+.markdown-body code {
+  background-color: rgba(44, 24, 16, 0.06);
+  padding: 0.15em 0.35em;
+  border-radius: 3px;
+  font-size: 0.875em;
+  font-family: 'SF Mono', 'Menlo', monospace;
+}
+
 /* Fade in animation */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(8px); }

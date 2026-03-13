@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import TimeAgo from '@/components/ui/TimeAgo'
+import MarkdownBody from '@/components/ui/MarkdownBody'
 
 interface ReplyData {
   id: string
@@ -166,9 +167,7 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
               </div>
             </div>
           ) : (
-            <p className="whitespace-pre-wrap text-sm" style={{ color: 'var(--color-dark-brown)', lineHeight: '1.75' }}>
-              {reply.body}
-            </p>
+            <MarkdownBody content={reply.body} className="text-sm" />
           )}
 
           {/* Reply actions */}

@@ -5,6 +5,7 @@ import ThreadTypeBadge from '@/components/threads/ThreadTypeBadge'
 import TimeAgo from '@/components/ui/TimeAgo'
 import ReplySection from '@/components/threads/ReplySection'
 import ThreadActions from '@/components/threads/ThreadActions'
+import MarkdownBody from '@/components/ui/MarkdownBody'
 import type { ThreadType } from '@/types/database'
 
 export default async function ThreadPage({
@@ -85,11 +86,7 @@ export default async function ThreadPage({
         </div>
 
         {/* Thread Body */}
-        <div
-          className="thread-body whitespace-pre-wrap"
-        >
-          {thread.body}
-        </div>
+        <MarkdownBody content={thread.body} className="thread-body" />
 
         {/* Thread Actions (edit/delete for author/admin) */}
         {(isAuthor || isAdmin) && (
