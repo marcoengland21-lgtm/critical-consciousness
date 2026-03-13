@@ -61,6 +61,55 @@ a:hover {
   text-decoration: underline;
 }
 
+/* Reading page — book-like typography */
+.reading-text {
+  font-family: 'Lora', Georgia, 'Times New Roman', serif;
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: var(--color-dark-brown);
+  max-width: 68ch;
+  margin: 0 auto;
+}
+
+.reading-text p {
+  margin-bottom: 1.5em;
+  text-align: left;
+  hanging-punctuation: first;
+}
+
+.reading-text blockquote,
+.reading-text .blockquote {
+  border-left: 3px solid var(--color-muted-gold);
+  padding-left: 1.25em;
+  margin: 1.5em 0;
+  font-style: italic;
+  color: var(--color-warm-gray);
+  background-color: rgba(196, 163, 90, 0.06);
+  padding: 0.75em 1.25em;
+  border-radius: 0 4px 4px 0;
+}
+
+/* Annotation highlights */
+.annotation-highlight {
+  background-color: rgba(196, 163, 90, 0.2);
+  cursor: pointer;
+  transition: background-color 150ms ease;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+.annotation-highlight:hover {
+  background-color: rgba(196, 163, 90, 0.4);
+}
+
+.annotation-highlight-dense {
+  background-color: rgba(196, 163, 90, 0.35);
+}
+
+.annotation-highlight-dense:hover {
+  background-color: rgba(196, 163, 90, 0.55);
+}
+
 /* Selection */
 ::selection {
   background-color: var(--color-muted-gold);

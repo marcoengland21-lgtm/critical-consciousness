@@ -31,3 +31,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# data files (seeded via scripts, not tracked)
+capital_ch1_*.txt
+capital_ch1_*.json
+capital_ch1_*.html
