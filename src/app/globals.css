@@ -151,6 +151,41 @@ html[data-theme="dark"] {
   --text-secondary: #9990ab;
 }
 
+/* Dark mode: override hardcoded white backgrounds on cards/containers */
+html[data-theme="dark"] [style*="background-color: white"],
+html[data-theme="dark"] [style*="backgroundColor: white"],
+html[data-theme="dark"] [style*="background-color:white"] {
+  background-color: #1e1a28 !important;
+}
+
+/* Dark mode: override hardcoded border colors */
+html[data-theme="dark"] [style*="border-color: #e2dfe8"],
+html[data-theme="dark"] [style*="borderColor: #e2dfe8"],
+html[data-theme="dark"] [style*="1px solid #e2dfe8"],
+html[data-theme="dark"] [style*="border-color:#e2dfe8"] {
+  border-color: #332d42 !important;
+}
+
+/* Dark mode: override hardcoded light backgrounds */
+html[data-theme="dark"] [style*="background-color: #faf9fc"],
+html[data-theme="dark"] [style*="backgroundColor: #faf9fc"] {
+  background-color: #252030 !important;
+}
+
+/* Dark mode: inputs and textareas */
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+  background-color: #1e1a28;
+  color: #eae6f2;
+  border-color: #332d42;
+}
+
+/* Dark mode: hover states */
+html[data-theme="dark"] .hover\:bg-gray-50:hover {
+  background-color: #252030 !important;
+}
+
 /* Selection */
 ::selection {
   background-color: rgba(107, 76, 154, 0.2);

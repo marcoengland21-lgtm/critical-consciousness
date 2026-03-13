@@ -5,16 +5,11 @@ export default function ThemeInitializer() {
         __html: `
           (function() {
             try {
-              const stored = localStorage.getItem('ccp-theme');
-              let theme = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-              if (stored) {
-                document.documentElement.setAttribute('data-theme', theme);
-              } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+              var stored = localStorage.getItem('ccp-theme');
+              if (stored === 'dark') {
                 document.documentElement.setAttribute('data-theme', 'dark');
               }
-            } catch (e) {
-              // localStorage not available or other error
-            }
+            } catch (e) {}
           })();
         `,
       }}
