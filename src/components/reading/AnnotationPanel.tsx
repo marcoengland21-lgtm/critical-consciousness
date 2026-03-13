@@ -23,6 +23,7 @@ interface Annotation {
   position_start: number
   position_end: number
   created_at: string
+  thread_id?: string | null
   author?: { id: string; display_name: string }
   replies?: Reply[]
 }
@@ -174,6 +175,55 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
                   </p>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Continue in thread button (shows when annotation has 2+ replies or already has a thread_id) */}
+          {(replies.length >= 2 || annotation.thread_id) && (
+            <div className="pt-3 border-t" style={{ borderColor: '#e5e1d8' }}>
+              {annotation.thread_id ? (
+                <button
+                  onClick={() => router.push(`/threads/${annotation.thread_id}`)}
+                  className="w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  style={{
+                    backgroundColor: '#f5f3f0',
+                    color: 'var(--color-deep-red)',
+                    border: '1px solid var(--color-muted-gold)',
+                  }}
+                >
+                  View in thread →
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    // Build summary of top replies for thread body
+                    const replySummary = replies
+                      .slice(0, 2)
+                      .map((r) => `> ${r.body}`)
+                      .join('\n\n')
+
+                    const threadBody = `${annotation.body}\n\n${replySummary}`
+
+                    const params = new URLSearchParams({
+                      quote: annotation.quote_exact,
+                      body: threadBody,
+                      type: 'passage_pick',
+                      chapter_id: annotation.chapter_id,
+                      annotation_id: annotation.id,
+                    })
+
+                    router.push(`/threads/new?${params.toString()}`)
+                  }}
+                  className="w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  style={{
+                    backgroundColor: '#f5f3f0',
+                    color: 'var(--color-deep-red)',
+                    border: '1px solid var(--color-muted-gold)',
+                  }}
+                >
+                  Continue in a thread →
+                </button>
+              )}
             </div>
           )}
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import AnnotationPopover from './AnnotationPopover'
@@ -9,8 +9,10 @@ import SelectionToolbar from './SelectionToolbar'
 import OnboardingHint from './OnboardingHint'
 import ReadingControls from './ReadingControls'
 import ConfusionFlagButton from './ConfusionFlagButton'
+import GlossaryTooltip from './GlossaryTooltip'
 import Toast from '@/components/ui/Toast'
 import { getConfusionFlagCounts, getUserConfusionFlags } from '@/lib/confusion-flags'
+import { findGlossaryTermMatches, buildGlossarySegments, GlossaryTerm, TermMatch } from '@/lib/glossary-utils'
 
 interface Annotation {
   id: string
@@ -88,6 +90,69 @@ function buildSegments(
   return segments
 }
 
+/** Merge annotation and glossary segments */
+function buildMergedSegments(
+  annotationSegments: { start: number; end: number; text: string; annotations: Annotation[] }[],
+  glossarySegments: {
+    start: number
+    end: number
+    text: string
+    isGlossaryTerm: boolean
+    termData?: { term: string; definition: string }
+  }[]
+): {
+  start: number
+  end: number
+  text: string
+  annotations: Annotation[]
+  isGlossaryTerm: boolean
+  termData?: { term: string; definition: string }
+}[] {
+  const merged: {
+    start: number
+    end: number
+    text: string
+    annotations: Annotation[]
+    isGlossaryTerm: boolean
+    termData?: { term: string; definition: string }
+  }[] = []
+
+  // Combine all boundaries
+  const boundaries = new Set<number>()
+  for (const seg of annotationSegments) {
+    boundaries.add(seg.start)
+    boundaries.add(seg.end)
+  }
+  for (const seg of glossarySegments) {
+    boundaries.add(seg.start)
+    boundaries.add(seg.end)
+  }
+
+  const sorted = Array.from(boundaries).sort((a, b) => a - b)
+
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const start = sorted[i]
+    const end = sorted[i + 1]
+
+    // Find overlapping segments
+    const overlapAnnotation = annotationSegments.find((s) => s.start <= start && s.end >= end)
+    const overlapGlossary = glossarySegments.find((s) => s.start <= start && s.end >= end)
+
+    const text = annotationSegments[0].text.slice(start, end) || glossarySegments[0].text.slice(start, end)
+
+    merged.push({
+      start,
+      end,
+      text,
+      annotations: overlapAnnotation?.annotations || [],
+      isGlossaryTerm: overlapGlossary?.isGlossaryTerm || false,
+      termData: overlapGlossary?.termData,
+    })
+  }
+
+  return merged
+}
+
 export default function ChapterReader({ chapter, annotations: initialAnnotations, userId, documentSlug }: Props) {
   // Debug logging
   console.log('[CCP Debug] ChapterReader mounted', {
@@ -120,6 +185,12 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [confusionFlagCounts, setConfusionFlagCounts] = useState<Map<number, number>>(new Map())
   const [userConfusionFlags, setUserConfusionFlags] = useState<Set<number>>(new Set())
+  const [glossaryTerms, setGlossaryTerms] = useState<GlossaryTerm[]>([])
+  const [glossaryTooltip, setGlossaryTooltip] = useState<{
+    term: string
+    definition: string
+    position: { top: number; left: number }
+  } | null>(null)
 
   // Scroll position memory
   useEffect(() => {
@@ -156,6 +227,29 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     }
     loadConfusionFlags()
   }, [chapter.id])
+
+  // Load glossary terms on mount
+  useEffect(() => {
+    async function loadGlossaryTerms() {
+      try {
+        const supabase = createClient()
+        const { data, error } = await supabase
+          .from('glossary_entries')
+          .select('id, term, definition')
+          .order('term', { ascending: true })
+
+        if (!error && data) {
+          setGlossaryTerms(data)
+          console.log('[CCP Debug] Loaded glossary terms:', data.length)
+        } else if (error) {
+          console.error('[CCP Debug] Failed to load glossary terms:', error)
+        }
+      } catch (error) {
+        console.error('[CCP Debug] Failed to load glossary terms:', error)
+      }
+    }
+    loadGlossaryTerms()
+  }, [])
 
   // Listen for Supabase realtime annotation changes
   useEffect(() => {
@@ -345,6 +439,23 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     }
   }, [])
 
+  /** Handle glossary term click */
+  const handleGlossaryTermClick = useCallback(
+    (term: string, definition: string, event: React.MouseEvent) => {
+      event.stopPropagation()
+      const rect = (event.target as HTMLElement).getBoundingClientRect()
+      setGlossaryTooltip({
+        term,
+        definition,
+        position: {
+          top: rect.bottom + window.scrollY + 8,
+          left: rect.left + window.scrollX,
+        },
+      })
+    },
+    []
+  )
+
   /** Open the annotation popover from toolbar */
   const handleAnnotateFromToolbar = useCallback(() => {
     console.log('[CCP Debug] Annotate button clicked, selection:', selection ? { text: selection.text.slice(0, 40), start: selection.start, end: selection.end } : null)
@@ -406,22 +517,25 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
             (a) => a.position_start < pEnd && a.position_end > pStart
           )
 
-          if (pAnnotations.length === 0) {
-            return (
-              <p key={pIdx} data-offset={pStart}>
-                {paragraph}
-              </p>
-            )
-          }
+          // Find glossary terms in this paragraph (only if not in focused mode)
+          const glossaryMatches = focusedMode ? [] : findGlossaryTermMatches(paragraph, glossaryTerms)
 
-          // Build segments for this paragraph
-          const localAnnotations = pAnnotations.map((a) => ({
-            ...a,
-            position_start: Math.max(a.position_start - pStart, 0),
-            position_end: Math.min(a.position_end - pStart, paragraph.length),
-          }))
+          // Build segments with both annotations and glossary terms
+          const annotationSegments = buildSegments(
+            paragraph,
+            pAnnotations.map((a) => ({
+              ...a,
+              position_start: Math.max(a.position_start - pStart, 0),
+              position_end: Math.min(a.position_end - pStart, paragraph.length),
+            }))
+          )
 
-          const segments = buildSegments(paragraph, localAnnotations)
+          // Build glossary segments
+          const glossarySegments = buildGlossarySegments(paragraph, glossaryMatches)
+
+          // Merge annotation and glossary segments
+          // This is complex because we need to handle overlapping highlights
+          const mergedSegments = buildMergedSegments(annotationSegments, glossarySegments)
 
           // Count annotations per paragraph for margin indicator
           const annotationCount = pAnnotations.length
@@ -453,31 +567,82 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
                   </span>
                 )}
               </div>
-              {segments.map((seg, sIdx) => {
-                if (seg.annotations.length === 0) {
-                  return <span key={sIdx}>{seg.text}</span>
+              {mergedSegments.map((seg, sIdx) => {
+                // Glossary term only (no annotations)
+                if (seg.isGlossaryTerm && seg.annotations.length === 0 && seg.termData) {
+                  return (
+                    <span
+                      key={sIdx}
+                      className="cursor-pointer border-b border-dotted"
+                      style={{
+                        borderColor: 'var(--color-muted-gold)',
+                        color: 'var(--color-deep-red)',
+                      }}
+                      onClick={(e) =>
+                        handleGlossaryTermClick(seg.termData!.term, seg.termData!.definition, e)
+                      }
+                      title={`Click to see definition of "${seg.termData.term}"`}
+                    >
+                      {seg.text}
+                    </span>
+                  )
                 }
 
-                // Map local annotations back to global ones
-                const globalAnns = seg.annotations.map((localAnn) => {
-                  return pAnnotations.find(
-                    (a) =>
-                      a.position_start <= pStart + localAnn.position_start &&
-                      a.position_end >= pStart + localAnn.position_end
-                  )!
-                }).filter(Boolean)
+                // Annotation highlight (may also be a glossary term)
+                if (seg.annotations.length > 0) {
+                  // Map local annotations back to global ones
+                  const globalAnns = seg.annotations.map((localAnn) => {
+                    return pAnnotations.find(
+                      (a) =>
+                        a.position_start <= pStart + localAnn.position_start &&
+                        a.position_end >= pStart + localAnn.position_end
+                    )!
+                  }).filter(Boolean)
 
-                const density = globalAnns.length
-                return (
-                  <mark
-                    key={sIdx}
-                    className={density > 1 ? 'annotation-highlight-dense' : 'annotation-highlight'}
-                    onClick={() => handleAnnotationClick(globalAnns)}
-                    title={`${density} annotation${density > 1 ? 's' : ''}`}
-                  >
-                    {seg.text}
-                  </mark>
-                )
+                  const density = globalAnns.length
+
+                  // If this is also a glossary term, we can support both interactions
+                  if (seg.isGlossaryTerm && seg.termData) {
+                    return (
+                      <mark
+                        key={sIdx}
+                        className={`${
+                          density > 1 ? 'annotation-highlight-dense' : 'annotation-highlight'
+                        } border-b border-dotted cursor-pointer`}
+                        style={{
+                          borderColor: 'var(--color-muted-gold)',
+                        }}
+                        onClick={(e) => {
+                          // If clicking on a glossary term part, show glossary
+                          // Otherwise, show annotation
+                          const target = e.target as HTMLElement
+                          if (e.detail === 1) {
+                            // Single click
+                            handleGlossaryTermClick(seg.termData!.term, seg.termData!.definition, e)
+                          }
+                        }}
+                        title={`${density} annotation${density > 1 ? 's' : ''}; Click to see glossary definition of "${seg.termData.term}"`}
+                      >
+                        {seg.text}
+                      </mark>
+                    )
+                  }
+
+                  // Regular annotation (no glossary term)
+                  return (
+                    <mark
+                      key={sIdx}
+                      className={density > 1 ? 'annotation-highlight-dense' : 'annotation-highlight'}
+                      onClick={() => handleAnnotationClick(globalAnns)}
+                      title={`${density} annotation${density > 1 ? 's' : ''}`}
+                    >
+                      {seg.text}
+                    </mark>
+                  )
+                }
+
+                // Regular text (no annotations, no glossary terms)
+                return <span key={sIdx}>{seg.text}</span>
               })}
             </p>
           )
@@ -521,6 +686,16 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
           userId={userId}
           chapterId={chapter.id}
           onClose={() => setActiveAnnotation(null)}
+        />
+      )}
+
+      {/* Glossary tooltip */}
+      {glossaryTooltip && (
+        <GlossaryTooltip
+          term={glossaryTooltip.term}
+          definition={glossaryTooltip.definition}
+          position={glossaryTooltip.position}
+          onClose={() => setGlossaryTooltip(null)}
         />
       )}
 

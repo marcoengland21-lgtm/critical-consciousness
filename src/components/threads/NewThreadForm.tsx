@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import QuoteFromReadingModal from './QuoteFromReadingModal'
 import type { ThreadType } from '@/types/database'
 
 interface Week {
@@ -26,20 +27,35 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [draftSaved, setDraftSaved] = useState(false)
+  const [showQuoteModal, setShowQuoteModal] = useState(false)
 
   // Load from URL params or localStorage draft on mount
   useEffect(() => {
     const quoteParam = searchParams.get('quote')
+    const bodyParam = searchParams.get('body')
     const typeParam = searchParams.get('type') as ThreadType | null
     const chapterParam = searchParams.get('chapter')
     const sectionParam = searchParams.get('section')
+    const chapterIdParam = searchParams.get('chapter_id')
+    const annotationIdParam = searchParams.get('annotation_id')
 
-    if (quoteParam) {
+    if (quoteParam || bodyParam) {
       // Came from reading page — pre-fill with quote
-      const sectionInfo = sectionParam ? ` (§${chapterParam}: ${sectionParam})` : ''
-      setBody(`> ${quoteParam}\n\n`)
+      if (bodyParam) {
+        // Use full body from params (e.g., when promoting annotation)
+        setBody(bodyParam)
+      } else {
+        // Legacy: just quote param
+        const sectionInfo = sectionParam ? ` (§${chapterParam}: ${sectionParam})` : ''
+        setBody(`> ${quoteParam}\n\n`)
+      }
       if (typeParam) setThreadType(typeParam)
-      setTitle(`On: "${quoteParam.length > 60 ? quoteParam.slice(0, 60) + '…' : quoteParam}"${sectionInfo}`)
+      const displayQuote = quoteParam || bodyParam?.slice(0, 60)
+      setTitle(`On: "${displayQuote && displayQuote.length > 60 ? displayQuote.slice(0, 60) + '…' : displayQuote}"`)
+
+      // Store chapter_id and annotation_id in sessionStorage for later use during thread creation
+      if (chapterIdParam) sessionStorage.setItem('_temp_chapter_id', chapterIdParam)
+      if (annotationIdParam) sessionStorage.setItem('_temp_annotation_id', annotationIdParam)
     } else {
       // Try to restore draft from localStorage
       try {
@@ -79,6 +95,23 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
       el.style.height = Math.max(200, el.scrollHeight) + 'px'
     }
   }, [])
+
+  // Handle quote insertion
+  function handleQuoteSelected(quote: string) {
+    const el = bodyRef.current
+    if (!el) return
+
+    const start = el.selectionStart
+    const end = el.selectionEnd
+    const newBody = body.slice(0, start) + quote + '\n\n' + body.slice(end)
+
+    setBody(newBody)
+    // Schedule focus and cursor positioning after state update
+    setTimeout(() => {
+      el.focus()
+      el.setSelectionRange(start + quote.length + 2, start + quote.length + 2)
+    }, 0)
+  }
 
   useEffect(() => {
     autoResize()
@@ -135,12 +168,32 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
       return
     }
 
+    // If this was created from an annotation, update the annotation with the thread_id
+    const annotationId = sessionStorage.getItem('_temp_annotation_id')
+    if (annotationId && data) {
+      await supabase
+        .from('annotations')
+        .update({ thread_id: data.id })
+        .eq('id', annotationId)
+    }
+
+    // Clean up temporary storage
+    sessionStorage.removeItem('_temp_chapter_id')
+    sessionStorage.removeItem('_temp_annotation_id')
+
     // Clear draft on successful publish
     localStorage.removeItem(DRAFT_KEY)
     router.push(`/threads/${data.id}`)
   }
 
   return (
+    <>
+      {showQuoteModal && (
+        <QuoteFromReadingModal
+          onQuoteSelected={handleQuoteSelected}
+          onClose={() => setShowQuoteModal(false)}
+        />
+      )}
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
         <div className="p-3 rounded-lg text-sm" style={{ backgroundColor: '#fef2f2', color: 'var(--color-deep-red)', border: '1px solid var(--color-deep-red)' }}>
@@ -219,14 +272,28 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
           <label htmlFor="body" className="block text-sm font-medium" style={{ color: 'var(--color-dark-brown)' }}>
             Body
           </label>
-          <span className="text-xs" style={{ color: 'var(--color-warm-gray)' }}>
-            Supports **bold**, *italic*, &gt; blockquotes
-            {draftSaved && (
-              <span className="ml-2 text-xs" style={{ color: 'var(--color-soft-sage)' }}>
-                Draft saved
-              </span>
-            )}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs" style={{ color: 'var(--color-warm-gray)' }}>
+              Supports **bold**, *italic*, &gt; blockquotes
+              {draftSaved && (
+                <span className="ml-2 text-xs" style={{ color: 'var(--color-soft-sage)' }}>
+                  Draft saved
+                </span>
+              )}
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowQuoteModal(true)}
+              className="px-2 py-1 text-xs font-medium rounded transition-colors"
+              style={{
+                backgroundColor: '#f5f3f0',
+                color: 'var(--color-deep-red)',
+                border: '1px solid var(--color-muted-gold)',
+              }}
+            >
+              Quote from reading
+            </button>
+          </div>
         </div>
         <textarea
           id="body"
@@ -264,5 +331,6 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
         </button>
       </div>
     </form>
+    </>
   )
 }

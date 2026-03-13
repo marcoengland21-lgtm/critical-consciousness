@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import ThreadTypeBadge from '@/components/threads/ThreadTypeBadge'
@@ -15,6 +16,7 @@ export default async function ThreadPage({
 }) {
   const { id } = await params
   const supabase = await createClient()
+  const adminClient = createAdminClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   // Fetch thread with author
@@ -41,6 +43,37 @@ export default async function ThreadPage({
     .select('role')
     .eq('id', user?.id || '')
     .single()
+
+  // Try to find chapter context from thread body (look for quote pattern from reading)
+  let contextChapter = null
+  let contextDocSlug = null
+  const blockquoteMatch = thread.body.match(/> "(.+?)" — \*§(\d+), (.+?)\*/)
+  if (blockquoteMatch) {
+    const chapterNum = parseInt(blockquoteMatch[2])
+    // Fetch chapter info to get document slug
+    const { data: chapters } = await adminClient
+      .from('text_chapters')
+      .select('id, chapter_number, document_id')
+      .eq('chapter_number', chapterNum)
+      .limit(1)
+
+    if (chapters && chapters.length > 0) {
+      const chapterId = chapters[0].id
+      const docId = chapters[0].document_id
+
+      // Get document slug
+      const { data: docs } = await adminClient
+        .from('text_documents')
+        .select('slug')
+        .eq('id', docId)
+        .single()
+
+      if (docs) {
+        contextChapter = chapterId
+        contextDocSlug = docs.slug
+      }
+    }
+  }
 
   const isAuthor = user?.id === thread.author_id
   const isAdmin = profile?.role === 'admin'
@@ -87,6 +120,19 @@ export default async function ThreadPage({
 
         {/* Thread Body */}
         <MarkdownBody content={thread.body} className="thread-body" />
+
+        {/* View in context link (if thread was created from a passage) */}
+        {contextChapter && contextDocSlug && (
+          <div className="mt-6 pt-4 border-t" style={{ borderColor: '#e5e1d8' }}>
+            <Link
+              href={`/reading/${contextDocSlug}/${thread.body.match(/§(\d+)/)?.[1] || '1'}`}
+              className="inline-flex items-center gap-2 text-sm font-medium transition-colors"
+              style={{ color: 'var(--color-deep-red)' }}
+            >
+              View in context ↗
+            </Link>
+          </div>
+        )}
 
         {/* Thread Actions (edit/delete for author/admin) */}
         {(isAuthor || isAdmin) && (
