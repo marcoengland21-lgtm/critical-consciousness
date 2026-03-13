@@ -3,10 +3,13 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 
 export default async function Home() {
-  // TODO: RE-ENABLE AUTH — Restore user check and redirect when reviewer access is no longer needed
+  // TODO: RE-ENABLE AUTH — Restore conditional redirect (only redirect if logged in)
   // const supabase = await createClient()
   // const { data: { user } } = await supabase.auth.getUser()
   // if (user) { redirect('/dashboard') }
+
+  // TODO: RE-ENABLE AUTH — Remove this unconditional redirect (reviewers should land on dashboard)
+  redirect('/dashboard')
 
   return (
     <main

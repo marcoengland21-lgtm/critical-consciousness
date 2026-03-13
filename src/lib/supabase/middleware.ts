@@ -30,22 +30,23 @@ export async function updateSession(request: NextRequest) {
   // Refresh session - important for Server Components
   const { data: { user } } = await supabase.auth.getUser()
 
+  // TODO: RE-ENABLE AUTH — Uncomment both redirect blocks below when reviewer access is no longer needed
   // Redirect unauthenticated users to login (except for login/register pages)
-  const isAuthPage = request.nextUrl.pathname.startsWith('/login') || 
-                     request.nextUrl.pathname.startsWith('/register')
-  
-  if (!user && !isAuthPage && request.nextUrl.pathname !== '/') {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
-  }
+  // const isAuthPage = request.nextUrl.pathname.startsWith('/login') ||
+  //                    request.nextUrl.pathname.startsWith('/register')
+  //
+  // if (!user && !isAuthPage && request.nextUrl.pathname !== '/') {
+  //   const url = request.nextUrl.clone()
+  //   url.pathname = '/login'
+  //   return NextResponse.redirect(url)
+  // }
 
   // Redirect authenticated users away from auth pages
-  if (user && isAuthPage) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
-    return NextResponse.redirect(url)
-  }
+  // if (user && isAuthPage) {
+  //   const url = request.nextUrl.clone()
+  //   url.pathname = '/dashboard'
+  //   return NextResponse.redirect(url)
+  // }
 
   return supabaseResponse
 }
