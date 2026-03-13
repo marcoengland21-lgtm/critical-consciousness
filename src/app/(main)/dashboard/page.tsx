@@ -68,10 +68,12 @@ export default async function DashboardPage() {
     <div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-1" style={{ color: 'var(--color-deep-red)' }}>
-          Welcome back, {displayName}
+          {user ? `Welcome back, ${displayName}` : 'Welcome to Critical Consciousness'}
         </h1>
         <p className="text-sm" style={{ color: 'var(--color-warm-gray)' }}>
-          {memberCount} member{memberCount !== 1 ? 's' : ''} · {threadCount || 0} thread{threadCount !== 1 ? 's' : ''}
+          {user
+            ? `${memberCount} member${memberCount !== 1 ? 's' : ''} · ${threadCount || 0} thread${threadCount !== 1 ? 's' : ''}`
+            : 'A collaborative study of Marx\'s Capital — Christchurch, 2026'}
         </p>
       </div>
 
@@ -153,14 +155,12 @@ export default async function DashboardPage() {
                 </div>
               ) : (
                 <div className="text-center py-6">
-                  <p className="text-sm" style={{ color: 'var(--color-warm-gray)' }}>
-                    No upcoming readings scheduled.
+                  <p className="text-sm mb-1" style={{ color: 'var(--color-dark-brown)' }}>
+                    The reading journey hasn&apos;t started yet
                   </p>
-                  {isAdmin && (
-                    <p className="text-xs mt-2" style={{ color: 'var(--color-warm-gray)' }}>
-                      Set up the reading schedule to get started.
-                    </p>
-                  )}
+                  <p className="text-xs" style={{ color: 'var(--color-warm-gray)' }}>
+                    Once the schedule is set, you&apos;ll see this week&apos;s reading, discussion prompts, and session details here.
+                  </p>
                 </div>
               )}
             </div>
@@ -209,8 +209,11 @@ export default async function DashboardPage() {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-sm mb-3" style={{ color: 'var(--color-warm-gray)' }}>
-                    No discussions yet.
+                  <p className="text-sm mb-1" style={{ color: 'var(--color-dark-brown)' }}>
+                    The conversation starts here
+                  </p>
+                  <p className="text-xs mb-3" style={{ color: 'var(--color-warm-gray)' }}>
+                    What&apos;s on your mind after this week&apos;s reading?
                   </p>
                   <Link
                     href="/threads/new"
@@ -251,7 +254,7 @@ export default async function DashboardPage() {
                 </div>
               ) : (
                 <p className="text-sm text-center py-4" style={{ color: 'var(--color-warm-gray)' }}>
-                  {currentWeek ? 'No roles assigned to you this week.' : 'Roles will appear when the schedule is set up.'}
+                  {currentWeek ? 'No roles assigned to you this week — but you can still join the discussion.' : 'Roles rotate weekly once the schedule is set up.'}
                 </p>
               )}
             </div>

@@ -26,11 +26,11 @@ export default async function ReadingPage() {
           Reading
         </h1>
         <div className="text-center py-16">
-          <p className="text-lg mb-2" style={{ color: 'var(--color-warm-gray)' }}>
-            No texts uploaded yet
+          <p className="text-lg mb-2" style={{ color: 'var(--color-dark-brown)' }}>
+            The text is coming
           </p>
           <p className="text-sm" style={{ color: 'var(--color-warm-gray)' }}>
-            When the group's reading materials are added, they'll appear here with social annotation features.
+            The text will appear here with social annotation — highlight passages, leave questions, and see what others are thinking.
           </p>
         </div>
       </div>
@@ -78,7 +78,7 @@ export default async function ReadingPage() {
               ) : (
                 <div className="px-6 py-4">
                   <p className="text-sm" style={{ color: 'var(--color-warm-gray)' }}>
-                    No chapters added yet.
+                    Chapters will appear here as they&apos;re added to the reading schedule.
                   </p>
                 </div>
               )}

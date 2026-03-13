@@ -141,7 +141,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
       {/* Entries */}
       {letters.length === 0 ? (
         <p className="text-center py-12 text-sm" style={{ color: 'var(--color-warm-gray)' }}>
-          {search ? 'No terms match your search.' : 'No glossary entries yet. Add the first term!'}
+          {search ? 'No terms match your search.' : 'As we work through Capital together, we\'ll build a shared vocabulary here. Stumbled on a term? Add it.'}
         </p>
       ) : (
         <div className="space-y-8">

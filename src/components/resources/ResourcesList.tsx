@@ -163,7 +163,7 @@ export default function ResourcesList({
       {/* Resource list */}
       {filtered.length === 0 ? (
         <p className="text-center py-12 text-sm" style={{ color: 'var(--color-warm-gray)' }}>
-          No resources yet. Add the first one!
+          Companion texts, lecture videos, and tools to help with the reading will be collected here.
         </p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

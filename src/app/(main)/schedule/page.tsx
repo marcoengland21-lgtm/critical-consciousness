@@ -36,11 +36,11 @@ export default async function SchedulePage() {
           Reading Schedule
         </h1>
         <div className="text-center py-16">
-          <p className="text-lg mb-2" style={{ color: 'var(--color-warm-gray)' }}>
-            No schedule set up yet
+          <p className="text-lg mb-2" style={{ color: 'var(--color-dark-brown)' }}>
+            The schedule is on its way
           </p>
           <p className="text-sm" style={{ color: 'var(--color-warm-gray)' }}>
-            The reading schedule will appear here once an admin creates it.
+            The reading schedule will appear here once your facilitator sets it up. In the meantime, explore the platform.
           </p>
         </div>
       </div>

@@ -87,11 +87,11 @@ export default async function ThreadsPage({
       {/* Thread List */}
       {!threads || threads.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-lg mb-2" style={{ color: 'var(--color-warm-gray)' }}>
-            No threads yet
+          <p className="text-lg mb-2" style={{ color: 'var(--color-dark-brown)' }}>
+            The conversation starts here
           </p>
           <p className="text-sm mb-6" style={{ color: 'var(--color-warm-gray)' }}>
-            Start a discussion to get the conversation going.
+            What&apos;s on your mind after this week&apos;s reading?
           </p>
           <Link
             href="/threads/new"
@@ -101,7 +101,7 @@ export default async function ThreadsPage({
               color: 'var(--color-warm-cream)',
             }}
           >
-            Create the First Thread
+            Start a Discussion
           </Link>
         </div>
       ) : (
