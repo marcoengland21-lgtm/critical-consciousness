@@ -1,13 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  /* Warm earth tone palette */
-  --color-deep-red: #8B2635;
-  --color-warm-cream: #F5F0E8;
-  --color-dark-brown: #2C1810;
-  --color-warm-gray: #6B5B4F;
-  --color-muted-gold: #C4A35A;
-  --color-soft-sage: #8A9A7B;
+  /* Modern, refined cool palette */
+  --color-deep-red: #c2185b;
+  --color-warm-cream: #f8f9fa;
+  --color-dark-brown: #1a1a2e;
+  --color-warm-gray: #6c757d;
+  --color-muted-gold: #5c6bc0;
+  --color-soft-sage: #e8eaf6;
+  --color-text-primary: #212529;
 
   /* Typography */
   --font-family-sans: system-ui, -apple-system, sans-serif;
@@ -16,13 +17,13 @@
 }
 
 html[data-theme="dark"] {
-  /* Dark mode: warm scholarly aesthetic (aged paper, low light) */
-  --color-deep-red: #d97f6e;
-  --color-warm-cream: #e8ddd0;
-  --color-dark-brown: #1a1612;
-  --color-warm-gray: #9a8f7f;
-  --color-muted-gold: #c9a86b;
-  --color-soft-sage: #8a9a7b;
+  /* Dark mode: refined cool palette */
+  --color-deep-red: #c2185b;
+  --color-warm-cream: #e2e2ea;
+  --color-dark-brown: #e2e2ea;
+  --color-warm-gray: #9299b8;
+  --color-muted-gold: #5c6bc0;
+  --color-soft-sage: #2d2d3f;
 }
 
 /* Clean typography defaults */
@@ -35,8 +36,8 @@ body {
 }
 
 html[data-theme="dark"] body {
-  color: #e8ddd0;
-  background-color: #1a1612;
+  color: #e2e2ea;
+  background-color: #121218;
 }
 
 h1,
@@ -100,14 +101,14 @@ a:hover {
   margin: 1.5em 0;
   font-style: italic;
   color: var(--color-warm-gray);
-  background-color: rgba(196, 163, 90, 0.06);
+  background-color: rgba(92, 107, 192, 0.06);
   padding: 0.75em 1.25em;
   border-radius: 0 4px 4px 0;
 }
 
 /* Annotation highlights */
 .annotation-highlight {
-  background-color: rgba(196, 163, 90, 0.2);
+  background-color: rgba(92, 107, 192, 0.12);
   cursor: pointer;
   transition: background-color 150ms ease;
   border-radius: 2px;
@@ -115,51 +116,51 @@ a:hover {
 }
 
 .annotation-highlight:hover {
-  background-color: rgba(196, 163, 90, 0.4);
+  background-color: rgba(92, 107, 192, 0.25);
 }
 
 .annotation-highlight-dense {
-  background-color: rgba(196, 163, 90, 0.35);
+  background-color: rgba(92, 107, 192, 0.2);
 }
 
 .annotation-highlight-dense:hover {
-  background-color: rgba(196, 163, 90, 0.55);
+  background-color: rgba(92, 107, 192, 0.4);
 }
 
 /* Dark mode specific styles for UI elements */
 html[data-theme="dark"] .annotation-highlight {
-  background-color: rgba(201, 168, 107, 0.25);
+  background-color: rgba(92, 107, 192, 0.2);
 }
 
 html[data-theme="dark"] .annotation-highlight:hover {
-  background-color: rgba(201, 168, 107, 0.45);
+  background-color: rgba(92, 107, 192, 0.35);
 }
 
 html[data-theme="dark"] .annotation-highlight-dense {
-  background-color: rgba(201, 168, 107, 0.4);
+  background-color: rgba(92, 107, 192, 0.3);
 }
 
 html[data-theme="dark"] .annotation-highlight-dense:hover {
-  background-color: rgba(201, 168, 107, 0.6);
+  background-color: rgba(92, 107, 192, 0.5);
 }
 
 /* Dark card/container backgrounds */
 html[data-theme="dark"] {
-  --bg-card: #241e18;
-  --border-color: #3a3228;
-  --text-primary: #e8ddd0;
-  --text-secondary: #9a8f7f;
+  --bg-card: #1e1e2a;
+  --border-color: #2d2d3f;
+  --text-primary: #e2e2ea;
+  --text-secondary: #9299b8;
 }
 
 /* Selection */
 ::selection {
-  background-color: rgba(196, 163, 90, 0.3);
+  background-color: rgba(92, 107, 192, 0.2);
   color: var(--color-dark-brown);
 }
 
 html[data-theme="dark"] ::selection {
-  background-color: rgba(196, 163, 90, 0.4);
-  color: var(--color-dark-text, #e8ddd0);
+  background-color: rgba(92, 107, 192, 0.3);
+  color: var(--color-dark-text, #e2e2ea);
 }
 
 /* Smooth transitions for interactive elements */
@@ -168,7 +169,7 @@ html[data-theme="dark"] ::selection {
 }
 .card-hover:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(44, 24, 16, 0.08);
+  box-shadow: 0 4px 12px rgba(26, 26, 46, 0.08);
 }
 
 /* Active nav link indicator */
@@ -214,7 +215,7 @@ html[data-theme="dark"] ::selection {
   padding: 0.5em 1em;
   margin: 0.75em 0;
   border-radius: 0 4px 4px 0;
-  background-color: rgba(196, 163, 90, 0.06);
+  background-color: rgba(92, 107, 192, 0.06);
   font-style: italic;
 }
 .markdown-body blockquote p {
@@ -227,7 +228,7 @@ html[data-theme="dark"] ::selection {
   font-style: italic;
 }
 .markdown-body code {
-  background-color: rgba(44, 24, 16, 0.06);
+  background-color: rgba(33, 37, 41, 0.06);
   padding: 0.15em 0.35em;
   border-radius: 3px;
   font-size: 0.875em;

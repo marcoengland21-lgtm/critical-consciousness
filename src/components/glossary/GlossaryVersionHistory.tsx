@@ -130,7 +130,7 @@ export default function GlossaryVersionHistory({ entryId, term, onClose }: Gloss
                 {idx < versions.length - 1 && (
                   <div
                     className="absolute left-1.5 top-4 w-0.5 h-12"
-                    style={{ backgroundColor: '#e5e1d8' }}
+                    style={{ backgroundColor: '#dee2e6' }}
                   />
                 )}
 

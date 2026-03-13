@@ -57,7 +57,7 @@ export default function AnnotationPopover({ rect, selectedText, onSave, onCancel
         top: `${top}px`,
         left: `${left}px`,
         backgroundColor: 'white',
-        borderColor: '#e5e1d8',
+        borderColor: '#dee2e6',
       }}
       onMouseDown={(e) => e.stopPropagation()}
       onMouseUp={(e) => e.stopPropagation()}
@@ -66,7 +66,7 @@ export default function AnnotationPopover({ rect, selectedText, onSave, onCancel
       <div
         className="px-4 pt-3 pb-2 text-xs border-b"
         style={{
-          borderColor: '#e5e1d8',
+          borderColor: '#dee2e6',
           color: 'var(--color-warm-gray)',
         }}
       >
@@ -85,7 +85,7 @@ export default function AnnotationPopover({ rect, selectedText, onSave, onCancel
           rows={3}
           className="w-full px-3 py-2 rounded-lg border text-sm resize-none"
           style={{
-            borderColor: '#e5e1d8',
+            borderColor: '#dee2e6',
             color: 'var(--color-dark-brown)',
             fontFamily: "'Lora', Georgia, serif",
             lineHeight: '1.6',

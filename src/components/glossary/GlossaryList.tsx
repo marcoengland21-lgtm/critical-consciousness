@@ -178,7 +178,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search terms..."
           className="flex-1 px-3 py-2 rounded-lg border text-sm"
-          style={{ borderColor: '#e5e1d8', color: 'var(--color-dark-brown)' }}
+          style={{ borderColor: '#dee2e6', color: 'var(--color-dark-brown)' }}
         />
         <button
           onClick={() => setShowForm(!showForm)}
@@ -194,14 +194,14 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
 
       {/* Add form */}
       {showForm && (
-        <form onSubmit={handleSubmit} className="mb-6 p-4 rounded-lg border space-y-3" style={{ backgroundColor: 'white', borderColor: '#e5e1d8' }}>
+        <form onSubmit={handleSubmit} className="mb-6 p-4 rounded-lg border space-y-3" style={{ backgroundColor: 'white', borderColor: '#dee2e6' }}>
           <input
             type="text"
             value={term}
             onChange={(e) => setTerm(e.target.value)}
             placeholder="Term (e.g., Commodity Fetishism)"
             className="w-full px-3 py-2 rounded-lg border text-sm"
-            style={{ borderColor: '#e5e1d8', color: 'var(--color-dark-brown)' }}
+            style={{ borderColor: '#dee2e6', color: 'var(--color-dark-brown)' }}
             required
           />
           <textarea
@@ -210,7 +210,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
             placeholder="Definition..."
             rows={4}
             className="w-full px-3 py-2 rounded-lg border text-sm resize-y"
-            style={{ borderColor: '#e5e1d8', color: 'var(--color-dark-brown)' }}
+            style={{ borderColor: '#dee2e6', color: 'var(--color-dark-brown)' }}
             required
           />
           <button
@@ -232,7 +232,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
               key={letter}
               href={`#letter-${letter}`}
               className="w-8 h-8 flex items-center justify-center rounded text-sm font-medium transition-colors"
-              style={{ color: 'var(--color-deep-red)', backgroundColor: 'white', border: '1px solid #e5e1d8' }}
+              style={{ color: 'var(--color-deep-red)', backgroundColor: 'white', border: '1px solid #dee2e6' }}
             >
               {letter}
             </a>
@@ -249,7 +249,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
         <div className="space-y-8">
           {letters.map((letter) => (
             <div key={letter} id={`letter-${letter}`}>
-              <h2 className="text-2xl font-bold mb-3 pb-1 border-b" style={{ color: 'var(--color-deep-red)', borderColor: '#e5e1d8' }}>
+              <h2 className="text-2xl font-bold mb-3 pb-1 border-b" style={{ color: 'var(--color-deep-red)', borderColor: '#dee2e6' }}>
                 {letter}
               </h2>
               <div className="space-y-4">
@@ -258,7 +258,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
                     key={entry.id}
                     id={`glossary-term-${entry.term}`}
                     className="p-4 rounded-lg border transition-colors scroll-mt-16"
-                    style={{ backgroundColor: 'white', borderColor: '#e5e1d8' }}
+                    style={{ backgroundColor: 'white', borderColor: '#dee2e6' }}
                   >
                     <div className="flex items-start justify-between gap-4 mb-2">
                       <h3 className="text-lg font-semibold" style={{ color: 'var(--color-dark-brown)' }}>
@@ -300,7 +300,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
                           onChange={(e) => setEditingDef(e.target.value)}
                           rows={4}
                           className="w-full px-3 py-2 rounded-lg border text-sm resize-y"
-                          style={{ borderColor: '#e5e1d8', color: 'var(--color-dark-brown)' }}
+                          style={{ borderColor: '#dee2e6', color: 'var(--color-dark-brown)' }}
                           required
                         />
                         <div className="flex gap-2">

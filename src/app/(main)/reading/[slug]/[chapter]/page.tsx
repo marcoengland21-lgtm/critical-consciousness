@@ -116,7 +116,7 @@ export default async function ChapterPage({ params }: Props) {
               backgroundColor: ch.chapter_number === chapterNum ? 'var(--color-dark-brown)' : 'white',
               color: ch.chapter_number === chapterNum ? 'var(--color-warm-cream)' : 'var(--color-dark-brown)',
               border: '1px solid',
-              borderColor: ch.chapter_number === chapterNum ? 'var(--color-dark-brown)' : '#e5e1d8',
+              borderColor: ch.chapter_number === chapterNum ? 'var(--color-dark-brown)' : '#dee2e6',
             }}
           >
             §{ch.chapter_number}: {ch.title.length > 30 ? ch.title.slice(0, 30) + '…' : ch.title}
@@ -150,7 +150,7 @@ export default async function ChapterPage({ params }: Props) {
       />
 
       {/* Chapter navigation footer */}
-      <div className="mt-16 pt-8 border-t flex items-center justify-between" style={{ borderColor: '#e5e1d8' }}>
+      <div className="mt-16 pt-8 border-t flex items-center justify-between" style={{ borderColor: '#dee2e6' }}>
         {prevChapter ? (
           <Link
             href={`/reading/${slug}/${prevChapter.chapter_number}`}

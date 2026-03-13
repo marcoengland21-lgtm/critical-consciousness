@@ -100,13 +100,13 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
         className="fixed right-0 top-0 h-full w-full sm:w-96 z-50 shadow-2xl overflow-y-auto animate-slide-in-right"
         style={{
           backgroundColor: 'white',
-          borderLeft: '1px solid #e5e1d8',
+          borderLeft: '1px solid #dee2e6',
         }}
       >
         {/* Header */}
         <div
           className="sticky top-0 z-10 px-5 py-4 border-b flex items-center justify-between"
-          style={{ backgroundColor: 'white', borderColor: '#e5e1d8' }}
+          style={{ backgroundColor: 'white', borderColor: '#dee2e6' }}
         >
           <h3 className="font-bold text-sm" style={{ color: 'var(--color-dark-brown)' }}>
             Annotation
@@ -158,7 +158,7 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
 
           {/* Replies */}
           {replies.length > 0 && (
-            <div className="space-y-3 pl-3 border-l-2" style={{ borderColor: '#e5e1d8' }}>
+            <div className="space-y-3 pl-3 border-l-2" style={{ borderColor: '#dee2e6' }}>
               <h4 className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-warm-gray)' }}>
                 {replies.length} {replies.length === 1 ? 'Reply' : 'Replies'}
               </h4>
@@ -180,7 +180,7 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
 
           {/* Continue in thread button (shows when annotation has 2+ replies or already has a thread_id) */}
           {(replies.length >= 2 || annotation.thread_id) && (
-            <div className="pt-3 border-t" style={{ borderColor: '#e5e1d8' }}>
+            <div className="pt-3 border-t" style={{ borderColor: '#dee2e6' }}>
               {annotation.thread_id ? (
                 <button
                   onClick={() => router.push(`/threads/${annotation.thread_id}`)}
@@ -228,7 +228,7 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
           )}
 
           {/* Reply form */}
-          <form onSubmit={handleReply} className="pt-3 border-t" style={{ borderColor: '#e5e1d8' }}>
+          <form onSubmit={handleReply} className="pt-3 border-t" style={{ borderColor: '#dee2e6' }}>
             <textarea
               value={replyBody}
               onChange={(e) => setReplyBody(e.target.value)}
@@ -236,7 +236,7 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
               rows={2}
               className="w-full px-3 py-2 rounded-lg border text-sm resize-none"
               style={{
-                borderColor: '#e5e1d8',
+                borderColor: '#dee2e6',
                 color: 'var(--color-dark-brown)',
                 lineHeight: '1.6',
               }}
@@ -265,7 +265,7 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
 function AuthorBadge({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' }) {
   // Generate a consistent color from the name
   const colors = [
-    '#8B2635', '#2C6B4F', '#4A5899', '#8A6B3D',
+    '#c2185b', '#2e7d6e', '#5c6bc0', '#7b6b3d',
     '#6B4C7D', '#2D7A8A', '#8A4B3D', '#4A7B4F',
   ]
   let hash = 0

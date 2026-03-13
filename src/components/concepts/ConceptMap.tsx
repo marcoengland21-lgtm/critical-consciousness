@@ -157,7 +157,7 @@ export default function ConceptMap({ entries }: Props) {
     if (!ctx) return
 
     // Clear canvas
-    ctx.fillStyle = 'var(--color-warm-cream)' === 'var(--color-warm-cream)' ? '#F5F0E8' : '#F5F0E8'
+    ctx.fillStyle = 'var(--color-warm-cream)' === 'var(--color-warm-cream)' ? '#f8f9fa' : '#f8f9fa'
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
 
     // Draw links
@@ -181,11 +181,11 @@ export default function ConceptMap({ entries }: Props) {
       const isHovered = hoveredNode?.id === node.id
 
       // Determine color based on week or hover state
-      let color = '#C4A35A'
+      let color = '#5c6bc0'
       if (isSelected) {
-        color = '#8B2635'
+        color = '#c2185b'
       } else if (isHovered) {
-        color = '#2C1810'
+        color = '#1a1a2e'
       } else if (node.week) {
         const hue = ((node.week - 1) * 30) % 360
         const rgb = hslToRgb(hue, 60, 50)
@@ -201,7 +201,7 @@ export default function ConceptMap({ entries }: Props) {
 
       // Draw border for selected node
       if (isSelected) {
-        ctx.strokeStyle = '#C4A35A'
+        ctx.strokeStyle = '#5c6bc0'
         ctx.lineWidth = 2
         ctx.stroke()
       }
@@ -263,7 +263,7 @@ export default function ConceptMap({ entries }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-lg border overflow-hidden" style={{ borderColor: '#e5e1d8' }}>
+      <div className="rounded-lg border overflow-hidden" style={{ borderColor: '#dee2e6' }}>
         <div className="bg-white p-4">
           <canvas
             ref={canvasRef}
@@ -273,28 +273,28 @@ export default function ConceptMap({ entries }: Props) {
             onMouseMove={handleCanvasMouseMove}
             onMouseLeave={() => setHoveredNode(null)}
             className="w-full border rounded"
-            style={{ borderColor: '#e5e1d8', cursor: hoveredNode ? 'pointer' : 'default' }}
+            style={{ borderColor: '#dee2e6', cursor: hoveredNode ? 'pointer' : 'default' }}
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Legend */}
-        <div className="rounded-lg border overflow-hidden" style={{ borderColor: '#e5e1d8' }}>
-          <div className="px-5 py-3" style={{ backgroundColor: 'white', borderBottom: '1px solid #e5e1d8' }}>
+        <div className="rounded-lg border overflow-hidden" style={{ borderColor: '#dee2e6' }}>
+          <div className="px-5 py-3" style={{ backgroundColor: 'white', borderBottom: '1px solid #dee2e6' }}>
             <h2 className="font-bold" style={{ color: 'var(--color-dark-brown)' }}>
               Legend
             </h2>
           </div>
           <div className="p-5 space-y-3" style={{ backgroundColor: 'white' }}>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#C4A35A' }} />
+              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#5c6bc0' }} />
               <span className="text-xs" style={{ color: 'var(--color-dark-brown)' }}>
                 Core concept
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#8B2635' }} />
+              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#c2185b' }} />
               <span className="text-xs" style={{ color: 'var(--color-dark-brown)' }}>
                 Selected
               </span>
@@ -307,8 +307,8 @@ export default function ConceptMap({ entries }: Props) {
 
         {/* Selected Node Details */}
         {selectedNode && (
-          <div className="lg:col-span-2 rounded-lg border overflow-hidden" style={{ borderColor: '#e5e1d8' }}>
-            <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: 'white', borderBottom: '1px solid #e5e1d8' }}>
+          <div className="lg:col-span-2 rounded-lg border overflow-hidden" style={{ borderColor: '#dee2e6' }}>
+            <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: 'white', borderBottom: '1px solid #dee2e6' }}>
               <h2 className="font-bold" style={{ color: 'var(--color-dark-brown)' }}>
                 {selectedNode.label}
               </h2>

@@ -51,27 +51,44 @@ export default async function WeeklyActivitySummary({ weekId }: WeeklyActivitySu
 
   if (!hasActivity) {
     return (
-      <div className="rounded-lg border p-5" style={{ borderColor: '#e5e1d8', backgroundColor: '#faf8f4' }}>
+      <div className="rounded-lg border p-5" style={{ borderColor: '#dee2e6', backgroundColor: '#f8f9fa' }}>
         <p className="text-sm italic" style={{ color: 'var(--color-warm-gray)' }}>
-          The group hasn't added any annotations, discussions, or glossary terms yet this week. Be the first to contribute!
+          The group's activity this week will appear here as people begin reading and annotating.
         </p>
       </div>
     )
   }
 
+  // Build qualitative activity description based on activity types present
+  const hasAnnotations = (annotationCount || 0) > 0
+  const hasThreads = (threadCount || 0) > 0
+  const hasGlossary = (glossaryCount || 0) > 0
+
+  let activityDescription = ''
+  if (hasAnnotations && hasThreads && hasGlossary) {
+    activityDescription = 'The group has been reading, discussing, and building shared vocabulary this week.'
+  } else if (hasAnnotations && hasThreads) {
+    activityDescription = 'The group has been reading and discussing together this week.'
+  } else if (hasAnnotations && hasGlossary) {
+    activityDescription = 'The group has been reading and building shared vocabulary this week.'
+  } else if (hasThreads && hasGlossary) {
+    activityDescription = 'Conversations are happening and the shared vocabulary is growing this week.'
+  } else if (hasAnnotations) {
+    activityDescription = 'People have been leaving notes in the text this week.'
+  } else if (hasThreads) {
+    activityDescription = 'Conversations are happening in the discussion threads.'
+  } else if (hasGlossary) {
+    activityDescription = 'The shared vocabulary is growing this week.'
+  }
+
   return (
-    <div className="rounded-lg border p-5" style={{ borderColor: '#e5e1d8', backgroundColor: '#faf8f4' }}>
+    <div className="rounded-lg border p-5" style={{ borderColor: '#dee2e6', backgroundColor: '#f8f9fa' }}>
       <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--color-dark-brown)' }}>
         This Week's Activity
       </h3>
       <p className="text-sm" style={{ color: 'var(--color-warm-gray)' }}>
-        The group has been active:{' '}
         <span className="font-medium" style={{ color: 'var(--color-dark-brown)' }}>
-          {annotationCount ? `${annotationCount} ${annotationCount === 1 ? 'annotation' : 'annotations'}` : null}
-          {annotationCount && threadCount ? ', ' : null}
-          {threadCount ? `${threadCount} ${threadCount === 1 ? 'discussion' : 'discussions'}` : null}
-          {(annotationCount || threadCount) && glossaryCount ? ', ' : null}
-          {glossaryCount ? `${glossaryCount} glossary ${glossaryCount === 1 ? 'term' : 'terms'}` : null}
+          {activityDescription}
         </span>
       </p>
     </div>
