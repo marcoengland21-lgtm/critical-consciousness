@@ -130,9 +130,7 @@ export default async function DashboardPage() {
           {user ? `Welcome back, ${displayName}` : 'Welcome to Critical Consciousness'}
         </h1>
         <p className="text-sm" style={{ color: 'var(--color-warm-gray)' }}>
-          {user
-            ? 'Christchurch Capital Reading Group'
-            : 'A collaborative study of Marx\'s Capital — Christchurch, 2026'}
+          Christchurch Capital Reading Group
         </p>
       </div>
 
@@ -359,7 +357,7 @@ export default async function DashboardPage() {
 
           {/* Start Reading CTA */}
           <Link
-            href="/reading"
+            href={currentWeek?.chapter_ref ? `/reading/capital-vol-1/${currentWeek.week_number}` : '/reading/capital-vol-1/1'}
             className="block rounded-lg border-2 p-5 transition-all hover:shadow-md card-hover"
             style={{
               borderColor: 'var(--color-deep-red)',
@@ -370,7 +368,7 @@ export default async function DashboardPage() {
               Annotate Together
             </p>
             <p className="font-bold" style={{ color: 'var(--color-dark-brown)', fontFamily: "'Lora', Georgia, serif" }}>
-              Capital, Vol. I — Chapter 1
+              {currentWeek ? currentWeek.title : 'Capital, Vol. I — Chapter 1'}
             </p>
             <p className="text-xs mt-1" style={{ color: 'var(--color-warm-gray)' }}>
               Read, highlight, and annotate Marx&apos;s text collaboratively
