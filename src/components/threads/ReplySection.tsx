@@ -28,6 +28,7 @@ interface ReplySectionProps {
 }
 
 export default function ReplySection({ threadId, replies: initialReplies, currentUserId, isAdmin }: ReplySectionProps) {
+  console.log('[CCP Debug] ReplySection mounted', { threadId, replyCount: initialReplies.length, currentUserId, isAdmin })
   const [replies, setReplies] = useState<ReplyData[]>(initialReplies)
   const [replyBody, setReplyBody] = useState('')
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
@@ -85,12 +86,15 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
       })
 
     if (!error) {
+      console.log('[CCP Debug] Reply submitted successfully', { parentReplyId })
       if (parentReplyId) {
         setNestedReplyBody('')
         setReplyingTo(null)
       } else {
         setReplyBody('')
       }
+    } else {
+      console.error('[CCP Debug] Reply submit failed', error)
     }
     setSubmitting(false)
   }

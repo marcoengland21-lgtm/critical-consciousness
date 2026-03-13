@@ -87,6 +87,15 @@ function buildSegments(
 }
 
 export default function ChapterReader({ chapter, annotations: initialAnnotations, userId, documentSlug }: Props) {
+  // Debug logging
+  console.log('[CCP Debug] ChapterReader mounted', {
+    chapterId: chapter.id,
+    contentLength: chapter.content.length,
+    initialAnnotationCount: initialAnnotations.length,
+    userId,
+    annotations: initialAnnotations.map(a => ({ id: a.id, start: a.position_start, end: a.position_end, body: a.body?.slice(0, 40) })),
+  })
+
   const router = useRouter()
   const textRef = useRef<HTMLDivElement>(null)
   const [annotations, setAnnotations] = useState(initialAnnotations)
@@ -142,8 +151,9 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
           table: 'annotations',
           filter: `chapter_id=eq.${chapter.id}`,
         },
-        () => {
+        (payload) => {
           // Refresh on any annotation change
+          console.log('[CCP Debug] Realtime annotation change', payload.eventType, payload.new)
           router.refresh()
         }
       )
@@ -216,6 +226,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     const end = getCharOffset(range.endContainer, range.endOffset)
     const rect = range.getBoundingClientRect()
 
+    console.log('[CCP Debug] Text selected', { text: text.slice(0, 60), start, end, rectTop: rect.top, rectLeft: rect.left })
     setSelection({ text, start, end, rect })
     setShowToolbar(true)
     setShowAnnotatePopover(false)
@@ -225,7 +236,10 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
   /** Save a new annotation */
   const handleSaveAnnotation = useCallback(
     async (body: string) => {
-      if (!selection) return
+      if (!selection) {
+        console.log('[CCP Debug] handleSaveAnnotation called but no selection')
+        return
+      }
 
       const supabase = createClient()
       const authorId = userId || GUEST_ID
@@ -237,18 +251,21 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
       const quotePrefix = content.slice(prefixStart, selection.start)
       const quoteSuffix = content.slice(selection.end, suffixEnd)
 
+      const insertPayload = {
+        chapter_id: chapter.id,
+        author_id: authorId,
+        body,
+        quote_exact: selection.text,
+        position_start: selection.start,
+        position_end: selection.end,
+        quote_prefix: quotePrefix,
+        quote_suffix: quoteSuffix,
+      }
+      console.log('[CCP Debug] Inserting annotation', insertPayload)
+
       const { data, error } = await supabase
         .from('annotations')
-        .insert({
-          chapter_id: chapter.id,
-          author_id: authorId,
-          body,
-          quote_exact: selection.text,
-          position_start: selection.start,
-          position_end: selection.end,
-          quote_prefix: quotePrefix,
-          quote_suffix: quoteSuffix,
-        })
+        .insert(insertPayload)
         .select(`
           *,
           author:profiles!author_id(id, display_name),
@@ -259,14 +276,21 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         `)
         .single()
 
+      console.log('[CCP Debug] Annotation save result', { data: data ? { id: data.id, start: data.position_start, end: data.position_end } : null, error })
+
       if (!error && data) {
-        setAnnotations((prev) => [...prev, data])
+        setAnnotations((prev) => {
+          const next = [...prev, data]
+          console.log('[CCP Debug] Annotations state updated, count:', next.length)
+          return next
+        })
         setSelection(null)
         setShowAnnotatePopover(false)
         setShowToolbar(false)
         window.getSelection()?.removeAllRanges()
         setToast({ message: 'Annotation saved', type: 'success' })
       } else if (error) {
+        console.error('[CCP Debug] Annotation save FAILED', error)
         setToast({ message: 'Failed to save annotation', type: 'error' })
       }
     },
@@ -275,6 +299,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
 
   /** Click on an annotated segment */
   const handleAnnotationClick = useCallback((anns: Annotation[]) => {
+    console.log('[CCP Debug] Annotation highlight clicked', { count: anns.length, ids: anns.map(a => a.id) })
     if (anns.length > 0) {
       setActiveAnnotation(anns[0])
       setShowAnnotatePopover(false)
@@ -284,9 +309,10 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
 
   /** Open the annotation popover from toolbar */
   const handleAnnotateFromToolbar = useCallback(() => {
+    console.log('[CCP Debug] Annotate button clicked, selection:', selection ? { text: selection.text.slice(0, 40), start: selection.start, end: selection.end } : null)
     setShowToolbar(false)
     setShowAnnotatePopover(true)
-  }, [])
+  }, [selection])
 
   /** Navigate to thread creation with selected quote */
   const handleStartThread = useCallback(() => {

@@ -95,6 +95,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    console.log('[CCP Debug] Thread submit', { title: title.slice(0, 40), threadType, weekId, bodyLength: body.length })
     if (!title.trim() || !body.trim()) {
       setError('Title and body are required.')
       return
@@ -105,6 +106,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
 
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
+    console.log('[CCP Debug] Thread submit auth', { userId: user?.id || 'none' })
 
     // TODO: RE-ENABLE AUTH — Restore this check when reviewer access is no longer needed
     if (!user) {
@@ -124,6 +126,8 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
       })
       .select('id')
       .single()
+
+    console.log('[CCP Debug] Thread insert result', { data, error: insertError })
 
     if (insertError) {
       setError(insertError.message)
