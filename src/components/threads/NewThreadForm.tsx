@@ -42,8 +42,10 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
+    // TODO: RE-ENABLE AUTH — Restore this check when reviewer access is no longer needed
+    // For now, allow guest posting with a fallback author
     if (!user) {
-      setError('You must be logged in.')
+      setError('You must be logged in to post. Guest posting coming soon.')
       setSubmitting(false)
       return
     }
@@ -135,8 +137,8 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="What's on your mind?"
-          className="w-full px-3 py-2 rounded-lg border text-sm"
+          placeholder="e.g. 'The double character of the commodity' or 'Question about abstract labour'"
+          className="w-full px-4 py-3 rounded-lg border text-sm transition-colors focus:outline-none"
           style={{ borderColor: '#e5e1d8', color: 'var(--color-dark-brown)' }}
           required
         />
@@ -151,10 +153,10 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
           id="body"
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          placeholder="Share your thoughts, questions, or reflections..."
+          placeholder="Share your thoughts, questions, or reflections on the reading..."
           rows={10}
-          className="w-full px-3 py-2 rounded-lg border text-sm resize-y"
-          style={{ borderColor: '#e5e1d8', color: 'var(--color-dark-brown)', lineHeight: '1.75' }}
+          className="w-full px-4 py-3 rounded-lg border text-sm resize-y transition-colors focus:outline-none"
+          style={{ borderColor: '#e5e1d8', color: 'var(--color-dark-brown)', lineHeight: '1.85' }}
           required
         />
       </div>

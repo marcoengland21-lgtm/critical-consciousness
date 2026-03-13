@@ -112,7 +112,7 @@ export default async function ThreadsPage({
               <Link
                 key={thread.id}
                 href={`/threads/${thread.id}`}
-                className="block p-5 rounded-lg border transition-all hover:shadow-md"
+                className="block p-5 rounded-lg border transition-all card-hover"
                 style={{
                   backgroundColor: 'white',
                   borderColor: thread.pinned ? 'var(--color-muted-gold)' : '#e5e1d8',

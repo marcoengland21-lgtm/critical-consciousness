@@ -284,6 +284,26 @@ export default async function DashboardPage() {
             </div>
           )}
 
+          {/* Start Reading CTA */}
+          <Link
+            href="/reading"
+            className="block rounded-lg border-2 p-5 transition-all hover:shadow-md card-hover"
+            style={{
+              borderColor: 'var(--color-deep-red)',
+              backgroundColor: 'white',
+            }}
+          >
+            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--color-deep-red)' }}>
+              Annotate Together
+            </p>
+            <p className="font-bold" style={{ color: 'var(--color-dark-brown)', fontFamily: "'Lora', Georgia, serif" }}>
+              Capital, Vol. I — Chapter 1
+            </p>
+            <p className="text-xs mt-1" style={{ color: 'var(--color-warm-gray)' }}>
+              Read, highlight, and annotate Marx&apos;s text collaboratively
+            </p>
+          </Link>
+
           {/* Quick Links */}
           <div className="rounded-lg border overflow-hidden" style={{ borderColor: '#e5e1d8' }}>
             <div className="px-5 py-3" style={{ backgroundColor: 'white', borderBottom: '1px solid #e5e1d8' }}>
@@ -293,13 +313,13 @@ export default async function DashboardPage() {
             </div>
             <div style={{ backgroundColor: 'white' }}>
               <Link href="/threads/new" className="block px-5 py-3 text-sm transition-colors hover:bg-gray-50 border-b" style={{ borderColor: '#e5e1d8', color: 'var(--color-dark-brown)' }}>
-                ✏️ Start a Discussion
+                Start a Discussion
               </Link>
               <Link href="/glossary" className="block px-5 py-3 text-sm transition-colors hover:bg-gray-50 border-b" style={{ borderColor: '#e5e1d8', color: 'var(--color-dark-brown)' }}>
-                📖 Browse Glossary
+                Browse Glossary
               </Link>
               <Link href="/resources" className="block px-5 py-3 text-sm transition-colors hover:bg-gray-50" style={{ color: 'var(--color-dark-brown)' }}>
-                📚 Resources
+                Resources
               </Link>
             </div>
           </div>

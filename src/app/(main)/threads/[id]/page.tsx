@@ -86,8 +86,7 @@ export default async function ThreadPage({
 
         {/* Thread Body */}
         <div
-          className="prose-content whitespace-pre-wrap"
-          style={{ color: 'var(--color-dark-brown)' }}
+          className="thread-body whitespace-pre-wrap"
         >
           {thread.body}
         </div>

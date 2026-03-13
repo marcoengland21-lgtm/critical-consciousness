@@ -96,7 +96,7 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
       {/* Panel */}
       <div
         ref={panelRef}
-        className="fixed right-0 top-0 h-full w-full sm:w-96 z-50 shadow-2xl overflow-y-auto"
+        className="fixed right-0 top-0 h-full w-full sm:w-96 z-50 shadow-2xl overflow-y-auto animate-slide-in-right"
         style={{
           backgroundColor: 'white',
           borderLeft: '1px solid #e5e1d8',

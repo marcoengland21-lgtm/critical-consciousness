@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import MobileNav from '@/components/layout/MobileNav'
+import NavLink from '@/components/layout/NavLink'
 import LogoutButton from '@/components/layout/LogoutButton'
 
 export default async function MainLayout({
@@ -59,61 +60,13 @@ export default async function MainLayout({
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
-              <Link
-                href="/dashboard"
-                className="transition-colors hover:opacity-80"
-                style={{
-                  color: 'var(--color-warm-cream)',
-                }}
-              >
-                Dashboard
-              </Link>
-              <Link
-                href="/schedule"
-                className="transition-colors hover:opacity-80"
-                style={{
-                  color: 'var(--color-warm-cream)',
-                }}
-              >
-                Schedule
-              </Link>
-              <Link
-                href="/threads"
-                className="transition-colors hover:opacity-80"
-                style={{
-                  color: 'var(--color-warm-cream)',
-                }}
-              >
-                Threads
-              </Link>
-              <Link
-                href="/reading"
-                className="transition-colors hover:opacity-80"
-                style={{
-                  color: 'var(--color-warm-cream)',
-                }}
-              >
-                Reading
-              </Link>
-              <Link
-                href="/glossary"
-                className="transition-colors hover:opacity-80"
-                style={{
-                  color: 'var(--color-warm-cream)',
-                }}
-              >
-                Glossary
-              </Link>
-              <Link
-                href="/resources"
-                className="transition-colors hover:opacity-80"
-                style={{
-                  color: 'var(--color-warm-cream)',
-                }}
-              >
-                Resources
-              </Link>
+            <div className="hidden md:flex items-center space-x-6">
+              <NavLink href="/dashboard">Dashboard</NavLink>
+              <NavLink href="/reading">Reading</NavLink>
+              <NavLink href="/threads">Threads</NavLink>
+              <NavLink href="/schedule">Schedule</NavLink>
+              <NavLink href="/glossary">Glossary</NavLink>
+              <NavLink href="/resources">Resources</NavLink>
             </div>
 
             {/* Right Side - User Info and Logout */}

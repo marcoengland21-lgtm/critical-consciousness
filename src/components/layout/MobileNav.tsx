@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
+import NavLink from './NavLink'
 
 interface MobileNavProps {
   displayName?: string
@@ -18,6 +18,7 @@ export default function MobileNav({ displayName }: MobileNavProps) {
         style={{
           color: 'var(--color-warm-cream)',
         }}
+        aria-label={isOpen ? 'Close menu' : 'Open menu'}
       >
         <svg
           className="w-6 h-6"
@@ -40,71 +41,18 @@ export default function MobileNav({ displayName }: MobileNavProps) {
 
       {isOpen && (
         <div
-          className="md:hidden absolute top-full left-0 right-0 py-4 space-y-2"
+          className="md:hidden absolute top-full left-0 right-0 py-2 border-t animate-fade-in"
           style={{
             backgroundColor: 'var(--color-dark-brown)',
+            borderColor: 'rgba(196, 163, 90, 0.2)',
           }}
         >
-          <Link
-            href="/dashboard"
-            className="block px-6 py-2 hover:opacity-80"
-            style={{
-              color: 'var(--color-warm-cream)',
-            }}
-            onClick={() => setIsOpen(false)}
-          >
-            Dashboard
-          </Link>
-          <Link
-            href="/schedule"
-            className="block px-6 py-2 hover:opacity-80"
-            style={{
-              color: 'var(--color-warm-cream)',
-            }}
-            onClick={() => setIsOpen(false)}
-          >
-            Schedule
-          </Link>
-          <Link
-            href="/threads"
-            className="block px-6 py-2 hover:opacity-80"
-            style={{
-              color: 'var(--color-warm-cream)',
-            }}
-            onClick={() => setIsOpen(false)}
-          >
-            Threads
-          </Link>
-          <Link
-            href="/reading"
-            className="block px-6 py-2 hover:opacity-80"
-            style={{
-              color: 'var(--color-warm-cream)',
-            }}
-            onClick={() => setIsOpen(false)}
-          >
-            Reading
-          </Link>
-          <Link
-            href="/glossary"
-            className="block px-6 py-2 hover:opacity-80"
-            style={{
-              color: 'var(--color-warm-cream)',
-            }}
-            onClick={() => setIsOpen(false)}
-          >
-            Glossary
-          </Link>
-          <Link
-            href="/resources"
-            className="block px-6 py-2 hover:opacity-80"
-            style={{
-              color: 'var(--color-warm-cream)',
-            }}
-            onClick={() => setIsOpen(false)}
-          >
-            Resources
-          </Link>
+          <NavLink href="/dashboard" mobile onClick={() => setIsOpen(false)}>Dashboard</NavLink>
+          <NavLink href="/reading" mobile onClick={() => setIsOpen(false)}>Reading</NavLink>
+          <NavLink href="/threads" mobile onClick={() => setIsOpen(false)}>Threads</NavLink>
+          <NavLink href="/schedule" mobile onClick={() => setIsOpen(false)}>Schedule</NavLink>
+          <NavLink href="/glossary" mobile onClick={() => setIsOpen(false)}>Glossary</NavLink>
+          <NavLink href="/resources" mobile onClick={() => setIsOpen(false)}>Resources</NavLink>
         </div>
       )}
     </>
