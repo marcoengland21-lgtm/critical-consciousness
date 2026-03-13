@@ -7,7 +7,7 @@ export default function AuthLayout({
     <main
       className="flex items-center justify-center min-h-screen p-4"
       style={{
-        backgroundColor: 'var(--color-warm-cream)',
+        backgroundColor: 'var(--bg-page)',
       }}
     >
       <div className="w-full max-w-md">
@@ -15,7 +15,7 @@ export default function AuthLayout({
           <h1
             className="text-3xl font-bold"
             style={{
-              color: 'var(--color-deep-red)',
+              color: 'var(--accent-red)',
             }}
           >
             Critical Consciousness
@@ -23,7 +23,7 @@ export default function AuthLayout({
           <p
             className="text-sm mt-1"
             style={{
-              color: 'var(--color-warm-gray)',
+              color: 'var(--text-secondary)',
             }}
           >
             Collaborative Study Platform

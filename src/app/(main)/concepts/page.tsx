@@ -17,10 +17,10 @@ export default async function ConceptsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--color-deep-red)' }}>
+          <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--accent-red)' }}>
             Concept Map
           </h1>
-          <p className="text-sm" style={{ color: 'var(--color-warm-gray)' }}>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
             Interactive visualization of how Marx's concepts relate across the text. Click a node to see details.
           </p>
         </div>

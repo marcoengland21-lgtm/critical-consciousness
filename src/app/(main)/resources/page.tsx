@@ -27,7 +27,7 @@ export default async function ResourcesPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-8" style={{ color: 'var(--color-deep-red)' }}>
+      <h1 className="text-3xl font-bold mb-8" style={{ color: 'var(--accent-red)' }}>
         Resources
       </h1>
       <ResourcesList

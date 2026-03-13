@@ -84,7 +84,7 @@ export default async function ThreadPage({
       <Link
         href="/threads"
         className="inline-flex items-center text-sm mb-6 transition-colors"
-        style={{ color: 'var(--color-warm-gray)' }}
+        style={{ color: 'var(--text-secondary)' }}
       >
         ← Back to Threads
       </Link>
@@ -94,23 +94,23 @@ export default async function ThreadPage({
         <div className="flex items-center gap-2 mb-3">
           {thread.pinned && (
             <span className="text-xs font-medium px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: 'var(--color-muted-gold)', color: 'var(--color-dark-brown)' }}>
+              style={{ backgroundColor: 'var(--accent-purple)', color: 'var(--text-primary)' }}>
               Pinned
             </span>
           )}
           <ThreadTypeBadge type={thread.thread_type as ThreadType} />
         </div>
 
-        <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--color-deep-red)' }}>
+        <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--accent-red)' }}>
           {thread.title}
         </h1>
 
-        <div className="flex items-center gap-3 mb-6 text-sm" style={{ color: 'var(--color-warm-gray)' }}>
-          <span className="font-medium" style={{ color: 'var(--color-dark-brown)' }}>
+        <div className="flex items-center gap-3 mb-6 text-sm" style={{ color: 'var(--text-secondary)' }}>
+          <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
             {thread.author?.display_name}
           </span>
           {thread.author?.role === 'admin' && (
-            <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: 'var(--color-soft-sage)', color: 'white' }}>
+            <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: 'var(--bg-soft)', color: 'var(--bg-card)' }}>
               admin
             </span>
           )}
@@ -127,7 +127,7 @@ export default async function ThreadPage({
             <Link
               href={`/reading/${contextDocSlug}/${thread.body.match(/§(\d+)/)?.[1] || '1'}`}
               className="inline-flex items-center gap-2 text-sm font-medium transition-colors"
-              style={{ color: 'var(--color-deep-red)' }}
+              style={{ color: 'var(--accent-red)' }}
             >
               View in context ↗
             </Link>

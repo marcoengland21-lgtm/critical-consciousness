@@ -125,13 +125,13 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
           className="px-6 py-4 border-b flex items-center justify-between flex-shrink-0"
           style={{ borderColor: 'var(--border-default)', backgroundColor: 'var(--bg-card)' }}
         >
-          <h2 className="font-bold text-lg" style={{ color: 'var(--color-dark-brown)' }}>
+          <h2 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
             {step === 'chapters' ? 'Select a Chapter' : 'Select Text'}
           </h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-lg"
-            style={{ color: 'var(--color-warm-gray)' }}
+            className="w-8 h-8 flex items-center justify-center rounded-full hover-bg-themed transition-colors text-lg"
+            style={{ color: 'var(--text-secondary)' }}
           >
             ×
           </button>
@@ -142,11 +142,11 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
           {step === 'chapters' ? (
             <div className="space-y-3">
               {loading ? (
-                <p style={{ color: 'var(--color-warm-gray)' }} className="text-center py-8">
+                <p style={{ color: 'var(--text-secondary)' }} className="text-center py-8">
                   Loading chapters...
                 </p>
               ) : chapters.length === 0 ? (
-                <p style={{ color: 'var(--color-warm-gray)' }} className="text-center py-8">
+                <p style={{ color: 'var(--text-secondary)' }} className="text-center py-8">
                   No chapters found
                 </p>
               ) : (
@@ -162,11 +162,11 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
                     style={{
                       borderColor: 'var(--border-default)',
                       backgroundColor: 'var(--bg-card)',
-                      color: 'var(--color-dark-brown)',
+                      color: 'var(--text-primary)',
                     }}
                   >
                     <div className="text-sm font-medium mb-1">§{ch.chapter_number}: {ch.title}</div>
-                    <div className="text-xs" style={{ color: 'var(--color-warm-gray)' }}>
+                    <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
                       {ch.document_title}
                     </div>
                   </button>
@@ -176,16 +176,16 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
           ) : selectedChapter ? (
             <div className="space-y-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--color-warm-gray)' }}>
+                <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
                   Selected chapter
                 </p>
-                <p className="text-sm font-medium" style={{ color: 'var(--color-dark-brown)' }}>
+                <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                   §{selectedChapter.chapter_number}: {selectedChapter.title}
                 </p>
               </div>
 
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--color-warm-gray)' }}>
+                <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
                   Highlight text to select a quote
                 </p>
                 <div
@@ -195,7 +195,7 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
                   style={{
                     borderColor: 'var(--border-default)',
                     backgroundColor: 'var(--bg-card-alt)',
-                    color: 'var(--color-dark-brown)',
+                    color: 'var(--text-primary)',
                     fontSize: '0.95rem',
                     lineHeight: '1.8',
                     fontFamily: "'Lora', Georgia, serif",
@@ -209,12 +209,12 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
                 <div
                   className="p-3 rounded-lg border-l-3"
                   style={{
-                    backgroundColor: 'rgba(196, 163, 90, 0.08)',
-                    borderLeft: '3px solid var(--color-muted-gold)',
-                    color: 'var(--color-warm-gray)',
+                    backgroundColor: 'rgba(107, 76, 154, 0.08)',
+                    borderLeft: '3px solid var(--accent-purple)',
+                    color: 'var(--text-secondary)',
                   }}
                 >
-                  <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: 'var(--color-warm-gray)' }}>
+                  <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: 'var(--text-secondary)' }}>
                     Selected
                   </p>
                   <p className="text-sm italic">&ldquo;{selectedText}&rdquo;</p>
@@ -240,7 +240,7 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
               }
             }}
             className="px-4 py-2 rounded-lg text-sm font-medium border transition-colors"
-            style={{ borderColor: 'var(--border-default)', color: 'var(--color-warm-gray)' }}
+            style={{ borderColor: 'var(--border-default)', color: 'var(--text-secondary)' }}
           >
             {step === 'select' ? 'Back' : 'Cancel'}
           </button>
@@ -251,7 +251,7 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
               disabled={!selectedText}
               className="px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
               style={{
-                backgroundColor: 'var(--color-deep-red)',
+                backgroundColor: 'var(--accent-red)',
                 color: 'var(--text-inverse)',
               }}
             >

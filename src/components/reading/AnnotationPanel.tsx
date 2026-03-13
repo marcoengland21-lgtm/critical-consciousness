@@ -108,13 +108,13 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
           className="sticky top-0 z-10 px-5 py-4 border-b flex items-center justify-between"
           style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
         >
-          <h3 className="font-bold text-sm" style={{ color: 'var(--color-dark-brown)' }}>
+          <h3 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
             Annotation
           </h3>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-lg"
-            style={{ color: 'var(--color-warm-gray)' }}
+            className="w-8 h-8 flex items-center justify-center rounded-full hover-bg-themed transition-colors text-lg"
+            style={{ color: 'var(--text-secondary)' }}
           >
             ×
           </button>
@@ -125,13 +125,13 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
           <div
             className="px-4 py-3 rounded-lg border-l-3"
             style={{
-              backgroundColor: 'rgba(196, 163, 90, 0.08)',
-              borderLeft: '3px solid var(--color-muted-gold)',
+              backgroundColor: 'rgba(107, 76, 154, 0.08)',
+              borderLeft: '3px solid var(--accent-purple)',
               fontFamily: "'Lora', Georgia, serif",
               fontSize: '0.875rem',
               lineHeight: '1.7',
               fontStyle: 'italic',
-              color: 'var(--color-warm-gray)',
+              color: 'var(--text-secondary)',
             }}
           >
             &ldquo;{annotation.quote_exact}&rdquo;
@@ -141,14 +141,14 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
           <div>
             <div className="flex items-center gap-2 mb-2">
               <AuthorBadge name={annotation.author?.display_name || 'Guest'} />
-              <span className="text-xs" style={{ color: 'var(--color-warm-gray)' }}>
+              <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
                 <TimeAgo date={annotation.created_at} />
               </span>
             </div>
             <p
               className="text-sm"
               style={{
-                color: 'var(--color-dark-brown)',
+                color: 'var(--text-primary)',
                 lineHeight: '1.7',
               }}
             >
@@ -159,18 +159,18 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
           {/* Replies */}
           {replies.length > 0 && (
             <div className="space-y-3 pl-3 border-l-2" style={{ borderColor: 'var(--border-default)' }}>
-              <h4 className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-warm-gray)' }}>
+              <h4 className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>
                 {replies.length} {replies.length === 1 ? 'Reply' : 'Replies'}
               </h4>
               {replies.map((reply) => (
                 <div key={reply.id} className="text-sm">
                   <div className="flex items-center gap-2 mb-1">
                     <AuthorBadge name={reply.author?.display_name || 'Guest'} size="sm" />
-                    <span className="text-xs" style={{ color: 'var(--color-warm-gray)' }}>
+                    <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
                       <TimeAgo date={reply.created_at} />
                     </span>
                   </div>
-                  <p style={{ color: 'var(--color-dark-brown)', lineHeight: '1.6' }}>
+                  <p style={{ color: 'var(--text-primary)', lineHeight: '1.6' }}>
                     {reply.body}
                   </p>
                 </div>
@@ -187,8 +187,8 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
                   className="w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
                   style={{
                     backgroundColor: 'var(--bg-soft)',
-                    color: 'var(--color-deep-red)',
-                    border: '1px solid var(--color-muted-gold)',
+                    color: 'var(--accent-red)',
+                    border: '1px solid var(--accent-purple)',
                   }}
                 >
                   View in thread →
@@ -217,8 +217,8 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
                   className="w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
                   style={{
                     backgroundColor: 'var(--bg-soft)',
-                    color: 'var(--color-deep-red)',
-                    border: '1px solid var(--color-muted-gold)',
+                    color: 'var(--accent-red)',
+                    border: '1px solid var(--accent-purple)',
                   }}
                 >
                   Continue in a thread →
@@ -237,7 +237,7 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
               className="w-full px-3 py-2 rounded-lg border text-sm resize-none"
               style={{
                 borderColor: 'var(--border-default)',
-                color: 'var(--color-dark-brown)',
+                color: 'var(--text-primary)',
                 lineHeight: '1.6',
               }}
             />
@@ -247,7 +247,7 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
                 disabled={submitting || !replyBody.trim()}
                 className="px-3 py-1.5 text-xs font-medium rounded-lg disabled:opacity-50 transition-colors"
                 style={{
-                  backgroundColor: 'var(--color-deep-red)',
+                  backgroundColor: 'var(--accent-red)',
                   color: 'var(--text-inverse)',
                 }}
               >
@@ -285,7 +285,7 @@ function AuthorBadge({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' }
       >
         {initial}
       </span>
-      <span className="text-xs font-medium" style={{ color: 'var(--color-dark-brown)' }}>
+      <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
         {name}
       </span>
     </span>

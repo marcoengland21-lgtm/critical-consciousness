@@ -67,10 +67,10 @@ export default function AnnotationPopover({ rect, selectedText, onSave, onCancel
         className="px-4 pt-3 pb-2 text-xs border-b"
         style={{
           borderColor: 'var(--border-default)',
-          color: 'var(--color-warm-gray)',
+          color: 'var(--text-secondary)',
         }}
       >
-        <span className="font-medium" style={{ color: 'var(--color-dark-brown)' }}>
+        <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
           Annotate:
         </span>{' '}
         &ldquo;{selectedText.length > 80 ? selectedText.slice(0, 80) + '…' : selectedText}&rdquo;
@@ -86,14 +86,14 @@ export default function AnnotationPopover({ rect, selectedText, onSave, onCancel
           className="w-full px-3 py-2 rounded-lg border text-sm resize-none"
           style={{
             borderColor: 'var(--border-default)',
-            color: 'var(--color-dark-brown)',
+            color: 'var(--text-primary)',
             fontFamily: "'Lora', Georgia, serif",
             lineHeight: '1.6',
           }}
         />
         <div className="flex items-center justify-between mt-2">
           {isGuest && (
-            <span className="text-xs" style={{ color: 'var(--color-warm-gray)' }}>
+            <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
               Posting as Guest
             </span>
           )}
@@ -102,7 +102,7 @@ export default function AnnotationPopover({ rect, selectedText, onSave, onCancel
               type="button"
               onClick={onCancel}
               className="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors"
-              style={{ color: 'var(--color-warm-gray)' }}
+              style={{ color: 'var(--text-secondary)' }}
             >
               Cancel
             </button>
@@ -111,7 +111,7 @@ export default function AnnotationPopover({ rect, selectedText, onSave, onCancel
               disabled={saving || !body.trim()}
               className="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
               style={{
-                backgroundColor: 'var(--color-deep-red)',
+                backgroundColor: 'var(--accent-red)',
                 color: 'var(--text-inverse)',
               }}
             >

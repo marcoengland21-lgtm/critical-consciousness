@@ -21,7 +21,7 @@ export default async function NewThreadPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8" style={{ color: 'var(--color-deep-red)' }}>
+      <h1 className="text-3xl font-bold mb-8" style={{ color: 'var(--accent-red)' }}>
         Start a New Thread
       </h1>
       <NewThreadForm weeks={weeks || []} />

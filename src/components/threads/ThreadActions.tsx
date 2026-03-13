@@ -38,7 +38,7 @@ export default function ThreadActions({ threadId, isAuthor, isAdmin }: ThreadAct
         <a
           href={`/threads/${threadId}/edit`}
           className="text-xs font-medium px-3 py-1.5 rounded border transition-colors"
-          style={{ borderColor: 'var(--border-default)', color: 'var(--color-warm-gray)' }}
+          style={{ borderColor: 'var(--border-default)', color: 'var(--text-secondary)' }}
         >
           Edit
         </a>
@@ -48,7 +48,7 @@ export default function ThreadActions({ threadId, isAuthor, isAdmin }: ThreadAct
           onClick={handleDelete}
           disabled={deleting}
           className="text-xs font-medium px-3 py-1.5 rounded border transition-colors disabled:opacity-50"
-          style={{ borderColor: 'var(--color-deep-red)', color: 'var(--color-deep-red)' }}
+          style={{ borderColor: 'var(--accent-red)', color: 'var(--accent-red)' }}
         >
           {deleting ? 'Deleting...' : 'Delete'}
         </button>

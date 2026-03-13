@@ -143,8 +143,8 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
           }}
           className="border-b border-dotted transition-colors"
           style={{
-            borderColor: 'var(--color-muted-gold)',
-            color: 'var(--color-deep-red)',
+            borderColor: 'var(--accent-purple)',
+            color: 'var(--accent-red)',
             backgroundColor: 'transparent',
             cursor: 'pointer',
             padding: '0',
@@ -178,13 +178,13 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search terms..."
           className="flex-1 px-3 py-2 rounded-lg border text-sm"
-          style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)' }}
+          style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}
         />
         <button
           onClick={() => setShowForm(!showForm)}
           className="px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
           style={{
-            backgroundColor: 'var(--color-deep-red)',
+            backgroundColor: 'var(--accent-red)',
             color: 'var(--text-inverse)',
           }}
         >
@@ -201,7 +201,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
             onChange={(e) => setTerm(e.target.value)}
             placeholder="Term (e.g., Commodity Fetishism)"
             className="w-full px-3 py-2 rounded-lg border text-sm"
-            style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)' }}
+            style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}
             required
           />
           <textarea
@@ -210,14 +210,14 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
             placeholder="Definition..."
             rows={4}
             className="w-full px-3 py-2 rounded-lg border text-sm resize-y"
-            style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)' }}
+            style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}
             required
           />
           <button
             type="submit"
             disabled={submitting}
             className="px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
-            style={{ backgroundColor: 'var(--color-deep-red)', color: 'var(--text-inverse)' }}
+            style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}
           >
             {submitting ? 'Saving...' : 'Save Term'}
           </button>
@@ -232,7 +232,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
               key={letter}
               href={`#letter-${letter}`}
               className="w-8 h-8 flex items-center justify-center rounded text-sm font-medium transition-colors"
-              style={{ color: 'var(--color-deep-red)', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-default)' }}
+              style={{ color: 'var(--accent-red)', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-default)' }}
             >
               {letter}
             </a>
@@ -242,14 +242,14 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
 
       {/* Entries */}
       {letters.length === 0 ? (
-        <p className="text-center py-12 text-sm" style={{ color: 'var(--color-warm-gray)' }}>
+        <p className="text-center py-12 text-sm" style={{ color: 'var(--text-secondary)' }}>
           {search ? 'No terms match your search.' : 'As we work through Capital together, we\'ll build a shared vocabulary here. Stumbled on a term? Add it.'}
         </p>
       ) : (
         <div className="space-y-8">
           {letters.map((letter) => (
             <div key={letter} id={`letter-${letter}`}>
-              <h2 className="text-2xl font-bold mb-3 pb-1 border-b" style={{ color: 'var(--color-deep-red)', borderColor: 'var(--border-default)' }}>
+              <h2 className="text-2xl font-bold mb-3 pb-1 border-b" style={{ color: 'var(--accent-red)', borderColor: 'var(--border-default)' }}>
                 {letter}
               </h2>
               <div className="space-y-4">
@@ -261,7 +261,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
                     style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
                   >
                     <div className="flex items-start justify-between gap-4 mb-2">
-                      <h3 className="text-lg font-semibold" style={{ color: 'var(--color-dark-brown)' }}>
+                      <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
                         {entry.term}
                       </h3>
                       <div className="flex gap-2">
@@ -274,7 +274,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
                             className="text-xs px-2 py-1 rounded transition-colors"
                             style={{
                               backgroundColor: 'var(--bg-button-secondary)',
-                              color: 'var(--color-warm-gray)',
+                              color: 'var(--text-secondary)',
                             }}
                           >
                             Edit
@@ -285,7 +285,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
                           className="text-xs px-2 py-1 rounded transition-colors"
                           style={{
                             backgroundColor: 'var(--bg-badge)',
-                            color: 'var(--color-warm-gray)',
+                            color: 'var(--text-secondary)',
                           }}
                         >
                           History
@@ -300,7 +300,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
                           onChange={(e) => setEditingDef(e.target.value)}
                           rows={4}
                           className="w-full px-3 py-2 rounded-lg border text-sm resize-y"
-                          style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)' }}
+                          style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}
                           required
                         />
                         <div className="flex gap-2">
@@ -308,7 +308,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
                             type="submit"
                             disabled={submitting}
                             className="px-3 py-1 rounded-lg text-sm font-medium disabled:opacity-50"
-                            style={{ backgroundColor: 'var(--color-deep-red)', color: 'var(--text-inverse)' }}
+                            style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}
                           >
                             {submitting ? 'Saving...' : 'Save'}
                           </button>
@@ -319,14 +319,14 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
                               setEditingDef('')
                             }}
                             className="px-3 py-1 rounded-lg text-sm font-medium"
-                            style={{ backgroundColor: 'var(--bg-button-secondary)', color: 'var(--color-warm-gray)' }}
+                            style={{ backgroundColor: 'var(--bg-button-secondary)', color: 'var(--text-secondary)' }}
                           >
                             Cancel
                           </button>
                         </div>
                       </form>
                     ) : (
-                      <p className="text-sm whitespace-pre-wrap" style={{ color: 'var(--color-warm-gray)', lineHeight: '1.75' }}>
+                      <p className="text-sm whitespace-pre-wrap" style={{ color: 'var(--text-secondary)', lineHeight: '1.75' }}>
                         {renderDefinitionWithLinks(entry.definition, entries, entry.id)}
                       </p>
                     )}
@@ -342,7 +342,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
                     )}
 
                     {!editingId && (
-                      <div className="mt-2 text-xs" style={{ color: 'var(--color-warm-gray)' }}>
+                      <div className="mt-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
                         Added by {entry.creator?.display_name || 'Unknown'}
                         {entry.first_appearance_week && ` · First appears: Week ${entry.first_appearance_week}`}
                       </div>

@@ -587,8 +587,8 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
                   <span
                     className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium"
                     style={{
-                      backgroundColor: annotationCount > 2 ? 'var(--color-muted-gold)' : '#e8ddd0',
-                      color: 'var(--color-dark-brown)',
+                      backgroundColor: annotationCount > 2 ? 'var(--accent-purple)' : 'var(--bg-soft)',
+                      color: 'var(--text-primary)',
                     }}
                     title={`${annotationCount} annotation${annotationCount > 1 ? 's' : ''}`}
                   >
@@ -604,8 +604,8 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
                       key={sIdx}
                       className="cursor-pointer border-b border-dotted"
                       style={{
-                        borderColor: 'var(--color-muted-gold)',
-                        color: 'var(--color-deep-red)',
+                        borderColor: 'var(--accent-purple)',
+                        color: 'var(--accent-red)',
                       }}
                       onClick={(e) =>
                         handleGlossaryTermClick(seg.termData!.term, seg.termData!.definition, e)
@@ -640,7 +640,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
                           density > 1 ? 'annotation-highlight-dense' : 'annotation-highlight'
                         } border-b border-dotted cursor-pointer`}
                         style={{
-                          borderColor: 'var(--color-muted-gold)',
+                          borderColor: 'var(--accent-purple)',
                           opacity: showKeywordStats && !isMatchingAnnotation ? 0.2 : undefined,
                           transition: 'opacity 200ms ease',
                         }}

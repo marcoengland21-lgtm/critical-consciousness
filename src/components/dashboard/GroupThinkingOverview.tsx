@@ -59,12 +59,12 @@ export default function GroupThinkingOverview({ annotations, threads }: Props) {
     return (
       <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
         <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
-          <h2 className="font-bold" style={{ color: 'var(--color-dark-brown)' }}>
+          <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
             What the Group is Thinking
           </h2>
         </div>
         <div className="p-5 text-center" style={{ backgroundColor: 'var(--bg-card)' }}>
-          <p className="text-sm" style={{ color: 'var(--color-warm-gray)' }}>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
             The group's thinking will appear here as people begin annotating the text.
           </p>
         </div>
@@ -75,7 +75,7 @@ export default function GroupThinkingOverview({ annotations, threads }: Props) {
   return (
     <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
       <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
-        <h2 className="font-bold" style={{ color: 'var(--color-dark-brown)' }}>
+        <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
           What the Group is Thinking
         </h2>
       </div>
@@ -83,7 +83,7 @@ export default function GroupThinkingOverview({ annotations, threads }: Props) {
         {/* By section summary */}
         {analysis.byChapter.length > 0 && (
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--color-muted-gold)' }}>
+            <h3 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--accent-purple)' }}>
               By Section
             </h3>
             <div className="space-y-2">
@@ -91,21 +91,21 @@ export default function GroupThinkingOverview({ annotations, threads }: Props) {
                 <div
                   key={chapter.chapter_number}
                   className="flex items-center justify-between p-2 rounded-lg"
-                  style={{ backgroundColor: 'var(--color-warm-cream)' }}
+                  style={{ backgroundColor: 'var(--bg-page)' }}
                 >
                   <div>
-                    <p className="text-sm font-medium" style={{ color: 'var(--color-dark-brown)' }}>
+                    <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                       Section {chapter.chapter_number}
                     </p>
-                    <p className="text-xs truncate" style={{ color: 'var(--color-warm-gray)' }}>
+                    <p className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>
                       {chapter.chapter_title}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs font-bold px-2 py-1 rounded" style={{ backgroundColor: 'var(--accent-purple)', color: 'white' }}>
+                    <span className="text-xs font-bold px-2 py-1 rounded" style={{ backgroundColor: 'var(--accent-purple)', color: 'var(--bg-card)' }}>
                       {chapter.annotation_count}
                     </span>
-                    <span className="text-xs" style={{ color: 'var(--color-warm-gray)' }}>
+                    <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
                       {chapter.annotation_count === 1 ? 'note' : 'notes'}
                     </span>
                   </div>
@@ -118,7 +118,7 @@ export default function GroupThinkingOverview({ annotations, threads }: Props) {
         {/* Themes being explored */}
         {analysis.recentSnippets.length > 0 && (
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--color-muted-gold)' }}>
+            <h3 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--accent-purple)' }}>
               Themes Being Explored
             </h3>
             <div className="space-y-2">
@@ -127,8 +127,8 @@ export default function GroupThinkingOverview({ annotations, threads }: Props) {
                   key={index}
                   className="p-3 rounded-lg text-sm italic"
                   style={{
-                    backgroundColor: 'var(--color-warm-cream)',
-                    color: 'var(--color-dark-brown)',
+                    backgroundColor: 'var(--bg-page)',
+                    color: 'var(--text-primary)',
                   }}
                 >
                   <p>Someone noted: "{snippet}"</p>

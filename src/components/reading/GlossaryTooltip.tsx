@@ -50,21 +50,21 @@ export default function GlossaryTooltip({ term, definition, position, onClose }:
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,
-        backgroundColor: 'var(--color-warm-cream)',
+        backgroundColor: 'var(--bg-page)',
         borderColor: 'var(--border-default)',
-        color: 'var(--color-dark-brown)',
+        color: 'var(--text-primary)',
       }}
     >
       <div className="text-xs font-semibold mb-2 text-blue-600">Glossary</div>
       <h4 className="font-semibold mb-2 text-sm">{term}</h4>
-      <p className="text-sm mb-3 whitespace-pre-wrap" style={{ color: 'var(--color-warm-gray)' }}>
+      <p className="text-sm mb-3 whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>
         {definition}
       </p>
       <button
         onClick={handleNavigateToGlossary}
         className="text-xs px-2 py-1 rounded transition-colors font-medium"
         style={{
-          backgroundColor: 'var(--color-deep-red)',
+          backgroundColor: 'var(--accent-red)',
           color: 'var(--text-inverse)',
         }}
       >

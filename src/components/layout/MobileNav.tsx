@@ -44,7 +44,7 @@ export default function MobileNav({ displayName }: MobileNavProps) {
           className="md:hidden absolute top-full left-0 right-0 py-2 border-t animate-fade-in"
           style={{
             backgroundColor: 'var(--bg-nav)',
-            borderColor: 'rgba(196, 163, 90, 0.2)',
+            borderColor: 'rgba(107, 76, 154, 0.3)',
           }}
         >
           <NavLink href="/dashboard" mobile onClick={() => setIsOpen(false)}>Dashboard</NavLink>

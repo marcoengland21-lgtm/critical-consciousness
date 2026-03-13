@@ -126,10 +126,10 @@ export default async function DashboardPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-1" style={{ color: 'var(--color-deep-red)' }}>
+        <h1 className="text-3xl font-bold mb-1" style={{ color: 'var(--accent-red)' }}>
           {user ? `Welcome back, ${displayName}` : 'Welcome to Critical Consciousness'}
         </h1>
-        <p className="text-sm" style={{ color: 'var(--color-warm-gray)' }}>
+        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
           Christchurch Capital Reading Group
         </p>
       </div>
@@ -143,13 +143,13 @@ export default async function DashboardPage() {
           )}
 
           {/* This Week's Reading */}
-          <div className="rounded-lg border-2 overflow-hidden" style={{ borderColor: 'var(--color-muted-gold)' }}>
+          <div className="rounded-lg border-2 overflow-hidden" style={{ borderColor: 'var(--accent-purple)' }}>
             <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-header)' }}>
               <div className="flex items-center justify-between">
                 <h2 className="font-bold" style={{ color: 'var(--text-inverse)' }}>
                   This Week&apos;s Reading
                 </h2>
-                <Link href="/schedule" className="text-xs font-medium" style={{ color: 'var(--color-muted-gold)' }}>
+                <Link href="/schedule" className="text-xs font-medium" style={{ color: 'var(--accent-purple)' }}>
                   Full Schedule →
                 </Link>
               </div>
@@ -158,18 +158,18 @@ export default async function DashboardPage() {
               {currentWeek ? (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--color-muted-gold)' }}>
+                    <span className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--accent-purple)' }}>
                       Week {currentWeek.week_number}
                     </span>
-                    <span className="text-xs" style={{ color: 'var(--color-warm-gray)' }}>
+                    <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
                       Due {new Date(currentWeek.due_date).toLocaleDateString('en-NZ', { weekday: 'short', day: 'numeric', month: 'short' })}
                     </span>
                   </div>
-                  <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--color-dark-brown)' }}>
+                  <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
                     {currentWeek.title}
                   </h3>
                   {currentWeek.chapter_ref && (
-                    <p className="text-sm mb-2" style={{ color: 'var(--color-warm-gray)' }}>
+                    <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
                       {currentWeek.chapter_ref}
                       {currentWeek.page_start && currentWeek.page_end && (
                         <span> (pp. {currentWeek.page_start}–{currentWeek.page_end})</span>
@@ -177,7 +177,7 @@ export default async function DashboardPage() {
                     </p>
                   )}
                   {currentWeek.description && (
-                    <p className="text-sm mb-3" style={{ color: 'var(--color-warm-gray)' }}>
+                    <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
                       {currentWeek.description}
                     </p>
                   )}
@@ -185,14 +185,14 @@ export default async function DashboardPage() {
                   {/* Session info */}
                   {currentWeek.session_date && (
                     <div className="text-sm p-3 rounded-lg mb-3" style={{ backgroundColor: 'var(--bg-card-alt)' }}>
-                      <span className="font-medium" style={{ color: 'var(--color-dark-brown)' }}>
+                      <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
                         Next Session:{' '}
                         {new Date(currentWeek.session_date).toLocaleDateString('en-NZ', {
                           weekday: 'long', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit'
                         })}
                       </span>
                       {currentWeek.session_location && (
-                        <span style={{ color: 'var(--color-warm-gray)' }}> · {currentWeek.session_location}</span>
+                        <span style={{ color: 'var(--text-secondary)' }}> · {currentWeek.session_location}</span>
                       )}
                     </div>
                   )}
@@ -200,14 +200,14 @@ export default async function DashboardPage() {
                   {/* Discussion prompts */}
                   {currentWeek.discussion_prompts?.length > 0 && (
                     <div>
-                      <h4 className="text-sm font-semibold mb-2" style={{ color: 'var(--color-dark-brown)' }}>
+                      <h4 className="text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
                         Discussion Prompts
                       </h4>
                       <ol className="space-y-1 list-decimal list-inside">
                         {currentWeek.discussion_prompts
                           .sort((a: any, b: any) => a.sort_order - b.sort_order)
                           .map((prompt: any) => (
-                            <li key={prompt.id} className="text-sm" style={{ color: 'var(--color-warm-gray)' }}>
+                            <li key={prompt.id} className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                               {prompt.prompt_text}
                             </li>
                           ))}
@@ -220,10 +220,10 @@ export default async function DashboardPage() {
                 </div>
               ) : (
                 <div className="text-center py-6">
-                  <p className="text-sm mb-1" style={{ color: 'var(--color-dark-brown)' }}>
+                  <p className="text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
                     The reading journey hasn&apos;t started yet
                   </p>
-                  <p className="text-xs" style={{ color: 'var(--color-warm-gray)' }}>
+                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
                     Once the schedule is set, you&apos;ll see this week&apos;s reading, discussion prompts, and session details here.
                   </p>
                 </div>
@@ -242,10 +242,10 @@ export default async function DashboardPage() {
           {/* Recent Threads */}
           <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
             <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
-              <h2 className="font-bold" style={{ color: 'var(--color-dark-brown)' }}>
+              <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
                 Recent Discussions
               </h2>
-              <Link href="/threads" className="text-xs font-medium" style={{ color: 'var(--color-deep-red)' }}>
+              <Link href="/threads" className="text-xs font-medium" style={{ color: 'var(--accent-red)' }}>
                 All Threads →
               </Link>
             </div>
@@ -258,18 +258,18 @@ export default async function DashboardPage() {
                       <Link
                         key={thread.id}
                         href={`/threads/${thread.id}`}
-                        className="block px-5 py-3 transition-colors hover:bg-gray-50"
+                        className="block px-5 py-3 transition-colors hover-bg-themed"
                       >
                         <div className="flex items-center gap-2 mb-0.5">
                           <ThreadTypeBadge type={thread.thread_type as ThreadType} />
                           {thread.pinned && (
-                            <span className="text-xs" style={{ color: 'var(--color-muted-gold)' }}>📌</span>
+                            <span className="text-xs" style={{ color: 'var(--accent-purple)' }}>📌</span>
                           )}
                         </div>
-                        <h3 className="text-sm font-semibold truncate" style={{ color: 'var(--color-dark-brown)' }}>
+                        <h3 className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
                           {thread.title}
                         </h3>
-                        <div className="flex items-center gap-2 mt-1 text-xs" style={{ color: 'var(--color-warm-gray)' }}>
+                        <div className="flex items-center gap-2 mt-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
                           <span>{thread.author?.display_name}</span>
                           <span>·</span>
                           <TimeAgo date={thread.created_at} />
@@ -280,16 +280,16 @@ export default async function DashboardPage() {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-sm mb-1" style={{ color: 'var(--color-dark-brown)' }}>
+                  <p className="text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
                     The conversation starts here
                   </p>
-                  <p className="text-xs mb-3" style={{ color: 'var(--color-warm-gray)' }}>
+                  <p className="text-xs mb-3" style={{ color: 'var(--text-secondary)' }}>
                     What&apos;s on your mind after this week&apos;s reading?
                   </p>
                   <Link
                     href="/threads/new"
                     className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium"
-                    style={{ backgroundColor: 'var(--color-deep-red)', color: 'var(--text-inverse)' }}
+                    style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}
                   >
                     Share with the Group
                   </Link>
@@ -304,7 +304,7 @@ export default async function DashboardPage() {
           {/* Your Roles This Week */}
           <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
             <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
-              <h2 className="font-bold" style={{ color: 'var(--color-dark-brown)' }}>
+              <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
                 Your Roles
               </h2>
             </div>
@@ -314,7 +314,7 @@ export default async function DashboardPage() {
                   {myRoles.map((role: any) => (
                     <div key={role.id} className="p-3 rounded-lg" style={{ backgroundColor: 'var(--bg-card-alt)' }}>
                       <RoleBadge type={role.role_type as WeeklyRoleType} />
-                      <p className="text-xs mt-1" style={{ color: 'var(--color-warm-gray)' }}>
+                      <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
                         {role.role_type === 'summarizer' && 'Prepare a brief summary of the key arguments.'}
                         {role.role_type === 'discussion_starter' && 'Come prepared with 2-3 questions to spark discussion.'}
                         {role.role_type === 'connector' && 'Find connections to current events or other readings.'}
@@ -324,7 +324,7 @@ export default async function DashboardPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-center py-4" style={{ color: 'var(--color-warm-gray)' }}>
+                <p className="text-sm text-center py-4" style={{ color: 'var(--text-secondary)' }}>
                   {currentWeek ? 'No roles assigned to you this week — but you can still join the discussion.' : 'Roles rotate weekly once the schedule is set up.'}
                 </p>
               )}
@@ -335,7 +335,7 @@ export default async function DashboardPage() {
           {currentWeek?.weekly_roles && currentWeek.weekly_roles.length > 0 && (
             <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
               <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
-                <h2 className="font-bold text-sm" style={{ color: 'var(--color-dark-brown)' }}>
+                <h2 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
                   All Roles This Week
                 </h2>
               </div>
@@ -343,10 +343,10 @@ export default async function DashboardPage() {
                 {currentWeek.weekly_roles.map((role: any) => (
                   <div key={role.id} className="flex items-center justify-between text-sm">
                     <RoleBadge type={role.role_type as WeeklyRoleType} />
-                    <span style={{ color: 'var(--color-dark-brown)' }}>
+                    <span style={{ color: 'var(--text-primary)' }}>
                       {role.user?.display_name}
                       {role.user?.id === user?.id && (
-                        <span className="text-xs ml-1" style={{ color: 'var(--color-deep-red)' }}>(You)</span>
+                        <span className="text-xs ml-1" style={{ color: 'var(--accent-red)' }}>(You)</span>
                       )}
                     </span>
                   </div>
@@ -360,17 +360,17 @@ export default async function DashboardPage() {
             href={currentWeek?.chapter_ref ? `/reading/capital-vol-1/${currentWeek.week_number}` : '/reading/capital-vol-1/1'}
             className="block rounded-lg border-2 p-5 transition-all hover:shadow-md card-hover"
             style={{
-              borderColor: 'var(--color-deep-red)',
+              borderColor: 'var(--accent-red)',
               backgroundColor: 'var(--bg-card)',
             }}
           >
-            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--color-deep-red)' }}>
+            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--accent-red)' }}>
               Annotate Together
             </p>
-            <p className="font-bold" style={{ color: 'var(--color-dark-brown)', fontFamily: "'Lora', Georgia, serif" }}>
+            <p className="font-bold" style={{ color: 'var(--text-primary)', fontFamily: "'Lora', Georgia, serif" }}>
               {currentWeek ? currentWeek.title : 'Capital, Vol. I — Chapter 1'}
             </p>
-            <p className="text-xs mt-1" style={{ color: 'var(--color-warm-gray)' }}>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
               Read, highlight, and annotate Marx&apos;s text collaboratively
             </p>
           </Link>
@@ -378,18 +378,18 @@ export default async function DashboardPage() {
           {/* Quick Links */}
           <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
             <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
-              <h2 className="font-bold text-sm" style={{ color: 'var(--color-dark-brown)' }}>
+              <h2 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
                 Quick Links
               </h2>
             </div>
             <div style={{ backgroundColor: 'var(--bg-card)' }}>
-              <Link href="/threads/new" className="block px-5 py-3 text-sm transition-colors hover:bg-gray-50 border-b" style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)' }}>
+              <Link href="/threads/new" className="block px-5 py-3 text-sm transition-colors hover-bg-themed border-b" style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}>
                 Share with the Group
               </Link>
-              <Link href="/glossary" className="block px-5 py-3 text-sm transition-colors hover:bg-gray-50 border-b" style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)' }}>
+              <Link href="/glossary" className="block px-5 py-3 text-sm transition-colors hover-bg-themed border-b" style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}>
                 Browse Glossary
               </Link>
-              <Link href="/resources" className="block px-5 py-3 text-sm transition-colors hover:bg-gray-50" style={{ color: 'var(--color-dark-brown)' }}>
+              <Link href="/resources" className="block px-5 py-3 text-sm transition-colors hover-bg-themed" style={{ color: 'var(--text-primary)' }}>
                 Resources
               </Link>
             </div>

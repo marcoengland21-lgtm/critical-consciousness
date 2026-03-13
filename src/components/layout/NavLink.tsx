@@ -20,8 +20,8 @@ export default function NavLink({ href, children, mobile, onClick }: NavLinkProp
         href={href}
         className="block px-6 py-2 text-sm font-medium transition-colors"
         style={{
-          color: isActive ? 'var(--color-muted-gold)' : 'var(--color-warm-cream)',
-          backgroundColor: isActive ? 'rgba(196, 163, 90, 0.1)' : 'transparent',
+          color: isActive ? 'var(--accent-purple)' : 'var(--text-inverse)',
+          backgroundColor: isActive ? 'rgba(107, 76, 154, 0.15)' : 'transparent',
         }}
         onClick={onClick}
       >
@@ -35,7 +35,7 @@ export default function NavLink({ href, children, mobile, onClick }: NavLinkProp
       href={href}
       className={`nav-link text-sm font-medium transition-colors ${isActive ? 'nav-link-active' : ''}`}
       style={{
-        color: isActive ? 'var(--color-muted-gold)' : 'var(--color-warm-cream)',
+        color: isActive ? 'var(--accent-purple)' : 'var(--text-inverse)',
       }}
     >
       {children}

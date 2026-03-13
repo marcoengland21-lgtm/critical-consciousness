@@ -15,14 +15,14 @@ export default async function Home() {
     <main
       className="flex items-center justify-center min-h-screen p-4"
       style={{
-        backgroundColor: 'var(--color-warm-cream)',
+        backgroundColor: 'var(--bg-page)',
       }}
     >
       <div className="text-center max-w-md">
         <h1
           className="text-5xl font-bold mb-4"
           style={{
-            color: 'var(--color-deep-red)',
+            color: 'var(--accent-red)',
           }}
         >
           Critical Consciousness
@@ -30,7 +30,7 @@ export default async function Home() {
         <p
           className="text-xl mb-8"
           style={{
-            color: 'var(--color-dark-brown)',
+            color: 'var(--text-primary)',
           }}
         >
           A collaborative study platform for reading Marx's Capital
@@ -40,7 +40,7 @@ export default async function Home() {
             href="/login"
             className="inline-block px-8 py-3 rounded-lg font-semibold transition-colors w-full"
             style={{
-              backgroundColor: 'var(--color-deep-red)',
+              backgroundColor: 'var(--accent-red)',
               color: 'var(--text-inverse)',
             }}
           >
@@ -50,8 +50,8 @@ export default async function Home() {
             href="/register"
             className="inline-block px-8 py-3 rounded-lg font-semibold transition-colors w-full border-2"
             style={{
-              borderColor: 'var(--color-dark-brown)',
-              color: 'var(--color-dark-brown)',
+              borderColor: 'var(--text-primary)',
+              color: 'var(--text-primary)',
             }}
           >
             Create Account

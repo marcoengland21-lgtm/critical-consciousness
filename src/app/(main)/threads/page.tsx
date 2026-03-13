@@ -25,7 +25,7 @@ function AuthorBadge({ name }: { name: string }) {
       >
         {initial}
       </span>
-      <span className="text-xs font-medium" style={{ color: 'var(--color-dark-brown)' }}>
+      <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
         {name}
       </span>
     </span>
@@ -93,14 +93,14 @@ export default async function ThreadsPage({
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold" style={{ color: 'var(--color-deep-red)' }}>
+        <h1 className="text-3xl font-bold" style={{ color: 'var(--accent-red)' }}>
           Discussion Threads
         </h1>
         <Link
           href="/threads/new"
           className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors"
           style={{
-            backgroundColor: 'var(--color-deep-red)',
+            backgroundColor: 'var(--accent-red)',
             color: 'var(--text-inverse)',
           }}
         >
@@ -117,10 +117,10 @@ export default async function ThreadsPage({
             className="px-3 py-1 rounded-full text-sm font-medium transition-colors border"
             style={{
               backgroundColor: params.type === t.value || (!params.type && !t.value)
-                ? 'var(--color-dark-brown)' : 'white',
+                ? 'var(--text-primary)' : 'var(--bg-card)',
               color: params.type === t.value || (!params.type && !t.value)
-                ? 'var(--color-warm-cream)' : 'var(--color-dark-brown)',
-              borderColor: 'var(--color-warm-gray)',
+                ? 'var(--bg-page)' : 'var(--text-primary)',
+              borderColor: 'var(--text-secondary)',
             }}
           >
             {t.label}
@@ -131,17 +131,17 @@ export default async function ThreadsPage({
       {/* Thread List */}
       {!threads || threads.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-lg mb-2" style={{ color: 'var(--color-dark-brown)' }}>
+          <p className="text-lg mb-2" style={{ color: 'var(--text-primary)' }}>
             The conversation starts here
           </p>
-          <p className="text-sm mb-6" style={{ color: 'var(--color-warm-gray)' }}>
+          <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
             What&apos;s on your mind after this week&apos;s reading?
           </p>
           <Link
             href="/threads/new"
             className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium"
             style={{
-              backgroundColor: 'var(--color-deep-red)',
+              backgroundColor: 'var(--accent-red)',
               color: 'var(--text-inverse)',
             }}
           >
@@ -160,7 +160,7 @@ export default async function ThreadsPage({
                 className="block p-5 rounded-lg border transition-all card-hover"
                 style={{
                   backgroundColor: 'var(--bg-card)',
-                  borderColor: thread.pinned ? 'var(--color-muted-gold)' : '#e2dfe8',
+                  borderColor: thread.pinned ? 'var(--accent-purple)' : 'var(--border-default)',
                   borderWidth: thread.pinned ? '2px' : '1px',
                 }}
               >
@@ -169,17 +169,17 @@ export default async function ThreadsPage({
                     <div className="flex items-center gap-2 mb-2">
                       {thread.pinned && (
                         <span className="text-xs font-medium px-2 py-0.5 rounded-full"
-                          style={{ backgroundColor: 'var(--color-muted-gold)', color: 'var(--color-dark-brown)' }}>
+                          style={{ backgroundColor: 'var(--accent-purple)', color: 'var(--text-primary)' }}>
                           Pinned
                         </span>
                       )}
                       <ThreadTypeBadge type={thread.thread_type as ThreadType} />
                     </div>
-                    <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--color-dark-brown)' }}>
+                    <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
                       {thread.title}
                     </h3>
                     {preview && (
-                      <p className="text-sm mb-3" style={{ color: 'var(--color-warm-gray)' }}>
+                      <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
                         {preview}
                       </p>
                     )}
@@ -187,7 +187,7 @@ export default async function ThreadsPage({
                       <div className="flex items-center gap-2">
                         <AuthorBadge name={thread.author?.display_name || 'Guest'} />
                       </div>
-                      <div className="flex items-center gap-2 flex-wrap" style={{ color: 'var(--color-warm-gray)' }}>
+                      <div className="flex items-center gap-2 flex-wrap" style={{ color: 'var(--text-secondary)' }}>
                         <TimeAgo date={thread.created_at} />
                         <span>·</span>
                         <span>{replyCount} {replyCount === 1 ? 'reply' : 'replies'}</span>

@@ -21,10 +21,10 @@ export default function Toast({ message, type = 'success', duration = 3000, onCl
   }, [duration, onClose])
 
   const bgColor = type === 'success'
-    ? 'var(--color-soft-sage)'
+    ? 'var(--bg-soft)'
     : type === 'error'
-      ? 'var(--color-deep-red)'
-      : 'var(--color-dark-brown)'
+      ? 'var(--accent-red)'
+      : 'var(--text-primary)'
 
   return (
     <div

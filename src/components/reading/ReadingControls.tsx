@@ -69,7 +69,7 @@ export default function ReadingControls({
         <div className="mb-4 pb-3 border-b" style={{ borderColor: 'var(--border-default)' }}>
           <div className="flex items-center gap-2">
             <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg" style={{ backgroundColor: 'var(--bg-card-alt)', border: '1px solid var(--border-default)' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--color-warm-gray)' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--text-secondary)' }}>
                 <circle cx="11" cy="11" r="8" />
                 <path d="m21 21-4.35-4.35" />
               </svg>
@@ -79,7 +79,7 @@ export default function ReadingControls({
                 value={keywordInput}
                 onChange={(e) => handleKeywordChange(e.target.value)}
                 className="flex-1 bg-transparent text-sm outline-none"
-                style={{ color: 'var(--color-dark-brown)' }}
+                style={{ color: 'var(--text-primary)' }}
               />
               {keywordInput && (
                 <button
@@ -88,7 +88,7 @@ export default function ReadingControls({
                   title="Clear filter"
                   aria-label="Clear filter"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--color-warm-gray)' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--text-secondary)' }}>
                     <line x1="18" y1="6" x2="6" y2="18" />
                     <line x1="6" y1="6" x2="18" y2="18" />
                   </svg>
@@ -96,7 +96,7 @@ export default function ReadingControls({
               )}
             </div>
             {keywordInput && (
-              <span className="text-xs font-medium px-2 py-1 rounded" style={{ color: 'var(--color-warm-gray)', backgroundColor: 'var(--bg-card-alt)' }}>
+              <span className="text-xs font-medium px-2 py-1 rounded" style={{ color: 'var(--text-secondary)', backgroundColor: 'var(--bg-card-alt)' }}>
                 {matchingAnnotationCount} of {annotationCount}
               </span>
             )}
@@ -115,20 +115,20 @@ export default function ReadingControls({
           onClick={() => onFontSizeChange(Math.max(MIN_FONT, fontSize - 2))}
           disabled={fontSize <= MIN_FONT}
           className="w-7 h-7 flex items-center justify-center rounded text-xs font-bold transition-colors disabled:opacity-30 hover:bg-black/5"
-          style={{ color: 'var(--color-warm-gray)' }}
+          style={{ color: 'var(--text-secondary)' }}
           title="Decrease font size"
           aria-label="Decrease font size"
         >
           A<span className="text-[10px]">-</span>
         </button>
-        <span className="text-xs tabular-nums w-8 text-center" style={{ color: 'var(--color-warm-gray)' }}>
+        <span className="text-xs tabular-nums w-8 text-center" style={{ color: 'var(--text-secondary)' }}>
           {fontSize}
         </span>
         <button
           onClick={() => onFontSizeChange(Math.min(MAX_FONT, fontSize + 2))}
           disabled={fontSize >= MAX_FONT}
           className="w-7 h-7 flex items-center justify-center rounded text-sm font-bold transition-colors disabled:opacity-30 hover:bg-black/5"
-          style={{ color: 'var(--color-warm-gray)' }}
+          style={{ color: 'var(--text-secondary)' }}
           title="Increase font size"
           aria-label="Increase font size"
         >
@@ -143,7 +143,7 @@ export default function ReadingControls({
       <button
         onClick={toggleTheme}
         className="w-7 h-7 flex items-center justify-center rounded text-xs transition-colors hover:bg-black/5"
-        style={{ color: 'var(--color-warm-gray)' }}
+        style={{ color: 'var(--text-secondary)' }}
         title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
         aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
       >
@@ -174,8 +174,8 @@ export default function ReadingControls({
         onClick={() => onFocusedModeChange(!focusedMode)}
         className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors"
         style={{
-          backgroundColor: focusedMode ? 'var(--color-dark-brown)' : 'transparent',
-          color: focusedMode ? 'var(--color-warm-cream)' : 'var(--color-warm-gray)',
+          backgroundColor: focusedMode ? 'var(--text-primary)' : 'transparent',
+          color: focusedMode ? 'var(--bg-page)' : 'var(--text-secondary)',
         }}
         title={focusedMode ? 'Show annotations' : 'Hide annotations for focused reading'}
       >
@@ -196,7 +196,7 @@ export default function ReadingControls({
         {!focusedMode && annotationCount > 0 && (
           <span
             className="ml-0.5 px-1.5 py-0.5 rounded-full text-[10px]"
-            style={{ backgroundColor: 'var(--bg-badge)', color: 'var(--color-dark-brown)' }}
+            style={{ backgroundColor: 'var(--bg-badge)', color: 'var(--text-primary)' }}
           >
             {annotationCount}
           </span>

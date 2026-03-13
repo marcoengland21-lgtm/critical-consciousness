@@ -156,12 +156,13 @@ export default function ConceptMap({ entries }: Props) {
     const ctx = canvasRef.current.getContext('2d')
     if (!ctx) return
 
-    // Clear canvas
-    ctx.fillStyle = 'var(--color-warm-cream)' === 'var(--color-warm-cream)' ? '#faf9fc' : '#faf9fc'
+    // Clear canvas — read CSS var for theme support
+    const computedStyle = getComputedStyle(document.documentElement)
+    ctx.fillStyle = computedStyle.getPropertyValue('--bg-page').trim() || '#faf9fc'
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
 
     // Draw links
-    ctx.strokeStyle = 'rgba(196, 163, 90, 0.2)'
+    ctx.strokeStyle = 'rgba(107, 76, 154, 0.2)'
     ctx.lineWidth = 1
     links.forEach((link) => {
       const sourceNode = nodes.find((n) => n.id === link.source)
@@ -181,11 +182,11 @@ export default function ConceptMap({ entries }: Props) {
       const isHovered = hoveredNode?.id === node.id
 
       // Determine color based on week or hover state
-      let color = '#6b4c9a'
+      let color = computedStyle.getPropertyValue('--accent-purple').trim() || '#6b4c9a'
       if (isSelected) {
-        color = '#a31545'
+        color = computedStyle.getPropertyValue('--accent-red').trim() || '#a31545'
       } else if (isHovered) {
-        color = '#1a1625'
+        color = computedStyle.getPropertyValue('--text-primary').trim() || '#1a1625'
       } else if (node.week) {
         const hue = ((node.week - 1) * 30) % 360
         const rgb = hslToRgb(hue, 60, 50)
@@ -282,24 +283,24 @@ export default function ConceptMap({ entries }: Props) {
         {/* Legend */}
         <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
           <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
-            <h2 className="font-bold" style={{ color: 'var(--color-dark-brown)' }}>
+            <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
               Legend
             </h2>
           </div>
           <div className="p-5 space-y-3" style={{ backgroundColor: 'var(--bg-card)' }}>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded-full" style={{ backgroundColor: 'var(--accent-purple)' }} />
-              <span className="text-xs" style={{ color: 'var(--color-dark-brown)' }}>
+              <span className="text-xs" style={{ color: 'var(--text-primary)' }}>
                 Core concept
               </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded-full" style={{ backgroundColor: 'var(--accent-red)' }} />
-              <span className="text-xs" style={{ color: 'var(--color-dark-brown)' }}>
+              <span className="text-xs" style={{ color: 'var(--text-primary)' }}>
                 Selected
               </span>
             </div>
-            <p className="text-xs mt-2" style={{ color: 'var(--color-warm-gray)' }}>
+            <p className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
               Colors may vary by first appearance week. Lines connect related concepts.
             </p>
           </div>
@@ -309,33 +310,33 @@ export default function ConceptMap({ entries }: Props) {
         {selectedNode && (
           <div className="lg:col-span-2 rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
             <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
-              <h2 className="font-bold" style={{ color: 'var(--color-dark-brown)' }}>
+              <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
                 {selectedNode.label}
               </h2>
               <button
                 onClick={() => setSelectedNode(null)}
                 className="text-lg leading-none"
-                style={{ color: 'var(--color-warm-gray)' }}
+                style={{ color: 'var(--text-secondary)' }}
               >
                 ×
               </button>
             </div>
             <div className="p-5 space-y-4" style={{ backgroundColor: 'var(--bg-card)' }}>
               <div>
-                <h3 className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--color-muted-gold)' }}>
+                <h3 className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--accent-purple)' }}>
                   Definition
                 </h3>
-                <p className="text-sm" style={{ color: 'var(--color-dark-brown)' }}>
+                <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
                   {selectedNode.definition}
                 </p>
               </div>
 
               {selectedNode.week && (
                 <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--color-muted-gold)' }}>
+                  <h3 className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--accent-purple)' }}>
                     First Appearance
                   </h3>
-                  <p className="text-sm" style={{ color: 'var(--color-dark-brown)' }}>
+                  <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
                     Week {selectedNode.week}
                   </p>
                 </div>
@@ -343,7 +344,7 @@ export default function ConceptMap({ entries }: Props) {
 
               {relatedNodes.length > 0 && (
                 <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--color-muted-gold)' }}>
+                  <h3 className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--accent-purple)' }}>
                     Related Concepts ({relatedNodes.length})
                   </h3>
                   <div className="space-y-1">
@@ -351,8 +352,8 @@ export default function ConceptMap({ entries }: Props) {
                       <button
                         key={node.id}
                         onClick={() => setSelectedNode(node)}
-                        className="block w-full text-left text-sm px-2 py-1 rounded transition-colors hover:bg-gray-100"
-                        style={{ color: 'var(--color-deep-red)' }}
+                        className="block w-full text-left text-sm px-2 py-1 rounded transition-colors hover-bg-themed"
+                        style={{ color: 'var(--accent-red)' }}
                       >
                         {node.label}
                       </button>

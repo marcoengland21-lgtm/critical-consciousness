@@ -93,16 +93,16 @@ export default async function ChapterPage({ params }: Props) {
   return (
     <div>
       {/* Breadcrumb navigation */}
-      <div className="mb-6 flex items-center gap-2 text-sm" style={{ color: 'var(--color-warm-gray)' }}>
-        <Link href="/reading" className="hover:underline" style={{ color: 'var(--color-deep-red)' }}>
+      <div className="mb-6 flex items-center gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+        <Link href="/reading" className="hover:underline" style={{ color: 'var(--accent-red)' }}>
           Reading
         </Link>
         <span>›</span>
-        <Link href="/reading" className="hover:underline" style={{ color: 'var(--color-deep-red)' }}>
+        <Link href="/reading" className="hover:underline" style={{ color: 'var(--accent-red)' }}>
           {doc.title}
         </Link>
         <span>›</span>
-        <span style={{ color: 'var(--color-dark-brown)' }}>§{chapterNum}</span>
+        <span style={{ color: 'var(--text-primary)' }}>§{chapterNum}</span>
       </div>
 
       {/* Section navigation tabs */}
@@ -113,10 +113,10 @@ export default async function ChapterPage({ params }: Props) {
             href={`/reading/${slug}/${ch.chapter_number}`}
             className="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
             style={{
-              backgroundColor: ch.chapter_number === chapterNum ? 'var(--color-dark-brown)' : 'white',
-              color: ch.chapter_number === chapterNum ? 'var(--color-warm-cream)' : 'var(--color-dark-brown)',
+              backgroundColor: ch.chapter_number === chapterNum ? 'var(--text-primary)' : 'var(--bg-card)',
+              color: ch.chapter_number === chapterNum ? 'var(--bg-page)' : 'var(--text-primary)',
               border: '1px solid',
-              borderColor: ch.chapter_number === chapterNum ? 'var(--color-dark-brown)' : '#e2dfe8',
+              borderColor: ch.chapter_number === chapterNum ? 'var(--text-primary)' : 'var(--border-default)',
             }}
           >
             §{ch.chapter_number}: {ch.title.length > 30 ? ch.title.slice(0, 30) + '…' : ch.title}
@@ -126,19 +126,19 @@ export default async function ChapterPage({ params }: Props) {
 
       {/* Chapter title */}
       <div className="mb-10 text-center">
-        <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--color-muted-gold)' }}>
+        <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--accent-purple)' }}>
           Section {chapterNum}
         </p>
         <h1
           className="text-2xl sm:text-3xl font-bold mb-3"
           style={{
-            color: 'var(--color-deep-red)',
+            color: 'var(--accent-red)',
             fontFamily: "'Lora', Georgia, serif",
           }}
         >
           {chapterData.title}
         </h1>
-        <div className="w-16 h-0.5 mx-auto" style={{ backgroundColor: 'var(--color-muted-gold)' }} />
+        <div className="w-16 h-0.5 mx-auto" style={{ backgroundColor: 'var(--accent-purple)' }} />
       </div>
 
       {/* Chapter text — the main reading experience */}
@@ -155,11 +155,11 @@ export default async function ChapterPage({ params }: Props) {
           <Link
             href={`/reading/${slug}/${prevChapter.chapter_number}`}
             className="group flex items-center gap-2 text-sm font-medium"
-            style={{ color: 'var(--color-deep-red)' }}
+            style={{ color: 'var(--accent-red)' }}
           >
             <span className="transition-transform group-hover:-translate-x-1">←</span>
             <div>
-              <p className="text-xs" style={{ color: 'var(--color-warm-gray)' }}>Previous</p>
+              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Previous</p>
               <p>§{prevChapter.chapter_number}: {prevChapter.title}</p>
             </div>
           </Link>
@@ -170,10 +170,10 @@ export default async function ChapterPage({ params }: Props) {
           <Link
             href={`/reading/${slug}/${nextChapter.chapter_number}`}
             className="group flex items-center gap-2 text-sm font-medium text-right"
-            style={{ color: 'var(--color-deep-red)' }}
+            style={{ color: 'var(--accent-red)' }}
           >
             <div>
-              <p className="text-xs" style={{ color: 'var(--color-warm-gray)' }}>Next</p>
+              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Next</p>
               <p>§{nextChapter.chapter_number}: {nextChapter.title}</p>
             </div>
             <span className="transition-transform group-hover:translate-x-1">→</span>

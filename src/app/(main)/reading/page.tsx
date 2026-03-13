@@ -35,14 +35,14 @@ export default async function ReadingPage() {
   if (!documents || documents.length === 0) {
     return (
       <div>
-        <h1 className="text-3xl font-bold mb-8" style={{ color: 'var(--color-deep-red)' }}>
+        <h1 className="text-3xl font-bold mb-8" style={{ color: 'var(--accent-red)' }}>
           Reading
         </h1>
         <div className="text-center py-16">
-          <p className="text-lg mb-2" style={{ color: 'var(--color-dark-brown)' }}>
+          <p className="text-lg mb-2" style={{ color: 'var(--text-primary)' }}>
             The text is coming
           </p>
-          <p className="text-sm" style={{ color: 'var(--color-warm-gray)' }}>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
             The text will appear here with social annotation — highlight passages, leave questions, and see what others are thinking.
           </p>
         </div>
@@ -53,10 +53,10 @@ export default async function ReadingPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--color-deep-red)' }}>
+        <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--accent-red)' }}>
           Reading
         </h1>
-        <p className="text-sm" style={{ color: 'var(--color-warm-gray)' }}>
+        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
           Read the text and annotate together — highlight passages, leave questions, and see what the group is thinking.
         </p>
       </div>
@@ -81,7 +81,7 @@ export default async function ReadingPage() {
                 >
                   {doc.title}
                 </h2>
-                <p className="text-sm" style={{ color: 'var(--color-muted-gold)' }}>
+                <p className="text-sm" style={{ color: 'var(--accent-purple)' }}>
                   Chapter 1 · {chapters.length} section{chapters.length !== 1 ? 's' : ''}
                 </p>
               </div>
@@ -98,18 +98,18 @@ export default async function ReadingPage() {
                       <Link
                         key={chapter.id}
                         href={`/reading/${doc.slug}/${chapter.chapter_number}`}
-                        className="flex items-center justify-between px-6 py-4 transition-all hover:bg-gray-50 group"
+                        className="flex items-center justify-between px-6 py-4 transition-all hover-bg-themed group"
                         style={{
                           backgroundColor: isCurrentWeek ? 'var(--bg-soft)' : 'var(--bg-card)',
-                          borderBottom: i < chapters.length - 1 ? '1px solid #e2dfe8' : 'none',
+                          borderBottom: i < chapters.length - 1 ? '1px solid var(--border-default)' : 'none',
                         }}
                       >
                         <div className="flex items-center gap-4">
                           <span
                             className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
                             style={{
-                              backgroundColor: isCurrentWeek ? 'var(--color-muted-gold)' : '#e8ddd0',
-                              color: isCurrentWeek ? 'var(--color-dark-brown)' : 'var(--color-warm-gray)',
+                              backgroundColor: isCurrentWeek ? 'var(--accent-purple)' : 'var(--bg-soft)',
+                              color: isCurrentWeek ? 'var(--text-primary)' : 'var(--text-secondary)',
                             }}
                           >
                             {chapter.chapter_number}
@@ -118,14 +118,14 @@ export default async function ReadingPage() {
                             <h3
                               className="font-medium text-sm group-hover:underline"
                               style={{
-                                color: 'var(--color-dark-brown)',
+                                color: 'var(--text-primary)',
                                 fontFamily: "'Lora', Georgia, serif",
                               }}
                             >
                               {chapter.title}
                             </h3>
                             {chapter.week && (
-                              <p className="text-xs mt-0.5" style={{ color: 'var(--color-warm-gray)' }}>
+                              <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
                                 Week {chapter.week.week_number}: {chapter.week.title}
                               </p>
                             )}
@@ -136,8 +136,8 @@ export default async function ReadingPage() {
                             <span
                               className="text-xs font-medium px-2 py-0.5 rounded-full"
                               style={{
-                                backgroundColor: 'var(--color-muted-gold)',
-                                color: 'var(--color-dark-brown)',
+                                backgroundColor: 'var(--accent-purple)',
+                                color: 'var(--text-primary)',
                               }}
                             >
                               This Week
@@ -145,7 +145,7 @@ export default async function ReadingPage() {
                           )}
                           <span
                             className="text-sm opacity-0 group-hover:opacity-100 transition-opacity"
-                            style={{ color: 'var(--color-deep-red)' }}
+                            style={{ color: 'var(--accent-red)' }}
                           >
                             Read →
                           </span>
@@ -159,7 +159,7 @@ export default async function ReadingPage() {
                   className="rounded-b-lg border border-t-0 px-6 py-4"
                   style={{ borderColor: 'var(--border-default)', backgroundColor: 'var(--bg-card)' }}
                 >
-                  <p className="text-sm" style={{ color: 'var(--color-warm-gray)' }}>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                     Chapters will appear here as they&apos;re added to the reading schedule.
                   </p>
                 </div>

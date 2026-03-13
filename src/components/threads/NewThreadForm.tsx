@@ -196,14 +196,14 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
       )}
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="p-3 rounded-lg text-sm" style={{ backgroundColor: 'var(--bg-soft)', color: 'var(--color-deep-red)', border: '1px solid var(--color-deep-red)' }}>
+        <div className="p-3 rounded-lg text-sm" style={{ backgroundColor: 'var(--bg-soft)', color: 'var(--accent-red)', border: '1px solid var(--accent-red)' }}>
           {error}
         </div>
       )}
 
       {/* Thread Type */}
       <div>
-        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-dark-brown)' }}>
+        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
           Thread Type
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -214,9 +214,9 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
               onClick={() => setThreadType(t.value)}
               className="p-3 rounded-lg border text-left transition-all text-sm"
               style={{
-                backgroundColor: threadType === t.value ? 'var(--color-dark-brown)' : 'white',
-                color: threadType === t.value ? 'var(--color-warm-cream)' : 'var(--color-dark-brown)',
-                borderColor: threadType === t.value ? 'var(--color-dark-brown)' : '#e2dfe8',
+                backgroundColor: threadType === t.value ? 'var(--text-primary)' : 'var(--bg-card)',
+                color: threadType === t.value ? 'var(--bg-page)' : 'var(--text-primary)',
+                borderColor: threadType === t.value ? 'var(--text-primary)' : 'var(--border-default)',
               }}
             >
               <div className="font-medium">{t.label}</div>
@@ -229,7 +229,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
       {/* Week Association (optional) */}
       {weeks.length > 0 && (
         <div>
-          <label htmlFor="week" className="block text-sm font-medium mb-2" style={{ color: 'var(--color-dark-brown)' }}>
+          <label htmlFor="week" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
             Related Week (optional)
           </label>
           <select
@@ -237,7 +237,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
             value={weekId}
             onChange={(e) => setWeekId(e.target.value)}
             className="w-full px-3 py-2 rounded-lg border text-sm"
-            style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)' }}
+            style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}
           >
             <option value="">No specific week</option>
             {weeks.map((w) => (
@@ -251,7 +251,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
 
       {/* Title */}
       <div>
-        <label htmlFor="title" className="block text-sm font-medium mb-2" style={{ color: 'var(--color-dark-brown)' }}>
+        <label htmlFor="title" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
           Title
         </label>
         <input
@@ -261,7 +261,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. 'The double character of the commodity' or 'Question about abstract labour'"
           className="w-full px-4 py-3 rounded-lg border text-sm transition-colors focus:outline-none"
-          style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)' }}
+          style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}
           required
         />
       </div>
@@ -269,14 +269,14 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
       {/* Body */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label htmlFor="body" className="block text-sm font-medium" style={{ color: 'var(--color-dark-brown)' }}>
+          <label htmlFor="body" className="block text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
             Body
           </label>
           <div className="flex items-center gap-2">
-            <span className="text-xs" style={{ color: 'var(--color-warm-gray)' }}>
+            <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
               Supports **bold**, *italic*, &gt; blockquotes
               {draftSaved && (
-                <span className="ml-2 text-xs" style={{ color: 'var(--color-soft-sage)' }}>
+                <span className="ml-2 text-xs" style={{ color: 'var(--bg-soft)' }}>
                   Draft saved
                 </span>
               )}
@@ -287,8 +287,8 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
               className="px-2 py-1 text-xs font-medium rounded transition-colors"
               style={{
                 backgroundColor: 'var(--bg-soft)',
-                color: 'var(--color-deep-red)',
-                border: '1px solid var(--color-muted-gold)',
+                color: 'var(--accent-red)',
+                border: '1px solid var(--accent-purple)',
               }}
             >
               Quote from reading
@@ -303,7 +303,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
           placeholder="Share your thoughts, questions, or reflections on the reading..."
           rows={10}
           className="w-full px-4 py-3 rounded-lg border text-sm resize-none transition-colors focus:outline-none"
-          style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)', lineHeight: '1.85', minHeight: '200px' }}
+          style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)', lineHeight: '1.85', minHeight: '200px' }}
           required
         />
       </div>
@@ -314,7 +314,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
           type="button"
           onClick={() => router.back()}
           className="px-4 py-2 rounded-lg text-sm font-medium border transition-colors"
-          style={{ borderColor: 'var(--border-default)', color: 'var(--color-warm-gray)' }}
+          style={{ borderColor: 'var(--border-default)', color: 'var(--text-secondary)' }}
         >
           Cancel
         </button>
@@ -323,7 +323,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
           disabled={submitting}
           className="px-6 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
           style={{
-            backgroundColor: 'var(--color-deep-red)',
+            backgroundColor: 'var(--accent-red)',
             color: 'var(--text-inverse)',
           }}
         >

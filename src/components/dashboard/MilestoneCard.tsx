@@ -31,7 +31,7 @@ export default async function MilestoneCard({ weekId, weekNumber }: MilestoneCar
     <div
       className="rounded-lg border-2 p-6 overflow-hidden"
       style={{
-        borderColor: 'var(--color-muted-gold)',
+        borderColor: 'var(--accent-purple)',
         backgroundColor: 'var(--bg-card-alt)',
         position: 'relative',
       }}
@@ -53,27 +53,27 @@ export default async function MilestoneCard({ weekId, weekNumber }: MilestoneCar
       <div className="relative z-10">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-2xl">🎓</span>
-          <h3 className="font-bold text-lg" style={{ color: 'var(--color-deep-red)' }}>
+          <h3 className="font-bold text-lg" style={{ color: 'var(--accent-red)' }}>
             Milestone Reached
           </h3>
         </div>
 
-        <h4 className="text-lg font-semibold mb-2" style={{ color: 'var(--color-dark-brown)' }}>
+        <h4 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
           {milestone.title}
         </h4>
 
         {milestone.description && (
-          <p className="text-sm mb-4" style={{ color: 'var(--color-warm-gray)' }}>
+          <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
             {milestone.description}
           </p>
         )}
 
         {milestone.reflection_prompt && (
-          <div className="p-4 rounded-lg border" style={{ borderColor: 'var(--color-muted-gold)', backgroundColor: 'var(--bg-card)' }}>
-            <p className="text-xs font-semibold mb-1 uppercase tracking-wide" style={{ color: 'var(--color-muted-gold)' }}>
+          <div className="p-4 rounded-lg border" style={{ borderColor: 'var(--accent-purple)', backgroundColor: 'var(--bg-card)' }}>
+            <p className="text-xs font-semibold mb-1 uppercase tracking-wide" style={{ color: 'var(--accent-purple)' }}>
               Reflection Prompt
             </p>
-            <p className="text-sm" style={{ color: 'var(--color-dark-brown)', fontStyle: 'italic' }}>
+            <p className="text-sm" style={{ color: 'var(--text-primary)', fontStyle: 'italic' }}>
               {milestone.reflection_prompt}
             </p>
           </div>

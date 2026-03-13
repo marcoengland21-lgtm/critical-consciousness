@@ -70,10 +70,10 @@ export default function GlossaryVersionHistory({ entryId, term, onClose }: Gloss
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
         <div
           className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-96 overflow-y-auto"
-          style={{ backgroundColor: 'var(--color-warm-cream)' }}
+          style={{ backgroundColor: 'var(--bg-page)' }}
           onClick={(e) => e.stopPropagation()}
         >
-          <p style={{ color: 'var(--color-warm-gray)' }}>Loading version history...</p>
+          <p style={{ color: 'var(--text-secondary)' }}>Loading version history...</p>
         </div>
       </div>
     )
@@ -84,20 +84,20 @@ export default function GlossaryVersionHistory({ entryId, term, onClose }: Gloss
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
         <div
           className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-96 overflow-y-auto"
-          style={{ backgroundColor: 'var(--color-warm-cream)' }}
+          style={{ backgroundColor: 'var(--bg-page)' }}
           onClick={(e) => e.stopPropagation()}
         >
           <div className="mb-4">
-            <h3 className="text-lg font-semibold" style={{ color: 'var(--color-dark-brown)' }}>
+            <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
               Version History: {term}
             </h3>
           </div>
-          <p style={{ color: 'var(--color-warm-gray)' }}>No previous versions found.</p>
+          <p style={{ color: 'var(--text-secondary)' }}>No previous versions found.</p>
           <button
             onClick={onClose}
             className="mt-4 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
             style={{
-              backgroundColor: 'var(--color-deep-red)',
+              backgroundColor: 'var(--accent-red)',
               color: 'var(--text-inverse)',
             }}
           >
@@ -112,11 +112,11 @@ export default function GlossaryVersionHistory({ entryId, term, onClose }: Gloss
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
       <div
         className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-96 overflow-y-auto"
-        style={{ backgroundColor: 'var(--color-warm-cream)' }}
+        style={{ backgroundColor: 'var(--bg-page)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4">
-          <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--color-dark-brown)' }}>
+          <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
             Version History: {term}
           </h3>
 
@@ -124,7 +124,7 @@ export default function GlossaryVersionHistory({ entryId, term, onClose }: Gloss
             {versions.map((version, idx) => (
               <div key={version.id} className="relative pb-4">
                 {/* Timeline dot */}
-                <div className="absolute left-0 top-0 w-4 h-4 rounded-full" style={{ backgroundColor: 'var(--color-muted-gold)' }} />
+                <div className="absolute left-0 top-0 w-4 h-4 rounded-full" style={{ backgroundColor: 'var(--accent-purple)' }} />
 
                 {/* Timeline line (not on last item) */}
                 {idx < versions.length - 1 && (
@@ -137,14 +137,14 @@ export default function GlossaryVersionHistory({ entryId, term, onClose }: Gloss
                 {/* Version content */}
                 <div className="ml-8">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold" style={{ color: 'var(--color-deep-red)' }}>
+                    <span className="text-xs font-semibold" style={{ color: 'var(--accent-red)' }}>
                       {formatDate(version.created_at)}
                     </span>
-                    <span className="text-xs" style={{ color: 'var(--color-warm-gray)' }}>
+                    <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
                       Updated by {version.author?.display_name || 'Unknown'}
                     </span>
                   </div>
-                  <p className="text-sm whitespace-pre-wrap" style={{ color: 'var(--color-warm-gray)' }}>
+                  <p className="text-sm whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>
                     {version.definition}
                   </p>
                 </div>
@@ -157,7 +157,7 @@ export default function GlossaryVersionHistory({ entryId, term, onClose }: Gloss
           onClick={onClose}
           className="px-4 py-2 rounded-lg text-sm font-medium transition-colors w-full"
           style={{
-            backgroundColor: 'var(--color-deep-red)',
+            backgroundColor: 'var(--accent-red)',
             color: 'var(--text-inverse)',
           }}
         >

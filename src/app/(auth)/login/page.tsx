@@ -43,7 +43,7 @@ export default function LoginPage() {
       <h2
         className="text-2xl font-bold mb-6"
         style={{
-          color: 'var(--color-dark-brown)',
+          color: 'var(--text-primary)',
         }}
       >
         Sign In
@@ -54,7 +54,7 @@ export default function LoginPage() {
           className="p-4 rounded-lg mb-4 text-sm"
           style={{
             backgroundColor: 'rgba(139, 38, 53, 0.1)',
-            color: 'var(--color-deep-red)',
+            color: 'var(--accent-red)',
           }}
         >
           {error}
@@ -67,7 +67,7 @@ export default function LoginPage() {
             htmlFor="email"
             className="block text-sm font-medium mb-2"
             style={{
-              color: 'var(--color-dark-brown)',
+              color: 'var(--text-primary)',
             }}
           >
             Email
@@ -80,8 +80,8 @@ export default function LoginPage() {
             required
             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
             style={{
-              borderColor: 'var(--color-warm-gray)',
-              '--tw-ring-color': 'var(--color-muted-gold)',
+              borderColor: 'var(--text-secondary)',
+              '--tw-ring-color': 'var(--accent-purple)',
             } as React.CSSProperties}
           />
         </div>
@@ -91,7 +91,7 @@ export default function LoginPage() {
             htmlFor="password"
             className="block text-sm font-medium mb-2"
             style={{
-              color: 'var(--color-dark-brown)',
+              color: 'var(--text-primary)',
             }}
           >
             Password
@@ -104,8 +104,8 @@ export default function LoginPage() {
             required
             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
             style={{
-              borderColor: 'var(--color-warm-gray)',
-              '--tw-ring-color': 'var(--color-muted-gold)',
+              borderColor: 'var(--text-secondary)',
+              '--tw-ring-color': 'var(--accent-purple)',
             } as React.CSSProperties}
           />
         </div>
@@ -115,7 +115,7 @@ export default function LoginPage() {
           disabled={loading}
           className="w-full py-2 rounded-lg font-semibold text-white transition-opacity disabled:opacity-50"
           style={{
-            backgroundColor: 'var(--color-deep-red)',
+            backgroundColor: 'var(--accent-red)',
           }}
         >
           {loading ? 'Signing in...' : 'Sign In'}
@@ -125,7 +125,7 @@ export default function LoginPage() {
       <p
         className="text-center mt-6"
         style={{
-          color: 'var(--color-warm-gray)',
+          color: 'var(--text-secondary)',
         }}
       >
         Don't have an account?{' '}
@@ -133,7 +133,7 @@ export default function LoginPage() {
           href="/register"
           className="font-semibold hover:underline"
           style={{
-            color: 'var(--color-deep-red)',
+            color: 'var(--accent-red)',
           }}
         >
           Create one

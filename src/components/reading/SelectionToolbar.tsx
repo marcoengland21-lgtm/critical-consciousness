@@ -40,7 +40,7 @@ export default function SelectionToolbar({ rect, onAnnotate, onStartThread, onCl
         top: `${top}px`,
         left: `${left}px`,
         backgroundColor: 'var(--bg-nav)',
-        borderColor: 'rgba(196, 163, 90, 0.3)',
+        borderColor: 'rgba(107, 76, 154, 0.3)',
       }}
       onMouseDown={(e) => e.stopPropagation()}
       onMouseUp={(e) => e.stopPropagation()}

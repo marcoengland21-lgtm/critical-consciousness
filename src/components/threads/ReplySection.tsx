@@ -139,18 +139,18 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
       <div key={reply.id} className={depth > 0 ? 'ml-6 pl-4 border-l-2' : ''} style={{ borderColor: depth > 0 ? 'var(--border-default)' : undefined }}>
         <div className="py-4">
           <div className="flex items-center gap-2 mb-2 text-sm">
-            <span className="font-medium" style={{ color: 'var(--color-dark-brown)' }}>
+            <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
               {reply.author?.display_name}
             </span>
             {reply.author?.role === 'admin' && (
-              <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: 'var(--color-soft-sage)', color: 'white' }}>
+              <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: 'var(--bg-soft)', color: 'var(--bg-card)' }}>
                 admin
               </span>
             )}
-            <span style={{ color: 'var(--color-warm-gray)' }}>·</span>
+            <span style={{ color: 'var(--text-secondary)' }}>·</span>
             <TimeAgo date={reply.created_at} />
             {reply.updated_at !== reply.created_at && (
-              <span className="text-xs italic" style={{ color: 'var(--color-warm-gray)' }}>(edited)</span>
+              <span className="text-xs italic" style={{ color: 'var(--text-secondary)' }}>(edited)</span>
             )}
           </div>
 
@@ -162,21 +162,21 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
                 onChange={(e) => { setEditBody(e.target.value); autoResize(e.target) }}
                 rows={3}
                 className="w-full px-3 py-2 rounded-lg border text-sm resize-none transition-all"
-                style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)', minHeight: '80px' }}
+                style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)', minHeight: '80px' }}
               />
               <div className="flex gap-2">
                 <button
                   onClick={() => updateReply(reply.id)}
                   disabled={submitting}
                   className="px-3 py-1 rounded text-xs font-medium"
-                  style={{ backgroundColor: 'var(--color-deep-red)', color: 'var(--text-inverse)' }}
+                  style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}
                 >
                   Save
                 </button>
                 <button
                   onClick={() => { setEditingId(null); setEditBody('') }}
                   className="px-3 py-1 rounded text-xs font-medium border"
-                  style={{ borderColor: 'var(--border-default)', color: 'var(--color-warm-gray)' }}
+                  style={{ borderColor: 'var(--border-default)', color: 'var(--text-secondary)' }}
                 >
                   Cancel
                 </button>
@@ -193,7 +193,7 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
                 <button
                   onClick={() => { setReplyingTo(replyingTo === reply.id ? null : reply.id); setNestedReplyBody('') }}
                   className="text-xs font-medium transition-colors"
-                  style={{ color: 'var(--color-warm-gray)' }}
+                  style={{ color: 'var(--text-secondary)' }}
                 >
                   Reply
                 </button>
@@ -202,7 +202,7 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
                 <button
                   onClick={() => { setEditingId(reply.id); setEditBody(reply.body) }}
                   className="text-xs font-medium transition-colors"
-                  style={{ color: 'var(--color-warm-gray)' }}
+                  style={{ color: 'var(--text-secondary)' }}
                 >
                   Edit
                 </button>
@@ -211,7 +211,7 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
                 <button
                   onClick={() => deleteReply(reply.id)}
                   className="text-xs font-medium transition-colors"
-                  style={{ color: 'var(--color-deep-red)' }}
+                  style={{ color: 'var(--accent-red)' }}
                 >
                   Delete
                 </button>
@@ -229,21 +229,21 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
                 placeholder={`Replying to ${reply.author?.display_name}...`}
                 rows={3}
                 className="w-full px-3 py-2 rounded-lg border text-sm resize-none transition-all"
-                style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)', minHeight: '80px' }}
+                style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)', minHeight: '80px' }}
               />
               <div className="flex gap-2 mt-2">
                 <button
                   onClick={() => submitReply(reply.id)}
                   disabled={submitting || !nestedReplyBody.trim()}
                   className="px-3 py-1 rounded text-xs font-medium disabled:opacity-50"
-                  style={{ backgroundColor: 'var(--color-deep-red)', color: 'var(--text-inverse)' }}
+                  style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}
                 >
                   {submitting ? 'Posting...' : 'Post Reply'}
                 </button>
                 <button
                   onClick={() => { setReplyingTo(null); setNestedReplyBody('') }}
                   className="px-3 py-1 rounded text-xs font-medium border"
-                  style={{ borderColor: 'var(--border-default)', color: 'var(--color-warm-gray)' }}
+                  style={{ borderColor: 'var(--border-default)', color: 'var(--text-secondary)' }}
                 >
                   Cancel
                 </button>
@@ -260,7 +260,7 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
 
   return (
     <div>
-      <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--color-dark-brown)' }}>
+      <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
         {replies.length} {replies.length === 1 ? 'Reply' : 'Replies'}
       </h2>
 
@@ -273,14 +273,14 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
           placeholder="Join the conversation..."
           rows={4}
           className="w-full px-3 py-2 rounded-lg border text-sm resize-none transition-all mb-3"
-          style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)', lineHeight: '1.75', minHeight: '120px' }}
+          style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)', lineHeight: '1.75', minHeight: '120px' }}
         />
         <div className="flex justify-end">
           <button
             onClick={() => submitReply(null)}
             disabled={submitting || !replyBody.trim()}
             className="px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
-            style={{ backgroundColor: 'var(--color-deep-red)', color: 'var(--text-inverse)' }}
+            style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}
           >
             {submitting ? 'Posting...' : 'Post Reply'}
           </button>
@@ -293,7 +293,7 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
       </div>
 
       {replies.length === 0 && (
-        <p className="text-center py-8 text-sm" style={{ color: 'var(--color-warm-gray)' }}>
+        <p className="text-center py-8 text-sm" style={{ color: 'var(--text-secondary)' }}>
           No replies yet. Be the first to respond.
         </p>
       )}

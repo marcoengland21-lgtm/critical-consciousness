@@ -23,7 +23,7 @@ export default async function GlossaryPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold" style={{ color: 'var(--color-deep-red)' }}>
+        <h1 className="text-3xl font-bold" style={{ color: 'var(--accent-red)' }}>
           Glossary
         </h1>
       </div>

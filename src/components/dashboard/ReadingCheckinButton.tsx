@@ -55,7 +55,7 @@ export default function ReadingCheckinButton({ weekId, currentStatus }: ReadingC
   return (
     <>
       <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border-default)' }}>
-        <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: 'var(--color-muted-gold)' }}>
+        <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: 'var(--accent-purple)' }}>
           Your Progress
         </p>
         <div className="flex gap-2">
@@ -66,9 +66,9 @@ export default function ReadingCheckinButton({ weekId, currentStatus }: ReadingC
               disabled={saving}
               className="flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all border"
               style={{
-                backgroundColor: status === option.value ? 'var(--color-dark-brown)' : 'white',
-                color: status === option.value ? 'var(--color-warm-cream)' : 'var(--color-dark-brown)',
-                borderColor: status === option.value ? 'var(--color-dark-brown)' : '#e2dfe8',
+                backgroundColor: status === option.value ? 'var(--text-primary)' : 'var(--bg-card)',
+                color: status === option.value ? 'var(--bg-page)' : 'var(--text-primary)',
+                borderColor: status === option.value ? 'var(--text-primary)' : 'var(--border-default)',
                 opacity: saving ? 0.6 : 1,
               }}
             >

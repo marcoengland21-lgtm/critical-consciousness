@@ -73,7 +73,7 @@ html[data-theme="dark"] {
 
   --text-primary: #eae6f2;
   --text-secondary: #9990ab;
-  --text-inverse: #1a1625;
+  --text-inverse: #faf9fc;        /* Always light — used on always-dark nav/headers */
   --text-badge: #c4b8d4;
 
   --border-default: #2d2740;
@@ -242,6 +242,10 @@ html[data-theme="dark"] ::selection {
 html[data-theme="dark"] .card-hover:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
+
+/* Theme-aware hover backgrounds (replaces Tailwind hover:bg-gray-*) */
+.hover-bg-themed { transition: background-color 150ms ease; }
+.hover-bg-themed:hover { background-color: var(--bg-hover); }
 
 /* Active nav link indicator */
 .nav-link {

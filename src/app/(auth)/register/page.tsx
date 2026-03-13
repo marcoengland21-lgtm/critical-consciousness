@@ -71,7 +71,7 @@ export default function RegisterPage() {
     <div>
       <h2
         className="text-2xl font-bold mb-6"
-        style={{ color: 'var(--color-dark-brown)' }}
+        style={{ color: 'var(--text-primary)' }}
       >
         Create Account
       </h2>
@@ -81,7 +81,7 @@ export default function RegisterPage() {
           className="p-4 rounded-lg mb-4 text-sm"
           style={{
             backgroundColor: 'rgba(139, 38, 53, 0.1)',
-            color: 'var(--color-deep-red)',
+            color: 'var(--accent-red)',
           }}
         >
           {error}
@@ -105,7 +105,7 @@ export default function RegisterPage() {
           <label
             htmlFor="inviteCode"
             className="block text-sm font-medium mb-2"
-            style={{ color: 'var(--color-dark-brown)' }}
+            style={{ color: 'var(--text-primary)' }}
           >
             Invite Code
           </label>
@@ -117,9 +117,9 @@ export default function RegisterPage() {
             required
             placeholder="Enter your invite code"
             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
-            style={{ borderColor: 'var(--color-warm-gray)' }}
+            style={{ borderColor: 'var(--text-secondary)' }}
           />
-          <p className="text-xs mt-1" style={{ color: 'var(--color-warm-gray)' }}>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
             You need an invite code from an existing member to join.
           </p>
         </div>
@@ -128,7 +128,7 @@ export default function RegisterPage() {
           <label
             htmlFor="displayName"
             className="block text-sm font-medium mb-2"
-            style={{ color: 'var(--color-dark-brown)' }}
+            style={{ color: 'var(--text-primary)' }}
           >
             Your Name
           </label>
@@ -140,7 +140,7 @@ export default function RegisterPage() {
             required
             placeholder="How you want to be known in the group"
             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
-            style={{ borderColor: 'var(--color-warm-gray)' }}
+            style={{ borderColor: 'var(--text-secondary)' }}
           />
         </div>
 
@@ -148,7 +148,7 @@ export default function RegisterPage() {
           <label
             htmlFor="email"
             className="block text-sm font-medium mb-2"
-            style={{ color: 'var(--color-dark-brown)' }}
+            style={{ color: 'var(--text-primary)' }}
           >
             Email
           </label>
@@ -159,7 +159,7 @@ export default function RegisterPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
-            style={{ borderColor: 'var(--color-warm-gray)' }}
+            style={{ borderColor: 'var(--text-secondary)' }}
           />
         </div>
 
@@ -167,7 +167,7 @@ export default function RegisterPage() {
           <label
             htmlFor="password"
             className="block text-sm font-medium mb-2"
-            style={{ color: 'var(--color-dark-brown)' }}
+            style={{ color: 'var(--text-primary)' }}
           >
             Password
           </label>
@@ -179,7 +179,7 @@ export default function RegisterPage() {
             required
             minLength={6}
             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
-            style={{ borderColor: 'var(--color-warm-gray)' }}
+            style={{ borderColor: 'var(--text-secondary)' }}
           />
         </div>
 
@@ -187,7 +187,7 @@ export default function RegisterPage() {
           type="submit"
           disabled={loading}
           className="w-full py-3 rounded-lg font-semibold text-white transition-opacity disabled:opacity-50"
-          style={{ backgroundColor: 'var(--color-deep-red)' }}
+          style={{ backgroundColor: 'var(--accent-red)' }}
         >
           {loading ? 'Creating account...' : 'Join the Study Group'}
         </button>
@@ -195,13 +195,13 @@ export default function RegisterPage() {
 
       <p
         className="text-center mt-6 text-sm"
-        style={{ color: 'var(--color-warm-gray)' }}
+        style={{ color: 'var(--text-secondary)' }}
       >
         Already have an account?{' '}
         <Link
           href="/login"
           className="font-semibold hover:underline"
-          style={{ color: 'var(--color-deep-red)' }}
+          style={{ color: 'var(--accent-red)' }}
         >
           Sign in
         </Link>

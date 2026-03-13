@@ -26,29 +26,29 @@ export default function OnboardingHint() {
     <div
       className="mb-6 px-4 py-3 rounded-lg border flex items-start gap-3 animate-fade-in"
       style={{
-        backgroundColor: 'rgba(196, 163, 90, 0.08)',
-        borderColor: 'var(--color-muted-gold)',
+        backgroundColor: 'rgba(107, 76, 154, 0.08)',
+        borderColor: 'var(--accent-purple)',
       }}
     >
       {/* Highlight icon */}
       <span className="flex-shrink-0 mt-0.5">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-muted-gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-purple)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 20h9" />
           <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
         </svg>
       </span>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium" style={{ color: 'var(--color-dark-brown)' }}>
+        <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
           Highlight any passage to leave a note
         </p>
-        <p className="text-xs mt-0.5" style={{ color: 'var(--color-warm-gray)' }}>
+        <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
           Select text to annotate it or start a discussion thread. Your annotations are visible to the whole group.
         </p>
       </div>
       <button
         onClick={handleDismiss}
         className="flex-shrink-0 p-1 rounded-full transition-colors hover:bg-black/5"
-        style={{ color: 'var(--color-warm-gray)' }}
+        style={{ color: 'var(--text-secondary)' }}
         aria-label="Dismiss hint"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

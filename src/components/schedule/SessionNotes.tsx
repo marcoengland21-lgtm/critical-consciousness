@@ -156,16 +156,16 @@ export default function SessionNotes({ weekId, hasSession }: SessionNotesProps) 
         className="w-full px-5 py-3 flex items-center justify-between transition-colors"
         style={{
           backgroundColor: isOpen ? 'var(--bg-card-alt)' : 'var(--bg-card)',
-          borderBottom: isOpen ? '1px solid #e2dfe8' : 'none',
+          borderBottom: isOpen ? '1px solid var(--border-default)' : 'none',
         }}
       >
-        <h4 className="font-semibold text-sm" style={{ color: 'var(--color-dark-brown)' }}>
+        <h4 className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
           Session Notes
         </h4>
         <span
           className="transition-transform"
           style={{
-            color: 'var(--color-warm-gray)',
+            color: 'var(--text-secondary)',
             transform: isOpen ? 'rotate(180deg)' : 'rotate(0)',
           }}
         >
@@ -183,14 +183,14 @@ export default function SessionNotes({ weekId, hasSession }: SessionNotesProps) 
             className="w-full px-4 py-3 rounded-lg border text-sm resize-none focus:outline-none"
             style={{
               borderColor: 'var(--border-default)',
-              color: 'var(--color-dark-brown)',
+              color: 'var(--text-primary)',
               lineHeight: '1.85',
               minHeight: '150px',
             }}
           />
 
           {lastEditor && (
-            <div className="flex items-center justify-between text-xs" style={{ color: 'var(--color-warm-gray)' }}>
+            <div className="flex items-center justify-between text-xs" style={{ color: 'var(--text-secondary)' }}>
               <span>
                 Last edited by <span className="font-medium">{lastEditor.name}</span>
               </span>
@@ -199,7 +199,7 @@ export default function SessionNotes({ weekId, hasSession }: SessionNotesProps) 
           )}
 
           {saving && (
-            <div className="text-xs" style={{ color: 'var(--color-muted-gold)' }}>
+            <div className="text-xs" style={{ color: 'var(--accent-purple)' }}>
               Saving...
             </div>
           )}

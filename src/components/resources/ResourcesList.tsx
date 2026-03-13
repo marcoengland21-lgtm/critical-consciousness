@@ -90,9 +90,9 @@ export default function ResourcesList({
             onClick={() => setFilter('')}
             className="px-3 py-1 rounded-full text-sm font-medium border transition-colors"
             style={{
-              backgroundColor: !filter ? 'var(--color-dark-brown)' : 'white',
-              color: !filter ? 'var(--color-warm-cream)' : 'var(--color-dark-brown)',
-              borderColor: 'var(--color-warm-gray)',
+              backgroundColor: !filter ? 'var(--text-primary)' : 'var(--bg-card)',
+              color: !filter ? 'var(--bg-page)' : 'var(--text-primary)',
+              borderColor: 'var(--text-secondary)',
             }}
           >
             All
@@ -103,9 +103,9 @@ export default function ResourcesList({
               onClick={() => setFilter(key)}
               className="px-3 py-1 rounded-full text-sm font-medium border transition-colors"
               style={{
-                backgroundColor: filter === key ? 'var(--color-dark-brown)' : 'white',
-                color: filter === key ? 'var(--color-warm-cream)' : 'var(--color-dark-brown)',
-                borderColor: 'var(--color-warm-gray)',
+                backgroundColor: filter === key ? 'var(--text-primary)' : 'var(--bg-card)',
+                color: filter === key ? 'var(--bg-page)' : 'var(--text-primary)',
+                borderColor: 'var(--text-secondary)',
               }}
             >
               {config.icon} {config.label}
@@ -115,7 +115,7 @@ export default function ResourcesList({
         <button
           onClick={() => setShowForm(!showForm)}
           className="px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
-          style={{ backgroundColor: 'var(--color-deep-red)', color: 'var(--text-inverse)' }}
+          style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}
         >
           {showForm ? 'Cancel' : 'Add Resource'}
         </button>
@@ -127,25 +127,25 @@ export default function ResourcesList({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
               placeholder="Resource title" className="px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)' }} required />
+              style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }} required />
             <input type="url" value={url} onChange={(e) => setUrl(e.target.value)}
               placeholder="URL (optional)" className="px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)' }} />
+              style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }} />
           </div>
           <textarea value={description} onChange={(e) => setDescription(e.target.value)}
             placeholder="Description (optional)" rows={2} className="w-full px-3 py-2 rounded-lg border text-sm resize-y"
-            style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)' }} />
+            style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }} />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <select value={resourceType} onChange={(e) => setResourceType(e.target.value as ResourceType)}
               className="px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)' }}>
+              style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}>
               {Object.entries(typeLabels).map(([key, config]) => (
                 <option key={key} value={key}>{config.icon} {config.label}</option>
               ))}
             </select>
             <select value={weekId} onChange={(e) => setWeekId(e.target.value)}
               className="px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)' }}>
+              style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}>
               <option value="">No specific week</option>
               {weeks.map((w) => (
                 <option key={w.id} value={w.id}>Week {w.week_number}: {w.title}</option>
@@ -154,7 +154,7 @@ export default function ResourcesList({
           </div>
           <button type="submit" disabled={submitting}
             className="px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
-            style={{ backgroundColor: 'var(--color-deep-red)', color: 'var(--text-inverse)' }}>
+            style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}>
             {submitting ? 'Saving...' : 'Save Resource'}
           </button>
         </form>
@@ -162,7 +162,7 @@ export default function ResourcesList({
 
       {/* Resource list */}
       {filtered.length === 0 ? (
-        <p className="text-center py-12 text-sm" style={{ color: 'var(--color-warm-gray)' }}>
+        <p className="text-center py-12 text-sm" style={{ color: 'var(--text-secondary)' }}>
           Companion texts, lecture videos, and tools to help with the reading will be collected here.
         </p>
       ) : (
@@ -174,20 +174,20 @@ export default function ResourcesList({
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">{typeInfo.icon}</span>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-sm mb-1" style={{ color: 'var(--color-dark-brown)' }}>
+                    <h3 className="font-semibold text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
                       {resource.url ? (
                         <a href={resource.url} target="_blank" rel="noopener noreferrer" className="underline hover:no-underline"
-                          style={{ color: 'var(--color-deep-red)' }}>
+                          style={{ color: 'var(--accent-red)' }}>
                           {resource.title}
                         </a>
                       ) : resource.title}
                     </h3>
                     {resource.description && (
-                      <p className="text-xs mb-2 line-clamp-2" style={{ color: 'var(--color-warm-gray)' }}>
+                      <p className="text-xs mb-2 line-clamp-2" style={{ color: 'var(--text-secondary)' }}>
                         {resource.description}
                       </p>
                     )}
-                    <div className="flex flex-wrap items-center gap-2 text-xs" style={{ color: 'var(--color-warm-gray)' }}>
+                    <div className="flex flex-wrap items-center gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
                       <span className="px-2 py-0.5 rounded-full" style={{ backgroundColor: 'var(--bg-badge)', color: 'var(--text-badge)' }}>
                         {typeInfo.label}
                       </span>
