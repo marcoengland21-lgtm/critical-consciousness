@@ -59,6 +59,8 @@ export default function AnnotationPopover({ rect, selectedText, onSave, onCancel
         backgroundColor: 'white',
         borderColor: '#e5e1d8',
       }}
+      onMouseDown={(e) => e.stopPropagation()}
+      onMouseUp={(e) => e.stopPropagation()}
     >
       {/* Selected text preview */}
       <div

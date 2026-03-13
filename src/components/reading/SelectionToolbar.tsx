@@ -42,6 +42,8 @@ export default function SelectionToolbar({ rect, onAnnotate, onStartThread, onCl
         backgroundColor: 'var(--color-dark-brown)',
         borderColor: 'rgba(196, 163, 90, 0.3)',
       }}
+      onMouseDown={(e) => e.stopPropagation()}
+      onMouseUp={(e) => e.stopPropagation()}
     >
       <button
         onClick={onAnnotate}
