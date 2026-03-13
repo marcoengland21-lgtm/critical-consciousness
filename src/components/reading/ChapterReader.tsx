@@ -191,6 +191,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     definition: string
     position: { top: number; left: number }
   } | null>(null)
+  const [annotationKeyword, setAnnotationKeyword] = useState('')
 
   // Scroll position memory
   useEffect(() => {
@@ -486,6 +487,31 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
   // Filter annotations in focused mode
   const displayAnnotations = focusedMode ? [] : annotations
 
+  // Filter annotations by keyword
+  const filterAnnotationsByKeyword = (anns: Annotation[]): { matching: Set<string>; total: number } => {
+    if (!annotationKeyword.trim()) {
+      return { matching: new Set(anns.map((a) => a.id)), total: anns.length }
+    }
+
+    const keyword = annotationKeyword.toLowerCase()
+    const matching = new Set<string>()
+    anns.forEach((ann) => {
+      if (ann.body.toLowerCase().includes(keyword)) {
+        matching.add(ann.id)
+      }
+    })
+
+    return { matching, total: anns.length }
+  }
+
+  const keywordFilter = useMemo(
+    () => filterAnnotationsByKeyword(displayAnnotations),
+    [displayAnnotations, annotationKeyword]
+  )
+
+  const matchingCount = keywordFilter.matching.size
+  const showKeywordStats = annotationKeyword.trim().length > 0
+
   return (
     <div className="relative">
       {/* Onboarding hint — only shown on first visit */}
@@ -498,6 +524,9 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         focusedMode={focusedMode}
         onFocusedModeChange={setFocusedMode}
         annotationCount={annotations.length}
+        annotationKeyword={annotationKeyword}
+        onAnnotationKeywordChange={setAnnotationKeyword}
+        matchingAnnotationCount={matchingCount}
       />
 
       {/* The reading text */}
@@ -603,6 +632,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
 
                   // If this is also a glossary term, we can support both interactions
                   if (seg.isGlossaryTerm && seg.termData) {
+                    const isMatchingAnnotation = globalAnns.some((ann) => keywordFilter.matching.has(ann.id))
                     return (
                       <mark
                         key={sIdx}
@@ -611,6 +641,8 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
                         } border-b border-dotted cursor-pointer`}
                         style={{
                           borderColor: 'var(--color-muted-gold)',
+                          opacity: showKeywordStats && !isMatchingAnnotation ? 0.2 : undefined,
+                          transition: 'opacity 200ms ease',
                         }}
                         onClick={(e) => {
                           // If clicking on a glossary term part, show glossary
@@ -629,12 +661,17 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
                   }
 
                   // Regular annotation (no glossary term)
+                  const isMatchingAnnotation = globalAnns.some((ann) => keywordFilter.matching.has(ann.id))
                   return (
                     <mark
                       key={sIdx}
                       className={density > 1 ? 'annotation-highlight-dense' : 'annotation-highlight'}
                       onClick={() => handleAnnotationClick(globalAnns)}
                       title={`${density} annotation${density > 1 ? 's' : ''}`}
+                      style={{
+                        opacity: showKeywordStats && !isMatchingAnnotation ? 0.2 : undefined,
+                        transition: 'opacity 200ms ease',
+                      }}
                     >
                       {seg.text}
                     </mark>

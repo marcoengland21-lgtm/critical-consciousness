@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 interface Props {
   fontSize: number
@@ -8,6 +8,9 @@ interface Props {
   focusedMode: boolean
   onFocusedModeChange: (focused: boolean) => void
   annotationCount: number
+  annotationKeyword?: string
+  onAnnotationKeywordChange?: (keyword: string) => void
+  matchingAnnotationCount?: number
 }
 
 const MIN_FONT = 14
@@ -19,14 +22,39 @@ export default function ReadingControls({
   focusedMode,
   onFocusedModeChange,
   annotationCount,
+  annotationKeyword = '',
+  onAnnotationKeywordChange,
+  matchingAnnotationCount = 0,
 }: Props) {
   const [isDarkMode, setIsDarkMode] = useState(false)
+  const [keywordInput, setKeywordInput] = useState(annotationKeyword)
+  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     // Check initial theme
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
     setIsDarkMode(isDark)
   }, [])
+
+  const handleKeywordChange = useCallback((value: string) => {
+    setKeywordInput(value)
+
+    // Debounce the callback
+    if (debounceTimer) {
+      clearTimeout(debounceTimer)
+    }
+
+    const timer = setTimeout(() => {
+      onAnnotationKeywordChange?.(value)
+    }, 300)
+
+    setDebounceTimer(timer)
+  }, [debounceTimer, onAnnotationKeywordChange])
+
+  const clearKeyword = useCallback(() => {
+    setKeywordInput('')
+    onAnnotationKeywordChange?.('')
+  }, [onAnnotationKeywordChange])
 
   const toggleTheme = () => {
     const newTheme = isDarkMode ? 'light' : 'dark'
@@ -35,11 +63,53 @@ export default function ReadingControls({
     setIsDarkMode(!isDarkMode)
   }
   return (
-    <div
-      className="flex items-center justify-end gap-3 mb-4 pb-3 border-b"
-      style={{ borderColor: '#e5e1d8' }}
-    >
-      {/* Font size controls */}
+    <div>
+      {/* Annotation keyword filter — shown above controls when there are annotations */}
+      {annotationCount > 0 && (
+        <div className="mb-4 pb-3 border-b" style={{ borderColor: '#e5e1d8' }}>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg" style={{ backgroundColor: '#f5f0e8', border: '1px solid #e5e1d8' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--color-warm-gray)' }}>
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Filter annotations by keyword…"
+                value={keywordInput}
+                onChange={(e) => handleKeywordChange(e.target.value)}
+                className="flex-1 bg-transparent text-sm outline-none"
+                style={{ color: 'var(--color-dark-brown)' }}
+              />
+              {keywordInput && (
+                <button
+                  onClick={clearKeyword}
+                  className="p-1 rounded hover:bg-black/5 transition-colors"
+                  title="Clear filter"
+                  aria-label="Clear filter"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--color-warm-gray)' }}>
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              )}
+            </div>
+            {keywordInput && (
+              <span className="text-xs font-medium px-2 py-1 rounded" style={{ color: 'var(--color-warm-gray)', backgroundColor: '#f5f0e8' }}>
+                {matchingAnnotationCount} of {annotationCount}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Main controls */}
+      <div
+        className="flex items-center justify-end gap-3 mb-4 pb-3 border-b"
+        style={{ borderColor: '#e5e1d8' }}
+      >
+        {/* Font size controls */}
       <div className="flex items-center gap-1">
         <button
           onClick={() => onFontSizeChange(Math.max(MIN_FONT, fontSize - 2))}
@@ -132,6 +202,7 @@ export default function ReadingControls({
           </span>
         )}
       </button>
+    </div>
     </div>
   )
 }

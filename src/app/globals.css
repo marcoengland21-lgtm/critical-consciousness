@@ -153,8 +153,13 @@ html[data-theme="dark"] {
 
 /* Selection */
 ::selection {
-  background-color: var(--color-muted-gold);
+  background-color: rgba(196, 163, 90, 0.3);
   color: var(--color-dark-brown);
+}
+
+html[data-theme="dark"] ::selection {
+  background-color: rgba(196, 163, 90, 0.4);
+  color: var(--color-dark-text, #e8ddd0);
 }
 
 /* Smooth transitions for interactive elements */

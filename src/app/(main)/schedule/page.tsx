@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import RoleBadge from '@/components/roles/RoleBadge'
+import SessionNotes from '@/components/schedule/SessionNotes'
 import type { WeeklyRoleType } from '@/types/database'
 
 export const metadata = {
@@ -202,6 +203,9 @@ export default async function SchedulePage() {
                     </ol>
                   </div>
                 )}
+
+                {/* Session Notes */}
+                <SessionNotes weekId={week.id} hasSession={!!sessionDate} />
 
                 {/* Thread links */}
                 <div className="pt-2">

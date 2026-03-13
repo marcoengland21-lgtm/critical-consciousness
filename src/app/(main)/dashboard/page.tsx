@@ -1,9 +1,17 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import ThreadTypeBadge from '@/components/threads/ThreadTypeBadge'
 import TimeAgo from '@/components/ui/TimeAgo'
 import RoleBadge from '@/components/roles/RoleBadge'
+import ReadingCheckinButton from '@/components/dashboard/ReadingCheckinButton'
+import WeeklyActivitySummary from '@/components/dashboard/WeeklyActivitySummary'
+import MilestoneCard from '@/components/dashboard/MilestoneCard'
+import GroupThinkingOverview from '@/components/dashboard/GroupThinkingOverview'
 import type { ThreadType, WeeklyRoleType } from '@/types/database'
+
+const GUEST_ID = 'ad4ce43f-6a30-484b-8f2c-df66f6b0276b'
+const DEFAULT_GROUP_ID = '00000000-0000-0000-0000-000000000001'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -38,6 +46,23 @@ export default async function DashboardPage() {
 
   const currentWeek = currentWeekData?.[0] || null
 
+  // Get user's reading checkin status for current week
+  let currentReadingStatus: 'done' | 'partial' | 'behind' | null = null
+  if (currentWeek) {
+    const adminSupabase = createAdminClient()
+    const { data: checkinData } = await adminSupabase
+      .from('reading_checkins')
+      .select('status')
+      .eq('user_id', GUEST_ID)
+      .eq('week_id', currentWeek.id)
+      .eq('group_id', DEFAULT_GROUP_ID)
+      .single()
+
+    if (checkinData) {
+      currentReadingStatus = checkinData.status as 'done' | 'partial' | 'behind'
+    }
+  }
+
   // Get user's roles for current week
   const myRoles = currentWeek?.weekly_roles?.filter(
     (r: any) => r.user?.id === user?.id
@@ -64,6 +89,40 @@ export default async function DashboardPage() {
     .from('threads')
     .select('*', { count: 'exact', head: true })
 
+  // Get annotations for GroupThinking overview
+  const adminSupabase = createAdminClient()
+  const { data: annotationsData } = await adminSupabase
+    .from('annotations')
+    .select(`
+      id, body, chapter_id,
+      chapter:text_chapters!chapter_id(chapter_number, title)
+    `)
+    .order('created_at', { ascending: false })
+
+  const annotations = annotationsData?.map((ann: any) => ({
+    chapter_number: ann.chapter?.chapter_number || 0,
+    chapter_title: ann.chapter?.title || 'Unknown',
+    annotation_count: 1,
+    body: ann.body,
+  })) || []
+
+  // Get thread counts by week
+  const { data: threadsData } = await supabase
+    .from('threads')
+    .select('week_id')
+
+  const threadsByWeek = new Map<string, number>()
+  threadsData?.forEach((thread: any) => {
+    if (thread.week_id) {
+      threadsByWeek.set(thread.week_id, (threadsByWeek.get(thread.week_id) || 0) + 1)
+    }
+  })
+
+  const threads = Array.from(threadsByWeek.entries()).map(([weekId, count], index) => ({
+    week_number: index + 1,
+    thread_count: count,
+  }))
+
   return (
     <div>
       <div className="mb-8">
@@ -80,6 +139,11 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left column: Current Week + Roles */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Milestone Card - if applicable */}
+          {currentWeek && (
+            <MilestoneCard weekId={currentWeek.id} weekNumber={currentWeek.week_number} />
+          )}
+
           {/* This Week's Reading */}
           <div className="rounded-lg border-2 overflow-hidden" style={{ borderColor: 'var(--color-muted-gold)' }}>
             <div className="px-5 py-3" style={{ backgroundColor: 'var(--color-dark-brown)' }}>
@@ -152,6 +216,9 @@ export default async function DashboardPage() {
                       </ol>
                     </div>
                   )}
+
+                  {/* Reading Checkin */}
+                  <ReadingCheckinButton weekId={currentWeek.id} currentStatus={currentReadingStatus} />
                 </div>
               ) : (
                 <div className="text-center py-6">
@@ -165,6 +232,14 @@ export default async function DashboardPage() {
               )}
             </div>
           </div>
+
+          {/* Weekly Activity Summary */}
+          {currentWeek && (
+            <WeeklyActivitySummary weekId={currentWeek.id} />
+          )}
+
+          {/* What the Group is Thinking */}
+          <GroupThinkingOverview annotations={annotations} threads={threads} />
 
           {/* Recent Threads */}
           <div className="rounded-lg border overflow-hidden" style={{ borderColor: '#e5e1d8' }}>
