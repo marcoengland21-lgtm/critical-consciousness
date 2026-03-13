@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import ThemeInitializer from '@/components/layout/ThemeInitializer'
 
 export const metadata: Metadata = {
   title: 'Critical Consciousness',
@@ -20,6 +21,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap"
           rel="stylesheet"
         />
+        <ThemeInitializer />
       </head>
       <body className="min-h-screen antialiased">
         {children}

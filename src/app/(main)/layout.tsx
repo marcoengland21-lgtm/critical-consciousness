@@ -64,8 +64,8 @@ export default async function MainLayout({
               <NavLink href="/dashboard">Dashboard</NavLink>
               <NavLink href="/reading">Reading</NavLink>
               <NavLink href="/threads">Threads</NavLink>
-              <NavLink href="/schedule">Schedule</NavLink>
               <NavLink href="/glossary">Glossary</NavLink>
+              <NavLink href="/schedule">Schedule</NavLink>
               <NavLink href="/resources">Resources</NavLink>
             </div>
 

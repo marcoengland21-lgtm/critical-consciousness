@@ -8,7 +8,9 @@ import AnnotationPanel from './AnnotationPanel'
 import SelectionToolbar from './SelectionToolbar'
 import OnboardingHint from './OnboardingHint'
 import ReadingControls from './ReadingControls'
+import ConfusionFlagButton from './ConfusionFlagButton'
 import Toast from '@/components/ui/Toast'
+import { getConfusionFlagCounts, getUserConfusionFlags } from '@/lib/confusion-flags'
 
 interface Annotation {
   id: string
@@ -116,6 +118,8 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
   })
   const [focusedMode, setFocusedMode] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [confusionFlagCounts, setConfusionFlagCounts] = useState<Map<number, number>>(new Map())
+  const [userConfusionFlags, setUserConfusionFlags] = useState<Set<number>>(new Set())
 
   // Scroll position memory
   useEffect(() => {
@@ -137,6 +141,21 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
   useEffect(() => {
     localStorage.setItem('ccp-font-size', String(fontSize))
   }, [fontSize])
+
+  // Load confusion flags on mount
+  useEffect(() => {
+    async function loadConfusionFlags() {
+      try {
+        const counts = await getConfusionFlagCounts(chapter.id)
+        setConfusionFlagCounts(counts)
+        const userFlags = await getUserConfusionFlags(chapter.id)
+        setUserConfusionFlags(userFlags)
+      } catch (error) {
+        console.error('[CCP Debug] Failed to load confusion flags:', error)
+      }
+    }
+    loadConfusionFlags()
+  }, [chapter.id])
 
   // Listen for Supabase realtime annotation changes
   useEffect(() => {
@@ -166,6 +185,25 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         },
         () => {
           router.refresh()
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'confusion_flags',
+          filter: `chapter_id=eq.${chapter.id}`,
+        },
+        async () => {
+          // Refresh confusion flags when they change
+          console.log('[CCP Debug] Realtime confusion flag change')
+          try {
+            const counts = await getConfusionFlagCounts(chapter.id)
+            setConfusionFlagCounts(counts)
+          } catch (error) {
+            console.error('[CCP Debug] Failed to refresh confusion flags:', error)
+          }
         }
       )
       .subscribe()
@@ -390,19 +428,31 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
 
           return (
             <p key={pIdx} data-offset={pStart} className="relative group/para">
-              {/* Margin annotation count indicator */}
-              {annotationCount > 0 && (
-                <span
-                  className="absolute -left-10 top-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium opacity-40 group-hover/para:opacity-100 transition-opacity hidden lg:flex"
-                  style={{
-                    backgroundColor: annotationCount > 2 ? 'var(--color-muted-gold)' : '#e8ddd0',
-                    color: 'var(--color-dark-brown)',
-                  }}
-                  title={`${annotationCount} annotation${annotationCount > 1 ? 's' : ''}`}
-                >
-                  {annotationCount}
-                </span>
-              )}
+              {/* Margin controls */}
+              <div className="absolute -left-16 top-1 flex gap-1 items-center opacity-40 group-hover/para:opacity-100 transition-opacity hidden lg:flex">
+                {/* Confusion flag button */}
+                <ConfusionFlagButton
+                  chapterId={chapter.id}
+                  paragraphIndex={pIdx}
+                  initialCount={confusionFlagCounts.get(pIdx) || 0}
+                  isUserFlagged={userConfusionFlags.has(pIdx)}
+                  hidden={focusedMode}
+                />
+
+                {/* Annotation count indicator */}
+                {annotationCount > 0 && (
+                  <span
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium"
+                    style={{
+                      backgroundColor: annotationCount > 2 ? 'var(--color-muted-gold)' : '#e8ddd0',
+                      color: 'var(--color-dark-brown)',
+                    }}
+                    title={`${annotationCount} annotation${annotationCount > 1 ? 's' : ''}`}
+                  >
+                    {annotationCount}
+                  </span>
+                )}
+              </div>
               {segments.map((seg, sIdx) => {
                 if (seg.annotations.length === 0) {
                   return <span key={sIdx}>{seg.text}</span>

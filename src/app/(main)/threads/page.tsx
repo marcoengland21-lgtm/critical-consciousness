@@ -4,8 +4,52 @@ import ThreadTypeBadge from '@/components/threads/ThreadTypeBadge'
 import TimeAgo from '@/components/ui/TimeAgo'
 import type { ThreadType } from '@/types/database'
 
+// Author badge component with color-coded initials
+function AuthorBadge({ name }: { name: string }) {
+  const colors = [
+    '#8B2635', '#2C6B4F', '#4A5899', '#8A6B3D',
+    '#6B4C7D', '#2D7A8A', '#8A4B3D', '#4A7B4F',
+  ]
+  let hash = 0
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  const color = colors[Math.abs(hash) % colors.length]
+  const initial = name.charAt(0).toUpperCase()
+
+  return (
+    <span className="flex items-center gap-1.5">
+      <span
+        className="w-5 h-5 rounded-full flex items-center justify-center font-bold text-white text-[10px] flex-shrink-0"
+        style={{ backgroundColor: color }}
+      >
+        {initial}
+      </span>
+      <span className="text-xs font-medium" style={{ color: 'var(--color-dark-brown)' }}>
+        {name}
+      </span>
+    </span>
+  )
+}
+
 export const metadata = {
   title: 'Discussion Threads | Critical Consciousness',
+}
+
+// Strip markdown and plain text preview
+function getTextPreview(text: string, maxLines: number = 3): string {
+  // Remove markdown formatting
+  let plain = text
+    .replace(/^>\s+/gm, '') // Remove blockquotes
+    .replace(/\*\*(.+?)\*\*/g, '$1') // Remove bold
+    .replace(/\*(.+?)\*/g, '$1') // Remove italic
+    .replace(/^#+\s+/gm, '') // Remove headers
+    .split('\n')
+    .filter(line => line.trim())
+    .slice(0, maxLines)
+    .join(' ')
+
+  return plain.length > 200 ? plain.slice(0, 200) + '...' : plain
 }
 
 export default async function ThreadsPage({
@@ -108,6 +152,7 @@ export default async function ThreadsPage({
         <div className="space-y-3">
           {threads.map((thread: any) => {
             const replyCount = thread.replies?.[0]?.count ?? 0
+            const preview = getTextPreview(thread.body || '')
             return (
               <Link
                 key={thread.id}
@@ -121,7 +166,7 @@ export default async function ThreadsPage({
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-2">
                       {thread.pinned && (
                         <span className="text-xs font-medium px-2 py-0.5 rounded-full"
                           style={{ backgroundColor: 'var(--color-muted-gold)', color: 'var(--color-dark-brown)' }}>
@@ -130,18 +175,23 @@ export default async function ThreadsPage({
                       )}
                       <ThreadTypeBadge type={thread.thread_type as ThreadType} />
                     </div>
-                    <h3 className="text-lg font-semibold mb-1 truncate" style={{ color: 'var(--color-dark-brown)' }}>
+                    <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--color-dark-brown)' }}>
                       {thread.title}
                     </h3>
-                    <p className="text-sm line-clamp-2 mb-2" style={{ color: 'var(--color-warm-gray)' }}>
-                      {thread.body}
-                    </p>
-                    <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--color-warm-gray)' }}>
-                      <span className="font-medium">{thread.author?.display_name}</span>
-                      <span>·</span>
-                      <TimeAgo date={thread.created_at} />
-                      <span>·</span>
-                      <span>{replyCount} {replyCount === 1 ? 'reply' : 'replies'}</span>
+                    {preview && (
+                      <p className="text-sm mb-3" style={{ color: 'var(--color-warm-gray)' }}>
+                        {preview}
+                      </p>
+                    )}
+                    <div className="flex flex-col gap-2 text-xs">
+                      <div className="flex items-center gap-2">
+                        <AuthorBadge name={thread.author?.display_name || 'Guest'} />
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap" style={{ color: 'var(--color-warm-gray)' }}>
+                        <TimeAgo date={thread.created_at} />
+                        <span>·</span>
+                        <span>{replyCount} {replyCount === 1 ? 'reply' : 'replies'}</span>
+                      </div>
                     </div>
                   </div>
                 </div>

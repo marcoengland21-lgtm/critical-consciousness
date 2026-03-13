@@ -15,12 +15,28 @@
   --line-height-loose: 2;
 }
 
+html[data-theme="dark"] {
+  /* Dark mode: warm scholarly aesthetic (aged paper, low light) */
+  --color-deep-red: #d97f6e;
+  --color-warm-cream: #e8ddd0;
+  --color-dark-brown: #1a1612;
+  --color-warm-gray: #9a8f7f;
+  --color-muted-gold: #c9a86b;
+  --color-soft-sage: #8a9a7b;
+}
+
 /* Clean typography defaults */
 body {
   font-family: var(--font-family-sans);
   line-height: var(--line-height-relaxed);
   color: var(--color-dark-brown);
   background-color: var(--color-warm-cream);
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+html[data-theme="dark"] body {
+  color: #e8ddd0;
+  background-color: #1a1612;
 }
 
 h1,
@@ -108,6 +124,31 @@ a:hover {
 
 .annotation-highlight-dense:hover {
   background-color: rgba(196, 163, 90, 0.55);
+}
+
+/* Dark mode specific styles for UI elements */
+html[data-theme="dark"] .annotation-highlight {
+  background-color: rgba(201, 168, 107, 0.25);
+}
+
+html[data-theme="dark"] .annotation-highlight:hover {
+  background-color: rgba(201, 168, 107, 0.45);
+}
+
+html[data-theme="dark"] .annotation-highlight-dense {
+  background-color: rgba(201, 168, 107, 0.4);
+}
+
+html[data-theme="dark"] .annotation-highlight-dense:hover {
+  background-color: rgba(201, 168, 107, 0.6);
+}
+
+/* Dark card/container backgrounds */
+html[data-theme="dark"] {
+  --bg-card: #241e18;
+  --border-color: #3a3228;
+  --text-primary: #e8ddd0;
+  --text-secondary: #9a8f7f;
 }
 
 /* Selection */

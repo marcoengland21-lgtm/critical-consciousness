@@ -146,6 +146,15 @@ export interface AnnotationReply {
   updated_at: string;
 }
 
+export interface ConfusionFlag {
+  id: string;
+  chapter_id: string;
+  paragraph_index: number;
+  user_id: string;
+  group_id: string;
+  created_at: string;
+}
+
 // Extended Types with Joined Data
 
 export interface ThreadWithAuthor extends Thread {

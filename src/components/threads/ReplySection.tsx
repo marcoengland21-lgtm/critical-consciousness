@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import TimeAgo from '@/components/ui/TimeAgo'
 import MarkdownBody from '@/components/ui/MarkdownBody'
@@ -36,6 +36,17 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
   const [submitting, setSubmitting] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editBody, setEditBody] = useState('')
+  const mainReplyRef = useRef<HTMLTextAreaElement>(null)
+  const nestedReplyRefs = useRef<Record<string, HTMLTextAreaElement>>({})
+  const editReplyRefs = useRef<Record<string, HTMLTextAreaElement>>({})
+
+  // Auto-expand textarea on input
+  const autoResize = useCallback((el: HTMLTextAreaElement | null) => {
+    if (el) {
+      el.style.height = 'auto'
+      el.style.height = Math.max(80, el.scrollHeight) + 'px'
+    }
+  }, [])
 
   // Real-time subscription
   useEffect(() => {
@@ -146,11 +157,12 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
           {editingId === reply.id ? (
             <div className="space-y-2">
               <textarea
+                ref={(el) => { if (el) editReplyRefs.current[reply.id] = el }}
                 value={editBody}
-                onChange={(e) => setEditBody(e.target.value)}
+                onChange={(e) => { setEditBody(e.target.value); autoResize(e.target) }}
                 rows={3}
-                className="w-full px-3 py-2 rounded-lg border text-sm resize-y"
-                style={{ borderColor: '#e5e1d8', color: 'var(--color-dark-brown)' }}
+                className="w-full px-3 py-2 rounded-lg border text-sm resize-none transition-all"
+                style={{ borderColor: '#e5e1d8', color: 'var(--color-dark-brown)', minHeight: '80px' }}
               />
               <div className="flex gap-2">
                 <button
@@ -211,13 +223,13 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
           {replyingTo === reply.id && (
             <div className="mt-3 ml-2">
               <textarea
+                ref={(el) => { if (el) { nestedReplyRefs.current[reply.id] = el; el.focus() } }}
                 value={nestedReplyBody}
-                onChange={(e) => setNestedReplyBody(e.target.value)}
+                onChange={(e) => { setNestedReplyBody(e.target.value); autoResize(e.target) }}
                 placeholder={`Replying to ${reply.author?.display_name}...`}
                 rows={3}
-                className="w-full px-3 py-2 rounded-lg border text-sm resize-y"
-                style={{ borderColor: '#e5e1d8', color: 'var(--color-dark-brown)' }}
-                autoFocus
+                className="w-full px-3 py-2 rounded-lg border text-sm resize-none transition-all"
+                style={{ borderColor: '#e5e1d8', color: 'var(--color-dark-brown)', minHeight: '80px' }}
               />
               <div className="flex gap-2 mt-2">
                 <button
@@ -255,12 +267,13 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
       {/* Top-level reply form */}
       <div className="mb-6 p-4 rounded-lg border" style={{ backgroundColor: 'white', borderColor: '#e5e1d8' }}>
         <textarea
+          ref={mainReplyRef}
           value={replyBody}
-          onChange={(e) => setReplyBody(e.target.value)}
+          onChange={(e) => { setReplyBody(e.target.value); autoResize(e.target) }}
           placeholder="Join the conversation..."
           rows={4}
-          className="w-full px-3 py-2 rounded-lg border text-sm resize-y mb-3"
-          style={{ borderColor: '#e5e1d8', color: 'var(--color-dark-brown)', lineHeight: '1.75' }}
+          className="w-full px-3 py-2 rounded-lg border text-sm resize-none transition-all mb-3"
+          style={{ borderColor: '#e5e1d8', color: 'var(--color-dark-brown)', lineHeight: '1.75', minHeight: '120px' }}
         />
         <div className="flex justify-end">
           <button
