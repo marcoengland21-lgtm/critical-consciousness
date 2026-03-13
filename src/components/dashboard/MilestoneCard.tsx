@@ -32,7 +32,7 @@ export default async function MilestoneCard({ weekId, weekNumber }: MilestoneCar
       className="rounded-lg border-2 p-6 overflow-hidden"
       style={{
         borderColor: 'var(--color-muted-gold)',
-        backgroundColor: '#f8f9fa',
+        backgroundColor: '#faf9fc',
         position: 'relative',
       }}
     >

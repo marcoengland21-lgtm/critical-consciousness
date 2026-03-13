@@ -57,8 +57,8 @@ export default function GroupThinkingOverview({ annotations, threads }: Props) {
 
   if (analysis.totalAnnotations === 0 && analysis.totalThreads === 0) {
     return (
-      <div className="rounded-lg border overflow-hidden" style={{ borderColor: '#dee2e6' }}>
-        <div className="px-5 py-3" style={{ backgroundColor: 'white', borderBottom: '1px solid #dee2e6' }}>
+      <div className="rounded-lg border overflow-hidden" style={{ borderColor: '#e2dfe8' }}>
+        <div className="px-5 py-3" style={{ backgroundColor: 'white', borderBottom: '1px solid #e2dfe8' }}>
           <h2 className="font-bold" style={{ color: 'var(--color-dark-brown)' }}>
             What the Group is Thinking
           </h2>
@@ -73,8 +73,8 @@ export default function GroupThinkingOverview({ annotations, threads }: Props) {
   }
 
   return (
-    <div className="rounded-lg border overflow-hidden" style={{ borderColor: '#dee2e6' }}>
-      <div className="px-5 py-3" style={{ backgroundColor: 'white', borderBottom: '1px solid #dee2e6' }}>
+    <div className="rounded-lg border overflow-hidden" style={{ borderColor: '#e2dfe8' }}>
+      <div className="px-5 py-3" style={{ backgroundColor: 'white', borderBottom: '1px solid #e2dfe8' }}>
         <h2 className="font-bold" style={{ color: 'var(--color-dark-brown)' }}>
           What the Group is Thinking
         </h2>
@@ -102,7 +102,7 @@ export default function GroupThinkingOverview({ annotations, threads }: Props) {
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs font-bold px-2 py-1 rounded" style={{ backgroundColor: '#5c6bc0', color: 'white' }}>
+                    <span className="text-xs font-bold px-2 py-1 rounded" style={{ backgroundColor: '#6b4c9a', color: 'white' }}>
                       {chapter.annotation_count}
                     </span>
                     <span className="text-xs" style={{ color: 'var(--color-warm-gray)' }}>

@@ -216,7 +216,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
               style={{
                 backgroundColor: threadType === t.value ? 'var(--color-dark-brown)' : 'white',
                 color: threadType === t.value ? 'var(--color-warm-cream)' : 'var(--color-dark-brown)',
-                borderColor: threadType === t.value ? 'var(--color-dark-brown)' : '#dee2e6',
+                borderColor: threadType === t.value ? 'var(--color-dark-brown)' : '#e2dfe8',
               }}
             >
               <div className="font-medium">{t.label}</div>
@@ -237,7 +237,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
             value={weekId}
             onChange={(e) => setWeekId(e.target.value)}
             className="w-full px-3 py-2 rounded-lg border text-sm"
-            style={{ borderColor: '#dee2e6', color: 'var(--color-dark-brown)' }}
+            style={{ borderColor: '#e2dfe8', color: 'var(--color-dark-brown)' }}
           >
             <option value="">No specific week</option>
             {weeks.map((w) => (
@@ -261,7 +261,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. 'The double character of the commodity' or 'Question about abstract labour'"
           className="w-full px-4 py-3 rounded-lg border text-sm transition-colors focus:outline-none"
-          style={{ borderColor: '#dee2e6', color: 'var(--color-dark-brown)' }}
+          style={{ borderColor: '#e2dfe8', color: 'var(--color-dark-brown)' }}
           required
         />
       </div>
@@ -303,7 +303,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
           placeholder="Share your thoughts, questions, or reflections on the reading..."
           rows={10}
           className="w-full px-4 py-3 rounded-lg border text-sm resize-none transition-colors focus:outline-none"
-          style={{ borderColor: '#dee2e6', color: 'var(--color-dark-brown)', lineHeight: '1.85', minHeight: '200px' }}
+          style={{ borderColor: '#e2dfe8', color: 'var(--color-dark-brown)', lineHeight: '1.85', minHeight: '200px' }}
           required
         />
       </div>
@@ -314,7 +314,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
           type="button"
           onClick={() => router.back()}
           className="px-4 py-2 rounded-lg text-sm font-medium border transition-colors"
-          style={{ borderColor: '#dee2e6', color: 'var(--color-warm-gray)' }}
+          style={{ borderColor: '#e2dfe8', color: 'var(--color-warm-gray)' }}
         >
           Cancel
         </button>

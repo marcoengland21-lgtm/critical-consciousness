@@ -1,14 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  /* Modern, refined cool palette */
-  --color-deep-red: #c2185b;
-  --color-warm-cream: #f8f9fa;
-  --color-dark-brown: #1a1a2e;
-  --color-warm-gray: #6c757d;
-  --color-muted-gold: #5c6bc0;
-  --color-soft-sage: #e8eaf6;
-  --color-text-primary: #212529;
+  /* Revolutionary palette — deep red + purple */
+  --color-deep-red: #a31545;        /* Rich crimson — Marxist red, strong contrast */
+  --color-warm-cream: #faf9fc;      /* Very light lavender-white — page bg */
+  --color-dark-brown: #1a1625;      /* Near-black with purple — text + nav bg */
+  --color-warm-gray: #6b6478;       /* Purple-gray — secondary text */
+  --color-muted-gold: #6b4c9a;      /* Muted purple — accents, links, badges */
+  --color-soft-sage: #ede8f5;       /* Pale purple — subtle backgrounds */
 
   /* Typography */
   --font-family-sans: system-ui, -apple-system, sans-serif;
@@ -17,13 +16,13 @@
 }
 
 html[data-theme="dark"] {
-  /* Dark mode: refined cool palette */
-  --color-deep-red: #c2185b;
-  --color-warm-cream: #e2e2ea;
-  --color-dark-brown: #e2e2ea;
-  --color-warm-gray: #9299b8;
-  --color-muted-gold: #5c6bc0;
-  --color-soft-sage: #2d2d3f;
+  /* Dark mode — deep purple-black */
+  --color-deep-red: #d4366e;        /* Brighter crimson for dark bg */
+  --color-warm-cream: #e8e4f0;      /* Light purple-gray text */
+  --color-dark-brown: #eae6f2;      /* Light text on dark bg */
+  --color-warm-gray: #9990ab;       /* Muted purple-gray */
+  --color-muted-gold: #9b80c9;      /* Brighter purple for dark bg */
+  --color-soft-sage: #2a2435;       /* Dark purple for subtle bgs */
 }
 
 /* Clean typography defaults */
@@ -36,8 +35,8 @@ body {
 }
 
 html[data-theme="dark"] body {
-  color: #e2e2ea;
-  background-color: #121218;
+  color: #eae6f2;
+  background-color: #110e18;
 }
 
 h1,
@@ -101,14 +100,14 @@ a:hover {
   margin: 1.5em 0;
   font-style: italic;
   color: var(--color-warm-gray);
-  background-color: rgba(92, 107, 192, 0.06);
+  background-color: rgba(107, 76, 154, 0.06);
   padding: 0.75em 1.25em;
   border-radius: 0 4px 4px 0;
 }
 
 /* Annotation highlights */
 .annotation-highlight {
-  background-color: rgba(92, 107, 192, 0.12);
+  background-color: rgba(107, 76, 154, 0.12);
   cursor: pointer;
   transition: background-color 150ms ease;
   border-radius: 2px;
@@ -116,51 +115,51 @@ a:hover {
 }
 
 .annotation-highlight:hover {
-  background-color: rgba(92, 107, 192, 0.25);
+  background-color: rgba(107, 76, 154, 0.25);
 }
 
 .annotation-highlight-dense {
-  background-color: rgba(92, 107, 192, 0.2);
+  background-color: rgba(107, 76, 154, 0.2);
 }
 
 .annotation-highlight-dense:hover {
-  background-color: rgba(92, 107, 192, 0.4);
+  background-color: rgba(107, 76, 154, 0.4);
 }
 
 /* Dark mode specific styles for UI elements */
 html[data-theme="dark"] .annotation-highlight {
-  background-color: rgba(92, 107, 192, 0.2);
+  background-color: rgba(107, 76, 154, 0.2);
 }
 
 html[data-theme="dark"] .annotation-highlight:hover {
-  background-color: rgba(92, 107, 192, 0.35);
+  background-color: rgba(107, 76, 154, 0.35);
 }
 
 html[data-theme="dark"] .annotation-highlight-dense {
-  background-color: rgba(92, 107, 192, 0.3);
+  background-color: rgba(107, 76, 154, 0.3);
 }
 
 html[data-theme="dark"] .annotation-highlight-dense:hover {
-  background-color: rgba(92, 107, 192, 0.5);
+  background-color: rgba(107, 76, 154, 0.5);
 }
 
 /* Dark card/container backgrounds */
 html[data-theme="dark"] {
-  --bg-card: #1e1e2a;
-  --border-color: #2d2d3f;
-  --text-primary: #e2e2ea;
-  --text-secondary: #9299b8;
+  --bg-card: #1e1a28;
+  --border-color: #332d42;
+  --text-primary: #eae6f2;
+  --text-secondary: #9990ab;
 }
 
 /* Selection */
 ::selection {
-  background-color: rgba(92, 107, 192, 0.2);
+  background-color: rgba(107, 76, 154, 0.2);
   color: var(--color-dark-brown);
 }
 
 html[data-theme="dark"] ::selection {
-  background-color: rgba(92, 107, 192, 0.3);
-  color: var(--color-dark-text, #e2e2ea);
+  background-color: rgba(107, 76, 154, 0.3);
+  color: var(--color-dark-text, #eae6f2);
 }
 
 /* Smooth transitions for interactive elements */
@@ -169,7 +168,7 @@ html[data-theme="dark"] ::selection {
 }
 .card-hover:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(26, 26, 46, 0.08);
+  box-shadow: 0 4px 12px rgba(26, 22, 37, 0.1);
 }
 
 /* Active nav link indicator */
@@ -215,7 +214,7 @@ html[data-theme="dark"] ::selection {
   padding: 0.5em 1em;
   margin: 0.75em 0;
   border-radius: 0 4px 4px 0;
-  background-color: rgba(92, 107, 192, 0.06);
+  background-color: rgba(107, 76, 154, 0.06);
   font-style: italic;
 }
 .markdown-body blockquote p {

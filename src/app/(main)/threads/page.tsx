@@ -7,7 +7,7 @@ import type { ThreadType } from '@/types/database'
 // Author badge component with color-coded initials
 function AuthorBadge({ name }: { name: string }) {
   const colors = [
-    '#c2185b', '#2e7d6e', '#5c6bc0', '#7b6b3d',
+    '#a31545', '#2e7d6e', '#6b4c9a', '#7b6b3d',
     '#6B4C7D', '#2D7A8A', '#8A4B3D', '#4A7B4F',
   ]
   let hash = 0
@@ -160,7 +160,7 @@ export default async function ThreadsPage({
                 className="block p-5 rounded-lg border transition-all card-hover"
                 style={{
                   backgroundColor: 'white',
-                  borderColor: thread.pinned ? 'var(--color-muted-gold)' : '#dee2e6',
+                  borderColor: thread.pinned ? 'var(--color-muted-gold)' : '#e2dfe8',
                   borderWidth: thread.pinned ? '2px' : '1px',
                 }}
               >

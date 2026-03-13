@@ -123,29 +123,29 @@ export default function ResourcesList({
 
       {/* Add form */}
       {showForm && (
-        <form onSubmit={handleSubmit} className="mb-6 p-4 rounded-lg border space-y-3" style={{ backgroundColor: 'white', borderColor: '#dee2e6' }}>
+        <form onSubmit={handleSubmit} className="mb-6 p-4 rounded-lg border space-y-3" style={{ backgroundColor: 'white', borderColor: '#e2dfe8' }}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
               placeholder="Resource title" className="px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: '#dee2e6', color: 'var(--color-dark-brown)' }} required />
+              style={{ borderColor: '#e2dfe8', color: 'var(--color-dark-brown)' }} required />
             <input type="url" value={url} onChange={(e) => setUrl(e.target.value)}
               placeholder="URL (optional)" className="px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: '#dee2e6', color: 'var(--color-dark-brown)' }} />
+              style={{ borderColor: '#e2dfe8', color: 'var(--color-dark-brown)' }} />
           </div>
           <textarea value={description} onChange={(e) => setDescription(e.target.value)}
             placeholder="Description (optional)" rows={2} className="w-full px-3 py-2 rounded-lg border text-sm resize-y"
-            style={{ borderColor: '#dee2e6', color: 'var(--color-dark-brown)' }} />
+            style={{ borderColor: '#e2dfe8', color: 'var(--color-dark-brown)' }} />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <select value={resourceType} onChange={(e) => setResourceType(e.target.value as ResourceType)}
               className="px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: '#dee2e6', color: 'var(--color-dark-brown)' }}>
+              style={{ borderColor: '#e2dfe8', color: 'var(--color-dark-brown)' }}>
               {Object.entries(typeLabels).map(([key, config]) => (
                 <option key={key} value={key}>{config.icon} {config.label}</option>
               ))}
             </select>
             <select value={weekId} onChange={(e) => setWeekId(e.target.value)}
               className="px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: '#dee2e6', color: 'var(--color-dark-brown)' }}>
+              style={{ borderColor: '#e2dfe8', color: 'var(--color-dark-brown)' }}>
               <option value="">No specific week</option>
               {weeks.map((w) => (
                 <option key={w.id} value={w.id}>Week {w.week_number}: {w.title}</option>
@@ -170,7 +170,7 @@ export default function ResourcesList({
           {filtered.map((resource) => {
             const typeInfo = typeLabels[resource.resource_type] || typeLabels.other
             return (
-              <div key={resource.id} className="p-4 rounded-lg border" style={{ backgroundColor: 'white', borderColor: '#dee2e6' }}>
+              <div key={resource.id} className="p-4 rounded-lg border" style={{ backgroundColor: 'white', borderColor: '#e2dfe8' }}>
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">{typeInfo.icon}</span>
                   <div className="flex-1 min-w-0">

@@ -54,7 +54,7 @@ export default function ReadingCheckinButton({ weekId, currentStatus }: ReadingC
 
   return (
     <>
-      <div className="mt-4 pt-4 border-t" style={{ borderColor: '#dee2e6' }}>
+      <div className="mt-4 pt-4 border-t" style={{ borderColor: '#e2dfe8' }}>
         <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: 'var(--color-muted-gold)' }}>
           Your Progress
         </p>
@@ -68,7 +68,7 @@ export default function ReadingCheckinButton({ weekId, currentStatus }: ReadingC
               style={{
                 backgroundColor: status === option.value ? 'var(--color-dark-brown)' : 'white',
                 color: status === option.value ? 'var(--color-warm-cream)' : 'var(--color-dark-brown)',
-                borderColor: status === option.value ? 'var(--color-dark-brown)' : '#dee2e6',
+                borderColor: status === option.value ? 'var(--color-dark-brown)' : '#e2dfe8',
                 opacity: saving ? 0.6 : 1,
               }}
             >

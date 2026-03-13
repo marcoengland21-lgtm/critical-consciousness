@@ -90,7 +90,7 @@ export default async function ReadingPage() {
               {chapters.length > 0 ? (
                 <div
                   className="rounded-b-lg border border-t-0 overflow-hidden"
-                  style={{ borderColor: '#dee2e6' }}
+                  style={{ borderColor: '#e2dfe8' }}
                 >
                   {chapters.map((chapter: any, i: number) => {
                     const isCurrentWeek = chapter.week_id === currentWeekId
@@ -101,7 +101,7 @@ export default async function ReadingPage() {
                         className="flex items-center justify-between px-6 py-4 transition-all hover:bg-gray-50 group"
                         style={{
                           backgroundColor: isCurrentWeek ? '#faf6ee' : 'white',
-                          borderBottom: i < chapters.length - 1 ? '1px solid #dee2e6' : 'none',
+                          borderBottom: i < chapters.length - 1 ? '1px solid #e2dfe8' : 'none',
                         }}
                       >
                         <div className="flex items-center gap-4">
@@ -157,7 +157,7 @@ export default async function ReadingPage() {
               ) : (
                 <div
                   className="rounded-b-lg border border-t-0 px-6 py-4"
-                  style={{ borderColor: '#dee2e6', backgroundColor: 'white' }}
+                  style={{ borderColor: '#e2dfe8', backgroundColor: 'white' }}
                 >
                   <p className="text-sm" style={{ color: 'var(--color-warm-gray)' }}>
                     Chapters will appear here as they&apos;re added to the reading schedule.

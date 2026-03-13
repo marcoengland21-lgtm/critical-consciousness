@@ -51,7 +51,7 @@ export default function GlossaryTooltip({ term, definition, position, onClose }:
         top: `${position.top}px`,
         left: `${position.left}px`,
         backgroundColor: 'var(--color-warm-cream)',
-        borderColor: '#dee2e6',
+        borderColor: '#e2dfe8',
         color: 'var(--color-dark-brown)',
       }}
     >

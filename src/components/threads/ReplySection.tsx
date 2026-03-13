@@ -136,7 +136,7 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
     const canDelete = reply.author_id === currentUserId || isAdmin
 
     return (
-      <div key={reply.id} className={depth > 0 ? 'ml-6 pl-4 border-l-2' : ''} style={{ borderColor: depth > 0 ? '#dee2e6' : undefined }}>
+      <div key={reply.id} className={depth > 0 ? 'ml-6 pl-4 border-l-2' : ''} style={{ borderColor: depth > 0 ? '#e2dfe8' : undefined }}>
         <div className="py-4">
           <div className="flex items-center gap-2 mb-2 text-sm">
             <span className="font-medium" style={{ color: 'var(--color-dark-brown)' }}>
@@ -162,7 +162,7 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
                 onChange={(e) => { setEditBody(e.target.value); autoResize(e.target) }}
                 rows={3}
                 className="w-full px-3 py-2 rounded-lg border text-sm resize-none transition-all"
-                style={{ borderColor: '#dee2e6', color: 'var(--color-dark-brown)', minHeight: '80px' }}
+                style={{ borderColor: '#e2dfe8', color: 'var(--color-dark-brown)', minHeight: '80px' }}
               />
               <div className="flex gap-2">
                 <button
@@ -176,7 +176,7 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
                 <button
                   onClick={() => { setEditingId(null); setEditBody('') }}
                   className="px-3 py-1 rounded text-xs font-medium border"
-                  style={{ borderColor: '#dee2e6', color: 'var(--color-warm-gray)' }}
+                  style={{ borderColor: '#e2dfe8', color: 'var(--color-warm-gray)' }}
                 >
                   Cancel
                 </button>
@@ -229,7 +229,7 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
                 placeholder={`Replying to ${reply.author?.display_name}...`}
                 rows={3}
                 className="w-full px-3 py-2 rounded-lg border text-sm resize-none transition-all"
-                style={{ borderColor: '#dee2e6', color: 'var(--color-dark-brown)', minHeight: '80px' }}
+                style={{ borderColor: '#e2dfe8', color: 'var(--color-dark-brown)', minHeight: '80px' }}
               />
               <div className="flex gap-2 mt-2">
                 <button
@@ -243,7 +243,7 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
                 <button
                   onClick={() => { setReplyingTo(null); setNestedReplyBody('') }}
                   className="px-3 py-1 rounded text-xs font-medium border"
-                  style={{ borderColor: '#dee2e6', color: 'var(--color-warm-gray)' }}
+                  style={{ borderColor: '#e2dfe8', color: 'var(--color-warm-gray)' }}
                 >
                   Cancel
                 </button>
@@ -265,7 +265,7 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
       </h2>
 
       {/* Top-level reply form */}
-      <div className="mb-6 p-4 rounded-lg border" style={{ backgroundColor: 'white', borderColor: '#dee2e6' }}>
+      <div className="mb-6 p-4 rounded-lg border" style={{ backgroundColor: 'white', borderColor: '#e2dfe8' }}>
         <textarea
           ref={mainReplyRef}
           value={replyBody}
@@ -273,7 +273,7 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
           placeholder="Join the conversation..."
           rows={4}
           className="w-full px-3 py-2 rounded-lg border text-sm resize-none transition-all mb-3"
-          style={{ borderColor: '#dee2e6', color: 'var(--color-dark-brown)', lineHeight: '1.75', minHeight: '120px' }}
+          style={{ borderColor: '#e2dfe8', color: 'var(--color-dark-brown)', lineHeight: '1.75', minHeight: '120px' }}
         />
         <div className="flex justify-end">
           <button
@@ -288,7 +288,7 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
       </div>
 
       {/* Reply tree */}
-      <div className="divide-y" style={{ borderColor: '#dee2e6' }}>
+      <div className="divide-y" style={{ borderColor: '#e2dfe8' }}>
         {topLevelReplies.map((reply) => renderReply(reply, 0))}
       </div>
 

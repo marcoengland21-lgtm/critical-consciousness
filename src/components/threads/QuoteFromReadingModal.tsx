@@ -123,7 +123,7 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
         {/* Header */}
         <div
           className="px-6 py-4 border-b flex items-center justify-between flex-shrink-0"
-          style={{ borderColor: '#dee2e6', backgroundColor: 'white' }}
+          style={{ borderColor: '#e2dfe8', backgroundColor: 'white' }}
         >
           <h2 className="font-bold text-lg" style={{ color: 'var(--color-dark-brown)' }}>
             {step === 'chapters' ? 'Select a Chapter' : 'Select Text'}
@@ -160,7 +160,7 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
                     }}
                     className="w-full text-left p-4 rounded-lg border transition-all hover:shadow-md"
                     style={{
-                      borderColor: '#dee2e6',
+                      borderColor: '#e2dfe8',
                       backgroundColor: 'white',
                       color: 'var(--color-dark-brown)',
                     }}
@@ -193,7 +193,7 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
                   onMouseUp={handleTextSelection}
                   className="p-4 rounded-lg border leading-relaxed select-text"
                   style={{
-                    borderColor: '#dee2e6',
+                    borderColor: '#e2dfe8',
                     backgroundColor: '#faf9f7',
                     color: 'var(--color-dark-brown)',
                     fontSize: '0.95rem',
@@ -227,7 +227,7 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
         {/* Footer */}
         <div
           className="px-6 py-4 border-t flex items-center justify-between gap-3 flex-shrink-0"
-          style={{ borderColor: '#dee2e6', backgroundColor: 'white' }}
+          style={{ borderColor: '#e2dfe8', backgroundColor: 'white' }}
         >
           <button
             onClick={() => {
@@ -240,7 +240,7 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
               }
             }}
             className="px-4 py-2 rounded-lg text-sm font-medium border transition-colors"
-            style={{ borderColor: '#dee2e6', color: 'var(--color-warm-gray)' }}
+            style={{ borderColor: '#e2dfe8', color: 'var(--color-warm-gray)' }}
           >
             {step === 'select' ? 'Back' : 'Cancel'}
           </button>
