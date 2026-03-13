@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import MobileNav from '@/components/layout/MobileNav'
 import NavLink from '@/components/layout/NavLink'
 import LogoutButton from '@/components/layout/LogoutButton'
+import ThemeToggle from '@/components/layout/ThemeToggle'
 
 export default async function MainLayout({
   children,
@@ -35,7 +36,7 @@ export default async function MainLayout({
     <div
       className="min-h-screen"
       style={{
-        backgroundColor: 'var(--color-warm-cream)',
+        backgroundColor: 'var(--bg-page)',
       }}
     >
       {/* Navigation Bar */}
@@ -43,7 +44,7 @@ export default async function MainLayout({
         className="sticky top-0 z-50 border-b"
         style={{
           backgroundColor: 'var(--bg-nav)',
-          borderColor: 'var(--color-muted-gold)',
+          borderColor: 'var(--accent-purple)',
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -71,6 +72,7 @@ export default async function MainLayout({
 
             {/* Right Side - User Info and Logout */}
             <div className="flex items-center space-x-4">
+              <ThemeToggle />
               <span
                 className="hidden sm:inline text-sm"
                 style={{
@@ -81,7 +83,7 @@ export default async function MainLayout({
               </span>
               {/* TODO: RE-ENABLE AUTH — Show LogoutButton only when user is logged in */}
               {user ? <LogoutButton /> : (
-                <Link href="/login" className="text-sm font-medium px-3 py-1 rounded" style={{ color: 'var(--text-inverse)', border: '1px solid var(--color-muted-gold)' }}>
+                <Link href="/login" className="text-sm font-medium px-3 py-1 rounded" style={{ color: 'var(--text-inverse)', border: '1px solid var(--accent-purple)' }}>
                   Sign In
                 </Link>
               )}
