@@ -163,6 +163,17 @@ CREATE TABLE text_chapters (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- Footnotes associated with text chapters
+CREATE TABLE text_footnotes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  chapter_id UUID NOT NULL REFERENCES text_chapters(id) ON DELETE CASCADE,
+  footnote_number INTEGER NOT NULL,
+  content TEXT NOT NULL,
+  author TEXT NOT NULL DEFAULT 'marx' CHECK (author IN ('marx', 'engels')),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(chapter_id, footnote_number)
+);
+
 -- Annotations on text chapters
 CREATE TABLE annotations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

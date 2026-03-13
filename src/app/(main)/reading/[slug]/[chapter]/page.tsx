@@ -76,6 +76,13 @@ export default async function ChapterPage({ params }: Props) {
   const prevChapter = currentIndex > 0 ? chapters[currentIndex - 1] : null
   const nextChapter = currentIndex < chapters.length - 1 ? chapters[currentIndex + 1] : null
 
+  // Get footnotes for this chapter
+  const { data: footnotes } = await supabase
+    .from('text_footnotes')
+    .select('*')
+    .eq('chapter_id', chapterData.id)
+    .order('footnote_number', { ascending: true })
+
   // Get existing annotations for this chapter
   const { data: annotations } = await supabase
     .from('annotations')
@@ -145,6 +152,7 @@ export default async function ChapterPage({ params }: Props) {
       <ChapterReader
         chapter={chapterData}
         annotations={annotations || []}
+        footnotes={footnotes || []}
         userId={user?.id || null}
         documentSlug={slug}
       />

@@ -10,6 +10,7 @@ import OnboardingHint from './OnboardingHint'
 import ReadingControls from './ReadingControls'
 import ConfusionFlagButton from './ConfusionFlagButton'
 import GlossaryTooltip from './GlossaryTooltip'
+import FootnoteInline from './FootnoteInline'
 import Toast from '@/components/ui/Toast'
 import { getConfusionFlagCounts, getUserConfusionFlags } from '@/lib/confusion-flags'
 import { findGlossaryTermMatches, buildGlossarySegments, GlossaryTerm, TermMatch } from '@/lib/glossary-utils'
@@ -42,9 +43,17 @@ interface Chapter {
   sort_order: number
 }
 
+interface Footnote {
+  id: string
+  footnote_number: number
+  content: string
+  author: 'marx' | 'engels'
+}
+
 interface Props {
   chapter: Chapter
   annotations: Annotation[]
+  footnotes: Footnote[]
   userId: string | null
   documentSlug: string
 }
@@ -153,7 +162,52 @@ function buildMergedSegments(
   return merged
 }
 
-export default function ChapterReader({ chapter, annotations: initialAnnotations, userId, documentSlug }: Props) {
+/** Split text on footnote markers [N] and return React nodes */
+function renderTextWithFootnotes(
+  text: string,
+  footnoteMap: Map<number, Footnote>,
+  keyPrefix: string
+): React.ReactNode[] {
+  const parts: React.ReactNode[] = []
+  const regex = /\[(\d+)\]/g
+  let lastIndex = 0
+  let match: RegExpExecArray | null
+
+  while ((match = regex.exec(text)) !== null) {
+    // Text before the marker
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index))
+    }
+
+    const fnNum = parseInt(match[1], 10)
+    const footnote = footnoteMap.get(fnNum)
+
+    if (footnote) {
+      parts.push(
+        <FootnoteInline
+          key={`${keyPrefix}-fn-${fnNum}`}
+          number={fnNum}
+          content={footnote.content}
+          author={footnote.author}
+        />
+      )
+    } else {
+      // If no footnote data found, render the marker as-is
+      parts.push(match[0])
+    }
+
+    lastIndex = match.index + match[0].length
+  }
+
+  // Remaining text after last marker
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex))
+  }
+
+  return parts.length > 0 ? parts : [text]
+}
+
+export default function ChapterReader({ chapter, annotations: initialAnnotations, footnotes, userId, documentSlug }: Props) {
   // Debug logging
   console.log('[CCP Debug] ChapterReader mounted', {
     chapterId: chapter.id,
@@ -192,6 +246,15 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     position: { top: number; left: number }
   } | null>(null)
   const [annotationKeyword, setAnnotationKeyword] = useState('')
+
+  // Build footnote lookup map
+  const footnoteMap = useMemo(() => {
+    const map = new Map<number, Footnote>()
+    for (const fn of footnotes) {
+      map.set(fn.footnote_number, fn)
+    }
+    return map
+  }, [footnotes])
 
   // Scroll position memory
   useEffect(() => {
@@ -612,7 +675,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
                       }
                       title={`Click to see definition of "${seg.termData.term}"`}
                     >
-                      {seg.text}
+                      {renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`)}
                     </span>
                   )
                 }
@@ -655,7 +718,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
                         }}
                         title={`${density} annotation${density > 1 ? 's' : ''}; Click to see glossary definition of "${seg.termData.term}"`}
                       >
-                        {seg.text}
+                        {renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`)}
                       </mark>
                     )
                   }
@@ -673,13 +736,13 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
                         transition: 'opacity 200ms ease',
                       }}
                     >
-                      {seg.text}
+                      {renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`)}
                     </mark>
                   )
                 }
 
                 // Regular text (no annotations, no glossary terms)
-                return <span key={sIdx}>{seg.text}</span>
+                return <span key={sIdx}>{renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`)}</span>
               })}
             </p>
           )

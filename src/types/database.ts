@@ -123,6 +123,15 @@ export interface TextChapter {
   created_at: string;
 }
 
+export interface TextFootnote {
+  id: string;
+  chapter_id: string;
+  footnote_number: number;
+  content: string;
+  author: 'marx' | 'engels';
+  created_at: string;
+}
+
 export interface Annotation {
   id: string;
   chapter_id: string;
