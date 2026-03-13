@@ -120,7 +120,7 @@ export default async function SchedulePage() {
               </div>
 
               {/* Week Details */}
-              <div className="px-6 py-4 space-y-4" style={{ backgroundColor: isCurrent ? '#faf9fc' : 'white' }}>
+              <div className="px-6 py-4 space-y-4" style={{ backgroundColor: isCurrent ? 'var(--bg-card-alt)' : 'var(--bg-card)' }}>
                 {/* Reading info */}
                 {(week.chapter_ref || week.description) && (
                   <div>
@@ -173,7 +173,7 @@ export default async function SchedulePage() {
                         <div
                           key={role.id}
                           className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border"
-                          style={{ borderColor: '#e2dfe8', backgroundColor: 'white' }}
+                          style={{ borderColor: 'var(--border-default)', backgroundColor: 'var(--bg-card)' }}
                         >
                           <RoleBadge type={role.role_type as WeeklyRoleType} />
                           <span style={{ color: 'var(--color-dark-brown)' }}>

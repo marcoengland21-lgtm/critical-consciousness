@@ -150,7 +150,7 @@ export default async function ChapterPage({ params }: Props) {
       />
 
       {/* Chapter navigation footer */}
-      <div className="mt-16 pt-8 border-t flex items-center justify-between" style={{ borderColor: '#e2dfe8' }}>
+      <div className="mt-16 pt-8 border-t flex items-center justify-between" style={{ borderColor: 'var(--border-default)' }}>
         {prevChapter ? (
           <Link
             href={`/reading/${slug}/${prevChapter.chapter_number}`}

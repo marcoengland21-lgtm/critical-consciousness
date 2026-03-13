@@ -101,7 +101,7 @@ export default async function ThreadsPage({
           className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors"
           style={{
             backgroundColor: 'var(--color-deep-red)',
-            color: 'var(--color-warm-cream)',
+            color: 'var(--text-inverse)',
           }}
         >
           New Thread
@@ -142,7 +142,7 @@ export default async function ThreadsPage({
             className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium"
             style={{
               backgroundColor: 'var(--color-deep-red)',
-              color: 'var(--color-warm-cream)',
+              color: 'var(--text-inverse)',
             }}
           >
             Start a Discussion
@@ -159,7 +159,7 @@ export default async function ThreadsPage({
                 href={`/threads/${thread.id}`}
                 className="block p-5 rounded-lg border transition-all card-hover"
                 style={{
-                  backgroundColor: 'white',
+                  backgroundColor: 'var(--bg-card)',
                   borderColor: thread.pinned ? 'var(--color-muted-gold)' : '#e2dfe8',
                   borderWidth: thread.pinned ? '2px' : '1px',
                 }}

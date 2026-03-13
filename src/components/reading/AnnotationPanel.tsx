@@ -99,14 +99,14 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
         ref={panelRef}
         className="fixed right-0 top-0 h-full w-full sm:w-96 z-50 shadow-2xl overflow-y-auto animate-slide-in-right"
         style={{
-          backgroundColor: 'white',
-          borderLeft: '1px solid #e2dfe8',
+          backgroundColor: 'var(--bg-card)',
+          borderLeft: '1px solid var(--border-default)',
         }}
       >
         {/* Header */}
         <div
           className="sticky top-0 z-10 px-5 py-4 border-b flex items-center justify-between"
-          style={{ backgroundColor: 'white', borderColor: '#e2dfe8' }}
+          style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
         >
           <h3 className="font-bold text-sm" style={{ color: 'var(--color-dark-brown)' }}>
             Annotation
@@ -158,7 +158,7 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
 
           {/* Replies */}
           {replies.length > 0 && (
-            <div className="space-y-3 pl-3 border-l-2" style={{ borderColor: '#e2dfe8' }}>
+            <div className="space-y-3 pl-3 border-l-2" style={{ borderColor: 'var(--border-default)' }}>
               <h4 className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-warm-gray)' }}>
                 {replies.length} {replies.length === 1 ? 'Reply' : 'Replies'}
               </h4>
@@ -180,13 +180,13 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
 
           {/* Continue in thread button (shows when annotation has 2+ replies or already has a thread_id) */}
           {(replies.length >= 2 || annotation.thread_id) && (
-            <div className="pt-3 border-t" style={{ borderColor: '#e2dfe8' }}>
+            <div className="pt-3 border-t" style={{ borderColor: 'var(--border-default)' }}>
               {annotation.thread_id ? (
                 <button
                   onClick={() => router.push(`/threads/${annotation.thread_id}`)}
                   className="w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
                   style={{
-                    backgroundColor: '#f5f3f0',
+                    backgroundColor: 'var(--bg-soft)',
                     color: 'var(--color-deep-red)',
                     border: '1px solid var(--color-muted-gold)',
                   }}
@@ -216,7 +216,7 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
                   }}
                   className="w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
                   style={{
-                    backgroundColor: '#f5f3f0',
+                    backgroundColor: 'var(--bg-soft)',
                     color: 'var(--color-deep-red)',
                     border: '1px solid var(--color-muted-gold)',
                   }}
@@ -228,7 +228,7 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
           )}
 
           {/* Reply form */}
-          <form onSubmit={handleReply} className="pt-3 border-t" style={{ borderColor: '#e2dfe8' }}>
+          <form onSubmit={handleReply} className="pt-3 border-t" style={{ borderColor: 'var(--border-default)' }}>
             <textarea
               value={replyBody}
               onChange={(e) => setReplyBody(e.target.value)}
@@ -236,7 +236,7 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
               rows={2}
               className="w-full px-3 py-2 rounded-lg border text-sm resize-none"
               style={{
-                borderColor: '#e2dfe8',
+                borderColor: 'var(--border-default)',
                 color: 'var(--color-dark-brown)',
                 lineHeight: '1.6',
               }}
@@ -248,7 +248,7 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
                 className="px-3 py-1.5 text-xs font-medium rounded-lg disabled:opacity-50 transition-colors"
                 style={{
                   backgroundColor: 'var(--color-deep-red)',
-                  color: 'var(--color-warm-cream)',
+                  color: 'var(--text-inverse)',
                 }}
               >
                 {submitting ? 'Sending…' : 'Reply'}

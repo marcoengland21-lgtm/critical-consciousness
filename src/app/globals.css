@@ -1,13 +1,53 @@
 @import "tailwindcss";
 
 :root {
-  /* Revolutionary palette — deep red + purple */
-  --color-deep-red: #a31545;        /* Rich crimson — Marxist red, strong contrast */
-  --color-warm-cream: #faf9fc;      /* Very light lavender-white — page bg */
-  --color-dark-brown: #1a1625;      /* Near-black with purple — text + nav bg */
-  --color-warm-gray: #6b6478;       /* Purple-gray — secondary text */
-  --color-muted-gold: #6b4c9a;      /* Muted purple — accents, links, badges */
-  --color-soft-sage: #ede8f5;       /* Pale purple — subtle backgrounds */
+  /* =================================================================
+     SEMANTIC DESIGN TOKENS — Revolutionary Red + Purple
+     All components should use these vars, never raw hex values.
+     ================================================================= */
+
+  /* Backgrounds — layered from deepest to lightest */
+  --bg-page: #faf9fc;              /* Page background */
+  --bg-card: #ffffff;              /* Cards, containers */
+  --bg-card-alt: #faf9fc;         /* Alternate card background */
+  --bg-soft: #ede8f5;             /* Subtle highlight backgrounds */
+  --bg-nav: #1a1625;              /* Navigation bar */
+  --bg-header: #1a1625;           /* Section headers (e.g. This Week's Reading) */
+  --bg-input: #ffffff;            /* Form inputs */
+  --bg-badge: #ede8f5;            /* Tag/badge backgrounds */
+  --bg-button-secondary: #f0edf5; /* Secondary/cancel button bg */
+  --bg-hover: #f5f2fa;            /* Hover states */
+
+  /* Text */
+  --text-primary: #1a1625;        /* Main body text */
+  --text-secondary: #6b6478;      /* Secondary/muted text */
+  --text-inverse: #faf9fc;        /* Text on dark backgrounds */
+  --text-badge: #5c4a6a;          /* Badge/tag text */
+
+  /* Borders */
+  --border-default: #e2dfe8;      /* Standard borders */
+  --border-strong: #d4d0dc;       /* Stronger borders */
+
+  /* Accents */
+  --accent-red: #a31545;          /* Primary CTA, links */
+  --accent-red-hover: #8b1039;    /* Hover state */
+  --accent-purple: #6b4c9a;       /* Secondary accent */
+  --accent-purple-hover: #573d80; /* Hover state */
+  --accent-green: #4a6741;        /* Success states */
+
+  /* Legacy aliases (for existing var() references) */
+  --color-deep-red: var(--accent-red);
+  --color-warm-cream: var(--bg-page);
+  --color-dark-brown: var(--text-primary);
+  --color-warm-gray: var(--text-secondary);
+  --color-muted-gold: var(--accent-purple);
+  --color-soft-sage: var(--bg-soft);
+
+  /* Role badge colors */
+  --role-summarizer: #7c5fa6;
+  --role-discussion: #3a7a5c;
+  --role-connector: #4a6a8c;
+  --role-passage: #8c4a6a;
 
   /* Typography */
   --font-family-sans: system-ui, -apple-system, sans-serif;
@@ -15,74 +55,123 @@
   --line-height-loose: 2;
 }
 
+/* =================================================================
+   DARK MODE — Deep purple-black, evolved from PMN Pulse
+   Maintains the Marxist red + scholarly purple identity
+   ================================================================= */
 html[data-theme="dark"] {
-  /* Dark mode — deep purple-black */
-  --color-deep-red: #d4366e;        /* Brighter crimson for dark bg */
-  --color-warm-cream: #e8e4f0;      /* Light purple-gray text */
-  --color-dark-brown: #eae6f2;      /* Light text on dark bg */
-  --color-warm-gray: #9990ab;       /* Muted purple-gray */
-  --color-muted-gold: #9b80c9;      /* Brighter purple for dark bg */
-  --color-soft-sage: #2a2435;       /* Dark purple for subtle bgs */
+  --bg-page: #0f0d17;
+  --bg-card: #1a1625;
+  --bg-card-alt: #1e1a28;
+  --bg-soft: #231e30;
+  --bg-nav: #0a0814;
+  --bg-header: #231e30;
+  --bg-input: #1a1625;
+  --bg-badge: #2d2740;
+  --bg-button-secondary: #231e30;
+  --bg-hover: #2d2740;
+
+  --text-primary: #eae6f2;
+  --text-secondary: #9990ab;
+  --text-inverse: #1a1625;
+  --text-badge: #c4b8d4;
+
+  --border-default: #2d2740;
+  --border-strong: #3d3555;
+
+  --accent-red: #e84a7a;
+  --accent-red-hover: #f06090;
+  --accent-purple: #a88cd4;
+  --accent-purple-hover: #bda3e0;
+  --accent-green: #6abf69;
+
+  --role-summarizer: #a88cd4;
+  --role-discussion: #5cc98a;
+  --role-connector: #6a9acc;
+  --role-passage: #cc6a9a;
 }
 
-/* Clean typography defaults */
+/* =================================================================
+   BASE STYLES
+   ================================================================= */
 body {
   font-family: var(--font-family-sans);
   line-height: var(--line-height-relaxed);
-  color: var(--color-dark-brown);
-  background-color: var(--color-warm-cream);
+  color: var(--text-primary);
+  background-color: var(--bg-page);
   transition: background-color 200ms ease, color 200ms ease;
 }
 
-html[data-theme="dark"] body {
-  color: #eae6f2;
-  background-color: #110e18;
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-family-sans);
   font-weight: 600;
   line-height: 1.2;
-  color: var(--color-dark-brown);
+  color: var(--text-primary);
 }
 
-/* Utility classes for the platform */
+/* Utility classes */
 .prose-content {
   font-size: 1rem;
   line-height: var(--line-height-relaxed);
   max-width: 65ch;
-  color: var(--color-dark-brown);
+  color: var(--text-primary);
 }
 
-/* Focus states for accessibility */
+/* Focus states */
 :focus-visible {
-  outline: 2px solid var(--color-muted-gold);
+  outline: 2px solid var(--accent-purple);
   outline-offset: 2px;
 }
 
 /* Links */
 a {
-  color: var(--color-deep-red);
+  color: var(--accent-red);
   text-decoration: none;
   transition: color 0.2s ease;
 }
-
 a:hover {
-  color: var(--color-warm-gray);
+  color: var(--text-secondary);
   text-decoration: underline;
 }
 
-/* Reading page — book-like typography */
+/* =================================================================
+   DARK MODE: Form element overrides
+   (for any elements not yet converted to CSS vars)
+   ================================================================= */
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+}
+
+/* Dark mode: catch remaining hardcoded white backgrounds */
+html[data-theme="dark"] [style*="background-color: white"],
+html[data-theme="dark"] [style*="backgroundColor: white"],
+html[data-theme="dark"] [style*="background-color:white"] {
+  background-color: var(--bg-card) !important;
+}
+
+html[data-theme="dark"] [style*="background-color: #faf9fc"],
+html[data-theme="dark"] [style*="backgroundColor: #faf9fc"] {
+  background-color: var(--bg-card-alt) !important;
+}
+
+html[data-theme="dark"] [style*="border-color: #e2dfe8"],
+html[data-theme="dark"] [style*="borderColor: #e2dfe8"],
+html[data-theme="dark"] [style*="1px solid #e2dfe8"] {
+  border-color: var(--border-default) !important;
+}
+
+/* =================================================================
+   READING PAGE — book-like typography
+   ================================================================= */
 .reading-text {
   font-family: 'Lora', Georgia, 'Times New Roman', serif;
   font-size: 1.125rem;
   line-height: 1.8;
-  color: var(--color-dark-brown);
+  color: var(--text-primary);
   max-width: 68ch;
   margin: 0 auto;
 }
@@ -95,17 +184,23 @@ a:hover {
 
 .reading-text blockquote,
 .reading-text .blockquote {
-  border-left: 3px solid var(--color-muted-gold);
-  padding-left: 1.25em;
+  border-left: 3px solid var(--accent-purple);
+  padding: 0.75em 1.25em;
   margin: 1.5em 0;
   font-style: italic;
-  color: var(--color-warm-gray);
+  color: var(--text-secondary);
   background-color: rgba(107, 76, 154, 0.06);
-  padding: 0.75em 1.25em;
   border-radius: 0 4px 4px 0;
 }
 
-/* Annotation highlights */
+html[data-theme="dark"] .reading-text blockquote,
+html[data-theme="dark"] .reading-text .blockquote {
+  background-color: rgba(107, 76, 154, 0.12);
+}
+
+/* =================================================================
+   ANNOTATION HIGHLIGHTS
+   ================================================================= */
 .annotation-highlight {
   background-color: rgba(107, 76, 154, 0.12);
   cursor: pointer;
@@ -113,97 +208,39 @@ a:hover {
   border-radius: 2px;
   padding: 0 1px;
 }
+.annotation-highlight:hover { background-color: rgba(107, 76, 154, 0.25); }
+.annotation-highlight-dense { background-color: rgba(107, 76, 154, 0.2); }
+.annotation-highlight-dense:hover { background-color: rgba(107, 76, 154, 0.4); }
 
-.annotation-highlight:hover {
-  background-color: rgba(107, 76, 154, 0.25);
-}
+html[data-theme="dark"] .annotation-highlight { background-color: rgba(155, 128, 201, 0.2); }
+html[data-theme="dark"] .annotation-highlight:hover { background-color: rgba(155, 128, 201, 0.35); }
+html[data-theme="dark"] .annotation-highlight-dense { background-color: rgba(155, 128, 201, 0.3); }
+html[data-theme="dark"] .annotation-highlight-dense:hover { background-color: rgba(155, 128, 201, 0.5); }
 
-.annotation-highlight-dense {
-  background-color: rgba(107, 76, 154, 0.2);
-}
-
-.annotation-highlight-dense:hover {
-  background-color: rgba(107, 76, 154, 0.4);
-}
-
-/* Dark mode specific styles for UI elements */
-html[data-theme="dark"] .annotation-highlight {
-  background-color: rgba(107, 76, 154, 0.2);
-}
-
-html[data-theme="dark"] .annotation-highlight:hover {
-  background-color: rgba(107, 76, 154, 0.35);
-}
-
-html[data-theme="dark"] .annotation-highlight-dense {
-  background-color: rgba(107, 76, 154, 0.3);
-}
-
-html[data-theme="dark"] .annotation-highlight-dense:hover {
-  background-color: rgba(107, 76, 154, 0.5);
-}
-
-/* Dark card/container backgrounds */
-html[data-theme="dark"] {
-  --bg-card: #1e1a28;
-  --border-color: #332d42;
-  --text-primary: #eae6f2;
-  --text-secondary: #9990ab;
-}
-
-/* Dark mode: override hardcoded white backgrounds on cards/containers */
-html[data-theme="dark"] [style*="background-color: white"],
-html[data-theme="dark"] [style*="backgroundColor: white"],
-html[data-theme="dark"] [style*="background-color:white"] {
-  background-color: #1e1a28 !important;
-}
-
-/* Dark mode: override hardcoded border colors */
-html[data-theme="dark"] [style*="border-color: #e2dfe8"],
-html[data-theme="dark"] [style*="borderColor: #e2dfe8"],
-html[data-theme="dark"] [style*="1px solid #e2dfe8"],
-html[data-theme="dark"] [style*="border-color:#e2dfe8"] {
-  border-color: #332d42 !important;
-}
-
-/* Dark mode: override hardcoded light backgrounds */
-html[data-theme="dark"] [style*="background-color: #faf9fc"],
-html[data-theme="dark"] [style*="backgroundColor: #faf9fc"] {
-  background-color: #252030 !important;
-}
-
-/* Dark mode: inputs and textareas */
-html[data-theme="dark"] input,
-html[data-theme="dark"] textarea,
-html[data-theme="dark"] select {
-  background-color: #1e1a28;
-  color: #eae6f2;
-  border-color: #332d42;
-}
-
-/* Dark mode: hover states */
-html[data-theme="dark"] .hover\:bg-gray-50:hover {
-  background-color: #252030 !important;
-}
-
-/* Selection */
+/* =================================================================
+   SELECTION
+   ================================================================= */
 ::selection {
   background-color: rgba(107, 76, 154, 0.2);
-  color: var(--color-dark-brown);
+  color: var(--text-primary);
 }
-
 html[data-theme="dark"] ::selection {
-  background-color: rgba(107, 76, 154, 0.3);
-  color: var(--color-dark-text, #eae6f2);
+  background-color: rgba(155, 128, 201, 0.3);
+  color: var(--text-primary);
 }
 
-/* Smooth transitions for interactive elements */
+/* =================================================================
+   CARDS & INTERACTIONS
+   ================================================================= */
 .card-hover {
   transition: transform 150ms ease, box-shadow 150ms ease;
 }
 .card-hover:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(26, 22, 37, 0.1);
+}
+html[data-theme="dark"] .card-hover:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 /* Active nav link indicator */
@@ -218,71 +255,84 @@ html[data-theme="dark"] ::selection {
   left: 0;
   right: 0;
   height: 2px;
-  background-color: var(--color-muted-gold);
+  background-color: var(--accent-purple);
   border-radius: 1px;
 }
 
-/* Thread body prose */
+/* =================================================================
+   THREAD & MARKDOWN BODY
+   ================================================================= */
 .thread-body {
   font-size: 1rem;
   line-height: 1.85;
-  color: var(--color-dark-brown);
+  color: var(--text-primary);
   max-width: 65ch;
 }
-.thread-body p {
-  margin-bottom: 1em;
-}
+.thread-body p { margin-bottom: 1em; }
 
-/* Markdown body styling (threads, replies) */
 .markdown-body {
   line-height: 1.75;
-  color: var(--color-dark-brown);
+  color: var(--text-primary);
 }
-.markdown-body p {
-  margin-bottom: 0.75em;
-}
-.markdown-body p:last-child {
-  margin-bottom: 0;
-}
+.markdown-body p { margin-bottom: 0.75em; }
+.markdown-body p:last-child { margin-bottom: 0; }
 .markdown-body blockquote {
-  border-left: 3px solid var(--color-muted-gold);
+  border-left: 3px solid var(--accent-purple);
   padding: 0.5em 1em;
   margin: 0.75em 0;
   border-radius: 0 4px 4px 0;
   background-color: rgba(107, 76, 154, 0.06);
   font-style: italic;
 }
-.markdown-body blockquote p {
-  margin-bottom: 0.25em;
+html[data-theme="dark"] .markdown-body blockquote {
+  background-color: rgba(155, 128, 201, 0.1);
 }
-.markdown-body strong {
-  font-weight: 600;
-}
-.markdown-body em {
-  font-style: italic;
-}
+.markdown-body blockquote p { margin-bottom: 0.25em; }
+.markdown-body strong { font-weight: 600; }
+.markdown-body em { font-style: italic; }
 .markdown-body code {
-  background-color: rgba(33, 37, 41, 0.06);
+  background-color: var(--bg-soft);
   padding: 0.15em 0.35em;
   border-radius: 3px;
   font-size: 0.875em;
   font-family: 'SF Mono', 'Menlo', monospace;
 }
 
-/* Fade in animation */
+/* =================================================================
+   ANIMATIONS
+   ================================================================= */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.animate-fade-in {
-  animation: fadeInUp 300ms ease forwards;
-}
+.animate-fade-in { animation: fadeInUp 300ms ease forwards; }
 
-/* Slide in from right (for panels) */
 @keyframes slideInRight {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
 }
-.animate-slide-in-right {
-  animation: slideInRight 200ms ease forwards;
+.animate-slide-in-right { animation: slideInRight 200ms ease forwards; }
+
+/* =================================================================
+   CONFUSION FLAG INTENSITY
+   ================================================================= */
+.confusion-none { background-color: var(--bg-card-alt); color: var(--text-secondary); }
+.confusion-low { background-color: #d4c9a8; color: var(--text-primary); }
+.confusion-mid { background-color: #c9a86b; color: var(--text-primary); }
+.confusion-high { background-color: #b8863f; color: var(--text-primary); }
+html[data-theme="dark"] .confusion-none { background-color: var(--bg-soft); color: var(--text-secondary); }
+html[data-theme="dark"] .confusion-low { background-color: #5a4f3f; color: #e8ddd0; }
+html[data-theme="dark"] .confusion-mid { background-color: #6b5a45; color: #e8ddd0; }
+html[data-theme="dark"] .confusion-high { background-color: #7a6850; color: #e8ddd0; }
+
+/* =================================================================
+   SCROLLBAR (matching PMN Pulse — minimal, clean)
+   ================================================================= */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(107, 100, 120, 0.3);
+  border-radius: 3px;
 }
+::-webkit-scrollbar-thumb:hover { background: rgba(107, 100, 120, 0.5); }
+* { scrollbar-width: thin; scrollbar-color: rgba(107, 100, 120, 0.3) transparent; }

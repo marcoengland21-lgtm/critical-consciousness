@@ -33,12 +33,12 @@ export default function ThreadActions({ threadId, isAuthor, isAdmin }: ThreadAct
   }
 
   return (
-    <div className="flex items-center gap-3 mt-6 pt-4 border-t" style={{ borderColor: '#e2dfe8' }}>
+    <div className="flex items-center gap-3 mt-6 pt-4 border-t" style={{ borderColor: 'var(--border-default)' }}>
       {isAuthor && (
         <a
           href={`/threads/${threadId}/edit`}
           className="text-xs font-medium px-3 py-1.5 rounded border transition-colors"
-          style={{ borderColor: '#e2dfe8', color: 'var(--color-warm-gray)' }}
+          style={{ borderColor: 'var(--border-default)', color: 'var(--color-warm-gray)' }}
         >
           Edit
         </a>

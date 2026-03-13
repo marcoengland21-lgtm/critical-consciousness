@@ -42,7 +42,7 @@ export default async function MainLayout({
       <nav
         className="sticky top-0 z-50 border-b"
         style={{
-          backgroundColor: 'var(--color-dark-brown)',
+          backgroundColor: 'var(--bg-nav)',
           borderColor: 'var(--color-muted-gold)',
         }}
       >
@@ -53,7 +53,7 @@ export default async function MainLayout({
               href="/dashboard"
               className="flex-shrink-0 font-bold text-lg"
               style={{
-                color: 'var(--color-warm-cream)',
+                color: 'var(--text-inverse)',
               }}
             >
               Critical Consciousness
@@ -74,14 +74,14 @@ export default async function MainLayout({
               <span
                 className="hidden sm:inline text-sm"
                 style={{
-                  color: 'var(--color-warm-cream)',
+                  color: 'var(--text-inverse)',
                 }}
               >
                 {displayName}
               </span>
               {/* TODO: RE-ENABLE AUTH — Show LogoutButton only when user is logged in */}
               {user ? <LogoutButton /> : (
-                <Link href="/login" className="text-sm font-medium px-3 py-1 rounded" style={{ color: 'var(--color-warm-cream)', border: '1px solid var(--color-muted-gold)' }}>
+                <Link href="/login" className="text-sm font-medium px-3 py-1 rounded" style={{ color: 'var(--text-inverse)', border: '1px solid var(--color-muted-gold)' }}>
                   Sign In
                 </Link>
               )}

@@ -146,9 +146,9 @@ export default async function DashboardPage() {
 
           {/* This Week's Reading */}
           <div className="rounded-lg border-2 overflow-hidden" style={{ borderColor: 'var(--color-muted-gold)' }}>
-            <div className="px-5 py-3" style={{ backgroundColor: '#1a1625' }}>
+            <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-header)' }}>
               <div className="flex items-center justify-between">
-                <h2 className="font-bold" style={{ color: '#faf9fc' }}>
+                <h2 className="font-bold" style={{ color: 'var(--text-inverse)' }}>
                   This Week&apos;s Reading
                 </h2>
                 <Link href="/schedule" className="text-xs font-medium" style={{ color: 'var(--color-muted-gold)' }}>
@@ -156,7 +156,7 @@ export default async function DashboardPage() {
                 </Link>
               </div>
             </div>
-            <div className="p-5" style={{ backgroundColor: 'white' }}>
+            <div className="p-5" style={{ backgroundColor: 'var(--bg-card)' }}>
               {currentWeek ? (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -186,7 +186,7 @@ export default async function DashboardPage() {
 
                   {/* Session info */}
                   {currentWeek.session_date && (
-                    <div className="text-sm p-3 rounded-lg mb-3" style={{ backgroundColor: '#faf9fc' }}>
+                    <div className="text-sm p-3 rounded-lg mb-3" style={{ backgroundColor: 'var(--bg-card-alt)' }}>
                       <span className="font-medium" style={{ color: 'var(--color-dark-brown)' }}>
                         Next Session:{' '}
                         {new Date(currentWeek.session_date).toLocaleDateString('en-NZ', {
@@ -242,8 +242,8 @@ export default async function DashboardPage() {
           <GroupThinkingOverview annotations={annotations} threads={threads} />
 
           {/* Recent Threads */}
-          <div className="rounded-lg border overflow-hidden" style={{ borderColor: '#e2dfe8' }}>
-            <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: 'white', borderBottom: '1px solid #e2dfe8' }}>
+          <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
+            <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
               <h2 className="font-bold" style={{ color: 'var(--color-dark-brown)' }}>
                 Recent Discussions
               </h2>
@@ -251,9 +251,9 @@ export default async function DashboardPage() {
                 All Threads →
               </Link>
             </div>
-            <div style={{ backgroundColor: 'white' }}>
+            <div style={{ backgroundColor: 'var(--bg-card)' }}>
               {recentThreads && recentThreads.length > 0 ? (
-                <div className="divide-y" style={{ borderColor: '#e2dfe8' }}>
+                <div className="divide-y" style={{ borderColor: 'var(--border-default)' }}>
                   {recentThreads.map((thread: any) => {
                     const replyCount = thread.replies?.[0]?.count ?? 0
                     return (
@@ -291,7 +291,7 @@ export default async function DashboardPage() {
                   <Link
                     href="/threads/new"
                     className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium"
-                    style={{ backgroundColor: 'var(--color-deep-red)', color: 'var(--color-warm-cream)' }}
+                    style={{ backgroundColor: 'var(--color-deep-red)', color: 'var(--text-inverse)' }}
                   >
                     Share with the Group
                   </Link>
@@ -304,17 +304,17 @@ export default async function DashboardPage() {
         {/* Right column: Roles + Quick Links */}
         <div className="space-y-6">
           {/* Your Roles This Week */}
-          <div className="rounded-lg border overflow-hidden" style={{ borderColor: '#e2dfe8' }}>
-            <div className="px-5 py-3" style={{ backgroundColor: 'white', borderBottom: '1px solid #e2dfe8' }}>
+          <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
+            <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
               <h2 className="font-bold" style={{ color: 'var(--color-dark-brown)' }}>
                 Your Roles
               </h2>
             </div>
-            <div className="p-5" style={{ backgroundColor: 'white' }}>
+            <div className="p-5" style={{ backgroundColor: 'var(--bg-card)' }}>
               {myRoles.length > 0 ? (
                 <div className="space-y-3">
                   {myRoles.map((role: any) => (
-                    <div key={role.id} className="p-3 rounded-lg" style={{ backgroundColor: '#faf9fc' }}>
+                    <div key={role.id} className="p-3 rounded-lg" style={{ backgroundColor: 'var(--bg-card-alt)' }}>
                       <RoleBadge type={role.role_type as WeeklyRoleType} />
                       <p className="text-xs mt-1" style={{ color: 'var(--color-warm-gray)' }}>
                         {role.role_type === 'summarizer' && 'Prepare a brief summary of the key arguments.'}
@@ -335,13 +335,13 @@ export default async function DashboardPage() {
 
           {/* All Roles This Week */}
           {currentWeek?.weekly_roles && currentWeek.weekly_roles.length > 0 && (
-            <div className="rounded-lg border overflow-hidden" style={{ borderColor: '#e2dfe8' }}>
-              <div className="px-5 py-3" style={{ backgroundColor: 'white', borderBottom: '1px solid #e2dfe8' }}>
+            <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
+              <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
                 <h2 className="font-bold text-sm" style={{ color: 'var(--color-dark-brown)' }}>
                   All Roles This Week
                 </h2>
               </div>
-              <div className="p-5 space-y-2" style={{ backgroundColor: 'white' }}>
+              <div className="p-5 space-y-2" style={{ backgroundColor: 'var(--bg-card)' }}>
                 {currentWeek.weekly_roles.map((role: any) => (
                   <div key={role.id} className="flex items-center justify-between text-sm">
                     <RoleBadge type={role.role_type as WeeklyRoleType} />
@@ -363,7 +363,7 @@ export default async function DashboardPage() {
             className="block rounded-lg border-2 p-5 transition-all hover:shadow-md card-hover"
             style={{
               borderColor: 'var(--color-deep-red)',
-              backgroundColor: 'white',
+              backgroundColor: 'var(--bg-card)',
             }}
           >
             <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--color-deep-red)' }}>
@@ -378,17 +378,17 @@ export default async function DashboardPage() {
           </Link>
 
           {/* Quick Links */}
-          <div className="rounded-lg border overflow-hidden" style={{ borderColor: '#e2dfe8' }}>
-            <div className="px-5 py-3" style={{ backgroundColor: 'white', borderBottom: '1px solid #e2dfe8' }}>
+          <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
+            <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
               <h2 className="font-bold text-sm" style={{ color: 'var(--color-dark-brown)' }}>
                 Quick Links
               </h2>
             </div>
-            <div style={{ backgroundColor: 'white' }}>
-              <Link href="/threads/new" className="block px-5 py-3 text-sm transition-colors hover:bg-gray-50 border-b" style={{ borderColor: '#e2dfe8', color: 'var(--color-dark-brown)' }}>
+            <div style={{ backgroundColor: 'var(--bg-card)' }}>
+              <Link href="/threads/new" className="block px-5 py-3 text-sm transition-colors hover:bg-gray-50 border-b" style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)' }}>
                 Share with the Group
               </Link>
-              <Link href="/glossary" className="block px-5 py-3 text-sm transition-colors hover:bg-gray-50 border-b" style={{ borderColor: '#e2dfe8', color: 'var(--color-dark-brown)' }}>
+              <Link href="/glossary" className="block px-5 py-3 text-sm transition-colors hover:bg-gray-50 border-b" style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)' }}>
                 Browse Glossary
               </Link>
               <Link href="/resources" className="block px-5 py-3 text-sm transition-colors hover:bg-gray-50" style={{ color: 'var(--color-dark-brown)' }}>

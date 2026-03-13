@@ -66,9 +66,9 @@ export default function ReadingControls({
     <div>
       {/* Annotation keyword filter — shown above controls when there are annotations */}
       {annotationCount > 0 && (
-        <div className="mb-4 pb-3 border-b" style={{ borderColor: '#e2dfe8' }}>
+        <div className="mb-4 pb-3 border-b" style={{ borderColor: 'var(--border-default)' }}>
           <div className="flex items-center gap-2">
-            <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg" style={{ backgroundColor: '#faf9fc', border: '1px solid #e2dfe8' }}>
+            <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg" style={{ backgroundColor: 'var(--bg-card-alt)', border: '1px solid var(--border-default)' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--color-warm-gray)' }}>
                 <circle cx="11" cy="11" r="8" />
                 <path d="m21 21-4.35-4.35" />
@@ -96,7 +96,7 @@ export default function ReadingControls({
               )}
             </div>
             {keywordInput && (
-              <span className="text-xs font-medium px-2 py-1 rounded" style={{ color: 'var(--color-warm-gray)', backgroundColor: '#faf9fc' }}>
+              <span className="text-xs font-medium px-2 py-1 rounded" style={{ color: 'var(--color-warm-gray)', backgroundColor: 'var(--bg-card-alt)' }}>
                 {matchingAnnotationCount} of {annotationCount}
               </span>
             )}
@@ -107,7 +107,7 @@ export default function ReadingControls({
       {/* Main controls */}
       <div
         className="flex items-center justify-end gap-3 mb-4 pb-3 border-b"
-        style={{ borderColor: '#e2dfe8' }}
+        style={{ borderColor: 'var(--border-default)' }}
       >
         {/* Font size controls */}
       <div className="flex items-center gap-1">
@@ -137,7 +137,7 @@ export default function ReadingControls({
       </div>
 
       {/* Divider */}
-      <div className="w-px h-4" style={{ backgroundColor: '#e2dfe8' }} />
+      <div className="w-px h-4" style={{ backgroundColor: 'var(--border-default)' }} />
 
       {/* Dark mode toggle */}
       <button
@@ -167,7 +167,7 @@ export default function ReadingControls({
       </button>
 
       {/* Divider */}
-      <div className="w-px h-4" style={{ backgroundColor: '#e2dfe8' }} />
+      <div className="w-px h-4" style={{ backgroundColor: 'var(--border-default)' }} />
 
       {/* Focused mode toggle */}
       <button
@@ -196,7 +196,7 @@ export default function ReadingControls({
         {!focusedMode && annotationCount > 0 && (
           <span
             className="ml-0.5 px-1.5 py-0.5 rounded-full text-[10px]"
-            style={{ backgroundColor: '#e8ddd0', color: 'var(--color-dark-brown)' }}
+            style={{ backgroundColor: 'var(--bg-badge)', color: 'var(--color-dark-brown)' }}
           >
             {annotationCount}
           </span>

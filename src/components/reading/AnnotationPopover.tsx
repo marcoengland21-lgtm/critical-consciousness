@@ -56,8 +56,8 @@ export default function AnnotationPopover({ rect, selectedText, onSave, onCancel
       style={{
         top: `${top}px`,
         left: `${left}px`,
-        backgroundColor: 'white',
-        borderColor: '#e2dfe8',
+        backgroundColor: 'var(--bg-card)',
+        borderColor: 'var(--border-default)',
       }}
       onMouseDown={(e) => e.stopPropagation()}
       onMouseUp={(e) => e.stopPropagation()}
@@ -66,7 +66,7 @@ export default function AnnotationPopover({ rect, selectedText, onSave, onCancel
       <div
         className="px-4 pt-3 pb-2 text-xs border-b"
         style={{
-          borderColor: '#e2dfe8',
+          borderColor: 'var(--border-default)',
           color: 'var(--color-warm-gray)',
         }}
       >
@@ -85,7 +85,7 @@ export default function AnnotationPopover({ rect, selectedText, onSave, onCancel
           rows={3}
           className="w-full px-3 py-2 rounded-lg border text-sm resize-none"
           style={{
-            borderColor: '#e2dfe8',
+            borderColor: 'var(--border-default)',
             color: 'var(--color-dark-brown)',
             fontFamily: "'Lora', Georgia, serif",
             lineHeight: '1.6',
@@ -112,7 +112,7 @@ export default function AnnotationPopover({ rect, selectedText, onSave, onCancel
               className="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
               style={{
                 backgroundColor: 'var(--color-deep-red)',
-                color: 'var(--color-warm-cream)',
+                color: 'var(--text-inverse)',
               }}
             >
               {saving ? 'Saving…' : 'Save'}

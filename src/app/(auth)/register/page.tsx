@@ -93,7 +93,7 @@ export default function RegisterPage() {
           className="p-4 rounded-lg mb-4 text-sm"
           style={{
             backgroundColor: 'rgba(138, 154, 123, 0.2)',
-            color: '#4a6741',
+            color: 'var(--accent-green)',
           }}
         >
           {success}

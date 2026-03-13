@@ -32,7 +32,7 @@ export default function AuthLayout({
         <div
           className="p-8 rounded-lg"
           style={{
-            backgroundColor: 'white',
+            backgroundColor: 'var(--bg-card)',
             boxShadow: '0 2px 8px rgba(44, 24, 16, 0.1)',
           }}
         >

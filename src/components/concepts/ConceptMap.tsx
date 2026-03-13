@@ -263,7 +263,7 @@ export default function ConceptMap({ entries }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-lg border overflow-hidden" style={{ borderColor: '#e2dfe8' }}>
+      <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
         <div className="bg-white p-4">
           <canvas
             ref={canvasRef}
@@ -273,28 +273,28 @@ export default function ConceptMap({ entries }: Props) {
             onMouseMove={handleCanvasMouseMove}
             onMouseLeave={() => setHoveredNode(null)}
             className="w-full border rounded"
-            style={{ borderColor: '#e2dfe8', cursor: hoveredNode ? 'pointer' : 'default' }}
+            style={{ borderColor: 'var(--border-default)', cursor: hoveredNode ? 'pointer' : 'default' }}
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Legend */}
-        <div className="rounded-lg border overflow-hidden" style={{ borderColor: '#e2dfe8' }}>
-          <div className="px-5 py-3" style={{ backgroundColor: 'white', borderBottom: '1px solid #e2dfe8' }}>
+        <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
+          <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
             <h2 className="font-bold" style={{ color: 'var(--color-dark-brown)' }}>
               Legend
             </h2>
           </div>
-          <div className="p-5 space-y-3" style={{ backgroundColor: 'white' }}>
+          <div className="p-5 space-y-3" style={{ backgroundColor: 'var(--bg-card)' }}>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#6b4c9a' }} />
+              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: 'var(--accent-purple)' }} />
               <span className="text-xs" style={{ color: 'var(--color-dark-brown)' }}>
                 Core concept
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#a31545' }} />
+              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: 'var(--accent-red)' }} />
               <span className="text-xs" style={{ color: 'var(--color-dark-brown)' }}>
                 Selected
               </span>
@@ -307,8 +307,8 @@ export default function ConceptMap({ entries }: Props) {
 
         {/* Selected Node Details */}
         {selectedNode && (
-          <div className="lg:col-span-2 rounded-lg border overflow-hidden" style={{ borderColor: '#e2dfe8' }}>
-            <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: 'white', borderBottom: '1px solid #e2dfe8' }}>
+          <div className="lg:col-span-2 rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
+            <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
               <h2 className="font-bold" style={{ color: 'var(--color-dark-brown)' }}>
                 {selectedNode.label}
               </h2>
@@ -320,7 +320,7 @@ export default function ConceptMap({ entries }: Props) {
                 ×
               </button>
             </div>
-            <div className="p-5 space-y-4" style={{ backgroundColor: 'white' }}>
+            <div className="p-5 space-y-4" style={{ backgroundColor: 'var(--bg-card)' }}>
               <div>
                 <h3 className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--color-muted-gold)' }}>
                   Definition

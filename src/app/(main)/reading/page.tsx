@@ -70,12 +70,12 @@ export default async function ReadingPage() {
               {/* Document header */}
               <div
                 className="rounded-t-lg px-6 py-5"
-                style={{ backgroundColor: 'var(--color-dark-brown)' }}
+                style={{ backgroundColor: 'var(--bg-nav)' }}
               >
                 <h2
                   className="text-2xl font-bold mb-1"
                   style={{
-                    color: 'var(--color-warm-cream)',
+                    color: 'var(--text-inverse)',
                     fontFamily: "'Lora', Georgia, serif",
                   }}
                 >
@@ -90,7 +90,7 @@ export default async function ReadingPage() {
               {chapters.length > 0 ? (
                 <div
                   className="rounded-b-lg border border-t-0 overflow-hidden"
-                  style={{ borderColor: '#e2dfe8' }}
+                  style={{ borderColor: 'var(--border-default)' }}
                 >
                   {chapters.map((chapter: any, i: number) => {
                     const isCurrentWeek = chapter.week_id === currentWeekId
@@ -100,7 +100,7 @@ export default async function ReadingPage() {
                         href={`/reading/${doc.slug}/${chapter.chapter_number}`}
                         className="flex items-center justify-between px-6 py-4 transition-all hover:bg-gray-50 group"
                         style={{
-                          backgroundColor: isCurrentWeek ? '#faf6ee' : 'white',
+                          backgroundColor: isCurrentWeek ? 'var(--bg-soft)' : 'var(--bg-card)',
                           borderBottom: i < chapters.length - 1 ? '1px solid #e2dfe8' : 'none',
                         }}
                       >
@@ -157,7 +157,7 @@ export default async function ReadingPage() {
               ) : (
                 <div
                   className="rounded-b-lg border border-t-0 px-6 py-4"
-                  style={{ borderColor: '#e2dfe8', backgroundColor: 'white' }}
+                  style={{ borderColor: 'var(--border-default)', backgroundColor: 'var(--bg-card)' }}
                 >
                   <p className="text-sm" style={{ color: 'var(--color-warm-gray)' }}>
                     Chapters will appear here as they&apos;re added to the reading schedule.

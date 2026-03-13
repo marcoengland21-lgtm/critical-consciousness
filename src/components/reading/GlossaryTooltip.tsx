@@ -51,7 +51,7 @@ export default function GlossaryTooltip({ term, definition, position, onClose }:
         top: `${position.top}px`,
         left: `${position.left}px`,
         backgroundColor: 'var(--color-warm-cream)',
-        borderColor: '#e2dfe8',
+        borderColor: 'var(--border-default)',
         color: 'var(--color-dark-brown)',
       }}
     >
@@ -65,7 +65,7 @@ export default function GlossaryTooltip({ term, definition, position, onClose }:
         className="text-xs px-2 py-1 rounded transition-colors font-medium"
         style={{
           backgroundColor: 'var(--color-deep-red)',
-          color: 'var(--color-warm-cream)',
+          color: 'var(--text-inverse)',
         }}
       >
         View Full Definition

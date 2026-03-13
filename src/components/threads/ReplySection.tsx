@@ -136,7 +136,7 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
     const canDelete = reply.author_id === currentUserId || isAdmin
 
     return (
-      <div key={reply.id} className={depth > 0 ? 'ml-6 pl-4 border-l-2' : ''} style={{ borderColor: depth > 0 ? '#e2dfe8' : undefined }}>
+      <div key={reply.id} className={depth > 0 ? 'ml-6 pl-4 border-l-2' : ''} style={{ borderColor: depth > 0 ? 'var(--border-default)' : undefined }}>
         <div className="py-4">
           <div className="flex items-center gap-2 mb-2 text-sm">
             <span className="font-medium" style={{ color: 'var(--color-dark-brown)' }}>
@@ -162,21 +162,21 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
                 onChange={(e) => { setEditBody(e.target.value); autoResize(e.target) }}
                 rows={3}
                 className="w-full px-3 py-2 rounded-lg border text-sm resize-none transition-all"
-                style={{ borderColor: '#e2dfe8', color: 'var(--color-dark-brown)', minHeight: '80px' }}
+                style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)', minHeight: '80px' }}
               />
               <div className="flex gap-2">
                 <button
                   onClick={() => updateReply(reply.id)}
                   disabled={submitting}
                   className="px-3 py-1 rounded text-xs font-medium"
-                  style={{ backgroundColor: 'var(--color-deep-red)', color: 'var(--color-warm-cream)' }}
+                  style={{ backgroundColor: 'var(--color-deep-red)', color: 'var(--text-inverse)' }}
                 >
                   Save
                 </button>
                 <button
                   onClick={() => { setEditingId(null); setEditBody('') }}
                   className="px-3 py-1 rounded text-xs font-medium border"
-                  style={{ borderColor: '#e2dfe8', color: 'var(--color-warm-gray)' }}
+                  style={{ borderColor: 'var(--border-default)', color: 'var(--color-warm-gray)' }}
                 >
                   Cancel
                 </button>
@@ -229,21 +229,21 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
                 placeholder={`Replying to ${reply.author?.display_name}...`}
                 rows={3}
                 className="w-full px-3 py-2 rounded-lg border text-sm resize-none transition-all"
-                style={{ borderColor: '#e2dfe8', color: 'var(--color-dark-brown)', minHeight: '80px' }}
+                style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)', minHeight: '80px' }}
               />
               <div className="flex gap-2 mt-2">
                 <button
                   onClick={() => submitReply(reply.id)}
                   disabled={submitting || !nestedReplyBody.trim()}
                   className="px-3 py-1 rounded text-xs font-medium disabled:opacity-50"
-                  style={{ backgroundColor: 'var(--color-deep-red)', color: 'var(--color-warm-cream)' }}
+                  style={{ backgroundColor: 'var(--color-deep-red)', color: 'var(--text-inverse)' }}
                 >
                   {submitting ? 'Posting...' : 'Post Reply'}
                 </button>
                 <button
                   onClick={() => { setReplyingTo(null); setNestedReplyBody('') }}
                   className="px-3 py-1 rounded text-xs font-medium border"
-                  style={{ borderColor: '#e2dfe8', color: 'var(--color-warm-gray)' }}
+                  style={{ borderColor: 'var(--border-default)', color: 'var(--color-warm-gray)' }}
                 >
                   Cancel
                 </button>
@@ -265,7 +265,7 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
       </h2>
 
       {/* Top-level reply form */}
-      <div className="mb-6 p-4 rounded-lg border" style={{ backgroundColor: 'white', borderColor: '#e2dfe8' }}>
+      <div className="mb-6 p-4 rounded-lg border" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}>
         <textarea
           ref={mainReplyRef}
           value={replyBody}
@@ -273,14 +273,14 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
           placeholder="Join the conversation..."
           rows={4}
           className="w-full px-3 py-2 rounded-lg border text-sm resize-none transition-all mb-3"
-          style={{ borderColor: '#e2dfe8', color: 'var(--color-dark-brown)', lineHeight: '1.75', minHeight: '120px' }}
+          style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)', lineHeight: '1.75', minHeight: '120px' }}
         />
         <div className="flex justify-end">
           <button
             onClick={() => submitReply(null)}
             disabled={submitting || !replyBody.trim()}
             className="px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
-            style={{ backgroundColor: 'var(--color-deep-red)', color: 'var(--color-warm-cream)' }}
+            style={{ backgroundColor: 'var(--color-deep-red)', color: 'var(--text-inverse)' }}
           >
             {submitting ? 'Posting...' : 'Post Reply'}
           </button>
@@ -288,7 +288,7 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
       </div>
 
       {/* Reply tree */}
-      <div className="divide-y" style={{ borderColor: '#e2dfe8' }}>
+      <div className="divide-y" style={{ borderColor: 'var(--border-default)' }}>
         {topLevelReplies.map((reply) => renderReply(reply, 0))}
       </div>
 

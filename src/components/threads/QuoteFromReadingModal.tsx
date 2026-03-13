@@ -118,12 +118,12 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
       <div
         ref={modalRef}
         className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-2xl max-h-[80vh] z-50 rounded-lg shadow-xl overflow-hidden flex flex-col"
-        style={{ backgroundColor: 'white' }}
+        style={{ backgroundColor: 'var(--bg-card)' }}
       >
         {/* Header */}
         <div
           className="px-6 py-4 border-b flex items-center justify-between flex-shrink-0"
-          style={{ borderColor: '#e2dfe8', backgroundColor: 'white' }}
+          style={{ borderColor: 'var(--border-default)', backgroundColor: 'var(--bg-card)' }}
         >
           <h2 className="font-bold text-lg" style={{ color: 'var(--color-dark-brown)' }}>
             {step === 'chapters' ? 'Select a Chapter' : 'Select Text'}
@@ -160,8 +160,8 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
                     }}
                     className="w-full text-left p-4 rounded-lg border transition-all hover:shadow-md"
                     style={{
-                      borderColor: '#e2dfe8',
-                      backgroundColor: 'white',
+                      borderColor: 'var(--border-default)',
+                      backgroundColor: 'var(--bg-card)',
                       color: 'var(--color-dark-brown)',
                     }}
                   >
@@ -193,8 +193,8 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
                   onMouseUp={handleTextSelection}
                   className="p-4 rounded-lg border leading-relaxed select-text"
                   style={{
-                    borderColor: '#e2dfe8',
-                    backgroundColor: '#faf9f7',
+                    borderColor: 'var(--border-default)',
+                    backgroundColor: 'var(--bg-card-alt)',
                     color: 'var(--color-dark-brown)',
                     fontSize: '0.95rem',
                     lineHeight: '1.8',
@@ -227,7 +227,7 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
         {/* Footer */}
         <div
           className="px-6 py-4 border-t flex items-center justify-between gap-3 flex-shrink-0"
-          style={{ borderColor: '#e2dfe8', backgroundColor: 'white' }}
+          style={{ borderColor: 'var(--border-default)', backgroundColor: 'var(--bg-card)' }}
         >
           <button
             onClick={() => {
@@ -240,7 +240,7 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
               }
             }}
             className="px-4 py-2 rounded-lg text-sm font-medium border transition-colors"
-            style={{ borderColor: '#e2dfe8', color: 'var(--color-warm-gray)' }}
+            style={{ borderColor: 'var(--border-default)', color: 'var(--color-warm-gray)' }}
           >
             {step === 'select' ? 'Back' : 'Cancel'}
           </button>
@@ -252,7 +252,7 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
               className="px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
               style={{
                 backgroundColor: 'var(--color-deep-red)',
-                color: 'var(--color-warm-cream)',
+                color: 'var(--text-inverse)',
               }}
             >
               Insert Quote

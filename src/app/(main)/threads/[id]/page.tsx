@@ -123,7 +123,7 @@ export default async function ThreadPage({
 
         {/* View in context link (if thread was created from a passage) */}
         {contextChapter && contextDocSlug && (
-          <div className="mt-6 pt-4 border-t" style={{ borderColor: '#e2dfe8' }}>
+          <div className="mt-6 pt-4 border-t" style={{ borderColor: 'var(--border-default)' }}>
             <Link
               href={`/reading/${contextDocSlug}/${thread.body.match(/§(\d+)/)?.[1] || '1'}`}
               className="inline-flex items-center gap-2 text-sm font-medium transition-colors"
@@ -141,7 +141,7 @@ export default async function ThreadPage({
       </article>
 
       {/* Divider */}
-      <hr className="mb-8" style={{ borderColor: '#e2dfe8' }} />
+      <hr className="mb-8" style={{ borderColor: 'var(--border-default)' }} />
 
       {/* Replies */}
       <ReplySection

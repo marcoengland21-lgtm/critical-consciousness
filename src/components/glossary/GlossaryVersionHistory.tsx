@@ -98,7 +98,7 @@ export default function GlossaryVersionHistory({ entryId, term, onClose }: Gloss
             className="mt-4 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
             style={{
               backgroundColor: 'var(--color-deep-red)',
-              color: 'var(--color-warm-cream)',
+              color: 'var(--text-inverse)',
             }}
           >
             Close
@@ -130,7 +130,7 @@ export default function GlossaryVersionHistory({ entryId, term, onClose }: Gloss
                 {idx < versions.length - 1 && (
                   <div
                     className="absolute left-1.5 top-4 w-0.5 h-12"
-                    style={{ backgroundColor: '#e2dfe8' }}
+                    style={{ backgroundColor: 'var(--border-default)' }}
                   />
                 )}
 
@@ -158,7 +158,7 @@ export default function GlossaryVersionHistory({ entryId, term, onClose }: Gloss
           className="px-4 py-2 rounded-lg text-sm font-medium transition-colors w-full"
           style={{
             backgroundColor: 'var(--color-deep-red)',
-            color: 'var(--color-warm-cream)',
+            color: 'var(--text-inverse)',
           }}
         >
           Close

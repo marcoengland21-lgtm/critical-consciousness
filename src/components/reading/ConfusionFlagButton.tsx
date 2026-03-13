@@ -40,49 +40,21 @@ export default function ConfusionFlagButton({
 
   if (hidden) return null
 
-  // Calculate color intensity based on count
-  // Low count: pale gold, High count: warm red
-  let bgColor = 'var(--color-warm-cream)'
-  let textColor = 'var(--color-warm-gray)'
-
-  if (count > 0) {
-    if (count <= 2) {
-      bgColor = '#d4c9a8' // pale gold
-    } else if (count <= 5) {
-      bgColor = '#c9a86b' // warm gold
-    } else {
-      bgColor = '#b8863f' // deep warm gold
-    }
-    textColor = 'var(--color-dark-brown)'
-  }
-
-  // In dark mode, adjust colors
-  const isDark = typeof document !== 'undefined' &&
-                 document.documentElement.getAttribute('data-theme') === 'dark'
-  if (isDark && count > 0) {
-    if (count <= 2) {
-      bgColor = '#5a4f3f'
-    } else if (count <= 5) {
-      bgColor = '#6b5a45'
-    } else {
-      bgColor = '#7a6850'
-    }
-    textColor = '#e8ddd0'
-  }
+  // Intensity class — colors defined in CSS for dark mode support
+  let intensityClass = 'confusion-none'
+  if (count > 0 && count <= 2) intensityClass = 'confusion-low'
+  else if (count > 2 && count <= 5) intensityClass = 'confusion-mid'
+  else if (count > 5) intensityClass = 'confusion-high'
 
   return (
     <button
       onClick={handleToggle}
       disabled={isLoading}
-      className="flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold transition-all opacity-40 group-hover/para:opacity-100 hover:opacity-100 disabled:opacity-50"
-      style={{
-        backgroundColor: bgColor,
-        color: textColor,
-      }}
+      className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold transition-all opacity-40 group-hover/para:opacity-100 hover:opacity-100 disabled:opacity-50 ${intensityClass}`}
       title={`${count} ${count === 1 ? 'person is' : 'people are'} confused here`}
       aria-label={`Toggle confusion flag for paragraph ${paragraphIndex}. ${count} ${count === 1 ? 'person is' : 'people are'} confused here.`}
     >
-      {count > 0 ? '?' : '?'}
+      ?
     </button>
   )
 }

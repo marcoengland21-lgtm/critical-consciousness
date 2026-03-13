@@ -115,7 +115,7 @@ export default function ResourcesList({
         <button
           onClick={() => setShowForm(!showForm)}
           className="px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
-          style={{ backgroundColor: 'var(--color-deep-red)', color: 'var(--color-warm-cream)' }}
+          style={{ backgroundColor: 'var(--color-deep-red)', color: 'var(--text-inverse)' }}
         >
           {showForm ? 'Cancel' : 'Add Resource'}
         </button>
@@ -123,29 +123,29 @@ export default function ResourcesList({
 
       {/* Add form */}
       {showForm && (
-        <form onSubmit={handleSubmit} className="mb-6 p-4 rounded-lg border space-y-3" style={{ backgroundColor: 'white', borderColor: '#e2dfe8' }}>
+        <form onSubmit={handleSubmit} className="mb-6 p-4 rounded-lg border space-y-3" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
               placeholder="Resource title" className="px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: '#e2dfe8', color: 'var(--color-dark-brown)' }} required />
+              style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)' }} required />
             <input type="url" value={url} onChange={(e) => setUrl(e.target.value)}
               placeholder="URL (optional)" className="px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: '#e2dfe8', color: 'var(--color-dark-brown)' }} />
+              style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)' }} />
           </div>
           <textarea value={description} onChange={(e) => setDescription(e.target.value)}
             placeholder="Description (optional)" rows={2} className="w-full px-3 py-2 rounded-lg border text-sm resize-y"
-            style={{ borderColor: '#e2dfe8', color: 'var(--color-dark-brown)' }} />
+            style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)' }} />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <select value={resourceType} onChange={(e) => setResourceType(e.target.value as ResourceType)}
               className="px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: '#e2dfe8', color: 'var(--color-dark-brown)' }}>
+              style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)' }}>
               {Object.entries(typeLabels).map(([key, config]) => (
                 <option key={key} value={key}>{config.icon} {config.label}</option>
               ))}
             </select>
             <select value={weekId} onChange={(e) => setWeekId(e.target.value)}
               className="px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: '#e2dfe8', color: 'var(--color-dark-brown)' }}>
+              style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)' }}>
               <option value="">No specific week</option>
               {weeks.map((w) => (
                 <option key={w.id} value={w.id}>Week {w.week_number}: {w.title}</option>
@@ -154,7 +154,7 @@ export default function ResourcesList({
           </div>
           <button type="submit" disabled={submitting}
             className="px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
-            style={{ backgroundColor: 'var(--color-deep-red)', color: 'var(--color-warm-cream)' }}>
+            style={{ backgroundColor: 'var(--color-deep-red)', color: 'var(--text-inverse)' }}>
             {submitting ? 'Saving...' : 'Save Resource'}
           </button>
         </form>
@@ -170,7 +170,7 @@ export default function ResourcesList({
           {filtered.map((resource) => {
             const typeInfo = typeLabels[resource.resource_type] || typeLabels.other
             return (
-              <div key={resource.id} className="p-4 rounded-lg border" style={{ backgroundColor: 'white', borderColor: '#e2dfe8' }}>
+              <div key={resource.id} className="p-4 rounded-lg border" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}>
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">{typeInfo.icon}</span>
                   <div className="flex-1 min-w-0">
@@ -188,7 +188,7 @@ export default function ResourcesList({
                       </p>
                     )}
                     <div className="flex flex-wrap items-center gap-2 text-xs" style={{ color: 'var(--color-warm-gray)' }}>
-                      <span className="px-2 py-0.5 rounded-full" style={{ backgroundColor: '#e8ddd0', color: '#5c4a3a' }}>
+                      <span className="px-2 py-0.5 rounded-full" style={{ backgroundColor: 'var(--bg-badge)', color: 'var(--text-badge)' }}>
                         {typeInfo.label}
                       </span>
                       {resource.week && (

@@ -150,12 +150,12 @@ export default function SessionNotes({ weekId, hasSession }: SessionNotesProps) 
   }
 
   return (
-    <div className="rounded-lg border overflow-hidden" style={{ borderColor: '#e2dfe8' }}>
+    <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full px-5 py-3 flex items-center justify-between transition-colors"
         style={{
-          backgroundColor: isOpen ? '#faf9fc' : 'white',
+          backgroundColor: isOpen ? 'var(--bg-card-alt)' : 'var(--bg-card)',
           borderBottom: isOpen ? '1px solid #e2dfe8' : 'none',
         }}
       >
@@ -174,7 +174,7 @@ export default function SessionNotes({ weekId, hasSession }: SessionNotesProps) 
       </button>
 
       {isOpen && (
-        <div className="px-5 py-4 space-y-3" style={{ backgroundColor: '#faf9fc' }}>
+        <div className="px-5 py-4 space-y-3" style={{ backgroundColor: 'var(--bg-card-alt)' }}>
           <textarea
             value={content}
             onChange={(e) => handleContentChange(e.target.value)}
@@ -182,7 +182,7 @@ export default function SessionNotes({ weekId, hasSession }: SessionNotesProps) 
             placeholder="Jot down key points, insights, and discussion highlights from the session..."
             className="w-full px-4 py-3 rounded-lg border text-sm resize-none focus:outline-none"
             style={{
-              borderColor: '#e2dfe8',
+              borderColor: 'var(--border-default)',
               color: 'var(--color-dark-brown)',
               lineHeight: '1.85',
               minHeight: '150px',

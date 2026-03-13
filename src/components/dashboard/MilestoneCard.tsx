@@ -32,7 +32,7 @@ export default async function MilestoneCard({ weekId, weekNumber }: MilestoneCar
       className="rounded-lg border-2 p-6 overflow-hidden"
       style={{
         borderColor: 'var(--color-muted-gold)',
-        backgroundColor: '#faf9fc',
+        backgroundColor: 'var(--bg-card-alt)',
         position: 'relative',
       }}
     >
@@ -69,7 +69,7 @@ export default async function MilestoneCard({ weekId, weekNumber }: MilestoneCar
         )}
 
         {milestone.reflection_prompt && (
-          <div className="p-4 rounded-lg border" style={{ borderColor: 'var(--color-muted-gold)', backgroundColor: 'white' }}>
+          <div className="p-4 rounded-lg border" style={{ borderColor: 'var(--color-muted-gold)', backgroundColor: 'var(--bg-card)' }}>
             <p className="text-xs font-semibold mb-1 uppercase tracking-wide" style={{ color: 'var(--color-muted-gold)' }}>
               Reflection Prompt
             </p>

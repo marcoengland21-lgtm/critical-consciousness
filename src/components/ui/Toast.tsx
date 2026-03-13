@@ -31,7 +31,7 @@ export default function Toast({ message, type = 'success', duration = 3000, onCl
       className="fixed bottom-6 right-6 z-[100] px-4 py-3 rounded-lg shadow-lg text-sm font-medium"
       style={{
         backgroundColor: bgColor,
-        color: 'var(--color-warm-cream)',
+        color: 'var(--text-inverse)',
         opacity: visible ? 1 : 0,
         transform: visible ? 'translateY(0)' : 'translateY(8px)',
         transition: 'opacity 300ms ease, transform 300ms ease',

@@ -39,7 +39,7 @@ export default function SelectionToolbar({ rect, onAnnotate, onStartThread, onCl
       style={{
         top: `${top}px`,
         left: `${left}px`,
-        backgroundColor: 'var(--color-dark-brown)',
+        backgroundColor: 'var(--bg-nav)',
         borderColor: 'rgba(196, 163, 90, 0.3)',
       }}
       onMouseDown={(e) => e.stopPropagation()}
@@ -48,7 +48,7 @@ export default function SelectionToolbar({ rect, onAnnotate, onStartThread, onCl
       <button
         onClick={onAnnotate}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors hover:bg-white/10"
-        style={{ color: 'var(--color-warm-cream)' }}
+        style={{ color: 'var(--text-inverse)' }}
         title="Add an annotation to this passage"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -60,7 +60,7 @@ export default function SelectionToolbar({ rect, onAnnotate, onStartThread, onCl
       <button
         onClick={onStartThread}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors hover:bg-white/10"
-        style={{ color: 'var(--color-warm-cream)' }}
+        style={{ color: 'var(--text-inverse)' }}
         title="Start a discussion thread about this passage"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

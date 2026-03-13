@@ -51,7 +51,7 @@ export default async function WeeklyActivitySummary({ weekId }: WeeklyActivitySu
 
   if (!hasActivity) {
     return (
-      <div className="rounded-lg border p-5" style={{ borderColor: '#e2dfe8', backgroundColor: '#faf9fc' }}>
+      <div className="rounded-lg border p-5" style={{ borderColor: 'var(--border-default)', backgroundColor: 'var(--bg-card-alt)' }}>
         <p className="text-sm italic" style={{ color: 'var(--color-warm-gray)' }}>
           The group's activity this week will appear here as people begin reading and annotating.
         </p>
@@ -82,7 +82,7 @@ export default async function WeeklyActivitySummary({ weekId }: WeeklyActivitySu
   }
 
   return (
-    <div className="rounded-lg border p-5" style={{ borderColor: '#e2dfe8', backgroundColor: '#faf9fc' }}>
+    <div className="rounded-lg border p-5" style={{ borderColor: 'var(--border-default)', backgroundColor: 'var(--bg-card-alt)' }}>
       <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--color-dark-brown)' }}>
         This Week's Activity
       </h3>

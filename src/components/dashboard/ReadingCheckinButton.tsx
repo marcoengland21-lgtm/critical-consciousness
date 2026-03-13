@@ -54,7 +54,7 @@ export default function ReadingCheckinButton({ weekId, currentStatus }: ReadingC
 
   return (
     <>
-      <div className="mt-4 pt-4 border-t" style={{ borderColor: '#e2dfe8' }}>
+      <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border-default)' }}>
         <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: 'var(--color-muted-gold)' }}>
           Your Progress
         </p>

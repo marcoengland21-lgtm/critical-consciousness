@@ -16,7 +16,7 @@ export default function MobileNav({ displayName }: MobileNavProps) {
         className="md:hidden p-2 rounded-lg"
         onClick={() => setIsOpen(!isOpen)}
         style={{
-          color: 'var(--color-warm-cream)',
+          color: 'var(--text-inverse)',
         }}
         aria-label={isOpen ? 'Close menu' : 'Open menu'}
       >
@@ -43,7 +43,7 @@ export default function MobileNav({ displayName }: MobileNavProps) {
         <div
           className="md:hidden absolute top-full left-0 right-0 py-2 border-t animate-fade-in"
           style={{
-            backgroundColor: 'var(--color-dark-brown)',
+            backgroundColor: 'var(--bg-nav)',
             borderColor: 'rgba(196, 163, 90, 0.2)',
           }}
         >

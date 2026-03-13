@@ -41,7 +41,7 @@ export default async function Home() {
             className="inline-block px-8 py-3 rounded-lg font-semibold transition-colors w-full"
             style={{
               backgroundColor: 'var(--color-deep-red)',
-              color: 'var(--color-warm-cream)',
+              color: 'var(--text-inverse)',
             }}
           >
             Sign In

@@ -18,7 +18,7 @@ export default function LogoutButton() {
       onClick={handleLogout}
       className="px-4 py-2 rounded-lg font-medium transition-colors text-sm"
       style={{
-        color: 'var(--color-warm-cream)',
+        color: 'var(--text-inverse)',
       }}
     >
       Logout

@@ -196,7 +196,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
       )}
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="p-3 rounded-lg text-sm" style={{ backgroundColor: '#fef2f2', color: 'var(--color-deep-red)', border: '1px solid var(--color-deep-red)' }}>
+        <div className="p-3 rounded-lg text-sm" style={{ backgroundColor: 'var(--bg-soft)', color: 'var(--color-deep-red)', border: '1px solid var(--color-deep-red)' }}>
           {error}
         </div>
       )}
@@ -237,7 +237,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
             value={weekId}
             onChange={(e) => setWeekId(e.target.value)}
             className="w-full px-3 py-2 rounded-lg border text-sm"
-            style={{ borderColor: '#e2dfe8', color: 'var(--color-dark-brown)' }}
+            style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)' }}
           >
             <option value="">No specific week</option>
             {weeks.map((w) => (
@@ -261,7 +261,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. 'The double character of the commodity' or 'Question about abstract labour'"
           className="w-full px-4 py-3 rounded-lg border text-sm transition-colors focus:outline-none"
-          style={{ borderColor: '#e2dfe8', color: 'var(--color-dark-brown)' }}
+          style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)' }}
           required
         />
       </div>
@@ -286,7 +286,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
               onClick={() => setShowQuoteModal(true)}
               className="px-2 py-1 text-xs font-medium rounded transition-colors"
               style={{
-                backgroundColor: '#f5f3f0',
+                backgroundColor: 'var(--bg-soft)',
                 color: 'var(--color-deep-red)',
                 border: '1px solid var(--color-muted-gold)',
               }}
@@ -303,7 +303,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
           placeholder="Share your thoughts, questions, or reflections on the reading..."
           rows={10}
           className="w-full px-4 py-3 rounded-lg border text-sm resize-none transition-colors focus:outline-none"
-          style={{ borderColor: '#e2dfe8', color: 'var(--color-dark-brown)', lineHeight: '1.85', minHeight: '200px' }}
+          style={{ borderColor: 'var(--border-default)', color: 'var(--color-dark-brown)', lineHeight: '1.85', minHeight: '200px' }}
           required
         />
       </div>
@@ -314,7 +314,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
           type="button"
           onClick={() => router.back()}
           className="px-4 py-2 rounded-lg text-sm font-medium border transition-colors"
-          style={{ borderColor: '#e2dfe8', color: 'var(--color-warm-gray)' }}
+          style={{ borderColor: 'var(--border-default)', color: 'var(--color-warm-gray)' }}
         >
           Cancel
         </button>
@@ -324,7 +324,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
           className="px-6 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
           style={{
             backgroundColor: 'var(--color-deep-red)',
-            color: 'var(--color-warm-cream)',
+            color: 'var(--text-inverse)',
           }}
         >
           {submitting ? 'Publishing...' : 'Share with the Group'}
