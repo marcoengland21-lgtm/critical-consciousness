@@ -16,8 +16,8 @@ export default function AnnotationPopover({ rect, selectedText, onSave, onCancel
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const popoverRef = useRef<HTMLDivElement>(null)
 
-  // Position the popover near the selection
-  const top = rect.bottom + window.scrollY + 8
+  // Position the popover near the selection (fixed to viewport)
+  const top = Math.min(rect.bottom + 8, window.innerHeight - 260)
   const left = Math.max(16, Math.min(rect.left + rect.width / 2 - 160, window.innerWidth - 336))
 
   useEffect(() => {
@@ -52,7 +52,7 @@ export default function AnnotationPopover({ rect, selectedText, onSave, onCancel
   return (
     <div
       ref={popoverRef}
-      className="absolute z-50 w-80 rounded-lg shadow-lg border"
+      className="fixed z-50 w-80 rounded-lg shadow-lg border"
       style={{
         top: `${top}px`,
         left: `${left}px`,

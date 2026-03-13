@@ -12,8 +12,8 @@ interface Props {
 export default function SelectionToolbar({ rect, onAnnotate, onStartThread, onClose }: Props) {
   const toolbarRef = useRef<HTMLDivElement>(null)
 
-  // Position above the selection
-  const top = rect.top + window.scrollY - 48
+  // Position above the selection (fixed to viewport)
+  const top = Math.max(8, rect.top - 48)
   const left = Math.max(8, Math.min(rect.left + rect.width / 2 - 100, window.innerWidth - 216))
 
   // Close on click outside
@@ -35,7 +35,7 @@ export default function SelectionToolbar({ rect, onAnnotate, onStartThread, onCl
   return (
     <div
       ref={toolbarRef}
-      className="absolute z-50 flex items-center gap-1 px-1.5 py-1 rounded-lg shadow-lg border animate-fade-in"
+      className="fixed z-50 flex items-center gap-1 px-1.5 py-1 rounded-lg shadow-lg border animate-fade-in"
       style={{
         top: `${top}px`,
         left: `${left}px`,
