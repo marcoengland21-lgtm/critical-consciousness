@@ -14,18 +14,21 @@ export default async function MainLayout({
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) {
-    redirect('/')
+  // TODO: RE-ENABLE AUTH — Remove this bypass when reviewer access is no longer needed
+  // if (!user) {
+  //   redirect('/')
+  // }
+
+  // Fetch user profile for display name (guest fallback if not logged in)
+  let displayName = 'Guest'
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('display_name')
+      .eq('id', user.id)
+      .single()
+    displayName = profile?.display_name || user.user_metadata?.display_name || 'User'
   }
-
-  // Fetch user profile for display name
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('display_name')
-    .eq('id', user.id)
-    .single()
-
-  const displayName = profile?.display_name || user.user_metadata?.display_name || 'User'
 
   return (
     <div
@@ -123,7 +126,12 @@ export default async function MainLayout({
               >
                 {displayName}
               </span>
-              <LogoutButton />
+              {/* TODO: RE-ENABLE AUTH — Show LogoutButton only when user is logged in */}
+              {user ? <LogoutButton /> : (
+                <Link href="/login" className="text-sm font-medium px-3 py-1 rounded" style={{ color: 'var(--color-warm-cream)', border: '1px solid var(--color-muted-gold)' }}>
+                  Sign In
+                </Link>
+              )}
               <MobileNav displayName={displayName} />
             </div>
           </div>

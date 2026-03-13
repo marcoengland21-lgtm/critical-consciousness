@@ -10,7 +10,8 @@ export default async function NewThreadPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) redirect('/')
+  // TODO: RE-ENABLE AUTH — Restore redirect when reviewer access is no longer needed
+  // if (!user) redirect('/')
 
   // Fetch weeks for optional week association
   const { data: weeks } = await supabase
