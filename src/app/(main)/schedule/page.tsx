@@ -33,14 +33,14 @@ export default async function SchedulePage() {
   if (!weeks || weeks.length === 0) {
     return (
       <div>
-        <h1 className="text-3xl font-bold mb-8" style={{ color: 'var(--color-deep-red)' }}>
+        <h1 className="text-3xl font-bold mb-8" style={{ color: 'var(--accent-red)' }}>
           Reading Schedule
         </h1>
         <div className="text-center py-16">
-          <p className="text-lg mb-2" style={{ color: 'var(--color-dark-brown)' }}>
+          <p className="text-lg mb-2" style={{ color: 'var(--text-primary)' }}>
             The schedule is on its way
           </p>
-          <p className="text-sm" style={{ color: 'var(--color-warm-gray)' }}>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
             The reading schedule will appear here once your facilitator sets it up. In the meantime, explore the platform.
           </p>
         </div>
@@ -50,7 +50,7 @@ export default async function SchedulePage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-8" style={{ color: 'var(--color-deep-red)' }}>
+      <h1 className="text-3xl font-bold mb-8" style={{ color: 'var(--accent-red)' }}>
         Reading Schedule
       </h1>
 
@@ -67,7 +67,7 @@ export default async function SchedulePage() {
               key={week.id}
               className="rounded-lg border-2 overflow-hidden transition-all"
               style={{
-                borderColor: isCurrent ? 'var(--color-muted-gold)' : isPast ? '#d4d0dc' : '#e2dfe8',
+                borderColor: isCurrent ? 'var(--accent-purple)' : isPast ? 'var(--border-strong)' : 'var(--border-default)',
                 opacity: isPast ? 0.7 : 1,
               }}
             >
@@ -75,7 +75,7 @@ export default async function SchedulePage() {
               <div
                 className="px-6 py-4"
                 style={{
-                  backgroundColor: isCurrent ? 'var(--color-dark-brown)' : 'white',
+                  backgroundColor: isCurrent ? 'var(--bg-header)' : 'var(--bg-card)',
                 }}
               >
                 <div className="flex items-start justify-between">
@@ -83,32 +83,32 @@ export default async function SchedulePage() {
                     <div className="flex items-center gap-3 mb-1">
                       <span
                         className="text-xs font-bold uppercase tracking-wide"
-                        style={{ color: isCurrent ? 'var(--color-muted-gold)' : 'var(--color-warm-gray)' }}
+                        style={{ color: isCurrent ? 'var(--accent-purple)' : 'var(--text-secondary)' }}
                       >
                         Week {week.week_number}
                       </span>
                       {isCurrent && (
                         <span
                           className="text-xs font-medium px-2 py-0.5 rounded-full"
-                          style={{ backgroundColor: 'var(--color-muted-gold)', color: 'var(--color-dark-brown)' }}
+                          style={{ backgroundColor: 'var(--accent-purple)', color: 'var(--text-inverse)' }}
                         >
                           Current
                         </span>
                       )}
                       {isPast && (
-                        <span className="text-xs" style={{ color: 'var(--color-warm-gray)' }}>
+                        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
                           Completed
                         </span>
                       )}
                     </div>
                     <h2
                       className="text-xl font-bold"
-                      style={{ color: isCurrent ? 'var(--color-warm-cream)' : 'var(--color-dark-brown)' }}
+                      style={{ color: isCurrent ? 'var(--text-inverse)' : 'var(--text-primary)' }}
                     >
                       {week.title}
                     </h2>
                   </div>
-                  <div className="text-right text-sm" style={{ color: isCurrent ? 'var(--color-warm-cream)' : 'var(--color-warm-gray)' }}>
+                  <div className="text-right text-sm" style={{ color: isCurrent ? 'var(--text-inverse)' : 'var(--text-secondary)' }}>
                     <div>Due: {dueDate.toLocaleDateString('en-NZ', { day: 'numeric', month: 'short' })}</div>
                     {sessionDate && (
                       <div className="mt-0.5">
@@ -125,15 +125,15 @@ export default async function SchedulePage() {
                 {(week.chapter_ref || week.description) && (
                   <div>
                     {week.chapter_ref && (
-                      <p className="text-sm font-medium mb-1" style={{ color: 'var(--color-dark-brown)' }}>
+                      <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
                         {week.chapter_ref}
                         {week.page_start && week.page_end && (
-                          <span style={{ color: 'var(--color-warm-gray)' }}> (pp. {week.page_start}–{week.page_end})</span>
+                          <span style={{ color: 'var(--text-secondary)' }}> (pp. {week.page_start}–{week.page_end})</span>
                         )}
                       </p>
                     )}
                     {week.description && (
-                      <p className="text-sm" style={{ color: 'var(--color-warm-gray)' }}>
+                      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                         {week.description}
                       </p>
                     )}
@@ -144,7 +144,7 @@ export default async function SchedulePage() {
                 {(week.session_location || week.zoom_link) && (
                   <div className="flex flex-wrap gap-3 text-sm">
                     {week.session_location && (
-                      <span className="flex items-center gap-1" style={{ color: 'var(--color-warm-gray)' }}>
+                      <span className="flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}>
                         📍 {week.session_location}
                       </span>
                     )}
@@ -154,7 +154,7 @@ export default async function SchedulePage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-1 underline"
-                        style={{ color: 'var(--color-deep-red)' }}
+                        style={{ color: 'var(--accent-red)' }}
                       >
                         🔗 Join Online
                       </a>
@@ -165,7 +165,7 @@ export default async function SchedulePage() {
                 {/* Roles */}
                 {week.weekly_roles && week.weekly_roles.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--color-dark-brown)' }}>
+                    <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
                       Roles This Week
                     </h3>
                     <div className="flex flex-wrap gap-2">
@@ -176,11 +176,11 @@ export default async function SchedulePage() {
                           style={{ borderColor: 'var(--border-default)', backgroundColor: 'var(--bg-card)' }}
                         >
                           <RoleBadge type={role.role_type as WeeklyRoleType} />
-                          <span style={{ color: 'var(--color-dark-brown)' }}>
+                          <span style={{ color: 'var(--text-primary)' }}>
                             {role.user?.display_name}
                           </span>
                           {role.user?.id === user?.id && (
-                            <span className="text-xs font-medium" style={{ color: 'var(--color-deep-red)' }}>(You)</span>
+                            <span className="text-xs font-medium" style={{ color: 'var(--accent-red)' }}>(You)</span>
                           )}
                         </div>
                       ))}
@@ -191,12 +191,12 @@ export default async function SchedulePage() {
                 {/* Discussion Prompts */}
                 {prompts.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--color-dark-brown)' }}>
+                    <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
                       Discussion Prompts
                     </h3>
                     <ol className="space-y-2 list-decimal list-inside">
                       {prompts.map((prompt: any) => (
-                        <li key={prompt.id} className="text-sm" style={{ color: 'var(--color-warm-gray)' }}>
+                        <li key={prompt.id} className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                           {prompt.prompt_text}
                         </li>
                       ))}
@@ -212,7 +212,7 @@ export default async function SchedulePage() {
                   <Link
                     href={`/threads?week=${week.id}`}
                     className="text-sm font-medium transition-colors"
-                    style={{ color: 'var(--color-deep-red)' }}
+                    style={{ color: 'var(--accent-red)' }}
                   >
                     View Week {week.week_number} Threads →
                   </Link>
