@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+:root {
+  /* Warm earth tone palette */
+  --color-deep-red: #8B2635;
+  --color-warm-cream: #F5F0E8;
+  --color-dark-brown: #2C1810;
+  --color-warm-gray: #6B5B4F;
+  --color-muted-gold: #C4A35A;
+  --color-soft-sage: #8A9A7B;
+
+  /* Typography */
+  --font-family-sans: system-ui, -apple-system, sans-serif;
+  --line-height-relaxed: 1.75;
+  --line-height-loose: 2;
+}
+
+/* Clean typography defaults */
+body {
+  font-family: var(--font-family-sans);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-dark-brown);
+  background-color: var(--color-warm-cream);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-family-sans);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--color-dark-brown);
+}
+
+/* Utility classes for the platform */
+.prose-content {
+  font-size: 1rem;
+  line-height: var(--line-height-relaxed);
+  max-width: 65ch;
+  color: var(--color-dark-brown);
+}
+
+/* Focus states for accessibility */
+:focus-visible {
+  outline: 2px solid var(--color-muted-gold);
+  outline-offset: 2px;
+}
+
+/* Links */
+a {
+  color: var(--color-deep-red);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--color-warm-gray);
+  text-decoration: underline;
+}
+
+/* Selection */
+::selection {
+  background-color: var(--color-muted-gold);
+  color: var(--color-dark-brown);
+}
