@@ -7,20 +7,39 @@ interface Props {
   params: Promise<{ slug: string; chapter: string }>
 }
 
+/**
+ * Map internal chapter_number to Marx's actual structure.
+ * chapter_number 1-4 = Chapter 1 sections, 5+ = Chapters 2-10
+ */
+function getChapterLabel(chapterNumber: number): { label: string; shortLabel: string } {
+  if (chapterNumber <= 4) {
+    return {
+      label: `Chapter 1, Section ${chapterNumber}`,
+      shortLabel: `1.${chapterNumber}`,
+    }
+  }
+  const marxChapter = chapterNumber - 3 // 5 -> 2, 6 -> 3, etc.
+  return {
+    label: `Chapter ${marxChapter}`,
+    shortLabel: `Ch ${marxChapter}`,
+  }
+}
+
 export async function generateMetadata({ params }: Props) {
   const { slug, chapter } = await params
   const supabase = await createClient()
 
-  // Parallel metadata fetch (was 2 sequential queries)
+  // Parallel metadata fetch
   const [{ data: doc }, { data: ch }] = await Promise.all([
     supabase.from('text_documents').select('title').eq('slug', slug).single(),
-    supabase.from('text_chapters').select('title').eq('chapter_number', parseInt(chapter)).single(),
+    supabase.from('text_chapters').select('title, chapter_number').eq('chapter_number', parseInt(chapter)).single(),
   ])
 
+  if (!ch) return { title: 'Reading | Critical Consciousness' }
+
+  const { label } = getChapterLabel(ch.chapter_number)
   return {
-    title: ch
-      ? `${ch.title} | ${doc?.title || 'Reading'} | Critical Consciousness`
-      : 'Reading | Critical Consciousness',
+    title: `${ch.title} | ${label} | ${doc?.title || 'Reading'} | Critical Consciousness`,
   }
 }
 
@@ -28,13 +47,10 @@ export default async function ChapterPage({ params }: Props) {
   const { slug, chapter } = await params
   const chapterNum = parseInt(chapter)
 
-  // Session-based auth (local JWT, no network call)
   const user = await getSessionUser()
   const supabase = await createClient()
 
-  // PHASE 1: 3 independent queries in parallel (no dependencies between them)
-  // Was: doc → chapter (sequential), then allChapters in parallel
-  // Now: all 3 at once since we know slug + chapter_number from URL
+  // PHASE 1: 3 independent queries in parallel
   const [
     { data: doc },
     { data: chapterData },
@@ -82,6 +98,12 @@ export default async function ChapterPage({ params }: Props) {
   const prevChapter = currentIndex > 0 ? chapters[currentIndex - 1] : null
   const nextChapter = currentIndex < chapters.length - 1 ? chapters[currentIndex + 1] : null
 
+  const { label: currentLabel } = getChapterLabel(chapterNum)
+
+  // Determine if we're in Ch1 sections or a standalone chapter
+  const isChapter1Section = chapterNum <= 4
+  const ch1Sections = chapters.filter(c => c.chapter_number <= 4)
+
   return (
     <div>
       {/* Breadcrumb navigation */}
@@ -94,35 +116,37 @@ export default async function ChapterPage({ params }: Props) {
           {doc.title}
         </Link>
         <span>›</span>
-        <span style={{ color: 'var(--text-primary)' }}>Section {chapterNum}</span>
+        <span style={{ color: 'var(--text-primary)' }}>{currentLabel}</span>
       </div>
 
-      {/* Section navigation tabs */}
-      <div className="flex flex-wrap gap-2 mb-10">
-        {chapters.map((ch) => {
-          const isActive = ch.chapter_number === chapterNum
-          return (
-            <Link
-              key={ch.id}
-              href={`/reading/${slug}/${ch.chapter_number}`}
-              className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
-              style={{
-                backgroundColor: isActive ? 'var(--text-primary)' : 'var(--bg-card)',
-                color: isActive ? 'var(--bg-page)' : 'var(--text-primary)',
-                border: '1px solid',
-                borderColor: isActive ? 'var(--text-primary)' : 'var(--border-default)',
-              }}
-            >
-              {ch.chapter_number}. {ch.title.length > 35 ? ch.title.slice(0, 35) + '…' : ch.title}
-            </Link>
-          )
-        })}
-      </div>
+      {/* Section navigation — only show Ch1 section tabs when reading a Ch1 section */}
+      {isChapter1Section && (
+        <div className="flex flex-wrap gap-2 mb-10">
+          {ch1Sections.map((ch) => {
+            const isActive = ch.chapter_number === chapterNum
+            return (
+              <Link
+                key={ch.id}
+                href={`/reading/${slug}/${ch.chapter_number}`}
+                className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                style={{
+                  backgroundColor: isActive ? 'var(--text-primary)' : 'var(--bg-card)',
+                  color: isActive ? 'var(--bg-page)' : 'var(--text-primary)',
+                  border: '1px solid',
+                  borderColor: isActive ? 'var(--text-primary)' : 'var(--border-default)',
+                }}
+              >
+                {ch.chapter_number}. {ch.title.length > 35 ? ch.title.slice(0, 35) + '...' : ch.title}
+              </Link>
+            )
+          })}
+        </div>
+      )}
 
       {/* Chapter title */}
       <div className="mb-10 text-center">
         <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--accent-purple)' }}>
-          Section {chapterNum}
+          {currentLabel}
         </p>
         <h1
           className="text-2xl sm:text-3xl font-bold mb-3"
@@ -173,13 +197,13 @@ export default async function ChapterPage({ params }: Props) {
         {prevChapter ? (
           <Link
             href={`/reading/${slug}/${prevChapter.chapter_number}`}
-            className="group flex items-center gap-2 text-sm font-medium"
+            className="group flex items-center gap-2 text-sm font-medium max-w-[45%]"
             style={{ color: 'var(--accent-red)' }}
           >
-            <span className="transition-transform group-hover:-translate-x-1">←</span>
-            <div>
+            <span className="transition-transform group-hover:-translate-x-1 flex-shrink-0">←</span>
+            <div className="min-w-0">
               <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Previous</p>
-              <p>Section {prevChapter.chapter_number}: {prevChapter.title}</p>
+              <p className="truncate">{getChapterLabel(prevChapter.chapter_number).label}: {prevChapter.title}</p>
             </div>
           </Link>
         ) : (
@@ -188,14 +212,14 @@ export default async function ChapterPage({ params }: Props) {
         {nextChapter ? (
           <Link
             href={`/reading/${slug}/${nextChapter.chapter_number}`}
-            className="group flex items-center gap-2 text-sm font-medium text-right"
+            className="group flex items-center gap-2 text-sm font-medium text-right max-w-[45%]"
             style={{ color: 'var(--accent-red)' }}
           >
-            <div>
+            <div className="min-w-0">
               <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Next</p>
-              <p>Section {nextChapter.chapter_number}: {nextChapter.title}</p>
+              <p className="truncate">{getChapterLabel(nextChapter.chapter_number).label}: {nextChapter.title}</p>
             </div>
-            <span className="transition-transform group-hover:translate-x-1">→</span>
+            <span className="transition-transform group-hover:translate-x-1 flex-shrink-0">→</span>
           </Link>
         ) : (
           <div />

@@ -5,6 +5,45 @@ export const metadata = {
   title: 'Reading | Critical Consciousness',
 }
 
+/**
+ * Map internal chapter_number to Marx's actual structure.
+ * chapter_number 1-4 = Chapter 1 sections
+ * chapter_number 5+ = Chapters 2-10
+ */
+interface MarxChapter {
+  marxChapter: number
+  part: number
+  partTitle: string
+  isSection?: boolean // true = sub-section of a chapter
+  parentLabel?: string // e.g. "Chapter 1" for sections
+}
+
+const CHAPTER_MAP: Record<number, MarxChapter> = {
+  // Chapter 1: Commodities (4 sections) — Part I
+  1: { marxChapter: 1, part: 1, partTitle: 'Commodities and Money', isSection: true, parentLabel: 'Chapter 1: Commodities' },
+  2: { marxChapter: 1, part: 1, partTitle: 'Commodities and Money', isSection: true, parentLabel: 'Chapter 1: Commodities' },
+  3: { marxChapter: 1, part: 1, partTitle: 'Commodities and Money', isSection: true, parentLabel: 'Chapter 1: Commodities' },
+  4: { marxChapter: 1, part: 1, partTitle: 'Commodities and Money', isSection: true, parentLabel: 'Chapter 1: Commodities' },
+  // Chapter 2: Exchange — Part I
+  5: { marxChapter: 2, part: 1, partTitle: 'Commodities and Money' },
+  // Chapter 3: Money — Part I
+  6: { marxChapter: 3, part: 1, partTitle: 'Commodities and Money' },
+  // Chapter 4: General Formula — Part II
+  7: { marxChapter: 4, part: 2, partTitle: 'The Transformation of Money into Capital' },
+  // Chapter 5: Contradictions — Part II
+  8: { marxChapter: 5, part: 2, partTitle: 'The Transformation of Money into Capital' },
+  // Chapter 6: Buying and Selling of Labour-Power — Part II
+  9: { marxChapter: 6, part: 2, partTitle: 'The Transformation of Money into Capital' },
+  // Chapter 7: Labour-Process — Part III
+  10: { marxChapter: 7, part: 3, partTitle: 'The Production of Absolute Surplus-Value' },
+  // Chapter 8: Constant & Variable Capital — Part III
+  11: { marxChapter: 8, part: 3, partTitle: 'The Production of Absolute Surplus-Value' },
+  // Chapter 9: Rate of Surplus-Value — Part III
+  12: { marxChapter: 9, part: 3, partTitle: 'The Production of Absolute Surplus-Value' },
+  // Chapter 10: The Working-Day — Part III
+  13: { marxChapter: 10, part: 3, partTitle: 'The Production of Absolute Surplus-Value' },
+}
+
 export default async function ReadingPage() {
   const supabase = await createClient()
 
@@ -65,6 +104,22 @@ export default async function ReadingPage() {
         {documents.map((doc: any) => {
           const chapters = doc.chapters?.sort((a: any, b: any) => a.sort_order - b.sort_order) || []
 
+          // Group chapters by Part
+          const parts: { part: number; partTitle: string; items: any[] }[] = []
+          let currentPart: { part: number; partTitle: string; items: any[] } | null = null
+
+          for (const chapter of chapters) {
+            const mapping = CHAPTER_MAP[chapter.chapter_number]
+            if (!mapping) continue
+
+            if (!currentPart || currentPart.part !== mapping.part) {
+              currentPart = { part: mapping.part, partTitle: mapping.partTitle, items: [] }
+              parts.push(currentPart)
+            }
+
+            currentPart.items.push({ ...chapter, mapping })
+          }
+
           return (
             <div key={doc.id}>
               {/* Document header */}
@@ -82,88 +137,214 @@ export default async function ReadingPage() {
                   {doc.title}
                 </h2>
                 <p className="text-sm" style={{ color: 'var(--accent-purple)' }}>
-                  Chapter 1 · {chapters.length} section{chapters.length !== 1 ? 's' : ''}
+                  Karl Marx
                 </p>
               </div>
 
-              {/* Chapter/section list */}
-              {chapters.length > 0 ? (
-                <div
-                  className="rounded-b-lg border border-t-0 overflow-hidden"
-                  style={{ borderColor: 'var(--border-default)' }}
-                >
-                  {chapters.map((chapter: any, i: number) => {
-                    const isCurrentWeek = chapter.week_id === currentWeekId
-                    return (
-                      <Link
-                        key={chapter.id}
-                        href={`/reading/${doc.slug}/${chapter.chapter_number}`}
-                        className="flex items-center justify-between px-6 py-4 transition-all hover-bg-themed group"
+              {/* Parts and chapters */}
+              <div
+                className="rounded-b-lg border border-t-0 overflow-hidden"
+                style={{ borderColor: 'var(--border-default)' }}
+              >
+                {parts.map((partGroup, partIdx) => {
+                  // Group Ch1 sections together under a parent label
+                  const ch1Sections = partGroup.items.filter((item: any) => item.mapping.isSection)
+                  const standaloneChapters = partGroup.items.filter((item: any) => !item.mapping.isSection)
+
+                  return (
+                    <div key={partGroup.part}>
+                      {/* Part header */}
+                      <div
+                        className="px-6 py-3"
                         style={{
-                          backgroundColor: isCurrentWeek ? 'var(--bg-soft)' : 'var(--bg-card)',
-                          borderBottom: i < chapters.length - 1 ? '1px solid var(--border-default)' : 'none',
+                          backgroundColor: 'var(--bg-soft)',
+                          borderBottom: '1px solid var(--border-default)',
+                          borderTop: partIdx > 0 ? '1px solid var(--border-default)' : 'none',
                         }}
                       >
-                        <div className="flex items-center gap-4">
-                          <span
-                            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+                        <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--accent-purple)' }}>
+                          Part {partGroup.part}
+                        </p>
+                        <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                          {partGroup.partTitle}
+                        </p>
+                      </div>
+
+                      {/* Chapter 1 sections (grouped) */}
+                      {ch1Sections.length > 0 && (
+                        <div>
+                          {/* Chapter 1 parent label */}
+                          <div
+                            className="px-6 py-3 flex items-center gap-3"
                             style={{
-                              backgroundColor: isCurrentWeek ? 'var(--accent-purple)' : 'var(--bg-soft)',
-                              color: isCurrentWeek ? 'var(--text-primary)' : 'var(--text-secondary)',
+                              backgroundColor: 'var(--bg-card)',
+                              borderBottom: '1px solid var(--border-default)',
                             }}
                           >
-                            {chapter.chapter_number}
-                          </span>
-                          <div>
-                            <h3
-                              className="font-medium text-sm group-hover:underline"
-                              style={{
-                                color: 'var(--text-primary)',
-                                fontFamily: "'Lora', Georgia, serif",
-                              }}
-                            >
-                              {chapter.title}
-                            </h3>
-                            {chapter.week && (
-                              <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                                Week {chapter.week.week_number}: {chapter.week.title}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {isCurrentWeek && (
                             <span
-                              className="text-xs font-medium px-2 py-0.5 rounded-full"
-                              style={{
-                                backgroundColor: 'var(--accent-purple)',
-                                color: 'var(--text-primary)',
-                              }}
+                              className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+                              style={{ backgroundColor: 'var(--bg-soft)', color: 'var(--text-secondary)' }}
                             >
-                              This Week
+                              1
                             </span>
-                          )}
-                          <span
-                            className="text-sm opacity-0 group-hover:opacity-100 transition-opacity"
-                            style={{ color: 'var(--accent-red)' }}
-                          >
-                            Read →
-                          </span>
+                            <p
+                              className="text-sm font-semibold"
+                              style={{ color: 'var(--text-primary)', fontFamily: "'Lora', Georgia, serif" }}
+                            >
+                              Commodities
+                            </p>
+                          </div>
+
+                          {/* Individual sections of Ch1 */}
+                          {ch1Sections.map((chapter: any, i: number) => {
+                            const isCurrentWeek = chapter.week_id === currentWeekId
+                            const isLast = i === ch1Sections.length - 1 && standaloneChapters.length === 0
+                            return (
+                              <Link
+                                key={chapter.id}
+                                href={`/reading/${doc.slug}/${chapter.chapter_number}`}
+                                className="flex items-center justify-between px-6 pl-16 py-3 transition-all hover-bg-themed group"
+                                style={{
+                                  backgroundColor: isCurrentWeek ? 'var(--bg-soft)' : 'var(--bg-card)',
+                                  borderBottom: isLast ? 'none' : '1px solid var(--border-default)',
+                                }}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <span
+                                    className="flex-shrink-0 w-6 h-6 rounded flex items-center justify-center text-xs"
+                                    style={{
+                                      backgroundColor: isCurrentWeek ? 'var(--accent-purple)' : 'var(--bg-soft)',
+                                      color: isCurrentWeek ? 'var(--text-primary)' : 'var(--text-secondary)',
+                                    }}
+                                  >
+                                    {chapter.chapter_number}
+                                  </span>
+                                  <div>
+                                    <h3
+                                      className="font-medium text-sm group-hover:underline"
+                                      style={{
+                                        color: 'var(--text-primary)',
+                                        fontFamily: "'Lora', Georgia, serif",
+                                      }}
+                                    >
+                                      {chapter.title}
+                                    </h3>
+                                    {chapter.week && (
+                                      <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                                        Week {chapter.week.week_number}: {chapter.week.title}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {isCurrentWeek && (
+                                    <span
+                                      className="text-xs font-medium px-2 py-0.5 rounded-full"
+                                      style={{ backgroundColor: 'var(--accent-purple)', color: 'var(--text-primary)' }}
+                                    >
+                                      This Week
+                                    </span>
+                                  )}
+                                  <span
+                                    className="text-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                                    style={{ color: 'var(--accent-red)' }}
+                                  >
+                                    Read →
+                                  </span>
+                                </div>
+                              </Link>
+                            )
+                          })}
                         </div>
-                      </Link>
-                    )
-                  })}
-                </div>
-              ) : (
+                      )}
+
+                      {/* Standalone chapters (Ch 2+) */}
+                      {standaloneChapters.map((chapter: any, i: number) => {
+                        const isCurrentWeek = chapter.week_id === currentWeekId
+                        const isLast = i === standaloneChapters.length - 1
+                        return (
+                          <Link
+                            key={chapter.id}
+                            href={`/reading/${doc.slug}/${chapter.chapter_number}`}
+                            className="flex items-center justify-between px-6 py-4 transition-all hover-bg-themed group"
+                            style={{
+                              backgroundColor: isCurrentWeek ? 'var(--bg-soft)' : 'var(--bg-card)',
+                              borderBottom: isLast ? 'none' : '1px solid var(--border-default)',
+                            }}
+                          >
+                            <div className="flex items-center gap-4">
+                              <span
+                                className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+                                style={{
+                                  backgroundColor: isCurrentWeek ? 'var(--accent-purple)' : 'var(--bg-soft)',
+                                  color: isCurrentWeek ? 'var(--text-primary)' : 'var(--text-secondary)',
+                                }}
+                              >
+                                {chapter.mapping.marxChapter}
+                              </span>
+                              <div>
+                                <h3
+                                  className="font-medium text-sm group-hover:underline"
+                                  style={{
+                                    color: 'var(--text-primary)',
+                                    fontFamily: "'Lora', Georgia, serif",
+                                  }}
+                                >
+                                  {chapter.title}
+                                </h3>
+                                {chapter.week && (
+                                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                                    Week {chapter.week.week_number}: {chapter.week.title}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {isCurrentWeek && (
+                                <span
+                                  className="text-xs font-medium px-2 py-0.5 rounded-full"
+                                  style={{ backgroundColor: 'var(--accent-purple)', color: 'var(--text-primary)' }}
+                                >
+                                  This Week
+                                </span>
+                              )}
+                              <span
+                                className="text-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                                style={{ color: 'var(--accent-red)' }}
+                              >
+                                Read →
+                              </span>
+                            </div>
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  )
+                })}
+
+                {/* Attribution */}
                 <div
-                  className="rounded-b-lg border border-t-0 px-6 py-4"
-                  style={{ borderColor: 'var(--border-default)', backgroundColor: 'var(--bg-card)' }}
+                  className="px-6 py-3 text-center"
+                  style={{
+                    borderTop: '1px solid var(--border-default)',
+                    backgroundColor: 'var(--bg-card)',
+                  }}
                 >
-                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                    Chapters will appear here as they&apos;re added to the reading schedule.
+                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                    Text from the{' '}
+                    <a
+                      href="https://www.marxists.org/archive/marx/works/1867-c1/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline"
+                      style={{ color: 'var(--accent-purple)' }}
+                    >
+                      Marxists Internet Archive
+                    </a>
+                    {' '}— Moore &amp; Aveling translation, edited by Engels
                   </p>
                 </div>
-              )}
+              </div>
             </div>
           )
         })}
