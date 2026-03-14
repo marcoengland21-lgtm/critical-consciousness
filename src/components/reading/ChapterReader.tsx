@@ -207,15 +207,9 @@ function renderTextWithFootnotes(
   return parts.length > 0 ? parts : [text]
 }
 
+const isDev = process.env.NODE_ENV === 'development'
+
 export default function ChapterReader({ chapter, annotations: initialAnnotations, footnotes, userId, documentSlug }: Props) {
-  // Debug logging
-  console.log('[CCP Debug] ChapterReader mounted', {
-    chapterId: chapter.id,
-    contentLength: chapter.content.length,
-    initialAnnotationCount: initialAnnotations.length,
-    userId,
-    annotations: initialAnnotations.map(a => ({ id: a.id, start: a.position_start, end: a.position_end, body: a.body?.slice(0, 40) })),
-  })
 
   const router = useRouter()
   const textRef = useRef<HTMLDivElement>(null)
@@ -304,7 +298,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
 
         if (!error && data) {
           setGlossaryTerms(data)
-          console.log('[CCP Debug] Loaded glossary terms:', data.length)
+          if (isDev) console.log('[CCP] Loaded glossary terms:', data.length)
         } else if (error) {
           console.error('[CCP Debug] Failed to load glossary terms:', error)
         }
@@ -330,7 +324,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         },
         (payload) => {
           // Refresh on any annotation change
-          console.log('[CCP Debug] Realtime annotation change', payload.eventType, payload.new)
+          if (isDev) console.log('[CCP] Realtime annotation change', payload.eventType)
           router.refresh()
         }
       )
@@ -355,7 +349,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         },
         async () => {
           // Refresh confusion flags when they change
-          console.log('[CCP Debug] Realtime confusion flag change')
+          if (isDev) console.log('[CCP] Confusion flag change')
           try {
             const counts = await getConfusionFlagCounts(chapter.id)
             setConfusionFlagCounts(counts)
@@ -422,7 +416,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     const end = getCharOffset(range.endContainer, range.endOffset)
     const rect = range.getBoundingClientRect()
 
-    console.log('[CCP Debug] Text selected', { text: text.slice(0, 60), start, end, rectTop: rect.top, rectLeft: rect.left })
+    if (isDev) console.log('[CCP] Text selected', { start, end })
     setSelection({ text, start, end, rect })
     setShowToolbar(true)
     setShowAnnotatePopover(false)
@@ -433,7 +427,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
   const handleSaveAnnotation = useCallback(
     async (body: string) => {
       if (!selection) {
-        console.log('[CCP Debug] handleSaveAnnotation called but no selection')
+        if (isDev) console.log('[CCP] No selection for annotation')
         return
       }
 
@@ -457,7 +451,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         quote_prefix: quotePrefix,
         quote_suffix: quoteSuffix,
       }
-      console.log('[CCP Debug] Inserting annotation', insertPayload)
+      if (isDev) console.log('[CCP] Inserting annotation')
 
       const { data, error } = await supabase
         .from('annotations')
@@ -472,12 +466,12 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         `)
         .single()
 
-      console.log('[CCP Debug] Annotation save result', { data: data ? { id: data.id, start: data.position_start, end: data.position_end } : null, error })
+      if (isDev) console.log('[CCP] Annotation saved', data?.id)
 
       if (!error && data) {
         setAnnotations((prev) => {
           const next = [...prev, data]
-          console.log('[CCP Debug] Annotations state updated, count:', next.length)
+          if (isDev) console.log('[CCP] Annotations:', next.length)
           return next
         })
         setSelection(null)
@@ -486,7 +480,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         window.getSelection()?.removeAllRanges()
         setToast({ message: 'Annotation saved', type: 'success' })
       } else if (error) {
-        console.error('[CCP Debug] Annotation save FAILED', error)
+        console.error('[CCP] Annotation save failed', error)
         setToast({ message: 'Failed to save annotation', type: 'error' })
       }
     },
@@ -495,7 +489,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
 
   /** Click on an annotated segment */
   const handleAnnotationClick = useCallback((anns: Annotation[]) => {
-    console.log('[CCP Debug] Annotation highlight clicked', { count: anns.length, ids: anns.map(a => a.id) })
+    if (isDev) console.log('[CCP] Annotation clicked', anns.length)
     if (anns.length > 0) {
       setActiveAnnotation(anns[0])
       setShowAnnotatePopover(false)
@@ -522,7 +516,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
 
   /** Open the annotation popover from toolbar */
   const handleAnnotateFromToolbar = useCallback(() => {
-    console.log('[CCP Debug] Annotate button clicked, selection:', selection ? { text: selection.text.slice(0, 40), start: selection.start, end: selection.end } : null)
+    if (isDev) console.log('[CCP] Annotate clicked')
     setShowToolbar(false)
     setShowAnnotatePopover(true)
   }, [selection])

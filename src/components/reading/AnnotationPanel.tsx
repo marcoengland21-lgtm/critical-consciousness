@@ -97,6 +97,9 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
       {/* Panel */}
       <div
         ref={panelRef}
+        role="dialog"
+        aria-label="Annotation detail"
+        aria-modal="true"
         className="fixed right-0 top-0 h-full w-full sm:w-96 z-50 shadow-2xl overflow-y-auto animate-slide-in-right"
         style={{
           backgroundColor: 'var(--bg-card)',
@@ -113,8 +116,9 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
           </h3>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover-bg-themed transition-colors text-lg"
+            className="w-11 h-11 flex items-center justify-center rounded-full hover-bg-themed transition-colors text-lg"
             style={{ color: 'var(--text-secondary)' }}
+            aria-label="Close annotation panel"
           >
             ×
           </button>
@@ -229,7 +233,9 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
 
           {/* Reply form */}
           <form onSubmit={handleReply} className="pt-3 border-t" style={{ borderColor: 'var(--border-default)' }}>
+            <label htmlFor="annotation-reply" className="sr-only">Reply to annotation</label>
             <textarea
+              id="annotation-reply"
               value={replyBody}
               onChange={(e) => setReplyBody(e.target.value)}
               placeholder={userId ? 'Reply to this annotation...' : 'Reply as Guest...'}

@@ -1,5 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import CollapsiblePart from '@/components/reading/CollapsiblePart'
+
+export const revalidate = 3600 // Revalidate hourly — chapter list rarely changes
 
 export const metadata = {
   title: 'Reading | Critical Consciousness',
@@ -70,7 +73,7 @@ export default async function ReadingPage() {
     supabase
       .from('text_documents')
       .select(`
-        *,
+        id, title, slug,
         chapters:text_chapters(
           id, chapter_number, title, sort_order, week_id,
           week:reading_schedule!week_id(week_number, title)
@@ -161,24 +164,17 @@ export default async function ReadingPage() {
                   const ch1Sections = partGroup.items.filter((item: any) => item.mapping.isSection)
                   const standaloneChapters = partGroup.items.filter((item: any) => !item.mapping.isSection)
 
+                  // First 3 parts open by default, rest collapsed
+                  const hasCurrentWeek = partGroup.items.some((item: any) => item.week_id === currentWeekId)
+                  const defaultOpen = hasCurrentWeek || partGroup.part <= 3
+
                   return (
-                    <div key={partGroup.part}>
-                      {/* Part header */}
-                      <div
-                        className="px-6 py-3"
-                        style={{
-                          backgroundColor: 'var(--bg-soft)',
-                          borderBottom: '1px solid var(--border-default)',
-                          borderTop: partIdx > 0 ? '1px solid var(--border-default)' : 'none',
-                        }}
+                    <div key={partGroup.part} style={{ borderTop: partIdx > 0 ? '1px solid var(--border-default)' : 'none' }}>
+                      <CollapsiblePart
+                        partNumber={partGroup.part}
+                        partTitle={partGroup.partTitle}
+                        defaultOpen={defaultOpen}
                       >
-                        <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--accent-purple)' }}>
-                          Part {partGroup.part}
-                        </p>
-                        <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                          {partGroup.partTitle}
-                        </p>
-                      </div>
 
                       {/* Chapter 1 sections (grouped) */}
                       {ch1Sections.length > 0 && (
@@ -328,6 +324,7 @@ export default async function ReadingPage() {
                           </Link>
                         )
                       })}
+                      </CollapsiblePart>
                     </div>
                   )
                 })}

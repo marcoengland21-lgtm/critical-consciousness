@@ -61,7 +61,7 @@ export default async function ChapterPage({ params }: Props) {
       .eq('slug', slug)
       .single(),
     supabase.from('text_chapters')
-      .select('*')
+      .select('id, chapter_number, title, content, sort_order')
       .eq('chapter_number', chapterNum)
       .single(),
     supabase.from('text_chapters')
@@ -77,7 +77,7 @@ export default async function ChapterPage({ params }: Props) {
     { data: annotations },
   ] = await Promise.all([
     supabase.from('text_footnotes')
-      .select('*')
+      .select('id, footnote_number, content, author')
       .eq('chapter_id', chapterData.id)
       .order('footnote_number', { ascending: true }),
     supabase.from('annotations')

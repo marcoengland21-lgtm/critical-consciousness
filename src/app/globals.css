@@ -20,9 +20,9 @@
 
   /* Text */
   --text-primary: #1a1625;        /* Main body text */
-  --text-secondary: #6b6478;      /* Secondary/muted text */
+  --text-secondary: #5a5368;      /* Secondary/muted text (WCAG AA 7:1 on white) */
   --text-inverse: #faf9fc;        /* Text on dark backgrounds */
-  --text-badge: #5c4a6a;          /* Badge/tag text */
+  --text-badge: #4d3d5c;          /* Badge/tag text (improved contrast) */
 
   /* Borders */
   --border-default: #e2dfe8;      /* Standard borders */
@@ -31,8 +31,8 @@
   /* Accents */
   --accent-red: #a31545;          /* Primary CTA, links */
   --accent-red-hover: #8b1039;    /* Hover state */
-  --accent-purple: #6b4c9a;       /* Secondary accent */
-  --accent-purple-hover: #573d80; /* Hover state */
+  --accent-purple: #5c3d8f;       /* Secondary accent (WCAG AA 4.5:1 on white) */
+  --accent-purple-hover: #4a3070; /* Hover state */
   --accent-green: #4a6741;        /* Success states */
 
   /* Legacy aliases (for existing var() references) */
@@ -72,7 +72,7 @@ html[data-theme="dark"] {
   --bg-hover: #2d2740;
 
   --text-primary: #eae6f2;
-  --text-secondary: #9990ab;
+  --text-secondary: #b0a8c2;      /* Improved contrast on dark bg */
   --text-inverse: #faf9fc;        /* Always light — used on always-dark nav/headers */
   --text-badge: #c4b8d4;
 
@@ -239,7 +239,7 @@ html[data-theme="dark"] .reading-text .blockquote {
    ANNOTATION HIGHLIGHTS
    ================================================================= */
 .annotation-highlight {
-  background-color: rgba(107, 76, 154, 0.12);
+  background-color: rgba(92, 61, 143, 0.15);
   cursor: pointer;
   transition: background-color 150ms ease;
   border-radius: 2px;
@@ -377,3 +377,16 @@ html[data-theme="dark"] .confusion-high { background-color: #7a6850; color: #e8d
 }
 ::-webkit-scrollbar-thumb:hover { background: rgba(107, 100, 120, 0.5); }
 * { scrollbar-width: thin; scrollbar-color: rgba(107, 100, 120, 0.3) transparent; }
+
+/* =================================================================
+   SEMANTIC COLOR UTILITIES — replaces repetitive inline styles
+   ================================================================= */
+.text-accent-red { color: var(--accent-red); }
+.text-accent-purple { color: var(--accent-purple); }
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-inverse { color: var(--text-inverse); }
+.bg-card { background-color: var(--bg-card); }
+.bg-soft { background-color: var(--bg-soft); }
+.bg-page { background-color: var(--bg-page); }
+.border-themed { border-color: var(--border-default); }

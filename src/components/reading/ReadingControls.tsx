@@ -65,6 +65,7 @@ export default function ReadingControls({
               <input
                 type="text"
                 placeholder="Filter annotations by keyword…"
+                aria-label="Filter annotations by keyword"
                 value={keywordInput}
                 onChange={(e) => handleKeywordChange(e.target.value)}
                 className="flex-1 bg-transparent text-sm outline-none"
@@ -114,20 +115,20 @@ export default function ReadingControls({
         <button
           onClick={() => onFontSizeChange(Math.max(MIN_FONT, fontSize - 2))}
           disabled={fontSize <= MIN_FONT}
-          className="w-7 h-7 flex items-center justify-center rounded text-xs font-bold transition-colors disabled:opacity-30 hover:bg-black/5"
+          className="w-11 h-11 flex items-center justify-center rounded text-xs font-bold transition-colors disabled:opacity-30 hover:bg-black/5"
           style={{ color: 'var(--text-secondary)' }}
           title="Decrease font size"
           aria-label="Decrease font size"
         >
           A<span className="text-[10px]">-</span>
         </button>
-        <span className="text-xs tabular-nums w-8 text-center" style={{ color: 'var(--text-secondary)' }}>
+        <span className="text-xs tabular-nums w-8 text-center" style={{ color: 'var(--text-secondary)' }} aria-live="polite" aria-label={`Font size ${fontSize} pixels`}>
           {fontSize}
         </span>
         <button
           onClick={() => onFontSizeChange(Math.min(MAX_FONT, fontSize + 2))}
           disabled={fontSize >= MAX_FONT}
-          className="w-7 h-7 flex items-center justify-center rounded text-sm font-bold transition-colors disabled:opacity-30 hover:bg-black/5"
+          className="w-11 h-11 flex items-center justify-center rounded text-sm font-bold transition-colors disabled:opacity-30 hover:bg-black/5"
           style={{ color: 'var(--text-secondary)' }}
           title="Increase font size"
           aria-label="Increase font size"
@@ -142,7 +143,7 @@ export default function ReadingControls({
       {/* Dark mode toggle */}
       <button
         onClick={toggleTheme}
-        className="w-7 h-7 flex items-center justify-center rounded text-xs transition-colors hover:bg-black/5"
+        className="w-11 h-11 flex items-center justify-center rounded text-xs transition-colors hover:bg-black/5"
         style={{ color: 'var(--text-secondary)' }}
         title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
         aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -178,6 +179,8 @@ export default function ReadingControls({
           color: focusedMode ? 'var(--bg-page)' : 'var(--text-secondary)',
         }}
         title={focusedMode ? 'Show annotations' : 'Hide annotations for focused reading'}
+        aria-label={focusedMode ? 'Show annotations' : 'Hide annotations for focused reading'}
+        aria-pressed={focusedMode}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           {focusedMode ? (

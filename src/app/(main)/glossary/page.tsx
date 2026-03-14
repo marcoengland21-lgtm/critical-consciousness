@@ -1,6 +1,8 @@
 import { createClient, getSessionUser } from '@/lib/supabase/server'
 import GlossaryList from '@/components/glossary/GlossaryList'
 
+export const revalidate = 3600
+
 export const metadata = {
   title: 'Glossary | Critical Consciousness',
 }
