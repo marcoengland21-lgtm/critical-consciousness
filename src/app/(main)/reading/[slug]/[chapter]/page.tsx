@@ -1,4 +1,4 @@
-import { createClient, getSessionUser } from '@/lib/supabase/server'
+import { createClient, createStaticClient, getSessionUser } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { unstable_cache } from 'next/cache'
@@ -45,9 +45,10 @@ export async function generateMetadata({ params }: Props) {
 }
 
 // Cache static chapter data — text content doesn't change, revalidate daily
+// Uses createStaticClient (no cookies) because unstable_cache cannot access dynamic APIs
 const getStaticChapterData = unstable_cache(
   async (slug: string, chapterNum: number) => {
-    const supabase = await createClient()
+    const supabase = createStaticClient()
 
     const [
       { data: doc },
@@ -74,9 +75,10 @@ const getStaticChapterData = unstable_cache(
 )
 
 // Cache footnotes separately (also static, never change)
+// Uses createStaticClient (no cookies) because unstable_cache cannot access dynamic APIs
 const getFootnotes = unstable_cache(
   async (chapterId: string) => {
-    const supabase = await createClient()
+    const supabase = createStaticClient()
     const { data } = await supabase.from('text_footnotes')
       .select('id, footnote_number, content, author')
       .eq('chapter_id', chapterId)
