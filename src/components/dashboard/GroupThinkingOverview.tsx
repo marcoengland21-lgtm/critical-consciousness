@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
+import Link from 'next/link'
 
 interface AnnotationData {
   chapter_number: number
@@ -17,9 +18,10 @@ interface ThreadData {
 interface Props {
   annotations: AnnotationData[]
   threads: ThreadData[]
+  documentSlug?: string
 }
 
-export default function GroupThinkingOverview({ annotations, threads }: Props) {
+export default function GroupThinkingOverview({ annotations, threads, documentSlug = 'capital-vol-1' }: Props) {
   const analysis = useMemo(() => {
     // Group annotations by chapter
     const byChapter = new Map<number, AnnotationData>()
@@ -38,14 +40,14 @@ export default function GroupThinkingOverview({ annotations, threads }: Props) {
       chapter.body += ' ' + ann.body
     })
 
-    // Get the 3 most recent annotation snippets for reflection
+    // Get the 3 most recent annotation snippets with their chapter info
     const recentSnippets = annotations
       .slice(-3)
       .reverse()
-      .map((ann) => {
-        const snippet = ann.body.length > 80 ? ann.body.substring(0, 80).trim() + '...' : ann.body
-        return snippet
-      })
+      .map((ann) => ({
+        snippet: ann.body.length > 80 ? ann.body.substring(0, 80).trim() + '...' : ann.body,
+        chapter_number: ann.chapter_number,
+      }))
 
     return {
       byChapter: Array.from(byChapter.values()),
@@ -74,23 +76,27 @@ export default function GroupThinkingOverview({ annotations, threads }: Props) {
 
   return (
     <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
-      <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
+      <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
         <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
           What the Group is Thinking
         </h2>
+        <Link href={`/reading/${documentSlug}/1`} className="text-xs font-medium" style={{ color: 'var(--accent-red)' }}>
+          Read &amp; Annotate →
+        </Link>
       </div>
       <div className="p-5 space-y-6" style={{ backgroundColor: 'var(--bg-card)' }}>
-        {/* By section summary */}
+        {/* By section summary — clickable links to each section */}
         {analysis.byChapter.length > 0 && (
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--accent-purple)' }}>
               By Section
             </h3>
             <div className="space-y-2">
-              {analysis.byChapter.slice(0, 3).map((chapter) => (
-                <div
+              {analysis.byChapter.slice(0, 4).map((chapter) => (
+                <Link
                   key={chapter.chapter_number}
-                  className="flex items-center justify-between p-2 rounded-lg"
+                  href={`/reading/${documentSlug}/${chapter.chapter_number}`}
+                  className="flex items-center justify-between p-2 rounded-lg transition-colors hover-bg-themed"
                   style={{ backgroundColor: 'var(--bg-page)' }}
                 >
                   <div>
@@ -109,30 +115,34 @@ export default function GroupThinkingOverview({ annotations, threads }: Props) {
                       {chapter.annotation_count === 1 ? 'note' : 'notes'}
                     </span>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
         )}
 
-        {/* Themes being explored */}
+        {/* Themes being explored — clickable to the relevant section */}
         {analysis.recentSnippets.length > 0 && (
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--accent-purple)' }}>
               Themes Being Explored
             </h3>
             <div className="space-y-2">
-              {analysis.recentSnippets.map((snippet, index) => (
-                <div
+              {analysis.recentSnippets.map((item, index) => (
+                <Link
                   key={index}
-                  className="p-3 rounded-lg text-sm italic"
+                  href={`/reading/${documentSlug}/${item.chapter_number}`}
+                  className="block p-3 rounded-lg text-sm italic transition-colors hover-bg-themed"
                   style={{
                     backgroundColor: 'var(--bg-page)',
                     color: 'var(--text-primary)',
                   }}
                 >
-                  <p>Someone noted: "{snippet}"</p>
-                </div>
+                  <p>&ldquo;{item.snippet}&rdquo;</p>
+                  <p className="text-xs not-italic mt-1" style={{ color: 'var(--text-secondary)' }}>
+                    Section {item.chapter_number} →
+                  </p>
+                </Link>
               ))}
             </div>
           </div>

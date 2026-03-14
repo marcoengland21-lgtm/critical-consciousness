@@ -157,8 +157,31 @@ export default async function ChapterPage({ params }: Props) {
         documentSlug={slug}
       />
 
+      {/* Cross-feature prompt */}
+      <div className="mt-12 p-5 rounded-lg border text-center" style={{ borderColor: 'var(--border-default)', backgroundColor: 'var(--bg-card)' }}>
+        <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
+          Finished reading? Share your thoughts with the group.
+        </p>
+        <div className="flex items-center justify-center gap-3">
+          <Link
+            href={`/threads/new?chapter=${chapterNum}&section=${encodeURIComponent(chapterData.title)}&chapter_id=${chapterData.id}`}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}
+          >
+            Start a Thread
+          </Link>
+          <Link
+            href="/threads"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium border transition-colors"
+            style={{ borderColor: 'var(--border-default)', color: 'var(--text-secondary)' }}
+          >
+            View Discussions
+          </Link>
+        </div>
+      </div>
+
       {/* Chapter navigation footer */}
-      <div className="mt-16 pt-8 border-t flex items-center justify-between" style={{ borderColor: 'var(--border-default)' }}>
+      <div className="mt-8 pt-8 border-t flex items-center justify-between" style={{ borderColor: 'var(--border-default)' }}>
         {prevChapter ? (
           <Link
             href={`/reading/${slug}/${prevChapter.chapter_number}`}

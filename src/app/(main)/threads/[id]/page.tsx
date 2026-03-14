@@ -15,9 +15,11 @@ export default async function ThreadPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const supabase = await createClient()
-  const adminClient = createAdminClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const authClient = await createClient()
+  // Admin client for data fetching (bypasses RLS for guest access)
+  // TODO: RE-ENABLE AUTH — switch to cookie-based client once RLS policies allow public reads
+  const supabase = createAdminClient()
+  const { data: { user } } = await authClient.auth.getUser()
 
   // Fetch thread with author
   const { data: thread, error } = await supabase
@@ -51,7 +53,7 @@ export default async function ThreadPage({
   if (blockquoteMatch) {
     const chapterNum = parseInt(blockquoteMatch[2])
     // Fetch chapter info to get document slug
-    const { data: chapters } = await adminClient
+    const { data: chapters } = await supabase
       .from('text_chapters')
       .select('id, chapter_number, document_id')
       .eq('chapter_number', chapterNum)
@@ -62,7 +64,7 @@ export default async function ThreadPage({
       const docId = chapters[0].document_id
 
       // Get document slug
-      const { data: docs } = await adminClient
+      const { data: docs } = await supabase
         .from('text_documents')
         .select('slug')
         .eq('id', docId)

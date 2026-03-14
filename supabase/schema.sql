@@ -286,9 +286,9 @@ RETURNS BOOLEAN AS $$
   );
 $$ LANGUAGE sql SECURITY DEFINER SET search_path = public;
 
--- PROFILES: Authenticated users can SELECT all; users can UPDATE their own display_name
+-- PROFILES: Anyone can read; users can UPDATE their own display_name
 CREATE POLICY "profiles_select" ON profiles
-  FOR SELECT USING (auth.role() = 'authenticated');
+  FOR SELECT USING (true);
 
 CREATE POLICY "profiles_update_own" ON profiles
   FOR UPDATE USING (auth.uid() = id)
@@ -350,9 +350,9 @@ CREATE POLICY "discussion_prompts_admin_update" ON discussion_prompts
 CREATE POLICY "discussion_prompts_admin_delete" ON discussion_prompts
   FOR DELETE USING (is_admin());
 
--- THREADS: Authenticated users can INSERT; authors/admins can UPDATE/DELETE own/any
+-- THREADS: Anyone can read; authenticated users can INSERT; authors/admins can UPDATE/DELETE
 CREATE POLICY "threads_select" ON threads
-  FOR SELECT USING (auth.role() = 'authenticated');
+  FOR SELECT USING (true);
 
 CREATE POLICY "threads_insert" ON threads
   FOR INSERT WITH CHECK (auth.role() = 'authenticated' AND author_id = auth.uid());
@@ -371,9 +371,9 @@ CREATE POLICY "threads_delete_own" ON threads
 CREATE POLICY "threads_delete_admin" ON threads
   FOR DELETE USING (is_admin());
 
--- REPLIES: Authenticated users can INSERT; authors/admins can UPDATE/DELETE own/any
+-- REPLIES: Anyone can read; authenticated users can INSERT; authors/admins can UPDATE/DELETE
 CREATE POLICY "replies_select" ON replies
-  FOR SELECT USING (auth.role() = 'authenticated');
+  FOR SELECT USING (true);
 
 CREATE POLICY "replies_insert" ON replies
   FOR INSERT WITH CHECK (auth.role() = 'authenticated' AND author_id = auth.uid());
@@ -448,9 +448,9 @@ CREATE POLICY "text_chapters_admin_update" ON text_chapters
 CREATE POLICY "text_chapters_admin_delete" ON text_chapters
   FOR DELETE USING (is_admin());
 
--- ANNOTATIONS: Authenticated users can INSERT; authors can UPDATE/DELETE their own
+-- ANNOTATIONS: Anyone can read; authenticated users can INSERT; authors can UPDATE/DELETE their own
 CREATE POLICY "annotations_select" ON annotations
-  FOR SELECT USING (auth.role() = 'authenticated');
+  FOR SELECT USING (true);
 
 CREATE POLICY "annotations_insert" ON annotations
   FOR INSERT WITH CHECK (auth.role() = 'authenticated' AND author_id = auth.uid());
@@ -462,9 +462,9 @@ CREATE POLICY "annotations_update_own" ON annotations
 CREATE POLICY "annotations_delete_own" ON annotations
   FOR DELETE USING (auth.uid() = author_id);
 
--- ANNOTATION_REPLIES: Authenticated users can INSERT; authors can UPDATE/DELETE their own
+-- ANNOTATION_REPLIES: Anyone can read; authenticated users can INSERT; authors can UPDATE/DELETE their own
 CREATE POLICY "annotation_replies_select" ON annotation_replies
-  FOR SELECT USING (auth.role() = 'authenticated');
+  FOR SELECT USING (true);
 
 CREATE POLICY "annotation_replies_insert" ON annotation_replies
   FOR INSERT WITH CHECK (auth.role() = 'authenticated' AND author_id = auth.uid());

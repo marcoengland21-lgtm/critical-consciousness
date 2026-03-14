@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import ThreadTypeBadge from '@/components/threads/ThreadTypeBadge'
 import TimeAgo from '@/components/ui/TimeAgo'
 import type { ThreadType } from '@/types/database'
@@ -58,8 +59,9 @@ export default async function ThreadsPage({
   searchParams: Promise<{ type?: string; week?: string }>
 }) {
   const params = await searchParams
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  // Admin client for data fetching (bypasses RLS for guest access)
+  // TODO: RE-ENABLE AUTH — switch to cookie-based client once RLS policies allow public reads
+  const supabase = createAdminClient()
 
   let query = supabase
     .from('threads')
