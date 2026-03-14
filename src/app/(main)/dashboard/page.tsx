@@ -30,15 +30,12 @@ export default async function DashboardPage() {
   const weekStartISO = weekStart.toISOString()
   const weekEndISO = weekEnd.toISOString()
 
-  // Run ALL queries in a single parallel batch — including milestone + activity counts
+  // Run all queries in a single parallel batch (8 queries, down from 11)
   const [
     { data: profile },
     { data: currentWeekData },
     { data: recentThreads },
-    { count: memberCount },
-    { count: threadCount },
-    { data: annotationsData },
-    { data: threadsData },
+    { data: recentAnnotations },
     { data: milestoneData },
     { count: weekAnnotationCount },
     { count: weekThreadCount },
@@ -55,13 +52,10 @@ export default async function DashboardPage() {
       author:profiles!author_id(display_name),
       replies:replies(count)
     `).order('created_at', { ascending: false }).limit(5),
-    supabase.from('profiles').select('*', { count: 'exact', head: true }),
-    supabase.from('threads').select('*', { count: 'exact', head: true }),
     supabase.from('annotations').select(`
       id, body, chapter_id,
       chapter:text_chapters!chapter_id(chapter_number, title)
-    `).order('created_at', { ascending: false }),
-    supabase.from('threads').select('week_id'),
+    `).order('created_at', { ascending: false }).limit(20),
     supabase.from('reading_milestones').select('id, week_number, title, description, reflection_prompt').order('week_number', { ascending: false }).limit(10),
     supabase.from('annotations').select('*', { count: 'exact', head: true }).gte('created_at', weekStartISO).lte('created_at', weekEndISO),
     supabase.from('threads').select('*', { count: 'exact', head: true }).gte('created_at', weekStartISO).lte('created_at', weekEndISO),
@@ -97,24 +91,15 @@ export default async function DashboardPage() {
     (r: any) => r.user?.id === user?.id
   ) || []
 
-  const annotations = annotationsData?.map((ann: any) => ({
+  const annotations = recentAnnotations?.map((ann: any) => ({
     chapter_number: ann.chapter?.chapter_number || 0,
     chapter_title: ann.chapter?.title || 'Unknown',
     annotation_count: 1,
     body: ann.body,
   })) || []
 
-  const threadsByWeek = new Map<string, number>()
-  threadsData?.forEach((thread: any) => {
-    if (thread.week_id) {
-      threadsByWeek.set(thread.week_id, (threadsByWeek.get(thread.week_id) || 0) + 1)
-    }
-  })
-
-  const threads = Array.from(threadsByWeek.entries()).map(([weekId, count], index) => ({
-    week_number: index + 1,
-    thread_count: count,
-  }))
+  // Use weekThreadCount for the "Group Thinking" overview thread stats
+  const threads = weekThreadCount ? [{ week_number: 1, thread_count: weekThreadCount }] : []
 
   return (
     <div>
