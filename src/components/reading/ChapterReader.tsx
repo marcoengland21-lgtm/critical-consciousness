@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
+import { useState, useRef, useCallback, useEffect, useMemo, memo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import AnnotationPopover from './AnnotationPopover'
@@ -61,6 +61,11 @@ interface Props {
 // Guest ID for unauthenticated annotation
 const GUEST_ID = 'ad4ce43f-6a30-484b-8f2c-df66f6b0276b'
 
+const isDev = process.env.NODE_ENV === 'development'
+
+// How many paragraphs to render immediately (above the fold)
+const INITIAL_RENDER_COUNT = 25
+
 /** Split text into annotated and unannotated segments */
 function buildSegments(
   text: string,
@@ -70,7 +75,6 @@ function buildSegments(
     return [{ start: 0, end: text.length, text, annotations: [] }]
   }
 
-  // Build a list of boundary points
   const boundaries = new Set<number>()
   boundaries.add(0)
   boundaries.add(text.length)
@@ -88,7 +92,6 @@ function buildSegments(
     const end = sorted[i + 1]
     const segText = text.slice(start, end)
 
-    // Find all annotations that cover this segment
     const covering = annotations.filter(
       (a) => a.position_start <= start && a.position_end >= end
     )
@@ -126,7 +129,6 @@ function buildMergedSegments(
     termData?: { term: string; definition: string }
   }[] = []
 
-  // Combine all boundaries
   const boundaries = new Set<number>()
   for (const seg of annotationSegments) {
     boundaries.add(seg.start)
@@ -143,7 +145,6 @@ function buildMergedSegments(
     const start = sorted[i]
     const end = sorted[i + 1]
 
-    // Find overlapping segments
     const overlapAnnotation = annotationSegments.find((s) => s.start <= start && s.end >= end)
     const overlapGlossary = glossarySegments.find((s) => s.start <= start && s.end >= end)
 
@@ -174,7 +175,6 @@ function renderTextWithFootnotes(
   let match: RegExpExecArray | null
 
   while ((match = regex.exec(text)) !== null) {
-    // Text before the marker
     if (match.index > lastIndex) {
       parts.push(text.slice(lastIndex, match.index))
     }
@@ -192,14 +192,12 @@ function renderTextWithFootnotes(
         />
       )
     } else {
-      // If no footnote data found, render the marker as-is
       parts.push(match[0])
     }
 
     lastIndex = match.index + match[0].length
   }
 
-  // Remaining text after last marker
   if (lastIndex < text.length) {
     parts.push(text.slice(lastIndex))
   }
@@ -207,8 +205,184 @@ function renderTextWithFootnotes(
   return parts.length > 0 ? parts : [text]
 }
 
-const isDev = process.env.NODE_ENV === 'development'
+// ====================================================================
+// Memoized paragraph component — only re-renders when its own props change
+// This is the key performance optimization: when you open a tooltip,
+// change font size, or type a keyword, paragraphs that didn't change
+// won't re-render their expensive segment/glossary/footnote logic.
+// ====================================================================
+interface ParagraphProps {
+  pIdx: number
+  paragraph: string
+  pStart: number
+  pEnd: number
+  annotations: Annotation[]
+  glossaryTerms: GlossaryTerm[]
+  footnoteMap: Map<number, Footnote>
+  focusedMode: boolean
+  chapterId: string
+  confusionCount: number
+  isUserFlagged: boolean
+  keywordFilter: { matching: Set<string> }
+  showKeywordStats: boolean
+  onAnnotationClick: (anns: Annotation[]) => void
+  onGlossaryTermClick: (term: string, definition: string, event: React.MouseEvent) => void
+}
 
+const MemoizedParagraph = memo(function Paragraph({
+  pIdx,
+  paragraph,
+  pStart,
+  pEnd,
+  annotations: displayAnnotations,
+  glossaryTerms,
+  footnoteMap,
+  focusedMode,
+  chapterId,
+  confusionCount,
+  isUserFlagged,
+  keywordFilter,
+  showKeywordStats,
+  onAnnotationClick,
+  onGlossaryTermClick,
+}: ParagraphProps) {
+  // Get annotations that overlap this paragraph
+  const pAnnotations = displayAnnotations.filter(
+    (a) => a.position_start < pEnd && a.position_end > pStart
+  )
+
+  // Find glossary terms in this paragraph
+  const glossaryMatches = focusedMode ? [] : findGlossaryTermMatches(paragraph, glossaryTerms)
+
+  // Build segments
+  const annotationSegments = buildSegments(
+    paragraph,
+    pAnnotations.map((a) => ({
+      ...a,
+      position_start: Math.max(a.position_start - pStart, 0),
+      position_end: Math.min(a.position_end - pStart, paragraph.length),
+    }))
+  )
+
+  const glossarySegments = buildGlossarySegments(paragraph, glossaryMatches)
+  const mergedSegments = buildMergedSegments(annotationSegments, glossarySegments)
+
+  const annotationCount = pAnnotations.length
+
+  return (
+    <p data-offset={pStart} className="relative group/para">
+      {/* Margin controls */}
+      <span className="absolute -left-16 top-1 flex gap-1 items-center opacity-40 group-hover/para:opacity-100 transition-opacity hidden lg:flex">
+        <ConfusionFlagButton
+          chapterId={chapterId}
+          paragraphIndex={pIdx}
+          initialCount={confusionCount}
+          isUserFlagged={isUserFlagged}
+          hidden={focusedMode}
+        />
+
+        {annotationCount > 0 ? (
+          <span
+            className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium"
+            style={{
+              backgroundColor: annotationCount > 2 ? 'var(--accent-purple)' : 'var(--bg-soft)',
+              color: 'var(--text-primary)',
+            }}
+            title={`${annotationCount} annotation${annotationCount > 1 ? 's' : ''}`}
+          >
+            {annotationCount}
+          </span>
+        ) : (
+          <span
+            className="w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover/para:opacity-50 transition-opacity"
+            title="Select text in this paragraph to annotate"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-purple)' }}>
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+            </svg>
+          </span>
+        )}
+      </span>
+
+      {mergedSegments.map((seg, sIdx) => {
+        // Glossary term only
+        if (seg.isGlossaryTerm && seg.annotations.length === 0 && seg.termData) {
+          return (
+            <span
+              key={sIdx}
+              className="cursor-pointer border-b border-dotted"
+              style={{ borderColor: 'var(--accent-purple)', color: 'var(--accent-red)' }}
+              onClick={(e) => onGlossaryTermClick(seg.termData!.term, seg.termData!.definition, e)}
+              title={`Click to see definition of "${seg.termData.term}"`}
+            >
+              {renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`)}
+            </span>
+          )
+        }
+
+        // Annotation highlight
+        if (seg.annotations.length > 0) {
+          const globalAnns = seg.annotations.map((localAnn) => {
+            return pAnnotations.find(
+              (a) =>
+                a.position_start <= pStart + localAnn.position_start &&
+                a.position_end >= pStart + localAnn.position_end
+            )!
+          }).filter(Boolean)
+
+          const density = globalAnns.length
+
+          if (seg.isGlossaryTerm && seg.termData) {
+            const isMatchingAnnotation = globalAnns.some((ann) => keywordFilter.matching.has(ann.id))
+            return (
+              <mark
+                key={sIdx}
+                className={`${density > 1 ? 'annotation-highlight-dense' : 'annotation-highlight'} border-b border-dotted cursor-pointer`}
+                style={{
+                  borderColor: 'var(--accent-purple)',
+                  opacity: showKeywordStats && !isMatchingAnnotation ? 0.2 : undefined,
+                  transition: 'opacity 200ms ease',
+                }}
+                onClick={(e) => {
+                  if (e.detail === 1) {
+                    onGlossaryTermClick(seg.termData!.term, seg.termData!.definition, e)
+                  }
+                }}
+                title={`${density} annotation${density > 1 ? 's' : ''}; Click to see glossary definition of "${seg.termData.term}"`}
+              >
+                {renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`)}
+              </mark>
+            )
+          }
+
+          const isMatchingAnnotation = globalAnns.some((ann) => keywordFilter.matching.has(ann.id))
+          return (
+            <mark
+              key={sIdx}
+              className={density > 1 ? 'annotation-highlight-dense' : 'annotation-highlight'}
+              onClick={() => onAnnotationClick(globalAnns)}
+              title={`${density} annotation${density > 1 ? 's' : ''}`}
+              style={{
+                opacity: showKeywordStats && !isMatchingAnnotation ? 0.2 : undefined,
+                transition: 'opacity 200ms ease',
+              }}
+            >
+              {renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`)}
+            </mark>
+          )
+        }
+
+        // Regular text
+        return <span key={sIdx}>{renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`)}</span>
+      })}
+    </p>
+  )
+})
+
+// ====================================================================
+// Main ChapterReader component
+// ====================================================================
 export default function ChapterReader({ chapter, annotations: initialAnnotations, footnotes, userId, documentSlug }: Props) {
 
   const router = useRouter()
@@ -240,6 +414,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     position: { top: number; left: number }
   } | null>(null)
   const [annotationKeyword, setAnnotationKeyword] = useState('')
+  const [renderedCount, setRenderedCount] = useState(INITIAL_RENDER_COUNT)
 
   // Build footnote lookup map
   const footnoteMap = useMemo(() => {
@@ -250,7 +425,46 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     return map
   }, [footnotes])
 
-  // Scroll position memory
+  // Pre-compute paragraph splits and offsets — only recompute when content changes
+  const paragraphData = useMemo(() => {
+    const paragraphs = chapter.content.split('\n\n')
+    const data: { text: string; start: number; end: number }[] = []
+    let offset = 0
+    for (const p of paragraphs) {
+      data.push({ text: p, start: offset, end: offset + p.length })
+      offset += p.length + 2 // +2 for \n\n
+    }
+    return data
+  }, [chapter.content])
+
+  // Progressive rendering: render remaining paragraphs after initial paint
+  useEffect(() => {
+    if (renderedCount >= paragraphData.length) return
+
+    // Use requestIdleCallback (or setTimeout fallback) to render more paragraphs
+    // without blocking the main thread
+    const renderMore = () => {
+      setRenderedCount((prev) => {
+        const next = Math.min(prev + 50, paragraphData.length)
+        return next
+      })
+    }
+
+    if ('requestIdleCallback' in window) {
+      const id = requestIdleCallback(renderMore, { timeout: 100 })
+      return () => cancelIdleCallback(id)
+    } else {
+      const id = setTimeout(renderMore, 16)
+      return () => clearTimeout(id)
+    }
+  }, [renderedCount, paragraphData.length])
+
+  // Reset rendered count when chapter changes
+  useEffect(() => {
+    setRenderedCount(INITIAL_RENDER_COUNT)
+  }, [chapter.id])
+
+  // Debounced scroll position memory
   useEffect(() => {
     const key = `ccp-scroll-${chapter.id}`
     const saved = localStorage.getItem(key)
@@ -259,11 +473,19 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
       setTimeout(() => window.scrollTo(0, pos), 100)
     }
 
+    let rafId: number | null = null
     function saveScroll() {
-      localStorage.setItem(key, String(window.scrollY))
+      if (rafId) return // Skip if already queued
+      rafId = requestAnimationFrame(() => {
+        localStorage.setItem(key, String(window.scrollY))
+        rafId = null
+      })
     }
     window.addEventListener('scroll', saveScroll, { passive: true })
-    return () => window.removeEventListener('scroll', saveScroll)
+    return () => {
+      window.removeEventListener('scroll', saveScroll)
+      if (rafId) cancelAnimationFrame(rafId)
+    }
   }, [chapter.id])
 
   // Save font size preference
@@ -280,7 +502,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         const userFlags = await getUserConfusionFlags(chapter.id)
         setUserConfusionFlags(userFlags)
       } catch (error) {
-        console.error('[CCP Debug] Failed to load confusion flags:', error)
+        console.error('[CCP] Failed to load confusion flags:', error)
       }
     }
     loadConfusionFlags()
@@ -300,10 +522,10 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
           setGlossaryTerms(data)
           if (isDev) console.log('[CCP] Loaded glossary terms:', data.length)
         } else if (error) {
-          console.error('[CCP Debug] Failed to load glossary terms:', error)
+          console.error('[CCP] Failed to load glossary terms:', error)
         }
       } catch (error) {
-        console.error('[CCP Debug] Failed to load glossary terms:', error)
+        console.error('[CCP] Failed to load glossary terms:', error)
       }
     }
     loadGlossaryTerms()
@@ -323,7 +545,6 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
           filter: `chapter_id=eq.${chapter.id}`,
         },
         (payload) => {
-          // Refresh on any annotation change
           if (isDev) console.log('[CCP] Realtime annotation change', payload.eventType)
           router.refresh()
         }
@@ -348,13 +569,12 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
           filter: `chapter_id=eq.${chapter.id}`,
         },
         async () => {
-          // Refresh confusion flags when they change
           if (isDev) console.log('[CCP] Confusion flag change')
           try {
             const counts = await getConfusionFlagCounts(chapter.id)
             setConfusionFlagCounts(counts)
           } catch (error) {
-            console.error('[CCP Debug] Failed to refresh confusion flags:', error)
+            console.error('[CCP] Failed to refresh confusion flags:', error)
           }
         }
       )
@@ -390,11 +610,10 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     []
   )
 
-  /** Handle text selection — shows floating toolbar first */
+  /** Handle text selection */
   const handleMouseUp = useCallback(() => {
     const sel = window.getSelection()
     if (!sel || sel.isCollapsed || !textRef.current) {
-      // Don't clear selection if annotation panel or popover is open
       if (!activeAnnotation && !showAnnotatePopover) {
         setSelection(null)
         setShowToolbar(false)
@@ -404,7 +623,6 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
 
     const range = sel.getRangeAt(0)
 
-    // Ensure selection is within our text container
     if (!textRef.current.contains(range.startContainer) || !textRef.current.contains(range.endContainer)) {
       return
     }
@@ -435,7 +653,6 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
       const authorId = userId || GUEST_ID
       const content = chapter.content
 
-      // Compute prefix/suffix context
       const prefixStart = Math.max(0, selection.start - 30)
       const suffixEnd = Math.min(content.length, selection.end + 30)
       const quotePrefix = content.slice(prefixStart, selection.start)
@@ -527,7 +744,6 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     const quote = selection.text.length > 200
       ? selection.text.slice(0, 200) + '…'
       : selection.text
-    // Encode selected text as a URL param for the thread form
     const params = new URLSearchParams({
       type: 'passage_pick',
       quote,
@@ -537,44 +753,37 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     router.push(`/threads/new?${params.toString()}`)
   }, [selection, chapter.chapter_number, chapter.title, router])
 
-  // Split text into paragraphs and render with annotations
-  const paragraphs = chapter.content.split('\n\n')
-  let charOffset = 0
-
   // Filter annotations in focused mode
   const displayAnnotations = focusedMode ? [] : annotations
 
-  // Filter annotations by keyword
-  const filterAnnotationsByKeyword = (anns: Annotation[]): { matching: Set<string>; total: number } => {
+  // Memoize keyword filter
+  const keywordFilter = useMemo(() => {
     if (!annotationKeyword.trim()) {
-      return { matching: new Set(anns.map((a) => a.id)), total: anns.length }
+      return { matching: new Set(displayAnnotations.map((a) => a.id)), total: displayAnnotations.length }
     }
-
     const keyword = annotationKeyword.toLowerCase()
     const matching = new Set<string>()
-    anns.forEach((ann) => {
+    displayAnnotations.forEach((ann) => {
       if (ann.body.toLowerCase().includes(keyword)) {
         matching.add(ann.id)
       }
     })
-
-    return { matching, total: anns.length }
-  }
-
-  const keywordFilter = useMemo(
-    () => filterAnnotationsByKeyword(displayAnnotations),
-    [displayAnnotations, annotationKeyword]
-  )
+    return { matching, total: displayAnnotations.length }
+  }, [displayAnnotations, annotationKeyword])
 
   const matchingCount = keywordFilter.matching.size
   const showKeywordStats = annotationKeyword.trim().length > 0
 
+  // Only render up to renderedCount paragraphs (progressive rendering)
+  const visibleParagraphs = paragraphData.slice(0, renderedCount)
+  const hasMore = renderedCount < paragraphData.length
+
   return (
     <div className="relative">
-      {/* Onboarding hint — only shown on first visit */}
+      {/* Onboarding hint */}
       <OnboardingHint />
 
-      {/* Reading controls (font size, focused mode) */}
+      {/* Reading controls */}
       <ReadingControls
         fontSize={fontSize}
         onFontSizeChange={setFontSize}
@@ -593,164 +802,33 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         onMouseUp={handleMouseUp}
         style={{ fontSize: `${fontSize / 16}rem` }}
       >
-        {paragraphs.map((paragraph, pIdx) => {
-          const pStart = charOffset
-          const pEnd = charOffset + paragraph.length
-          charOffset = pEnd + 2 // +2 for the \n\n
+        {visibleParagraphs.map((pData, pIdx) => (
+          <MemoizedParagraph
+            key={pIdx}
+            pIdx={pIdx}
+            paragraph={pData.text}
+            pStart={pData.start}
+            pEnd={pData.end}
+            annotations={displayAnnotations}
+            glossaryTerms={glossaryTerms}
+            footnoteMap={footnoteMap}
+            focusedMode={focusedMode}
+            chapterId={chapter.id}
+            confusionCount={confusionFlagCounts.get(pIdx) || 0}
+            isUserFlagged={userConfusionFlags.has(pIdx)}
+            keywordFilter={keywordFilter}
+            showKeywordStats={showKeywordStats}
+            onAnnotationClick={handleAnnotationClick}
+            onGlossaryTermClick={handleGlossaryTermClick}
+          />
+        ))}
 
-          // Get annotations that overlap this paragraph
-          const pAnnotations = displayAnnotations.filter(
-            (a) => a.position_start < pEnd && a.position_end > pStart
-          )
-
-          // Find glossary terms in this paragraph (only if not in focused mode)
-          const glossaryMatches = focusedMode ? [] : findGlossaryTermMatches(paragraph, glossaryTerms)
-
-          // Build segments with both annotations and glossary terms
-          const annotationSegments = buildSegments(
-            paragraph,
-            pAnnotations.map((a) => ({
-              ...a,
-              position_start: Math.max(a.position_start - pStart, 0),
-              position_end: Math.min(a.position_end - pStart, paragraph.length),
-            }))
-          )
-
-          // Build glossary segments
-          const glossarySegments = buildGlossarySegments(paragraph, glossaryMatches)
-
-          // Merge annotation and glossary segments
-          // This is complex because we need to handle overlapping highlights
-          const mergedSegments = buildMergedSegments(annotationSegments, glossarySegments)
-
-          // Count annotations per paragraph for margin indicator
-          const annotationCount = pAnnotations.length
-
-          return (
-            <p key={pIdx} data-offset={pStart} className="relative group/para">
-              {/* Margin controls */}
-              <div className="absolute -left-16 top-1 flex gap-1 items-center opacity-40 group-hover/para:opacity-100 transition-opacity hidden lg:flex">
-                {/* Confusion flag button */}
-                <ConfusionFlagButton
-                  chapterId={chapter.id}
-                  paragraphIndex={pIdx}
-                  initialCount={confusionFlagCounts.get(pIdx) || 0}
-                  isUserFlagged={userConfusionFlags.has(pIdx)}
-                  hidden={focusedMode}
-                />
-
-                {/* Annotation count indicator or empty-state nudge */}
-                {annotationCount > 0 ? (
-                  <span
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium"
-                    style={{
-                      backgroundColor: annotationCount > 2 ? 'var(--accent-purple)' : 'var(--bg-soft)',
-                      color: 'var(--text-primary)',
-                    }}
-                    title={`${annotationCount} annotation${annotationCount > 1 ? 's' : ''}`}
-                  >
-                    {annotationCount}
-                  </span>
-                ) : (
-                  <span
-                    className="w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover/para:opacity-50 transition-opacity"
-                    title="Select text in this paragraph to annotate"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-purple)' }}>
-                      <path d="M12 20h9" />
-                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                    </svg>
-                  </span>
-                )}
-              </div>
-              {mergedSegments.map((seg, sIdx) => {
-                // Glossary term only (no annotations)
-                if (seg.isGlossaryTerm && seg.annotations.length === 0 && seg.termData) {
-                  return (
-                    <span
-                      key={sIdx}
-                      className="cursor-pointer border-b border-dotted"
-                      style={{
-                        borderColor: 'var(--accent-purple)',
-                        color: 'var(--accent-red)',
-                      }}
-                      onClick={(e) =>
-                        handleGlossaryTermClick(seg.termData!.term, seg.termData!.definition, e)
-                      }
-                      title={`Click to see definition of "${seg.termData.term}"`}
-                    >
-                      {renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`)}
-                    </span>
-                  )
-                }
-
-                // Annotation highlight (may also be a glossary term)
-                if (seg.annotations.length > 0) {
-                  // Map local annotations back to global ones
-                  const globalAnns = seg.annotations.map((localAnn) => {
-                    return pAnnotations.find(
-                      (a) =>
-                        a.position_start <= pStart + localAnn.position_start &&
-                        a.position_end >= pStart + localAnn.position_end
-                    )!
-                  }).filter(Boolean)
-
-                  const density = globalAnns.length
-
-                  // If this is also a glossary term, we can support both interactions
-                  if (seg.isGlossaryTerm && seg.termData) {
-                    const isMatchingAnnotation = globalAnns.some((ann) => keywordFilter.matching.has(ann.id))
-                    return (
-                      <mark
-                        key={sIdx}
-                        className={`${
-                          density > 1 ? 'annotation-highlight-dense' : 'annotation-highlight'
-                        } border-b border-dotted cursor-pointer`}
-                        style={{
-                          borderColor: 'var(--accent-purple)',
-                          opacity: showKeywordStats && !isMatchingAnnotation ? 0.2 : undefined,
-                          transition: 'opacity 200ms ease',
-                        }}
-                        onClick={(e) => {
-                          // If clicking on a glossary term part, show glossary
-                          // Otherwise, show annotation
-                          const target = e.target as HTMLElement
-                          if (e.detail === 1) {
-                            // Single click
-                            handleGlossaryTermClick(seg.termData!.term, seg.termData!.definition, e)
-                          }
-                        }}
-                        title={`${density} annotation${density > 1 ? 's' : ''}; Click to see glossary definition of "${seg.termData.term}"`}
-                      >
-                        {renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`)}
-                      </mark>
-                    )
-                  }
-
-                  // Regular annotation (no glossary term)
-                  const isMatchingAnnotation = globalAnns.some((ann) => keywordFilter.matching.has(ann.id))
-                  return (
-                    <mark
-                      key={sIdx}
-                      className={density > 1 ? 'annotation-highlight-dense' : 'annotation-highlight'}
-                      onClick={() => handleAnnotationClick(globalAnns)}
-                      title={`${density} annotation${density > 1 ? 's' : ''}`}
-                      style={{
-                        opacity: showKeywordStats && !isMatchingAnnotation ? 0.2 : undefined,
-                        transition: 'opacity 200ms ease',
-                      }}
-                    >
-                      {renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`)}
-                    </mark>
-                  )
-                }
-
-                // Regular text (no annotations, no glossary terms)
-                return <span key={sIdx}>{renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`)}</span>
-              })}
-            </p>
-          )
-        })}
+        {/* Loading indicator while more paragraphs render */}
+        {hasMore && (
+          <div className="py-4 text-center" style={{ color: 'var(--text-secondary)' }}>
+            <span className="text-xs">Loading remaining text…</span>
+          </div>
+        )}
       </div>
 
       {/* Floating selection toolbar */}
@@ -803,7 +881,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         />
       )}
 
-      {/* Success/error toast */}
+      {/* Toast */}
       {toast && (
         <Toast
           message={toast.message}

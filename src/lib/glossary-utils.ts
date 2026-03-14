@@ -1,5 +1,6 @@
 /**
  * Glossary utilities for term matching and detection
+ * Optimized: pre-compiles a single regex from all terms for O(n) matching
  */
 
 export interface GlossaryTerm {
@@ -17,73 +18,70 @@ export interface TermMatch {
 
 /**
  * Finds all matches of glossary terms in text (case-insensitive, whole-word)
- * Returns matches sorted by position in text
+ * Uses a single compiled regex for all terms — much faster than searching each term individually.
+ * Returns matches sorted by position in text.
  */
 export function findGlossaryTermMatches(
   text: string,
   glossaryTerms: GlossaryTerm[]
 ): TermMatch[] {
-  const matches: TermMatch[] = []
+  if (glossaryTerms.length === 0 || !text) return []
 
-  // Sort terms by length (longest first) to match longer terms before shorter ones
+  // Sort terms by length (longest first) so longer matches take priority
   const sortedTerms = [...glossaryTerms].sort((a, b) => b.term.length - a.term.length)
 
-  for (const glossaryTerm of sortedTerms) {
-    const term = glossaryTerm.term.toLowerCase()
-    let searchText = text.toLowerCase()
-    let startIndex = 0
+  // Build a single regex that matches any glossary term with word boundaries
+  // Escape special regex characters in terms
+  const escapedTerms = sortedTerms.map((t) =>
+    t.term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  )
 
-    // Find all occurrences of this term in the text
-    while (startIndex < searchText.length) {
-      const index = searchText.indexOf(term, startIndex)
-      if (index === -1) break
+  // Use word boundaries for whole-word matching
+  const pattern = new RegExp(`\\b(${escapedTerms.join('|')})\\b`, 'gi')
 
-      // Check if it's a whole word match (not part of another word)
-      const charBefore = index > 0 ? text[index - 1] : ' '
-      const charAfter = index + term.length < text.length ? text[index + term.length] : ' '
+  // Build a lookup map from lowercase term -> original glossary entry
+  const termLookup = new Map<string, GlossaryTerm>()
+  for (const gt of sortedTerms) {
+    const key = gt.term.toLowerCase()
+    if (!termLookup.has(key)) {
+      termLookup.set(key, gt)
+    }
+  }
 
-      // Word boundary check: must be preceded/followed by whitespace or punctuation
-      const isBoundaryBefore = /\s|[^\w]|^/.test(charBefore)
-      const isBoundaryAfter = /\s|[^\w]|$/.test(charAfter)
+  const matches: TermMatch[] = []
+  let match: RegExpExecArray | null
 
-      if (isBoundaryBefore && isBoundaryAfter) {
-        // Check if this position overlaps with an existing match
-        const isOverlapping = matches.some(
-          (match) => (index < match.end && index + term.length > match.start)
-        )
+  while ((match = pattern.exec(text)) !== null) {
+    const matchedText = match[1].toLowerCase()
+    const glossaryEntry = termLookup.get(matchedText)
 
-        if (!isOverlapping) {
-          matches.push({
-            term: glossaryTerm.term,
-            definition: glossaryTerm.definition,
-            start: index,
-            end: index + term.length,
-          })
-        }
+    if (glossaryEntry) {
+      const start = match.index
+      const end = start + match[0].length
+
+      // Check for overlap with existing matches (longer terms win)
+      const isOverlapping = matches.some(
+        (m) => start < m.end && end > m.start
+      )
+
+      if (!isOverlapping) {
+        matches.push({
+          term: glossaryEntry.term,
+          definition: glossaryEntry.definition,
+          start,
+          end,
+        })
       }
-
-      startIndex = index + 1
     }
   }
 
-  // Sort matches by position in text
+  // Sort by position
   matches.sort((a, b) => a.start - b.start)
-
-  // Remove overlapping matches (keep the first one found)
-  const finalMatches: TermMatch[] = []
-  for (const match of matches) {
-    const hasOverlap = finalMatches.some((m) => m.start < match.end && m.end > match.start)
-    if (!hasOverlap) {
-      finalMatches.push(match)
-    }
-  }
-
-  return finalMatches
+  return matches
 }
 
 /**
  * Split text into segments with glossary term information
- * Used to build rendering segments that distinguish glossary terms from regular text
  */
 export function buildGlossarySegments(
   text: string,
@@ -110,7 +108,6 @@ export function buildGlossarySegments(
   let currentPos = 0
 
   for (const match of matches) {
-    // Add text before the match
     if (currentPos < match.start) {
       segments.push({
         start: currentPos,
@@ -120,7 +117,6 @@ export function buildGlossarySegments(
       })
     }
 
-    // Add the matched term
     segments.push({
       start: match.start,
       end: match.end,
@@ -132,7 +128,6 @@ export function buildGlossarySegments(
     currentPos = match.end
   }
 
-  // Add remaining text
   if (currentPos < text.length) {
     segments.push({
       start: currentPos,
