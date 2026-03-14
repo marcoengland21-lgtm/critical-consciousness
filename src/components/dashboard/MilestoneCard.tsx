@@ -1,10 +1,3 @@
-import { createAdminClient } from '@/lib/supabase/admin'
-
-interface MilestoneCardProps {
-  weekId: string
-  weekNumber: number
-}
-
 interface Milestone {
   id: string
   week_number: number
@@ -13,16 +6,11 @@ interface Milestone {
   reflection_prompt: string | null
 }
 
-export default async function MilestoneCard({ weekId, weekNumber }: MilestoneCardProps) {
-  const supabase = createAdminClient()
+interface MilestoneCardProps {
+  milestone: Milestone | null
+}
 
-  // Check if there's a milestone for this week
-  const { data: milestone } = await supabase
-    .from('reading_milestones')
-    .select('id, week_number, title, description, reflection_prompt')
-    .eq('week_number', weekNumber)
-    .single()
-
+export default function MilestoneCard({ milestone }: MilestoneCardProps) {
   if (!milestone) {
     return null
   }

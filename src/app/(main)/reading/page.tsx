@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 
 export const metadata = {
@@ -6,9 +6,7 @@ export const metadata = {
 }
 
 export default async function ReadingPage() {
-  // Use admin client to bypass RLS for server-side rendering
-  // TODO: RE-ENABLE AUTH — switch to cookie-based client once RLS policies are set
-  const supabase = createAdminClient()
+  const supabase = await createClient()
 
   // Get current week to determine default section
   const now = new Date().toISOString()

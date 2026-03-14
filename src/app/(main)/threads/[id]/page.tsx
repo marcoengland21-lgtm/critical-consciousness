@@ -1,5 +1,4 @@
-import { getSessionUser } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient, getSessionUser } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import ThreadTypeBadge from '@/components/threads/ThreadTypeBadge'
@@ -16,9 +15,7 @@ export default async function ThreadPage({
 }) {
   const { id } = await params
   const user = await getSessionUser()
-  // Admin client for data fetching (bypasses RLS for guest access)
-  // TODO: RE-ENABLE AUTH — switch to cookie-based client once RLS policies allow public reads
-  const supabase = createAdminClient()
+  const supabase = await createClient()
 
   // Fetch thread with author
   const { data: thread, error } = await supabase

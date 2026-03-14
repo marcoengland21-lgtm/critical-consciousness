@@ -1,5 +1,4 @@
-import { getSessionUser } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient, getSessionUser } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import ChapterReader from '@/components/reading/ChapterReader'
@@ -10,9 +9,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props) {
   const { slug, chapter } = await params
-  // Use admin client to bypass RLS for server-side rendering
-  // TODO: RE-ENABLE AUTH — switch to cookie-based client once RLS policies are set
-  const supabase = createAdminClient()
+  const supabase = await createClient()
 
   const { data: doc } = await supabase
     .from('text_documents')
@@ -40,9 +37,7 @@ export default async function ChapterPage({ params }: Props) {
   // Session-based auth (local JWT, no network call)
   const user = await getSessionUser()
 
-  // Admin client for data fetching (bypasses RLS)
-  // TODO: RE-ENABLE AUTH — switch to cookie-based client once RLS policies are set
-  const supabase = createAdminClient()
+  const supabase = await createClient()
 
   // Get the document
   const { data: doc } = await supabase

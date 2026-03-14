@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { createClient, getSessionUser } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
 import ThreadTypeBadge from '@/components/threads/ThreadTypeBadge'
 import TimeAgo from '@/components/ui/TimeAgo'
 import RoleBadge from '@/components/roles/RoleBadge'
@@ -15,11 +14,23 @@ const DEFAULT_GROUP_ID = '00000000-0000-0000-0000-000000000001'
 export default async function DashboardPage() {
   const user = await getSessionUser()
   const supabase = await createClient()
-  const adminSupabase = createAdminClient()
 
-  const now = new Date().toISOString()
+  const now = new Date()
+  const nowISO = now.toISOString()
 
-  // Run all independent queries in parallel for faster page loads
+  // Calculate this week's date range for activity counts
+  const currentDay = now.getDay()
+  const diff = now.getDate() - currentDay + (currentDay === 0 ? -6 : 1)
+  const weekStart = new Date(now)
+  weekStart.setDate(diff)
+  weekStart.setHours(0, 0, 0, 0)
+  const weekEnd = new Date(weekStart)
+  weekEnd.setDate(weekEnd.getDate() + 6)
+  weekEnd.setHours(23, 59, 59, 999)
+  const weekStartISO = weekStart.toISOString()
+  const weekEndISO = weekEnd.toISOString()
+
+  // Run ALL queries in a single parallel batch — including milestone + activity counts
   const [
     { data: profile },
     { data: currentWeekData },
@@ -28,13 +39,17 @@ export default async function DashboardPage() {
     { count: threadCount },
     { data: annotationsData },
     { data: threadsData },
+    { data: milestoneData },
+    { count: weekAnnotationCount },
+    { count: weekThreadCount },
+    { count: weekGlossaryCount },
   ] = await Promise.all([
     supabase.from('profiles').select('display_name, role').eq('id', user?.id || '').single(),
     supabase.from('reading_schedule').select(`
       *,
       weekly_roles(id, role_type, user:profiles!user_id(id, display_name)),
       discussion_prompts(id, prompt_text, sort_order)
-    `).gte('due_date', now).order('due_date', { ascending: true }).limit(1),
+    `).gte('due_date', nowISO).order('due_date', { ascending: true }).limit(1),
     supabase.from('threads').select(`
       id, title, thread_type, created_at, pinned,
       author:profiles!author_id(display_name),
@@ -42,21 +57,30 @@ export default async function DashboardPage() {
     `).order('created_at', { ascending: false }).limit(5),
     supabase.from('profiles').select('*', { count: 'exact', head: true }),
     supabase.from('threads').select('*', { count: 'exact', head: true }),
-    adminSupabase.from('annotations').select(`
+    supabase.from('annotations').select(`
       id, body, chapter_id,
       chapter:text_chapters!chapter_id(chapter_number, title)
     `).order('created_at', { ascending: false }),
     supabase.from('threads').select('week_id'),
+    supabase.from('reading_milestones').select('id, week_number, title, description, reflection_prompt').order('week_number', { ascending: false }).limit(10),
+    supabase.from('annotations').select('*', { count: 'exact', head: true }).gte('created_at', weekStartISO).lte('created_at', weekEndISO),
+    supabase.from('threads').select('*', { count: 'exact', head: true }).gte('created_at', weekStartISO).lte('created_at', weekEndISO),
+    supabase.from('glossary_entries').select('*', { count: 'exact', head: true }).gte('created_at', weekStartISO).lte('created_at', weekEndISO),
   ])
 
   const displayName = profile?.display_name || 'there'
   const isAdmin = profile?.role === 'admin'
   const currentWeek = currentWeekData?.[0] || null
 
+  // Find milestone for current week (if any)
+  const milestone = currentWeek
+    ? milestoneData?.find((m: any) => m.week_number === currentWeek.week_number) || null
+    : null
+
   // Checkin depends on currentWeek, so runs after the parallel batch
   let currentReadingStatus: 'done' | 'partial' | 'behind' | null = null
   if (currentWeek && user) {
-    const { data: checkinData } = await adminSupabase
+    const { data: checkinData } = await supabase
       .from('reading_checkins')
       .select('status')
       .eq('user_id', user.id)
@@ -107,8 +131,8 @@ export default async function DashboardPage() {
         {/* Left column: Current Week + Roles */}
         <div className="lg:col-span-2 space-y-6">
           {/* Milestone Card - if applicable */}
-          {currentWeek && (
-            <MilestoneCard weekId={currentWeek.id} weekNumber={currentWeek.week_number} />
+          {milestone && (
+            <MilestoneCard milestone={milestone} />
           )}
 
           {/* This Week's Reading */}
@@ -202,7 +226,11 @@ export default async function DashboardPage() {
 
           {/* Weekly Activity Summary */}
           {currentWeek && (
-            <WeeklyActivitySummary weekId={currentWeek.id} />
+            <WeeklyActivitySummary
+              annotationCount={weekAnnotationCount || 0}
+              threadCount={weekThreadCount || 0}
+              glossaryCount={weekGlossaryCount || 0}
+            />
           )}
 
           {/* What the Group is Thinking */}
