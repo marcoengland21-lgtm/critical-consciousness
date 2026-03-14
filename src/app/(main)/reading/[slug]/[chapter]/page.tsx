@@ -9,7 +9,7 @@ interface Props {
 
 /**
  * Map internal chapter_number to Marx's actual structure.
- * chapter_number 1-4 = Chapter 1 sections, 5+ = Chapters 2-10
+ * chapter_number 1-4 = Chapter 1 sections, 5-36 = Chapters 2-33
  */
 function getChapterLabel(chapterNumber: number): { label: string; shortLabel: string } {
   if (chapterNumber <= 4) {

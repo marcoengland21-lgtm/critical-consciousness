@@ -8,40 +8,50 @@ export const metadata = {
 /**
  * Map internal chapter_number to Marx's actual structure.
  * chapter_number 1-4 = Chapter 1 sections
- * chapter_number 5+ = Chapters 2-10
+ * chapter_number 5+ = Chapters 2-33 (formula: marxChapter = chapterNumber - 3)
  */
 interface MarxChapter {
   marxChapter: number
   part: number
   partTitle: string
-  isSection?: boolean // true = sub-section of a chapter
-  parentLabel?: string // e.g. "Chapter 1" for sections
+  isSection?: boolean
+  parentLabel?: string
 }
 
-const CHAPTER_MAP: Record<number, MarxChapter> = {
-  // Chapter 1: Commodities (4 sections) — Part I
-  1: { marxChapter: 1, part: 1, partTitle: 'Commodities and Money', isSection: true, parentLabel: 'Chapter 1: Commodities' },
-  2: { marxChapter: 1, part: 1, partTitle: 'Commodities and Money', isSection: true, parentLabel: 'Chapter 1: Commodities' },
-  3: { marxChapter: 1, part: 1, partTitle: 'Commodities and Money', isSection: true, parentLabel: 'Chapter 1: Commodities' },
-  4: { marxChapter: 1, part: 1, partTitle: 'Commodities and Money', isSection: true, parentLabel: 'Chapter 1: Commodities' },
-  // Chapter 2: Exchange — Part I
-  5: { marxChapter: 2, part: 1, partTitle: 'Commodities and Money' },
-  // Chapter 3: Money — Part I
-  6: { marxChapter: 3, part: 1, partTitle: 'Commodities and Money' },
-  // Chapter 4: General Formula — Part II
-  7: { marxChapter: 4, part: 2, partTitle: 'The Transformation of Money into Capital' },
-  // Chapter 5: Contradictions — Part II
-  8: { marxChapter: 5, part: 2, partTitle: 'The Transformation of Money into Capital' },
-  // Chapter 6: Buying and Selling of Labour-Power — Part II
-  9: { marxChapter: 6, part: 2, partTitle: 'The Transformation of Money into Capital' },
-  // Chapter 7: Labour-Process — Part III
-  10: { marxChapter: 7, part: 3, partTitle: 'The Production of Absolute Surplus-Value' },
-  // Chapter 8: Constant & Variable Capital — Part III
-  11: { marxChapter: 8, part: 3, partTitle: 'The Production of Absolute Surplus-Value' },
-  // Chapter 9: Rate of Surplus-Value — Part III
-  12: { marxChapter: 9, part: 3, partTitle: 'The Production of Absolute Surplus-Value' },
-  // Chapter 10: The Working-Day — Part III
-  13: { marxChapter: 10, part: 3, partTitle: 'The Production of Absolute Surplus-Value' },
+/** Marx's Chapter -> Part mapping */
+const PART_MAP: Record<number, { part: number; title: string }> = {}
+function setPart(chapters: number[], part: number, title: string) {
+  for (const ch of chapters) PART_MAP[ch] = { part, title }
+}
+setPart([1, 2, 3], 1, 'Commodities and Money')
+setPart([4, 5, 6], 2, 'The Transformation of Money into Capital')
+setPart([7, 8, 9, 10], 3, 'The Production of Absolute Surplus-Value')
+setPart([11, 12, 13, 14, 15], 4, 'Production of Relative Surplus-Value')
+setPart([16, 17, 18], 5, 'The Production of Absolute and Relative Surplus-Value')
+setPart([19, 20, 21, 22], 6, 'Wages')
+setPart([23, 24, 25], 7, 'The Accumulation of Capital')
+setPart([26, 27, 28, 29, 30, 31, 32, 33], 8, 'The So-Called Primitive Accumulation')
+
+function getChapterMapping(chapterNumber: number): MarxChapter | null {
+  // Ch1 sections (chapter_number 1-4)
+  if (chapterNumber >= 1 && chapterNumber <= 4) {
+    return {
+      marxChapter: 1,
+      part: 1,
+      partTitle: 'Commodities and Money',
+      isSection: true,
+      parentLabel: 'Chapter 1: Commodities',
+    }
+  }
+  // Chapters 2-33 (chapter_number 5-36)
+  const marxChapter = chapterNumber - 3
+  const partInfo = PART_MAP[marxChapter]
+  if (!partInfo) return null
+  return {
+    marxChapter,
+    part: partInfo.part,
+    partTitle: partInfo.title,
+  }
 }
 
 export default async function ReadingPage() {
@@ -109,7 +119,7 @@ export default async function ReadingPage() {
           let currentPart: { part: number; partTitle: string; items: any[] } | null = null
 
           for (const chapter of chapters) {
-            const mapping = CHAPTER_MAP[chapter.chapter_number]
+            const mapping = getChapterMapping(chapter.chapter_number)
             if (!mapping) continue
 
             if (!currentPart || currentPart.part !== mapping.part) {

@@ -1,0 +1,1226 @@
+{
+  "chapter": 15,
+  "title": "Machinery and Modern Industry",
+  "footnotes": [
+    {
+      "num": 1,
+      "text": "Mill should have said, “of any human being not fed by other people’s labour,” for, without doubt, machinery has greatly increased the number of well-to-do idlers.",
+      "author": "marx"
+    },
+    {
+      "num": 2,
+      "text": "See, for instance, Hutton: “Course of Mathematics.”",
+      "author": "marx"
+    },
+    {
+      "num": 3,
+      "text": "“From this point of view we may draw a sharp line of distinction between a tool and a machine: spades, hammers, chisels, &c., combinations of levers and of screws, in all of which, no matter how complicated they may be in other respects, man is the motive power, ... all this falls under the idea of a tool; but the plough, which is drawn by animal power, and wind-mills, &c., must be classed among machines.” (Wilhelm Schulz: “Die Bewegung der Produktion.” Zürich, 1843, p. 38.) In many respects a book to be recommended.",
+      "author": "marx"
+    },
+    {
+      "num": 4,
+      "text": "Before his time, spinning machines, although very imperfect ones, had already been used, and Italy was probably the country of their first appearance. A critical history of technology would show how little any of the inventions of the 18th century are the work of a single individual. Hitherto there is no such book. Darwin has interested us in the history of Nature’s Technology, i.e., in the formation of the organs of plants and animals, which organs serve as instruments of production for sustaining life. Does not the history of the productive organs of man, of organs that are the material basis of all social organisation, deserve equal attention? And would not such a history be easier to compile, since, as Vico says, human history differs from natural history in this, that we have made the former, but not the latter? Technology discloses man’s mode of dealing with Nature, the process of production by which he sustains his life, and thereby also lays bare the mode of formation of his social relations, and of the mental conceptions that flow from them. Every history of religion, even, that fails to take account of this material basis, is uncritical. It is, in reality, much easier to discover by analysis the earthly core of the misty creations of religion, than, conversely, it is, to develop from the actual relations of life the corresponding celestialised forms of those relations. The latter method is the only materialistic, and therefore the only scientific one. The weak points in the abstract materialism of natural science, a materialism that excludes history and its process, are at once evident from the abstract and ideological conceptions of its spokesmen, whenever they venture beyond the bounds of their own speciality.",
+      "author": "marx"
+    },
+    {
+      "num": 5,
+      "text": "Especially in the original form of the power-loom, we recognise, at the first glance, the ancient loom. In its modern form, the power-loom has undergone essential alterations.",
+      "author": "marx"
+    },
+    {
+      "num": 6,
+      "text": "It is only during the last 15 years (i.e., since about 1850), that a constantly increasing portion of these machine tools have been made in England by machinery, and that not by the same manufacturers who make the machines. Instances of machines for the fabrication of these mechanical tools are, the automatic bobbin-making engine, the cardsetting engine, shuttle-making machines, and machines for forging mule and throstle spindles.",
+      "author": "marx"
+    },
+    {
+      "num": 7,
+      "text": "Moses says: “Thou shalt not muzzle the ox that treads the corn.” The Christian philanthropists of Germany, on the contrary, fastened a wooden board round the necks of the serfs, whom they used as a motive power for grinding, in order to prevent them from putting flour into their mouths with their hands.",
+      "author": "marx"
+    },
+    {
+      "num": 8,
+      "text": "It was partly the want of streams with a good fall on them, and partly their battles with superabundance of water in other respects, that compelled the Dutch to resort to wind as a motive power. The wind-mill itself they got from Germany, where its invention was the origin of a pretty squabble between the nobles, the priests, and the emperor, as to which of those three the wind “belonged.” The air makes bondage, was the cry in Germany, at the same time that the wind was making Holland free. What it reduced to bondage in this case, was not the Dutchman, but the land for the Dutchman. In 1836, 12,000 windmills of 6,000 horse-power were still employed in Holland, to prevent two-thirds of the land from being reconverted into morasses.",
+      "author": "marx"
+    },
+    {
+      "num": 9,
+      "text": "It was, indeed, very much improved by Watt’s first so-called single acting engine; but, in this form, it continued to be a mere machine for raising water, and the liquor from salt mines.",
+      "author": "marx"
+    },
+    {
+      "num": 10,
+      "text": "“The union of all these simple instruments, set in motion by a single motor, constitutes a machine.” (Babbage, l.c.)",
+      "author": "marx"
+    },
+    {
+      "num": 11,
+      "text": "In January, 1861, John C. Morton read before the Society of Arts a paper on “The forces employed in agriculture.” He there states: “Every improvement that furthers the uniformity of the land makes the steam-engine more and more applicable to the production of pure mechanical force.... Horse-power is requisite wherever crooked fences and other obstructions prevent uniform action. These obstructions are vanishing day by day. For operations that demand more exercise of will than actual force, the only power applicable is that controlled every instant by the human mind-in other words, man-power.” Mr. Morton then reduces steam-power, horse-power, and man-power, to the unit in general use for steam-engines, namely, the force required to raise 33,000 lbs. one foot in one minute, and reckons the cost of one horse-power from a steam-engine to be 3d., and from a horse to be 5½d. per hour. Further, if a horse must fully maintain its health, it can work no more than 8 hours a day. Three at the least out of every seven horses used on tillage land during the year can be dispensed with by using steam-power, at an expense not greater than that which, the horses dispensed with, would cost during the 3 or 4 months in which alone they can be used effectively. Lastly, steam-power, in those agricultural operations in which it can be employed, improves, in comparison with horse-power, the quality of the work. To do the work of a steam-engine would require 66 men, at a total cost of 15s. an hour, and to do the work of a horse, 32 men, at a total cost of 8s. an hour.",
+      "author": "marx"
+    },
+    {
+      "num": 12,
+      "text": "Faulhaber, 1625; De Caus, 1688.",
+      "author": "marx"
+    },
+    {
+      "num": 13,
+      "text": "The modern turbine frees the industrial exploitation of water-power from many of its former fetters.",
+      "author": "marx"
+    },
+    {
+      "num": 14,
+      "text": "“In the early days of textile manufactures, the locality of the factory depended upon the existence of a stream having a sufficient fall to turn a water-wheel; and, although the establishment of the water-mills was the commencement of the breaking up of the domestic system of manufacture, yet the mills necessarily situated upon streams, and frequently at considerable distances the one from the other, formed part of a rural, rather than an urban system; and it was not until the introduction of the steam-power as a substitute for the stream that factories were congregated in towns, and localities where the coal and water required for the production of steam were found in sufficient quantities. The steam-engine is the parent of manufacturing towns.” (A. Redgrave in “Reports of the Insp. of Fact., 30th April, 1860,” p. 36.)",
+      "author": "marx"
+    },
+    {
+      "num": 15,
+      "text": "From the standpoint of division of labour in Manufacture, weaving was not simple, but, on the contrary, complicated manual labour; and consequently the power-loom is a machine that does very complicated work. It is altogether erroneous to suppose that modern machinery originally appropriated those operations alone, which division of labour had simplified. Spinning and weaving were, during the manufacturing period, split up into new species, and the implements were modified and improved; but the labour itself was in no way divided, and it retained its handicraft character. It is not the labour, but the instrument of labour, that serves as the starting-point of the machine.",
+      "author": "marx"
+    },
+    {
+      "num": 16,
+      "text": "Before the epoch of Mechanical Industry, the wool manufacture was the predominating manufacture in England. Hence it was in this industry that, in the first half of the 18th century, the most experiments were made. Cotton, which required less careful preparation for its treatment by machinery, derived the benefit of the experience gained on wool, just as afterwards the manipulation of wool by machinery was developed on the lines of cotton-spinning and weaving by machinery. It was only during the 10 years immediately preceding 1866, that isolated details of the wool manufacture, such as woolcombing, were incorporated in the factory system. “The application of power to the process of combing wool ... extensively in operation since the introduction of the combingmachine, especially Lister’s ... undoubtedly had the effect of throwing a very large number of men out of work. Wool was formerly combed by hand, most frequently in the cottage of the comber. It is now very generally combed in the factory, and hand-labour is superseded, except in some particular kinds of work, in which hand-combed wool is still preferred. Many of the hand-combers found employment in the factories, but the produce of the hand-combers bears so small a proportion to that of the machine, that the employment of a very large number of combers has passed away.” (“Rep. of lnsp. of Fact. for 31st Oct., 1856,” p. 16.)",
+      "author": "marx"
+    },
+    {
+      "num": 17,
+      "text": "“The principle of the factory system, then, is to substitute ... the partition of a process into its essential constituents, for the division or graduation of labour among artisans.” (Andrew Ure: “The Philosophy of Manufactures,” Lond., 1835, p. 20.)",
+      "author": "marx"
+    },
+    {
+      "num": 18,
+      "text": "The power-loom was at first made chiefly of wood; in its improved modern form it is made of iron. To what an extent the old forms of the instruments of production influenced their new forms at first starting, is shown by, amongst other things, the most superficial comparison of the present power-loom with the old one, of the modern blowing apparatus of a blast-furnace with the first inefficient mechanical reproduction of the ordinary bellows, and perhaps more strikingly than in any other way, by the attempts before the invention of the present locomotive, to construct a locomotive that actually had two feet, which after the fashion of a horse, it raised alternately from the ground. It is only after considerable development of the science of mechanics, and accumulated practical experience, that the form of a machine becomes settled entirely in accordance with mechanical principles, and emancipated from the traditional form of the tool that gave rise to it.",
+      "author": "marx"
+    },
+    {
+      "num": 19,
+      "text": "Eli Whitney’s cotton gin had until very recent times undergone less essential changes than any other machine of the 18th century. It is only during the last decade (i.e., since 1856) that another American, Mr. Emery, of Albany, New York, has rendered Whitney’s gin antiquated by an improvement as simple as it is effective.",
+      "author": "marx"
+    },
+    {
+      "num": 20,
+      "text": "“The Industry of Nations,” Lond., 1855, Part II., p. 239. This work also remarks: ‘Simple and outwardly unimportant as this appendage to lathes may appear, it is not, we believe, averring too much to state, that its influence in improving and extending the use of machinery has been as great as that produced by Watt’s improvements of the steam-engine itself. Its introduction went at once to perfect all machinery, to cheapen it, and to stimulate invention and improvement.”",
+      "author": "marx"
+    },
+    {
+      "num": 21,
+      "text": "One of these machines, used for forging paddle-wheel shafts in London, is called “Thor.” It forges a shaft of 16½ tons with as much ease as a blacksmith forges a horseshoe.",
+      "author": "marx"
+    },
+    {
+      "num": 22,
+      "text": "Wood-working machines that are also capable of being employed on a small scale are mostly American inventions.",
+      "author": "marx"
+    },
+    {
+      "num": 23,
+      "text": "Science, generally speaking, costs the capitalist nothing, a fact that by no means hinders him from exploiting it. The science of others is as much annexed by capital as the labour of others. Capitalistic appropriation and personal appropriation, whether of science or of material wealth, are, however, totally different things. Dr. Ure himself deplores the gross ignorance of mechanical science existing among his dear machinery-exploiting manufacturers, and Liebig can a tale unfold about the astounding ignorance of chemistry displayed by English chemical manufacturers.",
+      "author": "marx"
+    },
+    {
+      "num": 24,
+      "text": "Ricardo lays such stress on this effect of machinery (of which, in other connexions, he takes no more notice than he does of the general distinction between the labour process and the process of creating surplus-value), that he occasionally loses sight of the value given up by machines to the product, and puts machines on the same footing as natural forces. Thus “Adam Smith nowhere undervalues the services which the natural agents and machinery perform for us, but he very justly distinguishes the nature of the value which they add to commodities... as they perform their work gratuitously, the assistance which they afford us, adds nothing to value in exchange.” (Ric., l.c., pp. 336, 337.) This observation of Ricardo is of course correct in so far as it is directed against J. B. Say, who imagines that machines render the “service” of creating value which forms a part of “profits.”",
+      "author": "marx"
+    },
+    {
+      "num": 25,
+      "text": "A horse-power is equal to a force of 33,000 foot-pounds per minute, i.e., to a force that raises 33,000 pounds one foot in a minute, or one pound 33,000 feet. This is the horse power meant in the text. In ordinary language, and also here and there in quotations in this work, a distinction is drawn between the “nominal” and the “commercial” or “indicated” horse-power of the same engine. The old or nominal horse-power is calculated exclusively from the length of piston-stroke, and the diameter of the cylinder, and leaves pressure of steam and piston speed out of consideration. It expresses practically this: This engine would be one of 50 horse-power, if it were driven with the same low pressure of steam, and the same slow piston speed, as in the days of Boulton and Watt. But the two latter factors have increased enormously since those days. In order to measure the mechanical force exerted today by an engine, an indicator has been invented which shows the pressure of the steam in the cylinder. The piston speed is easily ascertained. Thus the “indicated” or “commercial” horse-power of an engine is expressed by a mathematical formula, involving diameter of cylinder, length of stroke, piston speed, and steam pressure, simultaneously, and showing what multiple of 33,000 pounds is really raised by the engine in a minute. Hence, one “nominal” horse-power may exert three, four, or even five “indicated” or “real” horse-powers. This observation is made for the purpose of explaining various citations in the subsequent pages. — F. E.",
+      "author": "engels"
+    },
+    {
+      "num": 26,
+      "text": "The reader who is imbued with capitalist notions will naturally miss here the “interest” that the machine, in proportion to its capital value, adds to the product. It is, however, easily seen that since a machine no more creates new value than any other part of constant capital, it cannot add any value under the name of “interest.” It is also evident that here, where we are treating of the production of surplus-value, we cannot assume a priori the existence of any part of that value under the name of interest. The capitalist mode of calculating, which appears, primâ facie, absurd, and repugnant to the laws of the creation of value, will be explained in the third book of this work.",
+      "author": "marx"
+    },
+    {
+      "num": 27,
+      "text": "This portion of value which is added by the machinery, decreases both absolutely and relatively, when the machinery does away with horses and other animals that are employed as mere moving forces, and not as machines for changing the form of matter. It may here be incidentally observed, that Descartes, in defining animals as mere machines, saw with eyes of the manufacturing period, while to eyes of the middle ages, animals were assistants to man, as they were later to Von Haller in his “Restauration der Staatswissenschaften.” That Descartes, like Bacon, anticipated an alteration in the form of production, and the practical subjugation of Nature by Man, as a result of the altered methods of thought, is plain from his “Discours de la Méthode.” He there says: “Il est possible (by the methods he introduced in philosophy) de parvenir à des connaissances fort utiles à la vie, et qu’au lieu de cette philosophie spéculative qu’on enseigne dans les écoles, on en peut trouver une pratique, par laquelle, connaissant la force et les actions du feu, de l’eau, de l’air, des astres, et de tous les autres corps qui nous environnent, aussi distinctement que nous connaissons les divers métiers de nos artisans, nous les pourrions employer en même façon à tous les usages auxquels ils sont propres, et ainsi nous rendre comme maîtres et possesseurs de la nature” and thus “contribuer au perfectionnement de la vie humaine.” [It is possible to attain knowledge very useful in life and, in place of the speculative philosophy taught in the schools, one can find a practical philosophy by which, given that we know the powers and the effectiveness of fire, water, air, the stars, and all the other bodies that surround us, as well and as accurately as we know the various trades of our craftsmen, we shall be able to employ them in the same manner as the latter to all uses to which they are adapted, and thus as it were make ourselves the masters and possessors of nature, and thus contributing to the perfection of human life.] In the preface to Sir Dudley North’s “Discourses upon Trade” (1691) it is stated, that Descartes’ method had begun to free Political Economy from the old fables and superstitious notions of gold, trade, &c. On the whole, however, the early English economists sided with Bacon and Hobbes as their philosophers; while, at a later period, the philosopher kat' exochín [dominant] of Political Economy in England, France, and Italy, was Locke.",
+      "author": "marx"
+    },
+    {
+      "num": 28,
+      "text": "According to the annual report (1863) of the Essen chamber of commerce, there was produced in 1862, at the cast-steel works of Krupp, with its 161 furnaces, thirty-two steam-engines (in the year 1800 this was about the number of all the steam-engines working in Manchester), and fourteen steam-hammers (representing in all 1,236 horse-power) forty-nine forges, 203 tool-machines, and about 2,400 workmen – thirteen million pounds of cast steel. Here there are not two workmen to each horse-power.",
+      "author": "marx"
+    },
+    {
+      "num": 29,
+      "text": "Babbage estimates that in Java the spinning labour alone adds 117% to the value of the cotton. At the same period (1832) the total value added to the cotton by machinery and labour in the fine-spinning industry, amounted to about 33% of the value of the cotton. (“On the Economy of Machinery,” pp. 165, 166.)",
+      "author": "marx"
+    },
+    {
+      "num": 30,
+      "text": "Machine printing also economises colour.",
+      "author": "marx"
+    },
+    {
+      "num": 31,
+      "text": "See Paper read by Dr. Watson, Reporter on Products to the Government of India, before the Society of Arts, 17th April, 1860.",
+      "author": "marx"
+    },
+    {
+      "num": 32,
+      "text": "“These mute agents (machines) are always the produce of much less labour than that which they displace, even when they are of the same money-value.” (Ricardo, l.c., p. 40.)",
+      "author": "marx"
+    },
+    {
+      "num": 33,
+      "text": "Hence in a communistic society there would be a very different scope for the employment of machinery than there can be in a bourgeois society.",
+      "author": "marx"
+    },
+    {
+      "num": 34,
+      "text": "“Employers of labour would not unnecessarily retain two sets of children under thirteen.... In fact one class of manufacturers, the spinners of woollen yarn, now rarely employ children under thirteen years of age, i.e., half-timers. They have introduced improved and new machinery of various kinds, which altogether supersedes the employment of children (i.e., under 13 years); f. i., I will mention one process as an illustration of this diminution in the number of children, wherein by the addition of an apparatus, called a piecing machine, to existing machines, the work of six or four half-timers, according to the peculiarity of each machine, can be performed by one young person (over 13 years)... the half-time system ‘stimulated’ the invention of the piecing machine.” (Reports of Insp. of Fact. for 31st Oct., 1858.)",
+      "author": "marx"
+    },
+    {
+      "num": 35,
+      "text": "“Wretch” is the recognised term in English Political Economy for the agricultural labourer.",
+      "author": "marx"
+    },
+    {
+      "num": 36,
+      "text": "“Machinery ... can frequently not be employed until labour (he means wages) rises.” (Ricardo, l.c., p. 479.)",
+      "author": "marx"
+    },
+    {
+      "num": 37,
+      "text": "See “Report of the Social Science Congress, at Edinburgh.” Oct., 1863.",
+      "author": "marx"
+    },
+    {
+      "num": 38,
+      "text": "Dr. Edward Smith, during the cotton crisis caused by the American Civil War, was sent by the English Government to Lancashire, Cheshire, and other places, to report on the sanitary condition of the cotton operatives. He reported, that from a hygienic point of view, and apart from the banishment of the operatives from the factory atmosphere, the crisis had several advantages. The women now had sufficient leisure to give their infants the breast, instead of poisoning them with “Godfrey’s cordial.” They had time to learn to cook. Unfortunately the acquisition of this art occurred at a time when they had nothing to cook. But from this we see how capital, for the purposes of its self-expansion, has usurped the labour necessary in the home of the family. This crisis was also utilised to teach sewing to the daughters of the workmen in sewing schools. An American revolution and a universal crisis, in order that the working girls, who spin for the whole world, might learn to sew!",
+      "author": "marx"
+    },
+    {
+      "num": 39,
+      "text": "“The numerical increase of labourers has been great, through the growing substitution of female for male, and above all, of childish for adult labour. Three girls of 13, at wages of from 6 shillings to 8 shillings a week, have replaced the one man of mature age, of wages varying from 18 shillings to 45 shillings.” (Th. de Quincey: “The Logic of Political Econ.,” London, 1844. Note to p. 147.) Since certain family functions, such as nursing and suckling children, cannot be entirely suppressed, the mothers confiscated by capital, must try substitutes of some sort. Domestic work, such as sewing and mending, must be replaced by the purchase of ready-made articles. Hence, the diminished expenditure of labour in the house is accompanied by an increased expenditure of money. The cost of keeping the family increases, and balances the greater income. In addition to this, economy and judgment in the consumption and preparation of the means of subsistence becomes impossible. Abundant material relating to these facts, which are concealed by official Political Economy, is to be found in the Reports of the Inspectors of Factories, of the Children’s Employment Commission, and more especially in the Reports on Public Health.",
+      "author": "marx"
+    },
+    {
+      "num": 40,
+      "text": "In striking contrast with the great fact, that the shortening of the hours of labour of women and children in English factories was exacted from capital by the male operatives, we find in the latest reports of the Children’s Employment Commission traits of the operative parents in relation to the traffic in children, that are truly revolting and thoroughly like slave-dealing. But the Pharisee of a capitalist, as may be seen from the same reports, denounces this brutality which he himself creates, perpetuates, and exploits, and which he moreover baptises “freedom of labour.” “Infant labour has been called into aid ... even to work for their own daily bread. Without strength to endure such disproportionate toil, without instruction to guide their future life, they have been thrown into a situation physically and morally polluted. The Jewish historian has remarked upon the overthrow of Jerusalem by Titus that it was no wonder it should have been destroyed, with such a signal destruction, when an inhuman mother sacrificed her own offspring to satisfy the cravings of absolute hunger.” (“Public Economy Concentrated.” Carlisle, 1833, p. 66.)",
+      "author": "marx"
+    },
+    {
+      "num": 41,
+      "text": "A. Redgrave in “Reports of lnsp. of Fact. for 31st October, 1858,” pp. 40, 41.",
+      "author": "marx"
+    },
+    {
+      "num": 42,
+      "text": "“Children’s Employment Commission, Fifth Report,” London, 1866, p. 81, n. 31. [Added in the 4th German edition. — The Bethnal Green silk industry is now almost destroyed. — F. E.]",
+      "author": "engels"
+    },
+    {
+      "num": 43,
+      "text": "“Children’s Employment Commission, Third Report,” London, 1864, p. 53, n. 15.",
+      "author": "marx"
+    },
+    {
+      "num": 44,
+      "text": "l.c., Fifth Report, p. 22, n. 137.",
+      "author": "marx"
+    },
+    {
+      "num": 45,
+      "text": "“Sixth Report on Public Health,” Lond., 1864, p. 34.",
+      "author": "marx"
+    },
+    {
+      "num": 46,
+      "text": "“It (the inquiry of 1861)... showed, moreover, that while, with the described circumstances, infants perish under the neglect and mismanagement which their mothers’ occupations imply, the mothers become to a grievous extent denaturalised towards their offspring – commonly not troubling themselves much at the death, and even sometimes... taking direct measures to insure it.” (l.c.)",
+      "author": "marx"
+    },
+    {
+      "num": 47,
+      "text": "l.c., p. 454.",
+      "author": "marx"
+    },
+    {
+      "num": 48,
+      "text": "l.c., pp. 454-463. “Report by Dr. Henry Julian Hunter on the excessive mortality of infants in some rural districts of England.”",
+      "author": "marx"
+    },
+    {
+      "num": 49,
+      "text": "l.c., p. 35 and pp. 455, 456.",
+      "author": "marx"
+    },
+    {
+      "num": 50,
+      "text": "l.c., p. 456.",
+      "author": "marx"
+    },
+    {
+      "num": 51,
+      "text": "In the agricultural as well as in the factory districts the consumption of opium among the grown-up labourers, both male and female, is extending daily. “To push the sale of opiate... is the great aim of some enterprising wholesale merchants. By druggists it is considered the leading article.” (l.c., p. 459.) Infants that take opiates “shrank up into little old men,” or “wizened like little monkeys.” (l.c., p. 460.) We here see how India and China avenged themselves on England.",
+      "author": "marx"
+    },
+    {
+      "num": 52,
+      "text": "l.c., p. 37.",
+      "author": "marx"
+    },
+    {
+      "num": 53,
+      "text": "“Rep. of Insp. of Fact. for 31st Oct., 1862,” p. 59. Mr. Baker was formerly a doctor.",
+      "author": "marx"
+    },
+    {
+      "num": 54,
+      "text": "L. Horner in “Reports of Insp. of Fact. for 30th June, 1857,” p. 17.",
+      "author": "marx"
+    },
+    {
+      "num": 55,
+      "text": "L. Horner in “Rep. of lnsp. of Fact. for 31st Oct., 1855,” pp. 18, 19.",
+      "author": "marx"
+    },
+    {
+      "num": 56,
+      "text": "Sir John Kincaid in “Rep. of Insp. of Fact. for 31st Oct., 1858,” pp. 31, 32.",
+      "author": "marx"
+    },
+    {
+      "num": 57,
+      "text": "L. Horner in “Reports, &c., for 31st Oct., 1857,” pp. 17, 18.",
+      "author": "marx"
+    },
+    {
+      "num": 58,
+      "text": "Sir J. Kincaid in “Reports, &c., 31st Oct., 1856,” p. 66.",
+      "author": "marx"
+    },
+    {
+      "num": 59,
+      "text": "A. Redgrave in “Rep. of Insp. of Fact., 31st. Oct., 1857,” pp. 41-42. In those industries where the Factory Act proper (not the Print Works Act referred to in the text) has been in force for some time, the obstacles in the way of the education clauses have, in recent years, been overcome. In industries not under the Act, the views of Mr. J. Geddes, a glass manufacturer, still extensively prevail. He informed Mr. White, one of the Inquiry Commissioners: “As far as I can see, the greater amount of education which a part of the working-class has enjoyed for some years past is an evil. It is dangerous, because it makes them independent.” (“Children’s Empl. Comm., Fourth Report,” Lond., 1865, p. 253.)",
+      "author": "marx"
+    },
+    {
+      "num": 60,
+      "text": "“Mr. E., a manufacturer ... informed me that he employed females exclusively at his power-looms ... gives a decided preference to married females, especially those who have families at home dependent on them for support; they are attentive, docile, more so than unmarried females, and are compelled to use their utmost exertions to procure the necessaries of life. Thus are the virtues, the peculiar virtues of the female character to be perverted to her injury – thus all that is most dutiful and tender in her nature is made a means of her bondage and suffering.” (Ten Hours’ Factory Bill. The Speech of Lord Ashley, March 15th, Lond., 1844, p. 20.)",
+      "author": "marx"
+    },
+    {
+      "num": 61,
+      "text": "“Since the general introduction of machinery, human nature has been forced far beyond its average strength.” (Rob. Owen: “Observations on the Effects of the Manufacturing System,” 2nd Ed., London, 1817.)",
+      "author": "marx"
+    },
+    {
+      "num": 62,
+      "text": "The English, who have a tendency to look upon the earliest form of appearance of a thing as the cause of its existence, are in the habit of attributing the long hours of work in factories to the extensive kidnapping of children, practised by capitalists in the infancy of the factory system, on workhouses and orphanages, by means of which robbery, unresisting material for exploitation was procured. Thus, for instance, Fielden, himself a manufacturer, says: “It is evident that the long hours of work were brought about by the circumstance of so great a number of destitute children being supplied from different parts of the country, that the masters were independent of the hands, and that having once established the custom by means of the miserable materials they had procured in this way, they could impose it on their neighbours with the greater facility.” (J. Fielden: “The Curse of the Factory System,” Lond., 1836, p. 11.) With reference to the labour of women, Saunders, the factory inspector, says in his report of 1844: “Amongst the female operatives there are some women who, for many weeks in succession, except for a few days, are employed from 6 a.m. till midnight, with less than 2 hours for meals, so that on 5 days of the week they have only 6 hours left out of the 24, for going to and from their homes and resting in bed.”",
+      "author": "marx"
+    },
+    {
+      "num": 63,
+      "text": "“Occasion... injury to the delicate moving parts of metallic mechanism by inaction.” (Ure, l.c., p. 281.)",
+      "author": "marx"
+    },
+    {
+      "num": 64,
+      "text": "The Manchester Spinner (Times, 26th Nov., 1862) before referred to says in relation to this subject: “It (namely, the “allowance for deterioration of machinery\") is also intended to cover the loss which is constantly arising from the superseding of machines before they are worn out, by others of a new and better construction.”",
+      "author": "marx"
+    },
+    {
+      "num": 65,
+      "text": "“It has been estimated, roughly, that the first individual of a newly-invented machine will cost about five times as much as the construction of the second.” Babbage, l.c., p. 349.",
+      "author": "marx"
+    },
+    {
+      "num": 66,
+      "text": "“The improvements which took place not long ago in frames for making patent net were so great that a machine in good repair which had cost £1,200, sold a few years after for £60 ... improvements succeeded each other so rapidly, that machines which had never been finished were abandoned in the hands of their makers, because new improvements had superseded their utility.” (Babbage, l.c., p. 233.) In these stormy, go-ahead times, therefore, the tulle manufacturers soon extended the working-day, by means of double sets of hands, from the original 8 hours to 24.",
+      "author": "marx"
+    },
+    {
+      "num": 67,
+      "text": "“It is self-evident, that, amid the ebbings and flowings of the markets and the alternate expansions and contractions of demand, occasions will constantly recur, in which the manufacturer may employ additional floating capital without employing additional fixed capital... if additional quantities of raw material can be worked up without incurring an additional expense for buildings and machinery.” (R. Torrens: “On Wages and Combination.” London, 1834, p. 64.)",
+      "author": "marx"
+    },
+    {
+      "num": 68,
+      "text": "This circumstance is mentioned only for the sake of completeness, for I shall not consider the rate of profit, i.e., the ratio of the surplus-value to the total capital advanced, until I come to the third book.",
+      "author": "marx"
+    },
+    {
+      "num": 69,
+      "text": "Senior, “Letters on the Factory Act.” London, 1837, pp. 13, 14.",
+      "author": "marx"
+    },
+    {
+      "num": 70,
+      "text": "“The great proportion of fixed to circulating capital ... makes long hours of work desirable.” With the increased use of machinery, &c., “the motives to long hours of work will become greater, as the only means by which a large proportion of fixed capital can be made profitable.” (l.c., pp. 11-13.) “There are certain expenses upon a mill which go on in the same proportion whether the mill be running short or full time, as, for instance, rent rates, and taxes, insurance against fire, wages of several permanent servants, deterioration of machinery, with various other charges upon a manufacturing establishment, the proportion of which to profits increases as the production decreases.” (“Rep. of Insp. of Fact. for 31st Oct., 1862,” p. 19.)",
+      "author": "marx"
+    },
+    {
+      "num": 71,
+      "text": "Why it is, that the capitalist, and also the political economists who are imbued with his views, are unconscious of this immanent contradiction, will appear from the first part of the third book.",
+      "author": "marx"
+    },
+    {
+      "num": 72,
+      "text": "It is one of the greatest merits of Ricardo to have seen in machinery not only the means of producing commodities, but of creating a “redundant population.”",
+      "author": "marx"
+    },
+    {
+      "num": 73,
+      "text": "F. Biese. “Die Philosophie des Aristoteles,” Vol. 2. Berlin, 1842, p. 408.",
+      "author": "marx"
+    },
+    {
+      "num": 74,
+      "text": "I give below the translation of this poem by Stolberg, because it brings into relief, quite in the spirit of former quotations referring to division of labour, the antithesis between the views of the ancients and the moderns. “Spare the hand that grinds the corn, Oh, miller girls, and softly sleep. Let Chanticleer announce the morn in vain! Deo has commanded the work of the girls to be done by the Nymphs, and now they skip lightly over the wheels, so that the shaken axles revolve with their spokes and pull round the load of the revolving stones. Let us live the life of our fathers, and let us rest from work and enjoy the gifts that the Goddess sends us.”",
+      "author": "marx"
+    },
+    {
+      "num": 75,
+      "text": "There are, of course, always differences, in the intensities of the labour in various industries. But these differences are, as Adam Smith has shown, compensated to a partial extent by minor circumstances, peculiar to each sort of labour. Labour-time, as a measure of value, is not, however, affected in this case, except in so far as the duration of labour, and the degree of its intensity, are two antithetical and mutually exclusive expressions for one and the same quantity of labour.",
+      "author": "marx"
+    },
+    {
+      "num": 76,
+      "text": "Especially by piece-work, a form we shall investigate in Part VI. of this book.",
+      "author": "marx"
+    },
+    {
+      "num": 77,
+      "text": "See “Rep. of lnsp. of Fact. for 31st October, 1865.”",
+      "author": "marx"
+    },
+    {
+      "num": 78,
+      "text": "Rep. of Insp. of Fact. for 1844 and the quarter ending 30th April, 1845, pp. 20-21.",
+      "author": "marx"
+    },
+    {
+      "num": 79,
+      "text": "l.c., p. 19. Since the wages for piece-work were unaltered, the weekly wages depended on the quantity produced.",
+      "author": "marx"
+    },
+    {
+      "num": 80,
+      "text": "l.c., p. 20.",
+      "author": "marx"
+    },
+    {
+      "num": 81,
+      "text": "The moral element played an important part in the above experiments. The workpeople told the factory inspector: “We work with more spirit, we have the reward ever before us of getting away sooner at night, and one active and cheerful spirit pervades the whole mill, from the youngest piecer to the oldest hand, and we can greatly help each other.” (l.c., p. 21.)",
+      "author": "marx"
+    },
+    {
+      "num": 82,
+      "text": "John Fielden, l.c., p. 32.",
+      "author": "marx"
+    },
+    {
+      "num": 83,
+      "text": "Lord Ashley, l.c., pp. 6-9, passim.",
+      "author": "marx"
+    },
+    {
+      "num": 84,
+      "text": "Rep. of Insp. of Fact. for Quarter ending 30th September, 1844, and from 1st October, 1844, to 30th April, 1845, p. 20.",
+      "author": "marx"
+    },
+    {
+      "num": 85,
+      "text": "l.c., p. 22.",
+      "author": "marx"
+    },
+    {
+      "num": 86,
+      "text": "“Rep. of lnsp. of Fact. for 31st October, 1862,” p. 62.",
+      "author": "marx"
+    },
+    {
+      "num": 87,
+      "text": "This was altered in the “Parliamentary Return” of 1862. In it the actual horse-power of the modern steam engines and water wheels appears in place of the nominal. The doubling spindles, too, are no longer included in the spinning spindles (as was the case in the “Returns” of 1839, 1850, and 1856); further, in the case of woollen mills, the number of “gigs” is added, a distinction made between jute and hemp mills on the one hand and flax mills on the other, and finally stocking-weaving is for the first time inserted in the report.",
+      "author": "marx"
+    },
+    {
+      "num": 88,
+      "text": "“Rep. of Insp. of Fact. for 31st October, 1856,” pp. 13-14, 20 and 1852, p. 23.",
+      "author": "marx"
+    },
+    {
+      "num": 89,
+      "text": "l.c., pp. 14-15.",
+      "author": "marx"
+    },
+    {
+      "num": 90,
+      "text": "l.c., P. 20.",
+      "author": "marx"
+    },
+    {
+      "num": 91,
+      "text": "“Reports, &c., for 31st October, 1858,” pp. 9-10. Compare “Reports, &c., for 30th April, 1860,” p. 30, sqq.",
+      "author": "marx"
+    },
+    {
+      "num": 92,
+      "text": "“Reports of lnsp. of Fact. for 31st Oct., 1862,” pp. 100 and 130.",
+      "author": "marx"
+    },
+    {
+      "num": 93,
+      "text": "On 2 modern power-looms a weaver now makes in a week of 60 hours 26 pieces of certain quality, length, and breadth; while on the old power-looms he could make no more than 4 such pieces. The cost of weaving a piece of such cloth had already soon after 1850 fallen from 2s. 9d. to 5 1/8d.",
+      "author": "marx"
+    },
+    {
+      "num": 94,
+      "text": "“Rep. of Insp. of Fact. for 31st Oct., 1861,” pp. 25, 26.",
+      "author": "marx"
+    },
+    {
+      "num": 95,
+      "text": "The agitation for a working-day of 8 hours has now (1867) begun in Lancashire among the factory operatives.",
+      "author": "marx"
+    },
+    {
+      "num": 96,
+      "text": "The following few figures indicate the increase in the “factories” of the United Kingdom since 1848:\r \r Quantity Exported. 1848.Quantity Exported. 1851.Quantity Exported. 1860.Quantity Exported. 1865.\r COTTON\r Cotton yarnlbs. 135,831,162lbs. 143,966,106lbs. 197,343,655lbs. 103,751,455\r Sewing thread—lbs. 4,392,176lbs. 6,297,554lbs. 4,648,611\r Cotton clothyds. 1,091,373,930yds. 1,543,161,789yds. 2,776,218,427yds. 2,015,237,851\r FLAX & HEMP\r Yarnlbs. 11,722,182lbs. 18,841,326lbs. 31,210,612lbs. 36,777,334\r Clothyds. 88,901,519yds. 129,106,753yds. 143,996,773yds. 247,012.529\r SILK\r Yarnlbs. 466,825lbs. 462,513lbs. 897,402lbs. 812,589\r Cloth—yds. 1,181,455yds. 1,307,293yds. 2,869,837\r WOOL\r Woollen and Worsted yarns—lbs. 14,670,880lbs. 27,533,968lbs. 31,669,267\r Cloth—yds. 151,231,153yds. 190,371,507yds. 278,837,418\r \r \r Value Exported. 1848. £Value Exported. 1851. £Value Exported. 1860. £Value Exported. 1865. £\r COTTON\r Yarn5,927,8316,634,0269,870,87510,351,049\r Cloth16,753,36923,454,81042,141,50546,903,796\r FLAX & HEMP\r Yarn493,449951,4261,801,2722,505,497\r Cloth2,802,7894,107,3964,804,8039,155,358\r SILK\r Yarn77,789196,380826,107768,064\r Cloth—1,130,3981,587,3031,409,221\r WOOL\r Yarn776,9751,484,5443,843,4505,424,047\r Cloth5,733,8288,377,18312,156,99820,102,259",
+      "author": "marx"
+    },
+    {
+      "num": 97,
+      "text": "Ure, l.c., p. 18.",
+      "author": "marx"
+    },
+    {
+      "num": 98,
+      "text": "Ure, l.c., P. 3 1. See Karl Marx, l.c., pp. 140-141.",
+      "author": "marx"
+    },
+    {
+      "num": 99,
+      "text": "It looks very like intentional misleading by statistics (which misleading it would be possible to prove in detail in other cases too), when the English factory legislation excludes from its operation the class of labourers last mentioned in the text, while the parliamentary returns expressly include in the category of factory operatives, not only engineers, mechanics, &c., but also managers, salesmen, messengers, warehousemen, packers, &c., in short everybody, except the owner of the factory himself.",
+      "author": "marx"
+    },
+    {
+      "num": 100,
+      "text": "Ure grants this. He says, “in case of need,” the workmen can be moved at the will of the manager from one machine to another, and he triumphantly exclaims: “Such a change is in flat contradiction with the old routine, that divides the labour, and to one workman assigns the task of fashioning the head of a needle, to another the sharpening of the point.” He had much better have asked himself, why this “old routine” is departed from in the automatic factory, only “in case of need. “",
+      "author": "marx"
+    },
+    {
+      "num": 101,
+      "text": "When distress is very great, as, for instance, during the American Civil War, the factory operative is now and then set by the Bourgeois to do the roughest of work, such as road-making, &c.. The English “ateliers nationaux” [national workshops] of 1862 and the following years, established for the benefit of the destitute cotton operatives, differ from the French of 1848 in this, that in the latter the workmen had to do unproductive work at the expense of the state, in the former they had to do productive municipal work to the advantage of the bourgeois, and that, too, cheaper than the regular workmen, with whom they were thus thrown into competition. “The physical appearance of the cotton operatives is unquestionably improved. This I attribute ... as to the men, to outdoor labour on public works.” (“Rep. of Insp. of Fact., 31st Oct., 1863,” p. 59.) The writer here alludes to the Preston factory operatives, who were employed on Preston Moor.",
+      "author": "marx"
+    },
+    {
+      "num": 102,
+      "text": "An example: The various mechanical apparatus introduced since the Act of 1844 into woollen mills, for replacing the labour of children. So soon as it shall happen that the children of the manufacturers themselves have to go through a course of schooling as helpers in the mill, this almost unexplored territory of mechanics will soon make remarkable progress. “Of machinery, perhaps self-acting mules are as dangerous as any other kind. Most of the accidents from them happen to little children, from their creeping under the mules to sweep the floor whilst the mules are in motion. Several ‘minders’ have been fined for this offence, but without much general benefit. If machine makers would only invent a self-sweeper, by whose use the necessity for these little children to creep under the machinery might be prevented, it would be a happy addition to our protective measures.” (“Reports of Insp. of Fact. for 31st. Oct., 1866,” p. 63.)",
+      "author": "marx"
+    },
+    {
+      "num": 103,
+      "text": "So much then for Proudhon’s wonderful idea: he “construes” machinery not as a synthesis of instruments of labour, but as a synthesis of detail operations for the benefit of the labourer himself.",
+      "author": "marx"
+    },
+    {
+      "num": 104,
+      "text": "F. Engels, l.c., p. 217. Even an ordinary and optimist Free-trader, like Mr. Molinari, goes so far as to say, “Un homme s’use plus vite en surveillant, quinze heures par jour, l’évolution uniforme d’un mécanisme, qu’en exercant, dans le même espace de temps, sa force physique. Ce travail de surveillance qui servirait peut-être d’utile gymnastique à l’intelligence, s’il n’était pas trop prolongé, détruit à la longue, par son excès, et l’intelligence, et le corps même.” [A man becomes exhausted more quickly when he watches over the uniform motion of mechanism for fifteen hours a day, than when he applies his physical strength over the same period of time. This labour of surveillance, which might perhaps serve as a useful exercise for the mind, if it did not go on too long, destroys both the mind and the body in the long run, through excessive application] (G. de Molinari: “Études Économiques.” Paris, 1846.)",
+      "author": "engels"
+    },
+    {
+      "num": 105,
+      "text": "F. Engels, l.c., p. 216.",
+      "author": "engels"
+    },
+    {
+      "num": 106,
+      "text": "“The Master Spinners’ and Manufacturers’ Defence Fund. Report of the Committee.” Manchester, 1854, p. 17. We shall see hereafter, that the “master” can sing quite another song, when he is threatened with the loss of his “living” automaton.",
+      "author": "marx"
+    },
+    {
+      "num": 107,
+      "text": "Ure, l.c., p. 15. Whoever knows the life history of Arkwright, will never dub this barber-genius “noble.” Of all the great inventors of the 18th century, he was incontestably the greatest thiever of other people’s inventions and the meanest fellow.",
+      "author": "marx"
+    },
+    {
+      "num": 108,
+      "text": "“The slavery in which the bourgeoisie has bound the proletariat, comes nowhere more plainly into daylight than in the factory system. In it all freedom comes to an end both at law and in fact. The workman must be in the factory at half past five. If he come a few minutes late, he is punished; if he come 10 minutes late, he is not allowed to enter until after breakfast, and thus loses a quarter of a day’s wage. He must eat, drink and sleep at word of command.... The despotic bell calls him from his bed, calls him from breakfast and dinner. And how does he fare in the mill? There the master is the absolute law-giver. He makes what regulations he pleases; he alters and makes additions to his code at pleasure; and if he insert the veriest nonsense, the courts say to the workman: Since you have entered into this contract voluntarily, you must now carry it out .... These workmen are condemned to live, from their ninth year till their death, under this mental and bodily torture.” (F. Engels, l.c., p. 217, sq.) What, “the courts say,” I will illustrate by two examples. One occurs at Sheffield at the end of 1866. In that town a workman had engaged himself for 2 years in a steelworks. In consequence of a quarrel with his employer he left the works, and declared that under no circumstances would he work for that master any more. He was prosecuted for breach of contract, and condemned to two months’ imprisonment. (If the master break the contract, he can be proceeded against only in a civil action, and risks nothing but money damages.) After the workman has served his two months, the master invites him to return to the works, pursuant to the contract. Workman says: No, he has already been punished for the breach. The master prosecutes again, the court condemns again, although one of the judges, Mr. Shee, publicly denounces this as a legal monstrosity, by which a man can periodically, as long as he lives, be punished over and over again for the same offence or crime. This judgment was given not by the “Great Unpaid,” the provincial Dogberries, but by one of the highest courts of justice in London. — [Added in the 4th German edition. — This has now been done away with. With few exceptions, e.g., when public gas-works are involved, the worker in England is now put on an equal footing with the employer in case of breach of contract and can be sued only civilly. — F. E.] The second case occurs in Wiltshire at the end of November 1863. About 30 power-loom weavers, in the employment of one Harrup, a cloth manufacturer at Leower’s Mill, Westbury Leigh, struck work because master Harrup indulged in the agreeable habit of making deductions from their wages for being late in the morning; 6d. for 2 minutes; 1s. for 3 minutes, and 1s. 6d. for ten minutes. This is at the rate of 9s. per hour, and £4 10s. 0d. per diem; while the wages of the weavers on the average of a year, never exceeded 10s. to 12s. weekly. Harrup also appointed a boy to announce the starting time by a whistle, which he often did before six o’clock in the morning: and if the hands were not all there at the moment the whistle ceased, the doors were closed, and those hands who were outside were fined: and as there was no clock on the premises, the unfortunate hands were at the mercy of the young Harrup-inspired time-keeper. The hands on strike, mothers of families as well as girls, offered to resume work if the timekeeper were replaced by a clock, and a more reasonable scale of fines were introduced. Harrup summoned I9 women and girls before the magistrates for breach of contract. To the utter indignation of all present, they were each mulcted in a fine of 6d. and 2s. 6d. for costs. Harrup was followed from the court by a crowd of people who hissed him. A favourite operation with manufacturers is to punish the workpeople by deductions made from their wages on account of faults in the material worked on. This method gave rise in 1866 to a general strike in the English pottery districts. The reports of the Ch. Empl. Com. (1863-1866), give cases where the worker not only receives no wages, but becomes, by means of his labour, and of the penal regulations, the debtor to boot, of his worthy master. The late cotton crisis also furnished edifying examples of the sagacity shown by the factory autocrats in making deductions from wages. Mr. R. Baker, the Inspector of Factories, says, “I have myself had lately to direct prosecutions against one cotton mill occupier for having in these pinching and painful times deducted 10d. a piece from some of the young workers employed by him, for the surgeon’s certificate (for which he himself had only paid 6d.), when only allowed by the law to deduct 3d., and by custom nothing at all .... And I have been informed of another, who, in order to keep without the law, but to attain the same object, charges the poor children who work for him a shilling each, as a fee for learning them the art and mystery of cotton spinning, so soon as they are declared by the surgeon fit and proper persons for that occupation. There may therefore be undercurrent causes for such extraordinary exhibitions as strikes, not only wherever they arise, but particularly at such times as the present, which without explanation, render them inexplicable to the public understanding.” He alludes here to a strike of power-loom weavers at Darwen, June, 1863. (“Reports of Insp. of Fact. for 30 April, 1863,” pp. 50-51.) The reports always go beyond their official dates.",
+      "author": "engels"
+    },
+    {
+      "num": 109,
+      "text": "The protection afforded by the Factory Acts against dangerous machinery has had a beneficial effect. “But ... there are other sources of accident which did not exist twenty years since; one especially, viz., the increased speed of the machinery. Wheels, rollers, spindles and shuttles are now propelled at increased and increasing rates; fingers must be quicker and defter in their movements to take up the broken thread, for, if placed with hesitation or carelessness, they are sacrificed.... A large number of accidents are caused by the eagerness of the workpeople to get through their work expeditiously. It must be remembered that it is of the highest importance to manufacturers that their machinery should be in motion, i.e., producing yarns and goods. Every minute’s stoppage is not only a loss of power, but of production, and the workpeople are urged by the overlookers, who are interested in the quantity of work turned off, to keep the machinery in motion, and it is no less important to those of the operatives who are paid by the weight or piece, that the machines should be kept in motion. Consequently, although it is strictly forbidden in many, nay in most factories, that machinery should be cleaned while in motion, it is nevertheless the constant practice in most, if not in all, that the workpeople do, unreproved, pick out waste, wipe rollers and wheels, &c., while their frames are in motion. Thus from this cause only, 906 accidents have occurred during the six months.... Although a great deal of cleaning is constantly going on day by day, yet Saturday is generally the day set apart for the thorough cleaning of the machinery, and a great deal of this is done while the machinery is in motion.” Since cleaning is not paid for, the workpeople seek to get done with it as speedily as possible. Hence “the number of accidents which occur on Fridays, and especially on Saturdays, is much larger than on any other day. On the former day the excess is nearly 12 per cent. over the average number of the four first days of the week, and on the latter day the excess is 25 per cent. over the average of the preceding five days; or, if the number of working-hours on Saturday being taken into account — 7½ hours on Saturday as compared with 10½ on other days — there is an excess of 65 per cent. on Saturdays over the average of the other five days.” (“Rep. of Insp. of Fact., 31st Oct., 1866,” pp. 9, 15, 16, 17.)",
+      "author": "marx"
+    },
+    {
+      "num": 110,
+      "text": "In Part I. of Book III. I shall give an account of a recent campaign by the English manufacturers against the Clauses in the Factory Acts that protect the “hands” against dangerous machinery. For the present, let this one quotation from the official report of Leonard Horner suffice: “I have heard some mill-owners speak with inexcusable levity of some of the accidents; such, for instance, as the loss of a finger being a trifling matter. A working-man’s living and prospects depend so much upon his fingers, that any loss of them is a very serious matter to him. When I have heard such inconsiderate remarks made, I have usually put this question: Suppose you were in want of an additional workman, and two were to apply, both equally well qualified in other respects, but one had lost a thumb or a forefinger, which would you engage? There never was a hesitation as to the answer....” The manufacturers have “mistaken prejudices against what they have heard represented as a pseudo-philanthropic legislation.” (“Rep. of Insp. of Fact., 31st Oct., 1855.\") These manufacturers are clever folk, and not without reason were they enthusiastic for the slave-holders’ rebellion.",
+      "author": "marx"
+    },
+    {
+      "num": 111,
+      "text": "In those factories that have been longest subject to the Factory Acts, with their compulsory limitation of the hours of labour, and other regulations, many of the older abuses have vanished. The very improvement of the machinery demands to a certain extent “improved construction of the buildings,” and this is an advantage to the workpeople. (See “Rep. of Insp. of Fact. for 31st Oct., 1863,” p. 109.)",
+      "author": "marx"
+    },
+    {
+      "num": 112,
+      "text": "See amongst others, John Houghton: “Husbandry and Trade Improved.” London, 1727. “The Advantages of the East India Trade, 1720.” John Bellers, l.c. “The masters and their workmen are, unhappily, in a perpetual war with each other. The invariable object of the former is to get their work done as cheaply as possible; and they do not fail to employ every artifice to this purpose, whilst the latter are equally attentive to every occasion of distressing their masters into a compliance with higher demands.” (“An Enquiry into the Causes of the Present High Price of Provisions,” pp. 61-62. Author, the Rev. Nathaniel Forster, quite on the side of the workmen.)",
+      "author": "marx"
+    },
+    {
+      "num": 113,
+      "text": "In old-fashioned manufactures the revolts of the workpeople against machinery, even to this day, occasionally assume a savage character, as in the case of the Sheffield file cutters in 1865.",
+      "author": "marx"
+    },
+    {
+      "num": 114,
+      "text": "Sir James Steuart also understands machinery quite in this sense. “Je considère donc les machines comme des moyens d’augmenter (virtuellement) le nombre des gens industrieux qu’on n’est pas obligé de nourrir.... En quoi l’effet d’une machine diffère-t-il de celui de nouveaux habitants?” (French trans. t. I., l. I., ch. XIX.) [I thus consider machines to be a means to (virtually) increase the number of industrious individuals we are not forced to feed. In what way does the effect of a machine differ from that of new inhabitants?] More naïve is Petty, who says, it replaces “Polygamy.” The above point of view is, at the most, admissible only for some parts of the United States. On the other hand, “machinery can seldom be used with success to abridge the labour of an individual; more time would be lost in its construction than could be saved by its application. It is only really useful when it acts on great masses, when a single machine can assist the work of thousands. It is accordingly in the most populous countries, where there are most idle men, that it is most abundant.... It is not called into use by a scarcity of men, but by the facility with which they can be brought to work in masses.” (Piercy Ravenstone: “Thoughts on the Funding System and its Effects.” London, 1824, p. 45.)",
+      "author": "marx"
+    },
+    {
+      "num": 115,
+      "text": "[Note in the 4th German edition. — This applies to Germany too. Where in our country agriculture on a large scale exists, hence particularly in the East, it has become possible only in consequence of the clearing of the estates (“Bauernlegen\"), a practice which became widerspread in the 16th century and was particularly so since 1648. — F. E.]",
+      "author": "engels"
+    },
+    {
+      "num": 116,
+      "text": "“Machinery and labour are in constant competition.” Ricardo, l.c., p. 479.",
+      "author": "marx"
+    },
+    {
+      "num": 117,
+      "text": "The competition between hand-weaving and power-weaving in England, before the passing of the Poor Law of 1833, was prolonged by supplementing the wages, which had fallen considerably below the minimum, with parish relief. “The Rev. Mr. Turner was, in 1827, rector of Wilmslow in Cheshire, a manufacturing district. The questions of the Committee of Emigration, and Mr. Turner’s answers, show how the competition of human labour is maintained against machinery. ‘Question: Has not the use of the power-loom superseded the use of the hand-loom? Answer: Undoubtedly; it would have superseded them much more than it has done, if the hand-loom weavers were not enabled to submit to a reduction of wages.’ ‘Question: But in submitting he has accepted wages which are insufficient to support him, and looks to parochial contribution as the remainder of his support? Answer: Yes, and in fact the competition between the hand-loom and the power-loom is maintained out of the poor-rates.’ Thus degrading pauperism or expatriation, is the benefit which the industrious receive from the introduction of machinery, to be reduced from the respectable and in some degree independent mechanic, to the cringing wretch who lives on the debasing bread of charity. This they call a temporary inconvenience.” (“A Prize Essay on the Comparative Merits of Competition and Co-operation.” Lond., 1834, p. 29.)",
+      "author": "marx"
+    },
+    {
+      "num": 118,
+      "text": "“The same cause which may increase the revenue of the country” (i.e., as Ricardo explains in the same passage, the revenues of landlords and capitalists, whose wealth, from the economic point of view, forms the Wealth of the Nation), “may at the same time render the population redundant and deteriorate the condition of the labourer.” (Ricardo, l.c., p. 469.) “The constant aim and the tendency of every improvement in machinery is, in fact, to do away entirely with the labour of man, or to lessen its price by substituting the labour of women and children for that of grown-up men, or of unskilled for that of skilled workmen.” (Ure, l.c., t. I., p. 35.)",
+      "author": "marx"
+    },
+    {
+      "num": 119,
+      "text": "“Rep. Insp. Fact. for 31st October, 1858,” p. 43.",
+      "author": "marx"
+    },
+    {
+      "num": 120,
+      "text": "“Rep. lnsp. Fact. for 31st October, 1856,” p. 15.",
+      "author": "marx"
+    },
+    {
+      "num": 121,
+      "text": "Ure, l.c., p. 19. “The great advantage of the machinery employed in brick-making consists in this, that the employer is made entirely independent of skilled labourers.” (“Ch. Empl. Comm. V. Report,” Lond., 1866, p. 130, n. 46.) Mr. A. Sturrock, superintendent of the machine department of the Great Northern Railway, says, with regard to the building of locomotives, &c.: “Expensive English workmen are being less used every day. The production of the workshops of England is being increased by the use of improved tools and these tools are again served by a low class of labour.... Formerly their skilled labour necessarily produced all the parts of engines. Now the parts of engines are produced by labour with less skill, but with good tools. By tools, I mean engineer’s machinery, lathes, planing machines, drills, and so on.” (“Royal Com. on Railways,” Lond., 1867, Minutes of Evidence, n. 17, 862 and 17, 863.)",
+      "author": "marx"
+    },
+    {
+      "num": 122,
+      "text": "Ure, l.c., p. 20.",
+      "author": "marx"
+    },
+    {
+      "num": 123,
+      "text": "Ure, l.c., p. 321.",
+      "author": "marx"
+    },
+    {
+      "num": 124,
+      "text": "Ure, l.c., p. 23.",
+      "author": "marx"
+    },
+    {
+      "num": 125,
+      "text": "“Rep. Insp. Fact., 31st Oct., 1863,” pp. 108,109.",
+      "author": "marx"
+    },
+    {
+      "num": 126,
+      "text": "l.c., p. 109. The rapid improvement of machinery, during the crisis, allowed the English manufacturers, immediately after the termination of the American Civil War, and almost in no time, to glut the markets of the world again. Cloth, during the last six months of 1866, was almost unsaleable. Thereupon began the consignment of goods to India and China, thus naturally making the glut more intense. At the beginning of 1867 the manufacturers resorted to their usual way out of the difficulty, viz., reducing wages 5 per cent. The workpeople resisted, and said that the only remedy was to work short time, 4 days a-week; and their theory was the correct one. After holding out for some time, the self-elected captains of industry had to make up their minds to short time, with reduced wages in some places, and in others without.",
+      "author": "marx"
+    },
+    {
+      "num": 127,
+      "text": "“The relation of master and man in the blown-flint bottle trades amounts to a chronic strike.” Hence the impetus given to the manufacture of pressed glass, in which the chief operations are done by machinery. One firm in Newcastle, who formerly produced 350,000 lbs. of blown-flint glass, now produces in its place 3,000,500 lbs. of pressed glass. (“Ch. Empl. Comm., Fourth Rep.,” 1865, pp. 262-263.)",
+      "author": "marx"
+    },
+    {
+      "num": 128,
+      "text": "Gaskell. “The Manufacturing Population of England,” London, 1833, pp. 3, 4.",
+      "author": "marx"
+    },
+    {
+      "num": 129,
+      "text": "W. Fairbairn discovered several very important applications of machinery to the construction of machines, in consequence of strikes in his own workshops.",
+      "author": "marx"
+    },
+    {
+      "num": 130,
+      "text": "Ure, l.c., pp. 368-370",
+      "author": "marx"
+    },
+    {
+      "num": 131,
+      "text": "Ure, l.c., pp. 368, 7, 370, 280, 281, 321, 370, 475.",
+      "author": "marx"
+    },
+    {
+      "num": 132,
+      "text": "Ricardo originally was also of this opinion, but afterwards expressly disclaimed it with the scientific impartiality and love of truth characteristic of him. See l.c., ch. xxxi. “On Machinery.”",
+      "author": "marx"
+    },
+    {
+      "num": 133,
+      "text": "Nota bene. My illustration is entirely on the lines of those given by the above named economists.",
+      "author": "marx"
+    },
+    {
+      "num": 134,
+      "text": "A disciple of Ricardo, in answer to the insipidities of J. B. Say, remarks on this point: “Where division of labour is well developed, the skill of the labourer is available only in that particular branch in which it has been acquired; he himself is a sort of machine. It does not therefore help matters one jot, to repeat in parrot fashion, that things have a tendency to find their level. On looking around us we cannot but see, that they are unable to find their level for a long time; and that when they do find it, the level is always lower than at the commencement of the process.” (“An Inquiry into those Principles Respecting the Nature of Demand,” &c., Lond. 1821, p. 72.)",
+      "author": "marx"
+    },
+    {
+      "num": 135,
+      "text": "MacCulloch, amongst others, is a past master in this pretentious cretinism. “If,” he says, with the affected naïveté of a child of 8 years, “if it be advantageous, to develop the skill of the workman more and more, so that he is capable of producing, with the same or with a less quantity of labour, a constantly increasing quantity of commodities, it must also be advantageous, that he should avail himself of the help of such machinery as will assist him most effectively in the attainment of this result.” (MacCulloch: “Princ. of Pol. Econ.,” Lond. 1830, p. 166.)",
+      "author": "marx"
+    },
+    {
+      "num": 136,
+      "text": "“The inventor of the spinning machine has ruined India, a fact, however, that touches us but little.” A. Thiers: De la propriété. — M. Thiers here confounds the spinning machine with the power-loom, “a fact, however, that touches us but little.”",
+      "author": "marx"
+    },
+    {
+      "num": 137,
+      "text": "According to the census of 1861 (Vol. II., Lond., 1863), the number of people employed in coal mines in England and Wales, amounted to 246,613 of which 73,545 were under, and 173,067 were over 20 years. Of those under 20, 835 were between 5 and 10 years, 30,701 between 10 and 15 years, 42,010 between 15 and 19 years. The number employed in iron, copper, lead, tin, and other mines of every description, was 319, 222.",
+      "author": "marx"
+    },
+    {
+      "num": 138,
+      "text": "In England and Wales, in 1861, there were employed in making machinery, 60,807 persons, including the masters and their clerks, &c., also all agents and business people connected with this industry, but excluding the makers of small machines, such as sewing-machines, &c., as also the makers of the operative parts of machines, such as spindles. The total number of civil engineers amounted to 3,329.",
+      "author": "marx"
+    },
+    {
+      "num": 139,
+      "text": "Since iron is one of the most important raw materials; let me here state that, in 1861, there were in England and Wales 125,771 operative iron founders, of whom 123,430 were males, 2,341 females. Of the former 30,810 were under, and 92,620 over 20 years.",
+      "author": "marx"
+    },
+    {
+      "num": 140,
+      "text": "“A family of four grown-up persons, with two children as winders, earned at the end of the last, and the beginning of the present century, by ten hours’ daily labour, £4 a week. If the work was very pressing, they could earn more.... Before that, they had always suffered from a deficient supply of yarn.” (Gaskell, l.c., pp. 25-27.)",
+      "author": "marx"
+    },
+    {
+      "num": 141,
+      "text": "F. Engels, in “Lage, &c.,” points out the miserable condition of a large number of those who work on these very articles of luxury. See also numerous instances in the “Reports of the Children’s Employment Commission.”",
+      "author": "engels"
+    },
+    {
+      "num": 142,
+      "text": "In 1861, in England and Wales, there were 94,665 sailors in the merchant service.",
+      "author": "marx"
+    },
+    {
+      "num": 143,
+      "text": "Of these only 177,596 are males above 13 years of age.",
+      "author": "marx"
+    },
+    {
+      "num": 144,
+      "text": "Of these, 30,501 are females.",
+      "author": "marx"
+    },
+    {
+      "num": 145,
+      "text": "Of these, 137,447 males. None are included in the 1,208,648 who do not serve in private houses. Between 1861 and 1870 the number of male servants nearly doubled itself. It increased to 267,671. In the year 1847 there were 2,694 gamekeepers (for the landlords’ preserves), in 1869 there were 4,921. The young servant girls in the houses of the London lower middle class are in common parlance called “slaveys.”",
+      "author": "marx"
+    },
+    {
+      "num": 146,
+      "text": "Ganilh, on the contrary, considers the final result of the factory system to be an absolutely less number of operatives, at whose expense an increased number of “gens honnêtes” live and develop their well-known “perfectibilité perfectible.” Little as he understands the movement of production, at least he feels, that machinery must needs be a very fatal institution, if its introduction converts busy workmen into paupers, and its development calls more slaves of labour into existence than it has suppressed. It is not possible to bring out the cretinism of his standpoint, except by his own words: “Les classes condamnées à produire et à consommer diminuent, et les classes qui dirigent le travail, qui soulagent, consolent, et éclairent toute la population, se multiplient ... et s’approprient tous les bienfaits qui résultent de la diminution des frais du travail, de l’abondance des productions, et du bon marché des consommations. Dans cette direction, l’espéce humaine s’élève aux plus hautes conceptions du génie, pénètre dans les profoundeurs mystérieuses de la religion, établit les principes salutaires de la morale (which consists in ‘s’approprier tous les beinfaits,’ &c.), les lois tutélaires de la liberté (liberty of ‘les classes condamnées à produire?’) et du pouvoir, de l’obéissance et de la justice, du devoir et de la l’humanité.” [The classes condemned to produce and to consume diminish, and the classes which direct labour, which relieve, console and enlighten the whole population, multiply ... and appropriate all the benefits which result from the diminution of the costs of labour, from the abundance of products and the cheapness of consumer goods. In this way, the human species rises to the highest creations of genius, penetrates the mysterious depths of religion, and establishes the salutory principles of morality, the laws for the protection of liberty, and power, of obedience and justice, of obligation and humanity] For this twaddle, see “Des Systèmes d’Economie Politique, &c., Par M. Ch. Ganilh,” 2ème ed., Paris, 1821, t. I, p. 224, and see p. 212.",
+      "author": "marx"
+    },
+    {
+      "num": 147,
+      "text": "“Reports of Insp. of Fact., 31 Oct., 1865,” p. 58, sq. At the same time, however, means of employment for an increased number of hands was ready in 110 new mills with 11,625 looms, 628,576 spindles and 2,695 total horse-power of steam and water (l.c.).",
+      "author": "marx"
+    },
+    {
+      "num": 148,
+      "text": "“Reports, &c., for 31 Oct., 1862,” p. 79. At the end of 1871, Mr. A. Redgrave, the factory inspector, in a lecture given at Bradford, in the New Mechanics’ Institution, said: “What has struck me for some time past is the altered appearance of the woollen factories. Formerly they were filled with women and children, now machinery seems to do all the work. At my asking for an explanation of this from a manufacturer, he gave me the following: ‘Under the old system I employed 63 persons; after the introduction of improved machinery I reduced my hands to 33, and lately, in consequence of new and extensive alterations, I have been in a position to reduce those 33 to 13’.”",
+      "author": "marx"
+    },
+    {
+      "num": 149,
+      "text": "See “Reports, &c., 31 Oct., 1856,” p. 16.",
+      "author": "marx"
+    },
+    {
+      "num": 150,
+      "text": "“The sufferings of the hand-loom weavers were the subject of an inquiry by a Royal Commission, but although their distress was acknowledged and lamented, the amelioration of their condition was left, and probably necessarily so, to the chances and changes of time, which it may now be hoped” [20 years later!] “have nearly obliterated those miseries, and not improbably by the present great extention of the power-loom.” (“Rep. Insp. of Fact., 31 Oct., 1856,” p. 15.)",
+      "author": "marx"
+    },
+    {
+      "num": 151,
+      "text": "Other ways in which machinery affects the production of raw material will be mentioned in the third book.",
+      "author": "marx"
+    },
+    {
+      "num": 152,
+      "text": "EXPORT OF COTTON FROM INDIA TO GREAT BRITAIN.\r 1846. —34,540,143 lbs.\r 1860. — 204,141,168 lbs.\r 1865. — 445,947,600 lbs.\r EXPORT OF WOOL FROM INDIA TO GREAT BRITAIN.\r 1846. — 4,570,581 lbs.\r 1860. — 20,214,173 lbs.\r 1865. — 20,679,111 lbs.",
+      "author": "marx"
+    },
+    {
+      "num": 153,
+      "text": "EXPORT OF WOOL FROM THE CAPE TO GREAT BRITAIN.\r 1846. — 2,958,457 lbs.\r 1860. — 16,574,345 lbs.\r 1865. — 29,920,623 lbs.\r EXPORT OF WOOL FROM AUSTRALIA TO GREAT BRITAIN.\r 1846. — 21,789,346 lbs.\r 1860. — 59,166,616 lbs.\r 1865. — 109,734,261 lbs.",
+      "author": "marx"
+    },
+    {
+      "num": 154,
+      "text": "The economic development of the United States is itself a product of European, more especially of English modern industry. In their present form (1866) the States must still be considered a European colony. [Added in the 4th German edition. — “Since then they have developed into country whose industry holds second place in the world, without on that account entirely losing their colonial character.” — F. E.] \r \r EXPORT OF COTTON FROM THE UNITED STATES TO GREAT BRITAIN\r 1846401,949,393 lbs.\r 1852765,630,543 lbs.\r 1859961,707,264 lbs.\r 18601,115,890,608 lbs.\r \r \r EXPORT OF CORN, &c., FROM THE UNITED STATES TO GREAT BRITAIN\r 18501862\r Wheat, cwts16,202,31241,033,503\r Barley, cwts3,669,6536,624,800 \r Oats, cwts3,174,8014,496,994 \r Rye, cwts388,7497,108 \r Flour, cwts3,819,4407,207,113 \r Buckwheat, cwts1,05419,571 \r Maize, cwts5,473,16111,694,818 \r Bere or Bigg (a sort of Barley), cwts2,0397,675 \r Peas, cwts811,6201,024,722 \r Beans, cwts1,822,9722,037,137 \r Total exports — 74,083,441",
+      "author": "engels"
+    },
+    {
+      "num": 156,
+      "text": "In an appeal made in July, 1866, to the Trade Societies of England, by the shoemakers of Leicester, who had been thrown on the streets by a lock-out, it is stated: “Twenty years ago the Leicester shoe trade was revolutionised by the introduction of riveting in the place of stitching. At that time good wages could be earned. Great competition was shown between the different firms as to which could turn out the neatest article. Shortly afterwards, however a worse kind of competition sprang up, namely, that of underselling one another in the market. The injurious consequences soon manifested themselves in reductions of wages, and so sweepingly quick was the fall in the price of labour, that many firms now pay only one half of the original wages. And yet, though wages sink lower and lower, profits appear, with each alteration in the scale of wages, to increase.” Even bad times are utilised by the manufacturers, for making exceptional profits by excessive lowering of wages, i.e., by a direct robbery of the labourer’s means of subsistence. One example (it has reference to the crisis in the Coventry silk weaving): “From information I have received from manufacturers as well as workmen, there seems to be no doubt that wages have been reduced to a greater extent than either the competition of the foreign producers, or other circumstances have rendered necessary ... the majority of weavers are working at a reduction of 30 to 40 per cent. in their wages. A piece of ribbon for making which the weaver got 6s. or 7s. five years back, now only brings them 3s. 3d. or 3s. 6d.; other work is now priced at 2s. and 2s. 3d. which was formerly priced at 4s. and 4s. 3d. The reduction in wage seems to have been carried to a greater extent than is necessary for increasing demand. Indeed, the reduction in the cost of weaving, in the case of many descriptions of ribbons, has not been accompanied by any corresponding reduction in the selling price of the manufactured article.” (Mr. F. D. Longe’s Report. “Ch. Emp. Com., V. Rep., 1866,” p. 114, 1.)",
+      "author": "marx"
+    },
+    {
+      "num": 157,
+      "text": "Conf “Reports of Insp. of Fact., 31st October, 1862,” p. 30.",
+      "author": "marx"
+    },
+    {
+      "num": 158,
+      "text": "l.c., p. 19.",
+      "author": "marx"
+    },
+    {
+      "num": 159,
+      "text": "“Rep. Insp. of Fact., 31st October, 1863,” pp. 41-45.",
+      "author": "marx"
+    },
+    {
+      "num": 160,
+      "text": "l.c., pp. 41-42",
+      "author": "marx"
+    },
+    {
+      "num": 161,
+      "text": "l.c., p. 57.",
+      "author": "marx"
+    },
+    {
+      "num": 162,
+      "text": "l.c., pp. 50-51.",
+      "author": "marx"
+    },
+    {
+      "num": 163,
+      "text": "l.c., pp. 62-63.",
+      "author": "marx"
+    },
+    {
+      "num": 164,
+      "text": "“Rep. &c., 30th April, 1864,” p. 27.",
+      "author": "marx"
+    },
+    {
+      "num": 165,
+      "text": "From a letter of Mr. Harris, Chief Constable of Bolton, in “Rep. of Insp. of Fact., 31st October, 1865,” pp. 61-62.",
+      "author": "marx"
+    },
+    {
+      "num": 166,
+      "text": "In an appeal, dated 1863, of the factory operatives of Lancashire, &c., for the purpose of forming a society for organised emigration, we find the following: “That a large emigration of factory workers is now absolutely essential to raise them from their present prostrate condition, few will deny; but to show that a continuous stream of emigration is at all times demanded, and, without which it is impossible for than to maintain their position in ordinary times, we beg to call attention to the subjoined facts: — In 1814 the official value of cotton goods exported was £17,665,378, whilst the real marketable value was £20,070,824. In 1858 the official value of cotton goods exported, was £182,221,681; but the real or marketable value was only £43,001,322, being a ten-fold quantity sold for little more than double the former price. To produce results so disadvantageous to the country generally, and to the factory workers in particular, several causes have cooperated, which, had circumstances permitted, we should have brought more prominently under your notice; suffice it for the present to say that the most obvious one is the constant redundancy of labour, without which a trade so ruinous in its effects never could have been carried on, and which requires a constantly extending market to save it from annihilation. Our cotton mills may be brought to a stand by the periodical stagnations of trade, which, under present arrangements, are as inevitable as death itself; but the human mind is constantly at work, and although we believe we are under the mark in stating that six millions of persons have left these shores during the last 25 years, yet, from the natural increase of population, and the displacement of labour to cheapen production, a large percentage of the male adults in the most prosperous times find it impossible to obtain work in factories on any conditions whatever.” (“Reports of Insp. of Fact., 30th April 1863,” pp. 51-52.) We shall, in a later chapter, see how our friends, the manufacturers, endeavoured, during the catastrophe in the cotton trade, to prevent by every means, including State interference, the emigration of the operatives.",
+      "author": "marx"
+    },
+    {
+      "num": 167,
+      "text": "“Ch. Empt. Comm. III. Report, 1864,” p. 108, n. 447.",
+      "author": "marx"
+    },
+    {
+      "num": 168,
+      "text": "In the United States the restoration, in this way, of handicrafts based on machinery is frequent; and therefore, when the inevitable transition to the factory system shall take place, the ensuing concentration will, compared with Europe and even with England, stride on in seven-league boots.",
+      "author": "marx"
+    },
+    {
+      "num": 169,
+      "text": "See “Rep. of Insp. of Fact., 31st Oct., 1865,” p. 64.",
+      "author": "marx"
+    },
+    {
+      "num": 170,
+      "text": "Mr. Gillott erected in Birmingham the first steel-pen factory on a large scale. It produced, so early as 1851, over 180,000,000 of pens yearly, and consumed 120 tons of steel. Birmingham has the monopoly of this industry in the United Kingdom, and at present produces thousands of millions of steel-pens. According to the Census of 1861, the number of persons employed was 1,428, of whom 1,268 females from 5 years of age upwards.",
+      "author": "marx"
+    },
+    {
+      "num": 171,
+      "text": "“Ch. Empl. Comm. II. Rep. 1864,” p. LXVIII., n. 415.",
+      "author": "marx"
+    },
+    {
+      "num": 172,
+      "text": "And now forsooth children are employed at file-cutting in Sheffield.",
+      "author": "marx"
+    },
+    {
+      "num": 173,
+      "text": "“Ch. Empl. Comm., V. Rep. 1866,” p. 3, n. 24; p. 6, n. 55, 56; p. 7, n. 59, 60.",
+      "author": "marx"
+    },
+    {
+      "num": 174,
+      "text": "l.c., pp. 114, 115, n. 6, 7. The commissioner justly remarks that though as a rule machines take the place of men, here literally young persons replace machines.",
+      "author": "marx"
+    },
+    {
+      "num": 175,
+      "text": "See the Report on the rag trade, and numerous details in “Public Health, VIII. Rep.” Lond. 1866, app., pp. 196, 208.",
+      "author": "marx"
+    },
+    {
+      "num": 176,
+      "text": "“Ch. Empl. Comm. V. Rep., 1866,” pp. xvi-xviii, n. 86-97, and pp. 130-133, n. 39-71. See also III. Rep., 1864, pp. 48, 56.",
+      "author": "marx"
+    },
+    {
+      "num": 177,
+      "text": "“Public Health. Sixth Rep.,” Lond. 1864, pp. 29, 31.",
+      "author": "marx"
+    },
+    {
+      "num": 178,
+      "text": "l.c., p. 30. Dr. Simon remarks that the mortality among the London tailors and printers between the ages of 25 and 35 is in fact much greater, because the employers in London obtain from the country a great number of young people up to 30 years of age, as “apprentices” and “improvers,” who come for the purpose of being perfected in their trade. These figure in the census as Londoners, they swell out the number of heads on which the London death-rate is calculated, without adding proportionally to the number of deaths in that place. The greater part of them in fact return to the country, and especially in cases of severe illness. (l.c.)",
+      "author": "marx"
+    },
+    {
+      "num": 179,
+      "text": "I allude here to hammered nails, as distinguished from nails cut out and made by machinery. See “Child. Empl. Comm., Third Rep.,” pp. xi., xix., n. 125-130, p. 52, n. 11, p. 114, n. 487, p. 137, n. 674.",
+      "author": "marx"
+    },
+    {
+      "num": 180,
+      "text": "“Ch. Empl. Comm., II. Rep.,” p. xxii, n. 166.",
+      "author": "marx"
+    },
+    {
+      "num": 181,
+      "text": "“Ch. Empl. Comm., II. Rep., 1864,” pp. xix., xx., xxi.",
+      "author": "marx"
+    },
+    {
+      "num": 182,
+      "text": "l.c., pp. xxi.. xxii.",
+      "author": "marx"
+    },
+    {
+      "num": 183,
+      "text": "l.c., pp. xxix., xxx.",
+      "author": "marx"
+    },
+    {
+      "num": 184,
+      "text": "l.c., pp. xi., xii.",
+      "author": "marx"
+    },
+    {
+      "num": 185,
+      "text": "“Child. Empl. Comm., I. Rep. 1863,” p. 185.",
+      "author": "marx"
+    },
+    {
+      "num": 186,
+      "text": "In England millinery and dressmaking are for the most part carried on, on the premises of the employer, partly by workwomen who live there, partly by women who live off the premises.",
+      "author": "marx"
+    },
+    {
+      "num": 187,
+      "text": "Mr. White, a commissioner, visited a military clothing manufactory that employed 1,000 to 1,200 persons, almost all females, and a shoe manufactory with 1,300 persons; of these nearly one half were children and young persons.",
+      "author": "marx"
+    },
+    {
+      "num": 188,
+      "text": "An instance. The weekly report of deaths by the Registrar-General dated 26th Feb., 1864, contains 5 cases of death from starvation. On the same day The Times reports another case. Six victims of starvation in one week!",
+      "author": "marx"
+    },
+    {
+      "num": 189,
+      "text": "“Child. Empl. Comm., Second Rep., 1864,” p. lxvii., n. 406-9, p. 84, n. 124, p. lxxiii, n. 441, p. 68, n. 6, p. 84, n. 126, p. 78, n. 85, p. 76, n. 69, p. lxxii, n. 483.",
+      "author": "marx"
+    },
+    {
+      "num": 190,
+      "text": "“The rental of premises required for workrooms seems the element which ultimately determines the point; and consequently it is in the metropolis, that the old system of giving work out to small employers and families has been longest retained, and earliest returned to.” (l.c., p. 83, n. 123.) The concluding statement in this quotation refers exclusively to shoemaking.",
+      "author": "marx"
+    },
+    {
+      "num": 191,
+      "text": "In glove-making and other industries where the condition of the work-people is hardly distinguishable from that of paupers, this does not occur.",
+      "author": "marx"
+    },
+    {
+      "num": 192,
+      "text": "l.c., p. 83, n. 122.",
+      "author": "marx"
+    },
+    {
+      "num": 193,
+      "text": "In the wholesale boot and shoe trade of Leicester alone, there were in 1864, 800 sewing-machines already in use.",
+      "author": "marx"
+    },
+    {
+      "num": 194,
+      "text": "l.c., p. 84, n. 124.",
+      "author": "marx"
+    },
+    {
+      "num": 195,
+      "text": "Instances: The Army Clothing Depot at Pimlico, London, the Shirt factory of Tillie and Henderson at Londonderry, and the clothes factory of Messrs. Tait at Limerick which employs about 1,200 hands.",
+      "author": "marx"
+    },
+    {
+      "num": 196,
+      "text": "“Tendency to Factory System” (l.c., p. lxvii). “The whole employment is at this time in a state of transition, and is undergoing the same Change as that effected in the lace trade, weaving, &c.” (l.c., n. 405.) “A complete revolution” (l.c., p. xlvi., n. 318). At the date of the Child. Empl. Comm. of 1840 stocking making was still done by manual labour. Since 1846 various sorts of machines have been introduced, which are now driven by steam. The total number of persons of both sexes and of all ages from 3 years upwards, employed in stocking making in England, was in 1862 about 129,000. Of these only 4,063 were, according to the Parliamentary Return of the 11th February, 1862, working under the Factory Acts.",
+      "author": "marx"
+    },
+    {
+      "num": 197,
+      "text": "Thus, e.g., in the earthenware trade, Messrs. Cochrane, of the Britain Pottery, Glasgow, report: “To keep up our quantity we have gone extensively into machines wrought by unskilled labour, and every day convinces us that we can produce a greater quantity than by the old method.” (“Rep. of Insp. of Fact., 31st Oct., 1865,” p. 13.) “The effect of the Fact. Acts is to force on the further introduction of machinery” (l.c., pp. 13-14).",
+      "author": "marx"
+    },
+    {
+      "num": 198,
+      "text": "Thus, after the extension of the Factory Act to the potteries, great increase of powerjiggers in place of hand-moved jiggers.",
+      "author": "marx"
+    },
+    {
+      "num": 199,
+      "text": "“Report of lnsp. of Fact., 31st Oct., 1865,” pp. 96 and 127.",
+      "author": "marx"
+    },
+    {
+      "num": 200,
+      "text": "The introduction of this and other machinery into match-making caused in one department alone 230 young persons to be replaced by 32 boys and girls of 14 to 17 years of age. This saving in labour was carried still further in 1865, by the employment of steam power.",
+      "author": "marx"
+    },
+    {
+      "num": 201,
+      "text": "“Ch. Empl. Comm., 11. Rep., 1864,” p. ix., n. 50.",
+      "author": "marx"
+    },
+    {
+      "num": 202,
+      "text": "“Rep. of Insp. of Fact., 31st Oct., 1865,” p..22.",
+      "author": "marx"
+    },
+    {
+      "num": 203,
+      "text": "“But it must be borne in mind that those improvements, though carried out fully in some establishments, are by no means general, and are not capable of being brought into use in many of the old manufactories without an expenditure of capital beyond the means of many of the present occupiers.” “I cannot but rejoice,” writes Sub-Insp. May, “that notwithstanding the temporary disorganisation which inevitably follows the introduction of such a measure (as the Factory Act Extension Act), and is, indeed, directly indicative of the evils which it was intended to remedy, &c.” (Rep. of Insp. of Fact., 31st Oct., 1865.)",
+      "author": "marx"
+    },
+    {
+      "num": 204,
+      "text": "With blast furnaces, for instance, “work towards the end of the week being generally much increased in duration in consequence of the habit of the men of idling on Monday and occasionally during a part or the whole of Tuesday also.” (“Child. Empl. Comm., III. Rep.,” p. vi.) “The little masters generally have very irregular hours. They lose two or three days, and then work all night to make it up.... They always employ their own children, if they have any.” (l.c., p. vii.) “The want of regularity in coming to work, encouraged by the possibility and practice of making up for this by working longer hours.” (l.c., p. xviii.) “In Birmingham ... an enormous amount of time is lost ... idling part of the time, slaving the rest.” (l.c., p. xi.)",
+      "author": "marx"
+    },
+    {
+      "num": 205,
+      "text": "“Child. Empl. Comm., IV., Rep.,” p. xxxii., “The extension of the railway system is said to have contributed greatly to this custom of giving sudden orders, and the consequent hurry, neglect of meal-times, and late hours of the workpeople.” (l.c., p. xxxi.)",
+      "author": "marx"
+    },
+    {
+      "num": 206,
+      "text": "“Ch. Empl. Comm, IV. Rep.,” pp. xxxv., n. 235, 237.",
+      "author": "marx"
+    },
+    {
+      "num": 207,
+      "text": "“Ch. Empl. Comm. IV. Rep.,” p. 127, n. 56.",
+      "author": "marx"
+    },
+    {
+      "num": 208,
+      "text": "“With respect to the loss of trade by non-completion of shipping orders in time, I remember that this was the pet argument of the factory masters in 1832 and 1833. Nothing that can be advanced now on this subject, could have the force that it had then, before steam had halved all distances and established new regulations for transit. It quite failed at that time of proof when put to the test, and again it will certainly fail should it have to be tried.” (“Reports of Insp. of Fact., 31 Oct., 1862,” pp. 54, 55.)",
+      "author": "marx"
+    },
+    {
+      "num": 209,
+      "text": "“Ch. Empl. Comm. V. Rep.,” p. 171, n. 34.",
+      "author": "marx"
+    },
+    {
+      "num": 210,
+      "text": "The evidence of some Bradford export-houses is as follows: “Under these circumstances, it seems clear that no boys need be worked longer than from 8 a.m. to 7 or 7.30 p.m., in making up. It is merely a question of extra hands and extra outlay. If some masters were not so greedy, the boys would not work late; an extra machine costs only £16 or £18; much of such over-time as does occur is to be referred to an insufficiency of appliances, and a want of space.” “Ch. Empl, Comm. V. Rep.,” p. 171, n. 35, 36, 38.",
+      "author": "marx"
+    },
+    {
+      "num": 211,
+      "text": "l.c. A London manufacturer, who in other respects looks upon the compulsory regulation of the hours of labour as a protection for the workpeople against the manufacturers, and for the manufacturers themselves against the wholesale trade, states: “The pressure in our business is caused by the shippers, who want, e.g., to send the goods by sailing vessel so as to reach their destination at a given season, and at the same time want to pocket the difference in freight between a sailing vessel and a steamship, or who select the earlier of two steamships in order to be in the foreign market before their competitors.”",
+      "author": "marx"
+    },
+    {
+      "num": 212,
+      "text": "“This could be obviated,” says a manufacturer, “at the expense of an enlargement of the works under the pressure of a General Act of Parliament.” l.c., p. x., n. 38.",
+      "author": "marx"
+    },
+    {
+      "num": 213,
+      "text": "l.c., p. xv., n. 72. sqq.",
+      "author": "marx"
+    },
+    {
+      "num": 214,
+      "text": "“Rep. Insp. Fact., 31st October, 1865,” p. 127.",
+      "author": "marx"
+    },
+    {
+      "num": 215,
+      "text": "It has been found out by experiment, that with each respiration of average intensity made by a healthy average individual, about 25 cubic inches of air are consumed, and that about 20 respirations are made in each minute. Hence the air inhaled in 24 hours by each individual is about 720,000 cubic inches, or 416 cubic feet. It is clear, however, that air which has been once breathed, can no longer serve for the same process until it has been purified in the great workshop of Nature. According to the experiments of Valentin and Brunner, it appears that a healthy man gives off about 1,300 cubic inches of carbonic acid per hour; this would give about 8 ounces of solid carbon thrown off from the lungs in 24 hours. “Every man should have at least 800 cubic feet.” (Huxley.)",
+      "author": "marx"
+    },
+    {
+      "num": 216,
+      "text": "According to the English Factory Act, parents cannot send their children under 14 years of age into Factories under the control of the Act, unless at the same time they allow them to receive elementary education. The manufacturer is responsible for compliance with the Act. “Factory education is compulsory, and it is a condition of labour.” (“Rep. Insp. Fact., 31st Oct., 1865,” p. 111.)",
+      "author": "marx"
+    },
+    {
+      "num": 217,
+      "text": "On the very advantageous results of combining gymnastics (and drilling in the case of boys) with compulsory education for factory children and pauper scholars, see the speech of N. W. Senior at the seventh annual congress of “The National Association for the Promotion of Social Science,” in “Report of Proceedings, &c.,” Lond. 1863, pp. 63, 64, also the “Rep. Insp. Fact., 31st Oct., 1865,” pp. 118, 119, 120, 126, sqq.",
+      "author": "marx"
+    },
+    {
+      "num": 218,
+      "text": "“Rep. Insp. Fact., 31st Oct., 1865,” p. 118. A silk manufacturer naively states to the Children’s Employment Commissioners: “I am quite sure that the true secret of producing efficient workpeople is to be found in uniting education and labour from a period of childhood. Of course the occupation must not be too severe, nor irksome, or unhealthy. But of the advantage of the union I have no doubt. I wish my own children could have some work as well as play to give variety to their schooling.” (“Ch. Empl. Comm. V. Rep.,” p. 82, n. 36.)",
+      "author": "marx"
+    },
+    {
+      "num": 219,
+      "text": "Senior, l.c., p. 66. How modern industry, when it has attained to a certain pitch, is capable, by the revolution it effects in the mode of production and in the social conditions of production, of also revolutionising people’s minds, is strikingly shown by a comparison of Senior’s speech in 1863, with his philippic against the Factory Act of 1833; or by a comparison, of the views of the congress above referred to, with the fact that in certain country districts of England poor parents are forbidden, on pain of death by starvation, to educate their children. Thus, e.g., Mr. Snell reports it to be a common occurrence in Somersetshire that, when a poor person claims parish relief, he is compelled to take his children from school. Mr. Wollarton, the clergyman at Feltham, also tells of cases where all relief was denied to certain families “because they were sending their children to school!”",
+      "author": "marx"
+    },
+    {
+      "num": 220,
+      "text": "Wherever handicraft-machines, driven by men, compete directly or indirectly with more developed machines driven by mechanical power, a great change takes place with regard to the labourer who drives the machine. At first the steam-engine replaces this labourer, afterwards he must replace the steam-engine. Consequently the tension and the amount of labour-power expended become monstrous, and especially so in the case of the children who are condemned to this torture. Thus Mr. Longe; one of the commissioners, found in Coventry and the neighbourhood boys of from 10 to 15 years employed in driving the ribbon-looms, not to mention younger children who had to drive smaller machines. “It is extraordinarily fatiguing work. The boy is a mere substitute for steam power.” (“Ch. Empl. Comm. V, Rep. 1866;” p. 114, n. 6.) As to the fatal consequences of “this system of slavery,” as the official report styles it, see l.c., p. 114 sqq.",
+      "author": "marx"
+    },
+    {
+      "num": 221,
+      "text": "l.c., p. 3, n. 24.",
+      "author": "marx"
+    },
+    {
+      "num": 222,
+      "text": "l.c., P. 7, n. 60.",
+      "author": "marx"
+    },
+    {
+      "num": 223,
+      "text": "“In some parts of the Highlands of Scotland, not many years ago, every peasant, according to the Statistical Account, made his own shoes of leather tanned by himself. Many a shepherd and cottar too, with his wife and children, appeared at Church in clothes which had been touched by no hands but their own, since they were shorn from the sheep and sown in the flaxfield. In the preparation of these. it is added, scarcely a single article had been purchased, except the awl, needle, thimble, and a very few parts of the iron-work employed in the weaving. The dyes, toci, were chiefly extracted by the women from trees, shrubs and herbs.” (Dugald Stewart’s “Works,” Hamilton’s Ed., Vol. viii., pp. 327-328.)",
+      "author": "marx"
+    },
+    {
+      "num": 224,
+      "text": "In the celebrated “Livre des métiers” of Etienne Boileau, we find it prescribed that a journeyman on being admitted among the masters had to swear “to love his brethren with brotherly love, to support them in their respective trades, not wilfully to betray the secrets of the trade, and besides, in the interests of all, not to recommend his own wares by calling the attention of the buyer to defects in the articles made by others.”",
+      "author": "marx"
+    },
+    {
+      "num": 225,
+      "text": "“The bourgeoisie cannot exist without continually revolutionising the instruments of production, and thereby the relations of production and all the social relations. Conservation, in an unaltered form, of the old modes of production was on the contrary the first condition of existence for all earlier industrial classes. Constant revolution in production, uninterrupted disturbance of all social conditions, everlasting uncertainty and agitation, distinguish the bourgeois epoch from all earlier ones. All fixed, fast-frozen relations, with their train of ancient and venerable prejudices and opinions, are swept away, all new formed ones become antiquated before they can ossify. All that is solid melts into air, all that is holy is profaned, and man is at last compelled to face with sober senses his real conditions of life, and his relations with his kind.” (F. Engels und Karl Marx: “Manifest der Kommunistischen Partei.” Lond. 1848, p. 5.)",
+      "author": "engels"
+    },
+    {
+      "num": 226,
+      "text": "“You take my life When you do take the means whereby I live.” Shakespeare.",
+      "author": "marx"
+    },
+    {
+      "num": 227,
+      "text": "A French workman, on his return from San-Francisco, writes as follows: “I never could have believed, that I was capable of working at the various occupations I was employed on in California. I was firmly convinced that I was fit for nothing but letter-press printing.... Once in the midst of this world of adventurers, who change their occupation as often as they do their shirt, egad, I did as the others. As mining did not turn out remunerative enough, I left it for the town, where in succession I became typographer, slater, plumber, &c. In consequence of thus finding out that I am fit to any sort of work, I feel less of a mollusk and more of a man.” (A. Corbon, “De l’enseignement professionnel,” 2ème ed., p. 50.)",
+      "author": "marx"
+    },
+    {
+      "num": 228,
+      "text": "John Bellers, a very phenomenon in the history of Political Economy, saw most clearly at the end of the 17th century, the necessity for abolishing the present system of education and division of labour, which beget hypertrophy and atrophy at the two opposite extremities of society. Amongst other things he says this: “An idle learning being little better than the learning of idleness.... Bodily labour, it’s a primitive institution of God.... Labour being as proper for the bodies’ health as eating is for its living; for what pains a man saves by ease, he will find in disease.... Labour adds oil to the lamp of life, when thinking inflames it.... A childish silly employ” (a warning this, by presentiment, against the Basedows and their modern imitators) “leaves the children’s minds silly,” (“Proposals for Raising a Colledge of Industry of all Useful Trades and Husbandry.” Lond., 1696, pp. 12, 14, 18.)",
+      "author": "marx"
+    },
+    {
+      "num": 229,
+      "text": "This sort of labour goes on mostly in small workshops, as we have seen in the lacemaking and straw-plaiting trades, and as could be shown more in detail from the metal trades of Sheffield, Birmingham, &c.",
+      "author": "marx"
+    },
+    {
+      "num": 230,
+      "text": "“Ch. Empl. Comm., V. Rep.,” p. xxv., n. 162, and II. Rep., p. xxxviii., n, 285, 289, p. xxv., xxvi., n. 191.",
+      "author": "marx"
+    },
+    {
+      "num": 231,
+      "text": "“Factory labour may be as pure and as excellent as domestic labour, and perhaps more so.” (“Rep. Insp. of Fact., 31st October, 1865,” p. 129.)",
+      "author": "marx"
+    },
+    {
+      "num": 232,
+      "text": "“Rep. Insp. of Fact., 31st October, 1865,” pp. 27-32.",
+      "author": "marx"
+    },
+    {
+      "num": 233,
+      "text": "Numerous instances will be found in “Rep. of Insp. of Fact.”",
+      "author": "marx"
+    },
+    {
+      "num": 234,
+      "text": "“Ch. Empl. Comm., V. Rep.,” p. x., n. 35.",
+      "author": "marx"
+    },
+    {
+      "num": 235,
+      "text": "“Ch. Empl. Comm., V. Rep.,” p. ix., n. 28.",
+      "author": "marx"
+    },
+    {
+      "num": 236,
+      "text": "l.c., p. xxv., n. 165-167. As to the advantages of large scale, compared with small scale, industries, see “Ch. Empl. Comm., III. Rep.,” p. 13, n. 144, p. 25, n. 121, p. 26, n. 125, p. 27, n. 140, &c.",
+      "author": "marx"
+    },
+    {
+      "num": 237,
+      "text": "The trades proposed to be brought under the Act were the following: Lace-making, stocking-weaving, straw-plaiting, the manufacture of wearing apparel with its numerous sub-divisions, artificial flower-making, shoemaking, hat-making, glove-making, tailoring, all metal works, from blast furnaces down to needleworks, &c., paper-mills, glassworks, tobacco factories, India-rubber works, braid-making (for weaving), hand-carpetmaking, umbrella and parasol making, the manufacture of spindles and spools, letterpress printing, book-binding, manufacture of stationery (including paper bags, cards, coloured paper, &c.), rope-making, manufacture of jet ornaments, brick-making, silk manufacture by hand, Coventry weaving, salt works, tallow chandlers, cement works, sugar refineries, biscuit-making, various industries connected with timber, and other mixed trades.",
+      "author": "marx"
+    },
+    {
+      "num": 238,
+      "text": "l.c., p. xxv., n. 169.",
+      "author": "marx"
+    },
+    {
+      "num": 239,
+      "text": "Here (from “The Tory Cabinet...... to “Nassau W. Senior\") the English text has been altered in conformity with the 4th German edition. — Ed.",
+      "author": "marx"
+    },
+    {
+      "num": 240,
+      "text": "The Factory Acts Extension Act was passed on August 12, 1867. It regulates all foundries, smithies, and metal manufactories, including machine shops; furthermore glass-works, paper mills, gutta-percha and India-rubber works, tobacco manufactories, letter-press printing and book-binding works, and, lastly, all workshops in which more than 50 persons are employed. The Hours of Labour Regulation Act, passed on August 17, 1867, regulates the smaller workshops and the so-called domestic industries.",
+      "author": "marx"
+    },
+    {
+      "num": 241,
+      "text": "Senior, “Social Science Congress,” pp. 55-58.",
+      "author": "marx"
+    },
+    {
+      "num": 242,
+      "text": "The “personnel” of this staff consisted of 2 inspectors, 2 assistant inspectors and 41 sub-inspectors. Eight additional sub-inspectors were appointed in 1871. The total cost of administering the Acts in England, Scotland, and Ireland amounted for the year 1871-72 to no more than £25,347, inclusive of the law expenses incurred by prosecutions of offending masters.",
+      "author": "marx"
+    },
+    {
+      "num": 243,
+      "text": "Robert Owen, the father of Co-operative Factories and Stores, but who, as before remarked, in no way shared the illusions of his followers with regard to the bearing of these isolated elements of transformation, not only practically made the factory system the sole foundation of his experiments, but also declared that system to be theoretically the starting-point of the social revolution. Herr Vissering, Professor of Political Economy in the University of Leyden, appears to have a suspicion of this when, in his “Handboek van Practische Staatshuishoudkunde, 1860-62,” which reproduces all the platitudes of vulgar economy, he strongly supports handicrafts against the factory system.",
+      "author": "marx"
+    },
+    {
+      "num": 244,
+      "text": "“You divide the people into two hostile camps of clownish boors and emasculated dwarfs. Good heavens! a nation divided into agricultural and commercial interests, calling itself sane; nay, styling itself enlightened and civilised, not only in spite of, but in consequence of this monstrous and unnatural division.” (David Urquhart, l.c., p. 119.) This passage shows, at one and the same time, the strength and the weakness of that kind of criticism which knows how to judge and condemn the present, but not how to comprehend it.",
+      "author": "marx"
+    },
+    {
+      "num": 245,
+      "text": "See Liebig: “Die Chemie in ihrer Anwendung auf Agricultur und Physiologie,” 7. Auflage, 1862, and especially the “Einleitung in die Naturgesetze des Feldbaus,” in the 1st Volume. To have developed from the point of view of natural science, the negative, i.e., destructive side of modern agriculture, is one of Liebig’s immortal merits. His summary, too, of the history of agriculture, although not free from gross errors, contains flashes of light. It is, however, to be regretted that he ventures on such haphazard assertions as the following: “By greater pulverising and more frequent ploughing, the circulation of air in the interior of porous soil is aided, and the surface exposed to the action of the atmosphere is increased and renewed; but it is easily seen that the increased yield of the land cannot be proportional to the labour spent on that land, but increases in a much smaller proportion. This law,” adds Liebig, “was first enunciated by John Stuart Mill in his ‘Principles of Pol. Econ.,’ Vol. 1, p. 17, as follows: ‘That the produce of land increases, caeteris paribus, in a diminishing ratio to the increase of the labourers employed’ (Mill here introduces in an erroneous form the law enunciated by Ricardo’s school, for since the ‘decrease of the labourers employed,’ kept even pace in England with the advance of agriculture, the law discovered in, and applied to, England, could have no application to that country, at all events), ‘is the universal law of agricultural industry.’ This is very remarkable, since Mill was ignorant of the reason for this law.” (Liebig, l.c., Bd. I., p. 143 and Note.) Apart from Liebig’s wrong interpretation of the word “labour,” by which word he understands something quite different from what Political Economy does, it is, in any case, “very remarkable” that he should make Mr. John Stuart Mill the first propounder of a theory which was first published by James Anderson in A. Smith’s days, and was repeated in various works down to the beginning of the 19th century; a theory which Malthus, that master in plagiarism (the whole of his population theory is a shameless plagiarism), appropriated to himself in 1815; which West developed at the same time as, and independently of, Anderson; which in the year 1817 was connected by Ricardo with the general theory of value, then made the round of the world as Ricardo’s theory, and in 1820 was vulgarised by James Mill, the father of John Stuart Mill; and which, finally, was reproduced by John Stuart Mill and others, as a dogma already quite commonplace, and known to every schoolboy. It cannot be denied that John Stuart Mill owes his, at all events, “remarkable” authority almost entirely to such quid-pro-quos.",
+      "author": "marx"
+    }
+  ]
+}
