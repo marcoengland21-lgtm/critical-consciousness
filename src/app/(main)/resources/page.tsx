@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getSessionUser } from '@/lib/supabase/server'
 import ResourcesList from '@/components/resources/ResourcesList'
 
 export const metadata = {
@@ -6,8 +6,8 @@ export const metadata = {
 }
 
 export default async function ResourcesPage() {
+  const user = await getSessionUser()
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
 
   const { data: resources } = await supabase
     .from('resources')

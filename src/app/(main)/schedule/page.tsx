@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getSessionUser } from '@/lib/supabase/server'
 import Link from 'next/link'
 import RoleBadge from '@/components/roles/RoleBadge'
 import SessionNotes from '@/components/schedule/SessionNotes'
@@ -9,8 +9,8 @@ export const metadata = {
 }
 
 export default async function SchedulePage() {
+  const user = await getSessionUser()
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
 
   const { data: weeks } = await supabase
     .from('reading_schedule')

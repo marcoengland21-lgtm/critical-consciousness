@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getSessionUser } from '@/lib/supabase/server'
 import GlossaryList from '@/components/glossary/GlossaryList'
 
 export const metadata = {
@@ -6,8 +6,8 @@ export const metadata = {
 }
 
 export default async function GlossaryPage() {
+  const user = await getSessionUser()
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
 
   const { data: entries } = await supabase
     .from('glossary_entries')

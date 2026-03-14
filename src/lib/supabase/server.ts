@@ -26,3 +26,14 @@ export async function createClient() {
     }
   )
 }
+
+/**
+ * Get the current user from session (local JWT read, no network call).
+ * Use this for read-only pages that just need to know who's logged in.
+ * For write operations, use supabase.auth.getUser() which verifies with Supabase.
+ */
+export async function getSessionUser() {
+  const supabase = await createClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  return session?.user ?? null
+}

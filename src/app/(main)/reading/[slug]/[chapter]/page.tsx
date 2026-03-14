@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { getSessionUser } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -37,9 +37,8 @@ export default async function ChapterPage({ params }: Props) {
   const { slug, chapter } = await params
   const chapterNum = parseInt(chapter)
 
-  // Cookie-based client for auth check only
-  const authClient = await createClient()
-  const { data: { user } } = await authClient.auth.getUser()
+  // Session-based auth (local JWT, no network call)
+  const user = await getSessionUser()
 
   // Admin client for data fetching (bypasses RLS)
   // TODO: RE-ENABLE AUTH — switch to cookie-based client once RLS policies are set

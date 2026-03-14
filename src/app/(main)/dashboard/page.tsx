@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getSessionUser } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import ThreadTypeBadge from '@/components/threads/ThreadTypeBadge'
 import TimeAgo from '@/components/ui/TimeAgo'
@@ -13,9 +13,9 @@ import type { ThreadType, WeeklyRoleType } from '@/types/database'
 const DEFAULT_GROUP_ID = '00000000-0000-0000-0000-000000000001'
 
 export default async function DashboardPage() {
+  const user = await getSessionUser()
   const supabase = await createClient()
   const adminSupabase = createAdminClient()
-  const { data: { user } } = await supabase.auth.getUser()
 
   const now = new Date().toISOString()
 

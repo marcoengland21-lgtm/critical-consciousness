@@ -1,6 +1,5 @@
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getSessionUser } from '@/lib/supabase/server'
 import MobileNav from '@/components/layout/MobileNav'
 import NavLink from '@/components/layout/NavLink'
 import LogoutButton from '@/components/layout/LogoutButton'
@@ -12,19 +11,14 @@ export default async function MainLayout({
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  // TODO: RE-ENABLE AUTH — Remove this bypass when reviewer access is no longer needed
-  // if (!user) {
-  //   redirect('/')
-  // }
+  // Use session (local JWT read) instead of getUser (network call)
+  // This runs on every page navigation — must be instant
+  const user = await getSessionUser()
 
   // Fetch user profile for display name (guest fallback if not logged in)
   let displayName = 'Guest'
   if (user) {
+    const supabase = await createClient()
     const { data: profile } = await supabase
       .from('profiles')
       .select('display_name')

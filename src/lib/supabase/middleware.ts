@@ -27,22 +27,24 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // Refresh session - important for Server Components
-  const { data: { user } } = await supabase.auth.getUser()
+  // Use getSession() instead of getUser() — reads JWT from cookie locally,
+  // no network round-trip to Supabase auth server. This makes every page
+  // navigation instant instead of waiting for a remote auth check.
+  // getUser() is still used in write operations (posting threads, annotations)
+  // where we need verified auth.
+  const { data: { session } } = await supabase.auth.getSession()
 
   // TODO: RE-ENABLE AUTH — Uncomment both redirect blocks below when reviewer access is no longer needed
-  // Redirect unauthenticated users to login (except for login/register pages)
   // const isAuthPage = request.nextUrl.pathname.startsWith('/login') ||
   //                    request.nextUrl.pathname.startsWith('/register')
   //
-  // if (!user && !isAuthPage && request.nextUrl.pathname !== '/') {
+  // if (!session && !isAuthPage && request.nextUrl.pathname !== '/') {
   //   const url = request.nextUrl.clone()
   //   url.pathname = '/login'
   //   return NextResponse.redirect(url)
   // }
 
-  // Redirect authenticated users away from auth pages
-  // if (user && isAuthPage) {
+  // if (session && isAuthPage) {
   //   const url = request.nextUrl.clone()
   //   url.pathname = '/dashboard'
   //   return NextResponse.redirect(url)

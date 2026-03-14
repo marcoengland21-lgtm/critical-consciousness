@@ -1,5 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { createClient, getSessionUser } from '@/lib/supabase/server'
 import NewThreadForm from '@/components/threads/NewThreadForm'
 
 export const metadata = {
@@ -7,8 +6,8 @@ export const metadata = {
 }
 
 export default async function NewThreadPage() {
+  const user = await getSessionUser()
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
 
   // TODO: RE-ENABLE AUTH — Restore redirect when reviewer access is no longer needed
   // if (!user) redirect('/')
