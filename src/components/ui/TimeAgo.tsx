@@ -21,9 +21,14 @@ function getTimeAgo(dateStr: string): string {
 }
 
 export default function TimeAgo({ date }: { date: string }) {
-  const [timeAgo, setTimeAgo] = useState(getTimeAgo(date))
+  // Initialize with the computed value for SSR, then recalculate on client.
+  // suppressHydrationWarning prevents React #418 when server/client times differ.
+  const [timeAgo, setTimeAgo] = useState(() => getTimeAgo(date))
 
   useEffect(() => {
+    // Recalculate immediately on mount to correct any SSR mismatch
+    setTimeAgo(getTimeAgo(date))
+
     const interval = setInterval(() => {
       setTimeAgo(getTimeAgo(date))
     }, 60000)
@@ -31,7 +36,7 @@ export default function TimeAgo({ date }: { date: string }) {
   }, [date])
 
   return (
-    <time dateTime={date} title={new Date(date).toLocaleString('en-NZ')}>
+    <time dateTime={date} title={new Date(date).toLocaleString('en-NZ')} suppressHydrationWarning>
       {timeAgo}
     </time>
   )

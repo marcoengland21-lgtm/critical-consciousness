@@ -213,10 +213,12 @@ export default async function ReadingPage() {
                           {ch1Sections.map((chapter: any, i: number) => {
                             const isCurrentWeek = chapter.week_id === currentWeekId
                             const isLast = i === ch1Sections.length - 1 && standaloneChapters.length === 0
+                            const sectionLabel = `Read Chapter 1, Section ${chapter.chapter_number}: ${chapter.title}`
                             return (
                               <Link
                                 key={chapter.id}
                                 href={`/reading/${doc.slug}/${chapter.chapter_number}`}
+                                aria-label={sectionLabel}
                                 className="flex items-center justify-between px-6 pl-16 py-3 transition-all hover-bg-themed group"
                                 style={{
                                   backgroundColor: isCurrentWeek ? 'var(--bg-soft)' : 'var(--bg-card)',
@@ -228,7 +230,7 @@ export default async function ReadingPage() {
                                     className="flex-shrink-0 w-6 h-6 rounded flex items-center justify-center text-xs"
                                     style={{
                                       backgroundColor: isCurrentWeek ? 'var(--accent-purple)' : 'var(--bg-soft)',
-                                      color: isCurrentWeek ? 'var(--text-primary)' : 'var(--text-secondary)',
+                                      color: isCurrentWeek ? 'var(--text-inverse)' : 'var(--text-secondary)',
                                     }}
                                   >
                                     {chapter.chapter_number}
@@ -254,13 +256,13 @@ export default async function ReadingPage() {
                                   {isCurrentWeek && (
                                     <span
                                       className="text-xs font-medium px-2 py-0.5 rounded-full"
-                                      style={{ backgroundColor: 'var(--accent-purple)', color: 'var(--text-primary)' }}
+                                      style={{ backgroundColor: 'var(--accent-purple)', color: 'var(--text-inverse)' }}
                                     >
                                       This Week
                                     </span>
                                   )}
                                   <span
-                                    className="text-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                                    className="text-sm opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                                     style={{ color: 'var(--accent-red)' }}
                                   >
                                     Read →
@@ -276,10 +278,12 @@ export default async function ReadingPage() {
                       {standaloneChapters.map((chapter: any, i: number) => {
                         const isCurrentWeek = chapter.week_id === currentWeekId
                         const isLast = i === standaloneChapters.length - 1
+                        const chapterLabel = `Read Chapter ${chapter.mapping.marxChapter}: ${chapter.title}`
                         return (
                           <Link
                             key={chapter.id}
                             href={`/reading/${doc.slug}/${chapter.chapter_number}`}
+                            aria-label={chapterLabel}
                             className="flex items-center justify-between px-6 py-4 transition-all hover-bg-themed group"
                             style={{
                               backgroundColor: isCurrentWeek ? 'var(--bg-soft)' : 'var(--bg-card)',
@@ -291,7 +295,7 @@ export default async function ReadingPage() {
                                 className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
                                 style={{
                                   backgroundColor: isCurrentWeek ? 'var(--accent-purple)' : 'var(--bg-soft)',
-                                  color: isCurrentWeek ? 'var(--text-primary)' : 'var(--text-secondary)',
+                                  color: isCurrentWeek ? 'var(--text-inverse)' : 'var(--text-secondary)',
                                 }}
                               >
                                 {chapter.mapping.marxChapter}
@@ -317,13 +321,13 @@ export default async function ReadingPage() {
                               {isCurrentWeek && (
                                 <span
                                   className="text-xs font-medium px-2 py-0.5 rounded-full"
-                                  style={{ backgroundColor: 'var(--accent-purple)', color: 'var(--text-primary)' }}
+                                  style={{ backgroundColor: 'var(--accent-purple)', color: 'var(--text-inverse)' }}
                                 >
                                   This Week
                                 </span>
                               )}
                               <span
-                                className="text-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="text-sm opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                                 style={{ color: 'var(--accent-red)' }}
                               >
                                 Read →

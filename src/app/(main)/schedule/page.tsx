@@ -113,10 +113,10 @@ export default async function SchedulePage() {
                     </h2>
                   </div>
                   <div className="text-right text-sm" style={{ color: isCurrent ? 'var(--text-inverse)' : 'var(--text-secondary)' }}>
-                    <div>Due: {dueDate.toLocaleDateString('en-NZ', { day: 'numeric', month: 'short' })}</div>
+                    <div>Due: {dueDate.toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', timeZone: 'Pacific/Auckland' })}</div>
                     {sessionDate && (
                       <div className="mt-0.5">
-                        Session: {sessionDate.toLocaleDateString('en-NZ', { weekday: 'short', day: 'numeric', month: 'short' })}
+                        Session: {sessionDate.toLocaleDateString('en-NZ', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Pacific/Auckland' })}
                       </div>
                     )}
                   </div>

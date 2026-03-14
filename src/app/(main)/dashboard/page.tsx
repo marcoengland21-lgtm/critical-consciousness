@@ -138,7 +138,7 @@ export default async function DashboardPage() {
                       Week {currentWeek.week_number}
                     </span>
                     <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                      Due {new Date(currentWeek.due_date).toLocaleDateString('en-NZ', { weekday: 'short', day: 'numeric', month: 'short' })}
+                      Due {new Date(currentWeek.due_date).toLocaleDateString('en-NZ', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Pacific/Auckland' })}
                     </span>
                   </div>
                   <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
@@ -164,7 +164,8 @@ export default async function DashboardPage() {
                       <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
                         Next Session:{' '}
                         {new Date(currentWeek.session_date).toLocaleDateString('en-NZ', {
-                          weekday: 'long', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit'
+                          weekday: 'long', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit',
+                          timeZone: 'Pacific/Auckland',
                         })}
                       </span>
                       {currentWeek.session_location && (
