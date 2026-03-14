@@ -1,9 +1,13 @@
 import Link from 'next/link'
 import { createClient, getSessionUser } from '@/lib/supabase/server'
+import ThreadTypeBadge from '@/components/threads/ThreadTypeBadge'
+import TimeAgo from '@/components/ui/TimeAgo'
 import RoleBadge from '@/components/roles/RoleBadge'
 import ReadingCheckinButton from '@/components/dashboard/ReadingCheckinButton'
-import DeferredDashboard from '@/components/dashboard/DeferredDashboard'
-import type { WeeklyRoleType } from '@/types/database'
+import WeeklyActivitySummary from '@/components/dashboard/WeeklyActivitySummary'
+import MilestoneCard from '@/components/dashboard/MilestoneCard'
+import GroupThinkingOverview from '@/components/dashboard/GroupThinkingOverview'
+import type { ThreadType, WeeklyRoleType } from '@/types/database'
 
 const DEFAULT_GROUP_ID = '00000000-0000-0000-0000-000000000001'
 
@@ -14,11 +18,28 @@ export default async function DashboardPage() {
   const now = new Date()
   const nowISO = now.toISOString()
 
-  // CRITICAL PATH ONLY: 2 queries for instant page shell
-  // Profile + current week (with roles & prompts) — everything the user needs immediately
+  // Calculate this week's date range for activity counts
+  const currentDay = now.getDay()
+  const diff = now.getDate() - currentDay + (currentDay === 0 ? -6 : 1)
+  const weekStart = new Date(now)
+  weekStart.setDate(diff)
+  weekStart.setHours(0, 0, 0, 0)
+  const weekEnd = new Date(weekStart)
+  weekEnd.setDate(weekEnd.getDate() + 6)
+  weekEnd.setHours(23, 59, 59, 999)
+  const weekStartISO = weekStart.toISOString()
+  const weekEndISO = weekEnd.toISOString()
+
+  // All 8 queries in a single parallel batch
   const [
     { data: profile },
     { data: currentWeekData },
+    { data: recentThreads },
+    { data: recentAnnotations },
+    { data: milestoneData },
+    { count: weekAnnotationCount },
+    { count: weekThreadCount },
+    { count: weekGlossaryCount },
   ] = await Promise.all([
     supabase.from('profiles').select('display_name, role').eq('id', user?.id || '').single(),
     supabase.from('reading_schedule').select(`
@@ -26,12 +47,30 @@ export default async function DashboardPage() {
       weekly_roles(id, role_type, user:profiles!user_id(id, display_name)),
       discussion_prompts(id, prompt_text, sort_order)
     `).gte('due_date', nowISO).order('due_date', { ascending: true }).limit(1),
+    supabase.from('threads').select(`
+      id, title, thread_type, created_at, pinned,
+      author:profiles!author_id(display_name),
+      replies:replies(count)
+    `).order('created_at', { ascending: false }).limit(5),
+    supabase.from('annotations').select(`
+      id, body, chapter_id,
+      chapter:text_chapters!chapter_id(chapter_number, title)
+    `).order('created_at', { ascending: false }).limit(20),
+    supabase.from('reading_milestones').select('id, week_number, title, description, reflection_prompt').order('week_number', { ascending: false }).limit(10),
+    supabase.from('annotations').select('*', { count: 'exact', head: true }).gte('created_at', weekStartISO).lte('created_at', weekEndISO),
+    supabase.from('threads').select('*', { count: 'exact', head: true }).gte('created_at', weekStartISO).lte('created_at', weekEndISO),
+    supabase.from('glossary_entries').select('*', { count: 'exact', head: true }).gte('created_at', weekStartISO).lte('created_at', weekEndISO),
   ])
 
   const displayName = profile?.display_name || 'there'
   const currentWeek = currentWeekData?.[0] || null
 
-  // Checkin depends on currentWeek — still server-side since it's part of the reading card
+  // Find milestone for current week (if any)
+  const milestone = currentWeek
+    ? milestoneData?.find((m: any) => m.week_number === currentWeek.week_number) || null
+    : null
+
+  // Checkin depends on currentWeek, so runs after the parallel batch
   let currentReadingStatus: 'done' | 'partial' | 'behind' | null = null
   if (currentWeek && user) {
     const { data: checkinData } = await supabase
@@ -51,6 +90,15 @@ export default async function DashboardPage() {
     (r: any) => r.user?.id === user?.id
   ) || []
 
+  const annotations = recentAnnotations?.map((ann: any) => ({
+    chapter_number: ann.chapter?.chapter_number || 0,
+    chapter_title: ann.chapter?.title || 'Unknown',
+    annotation_count: 1,
+    body: ann.body,
+  })) || []
+
+  const threads = weekThreadCount ? [{ week_number: 1, thread_count: weekThreadCount }] : []
+
   return (
     <div>
       <div className="mb-8">
@@ -63,9 +111,14 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left column: Critical reading card + deferred content */}
+        {/* Left column: Current Week + Activity + Group Thinking + Threads */}
         <div className="lg:col-span-2 space-y-6">
-          {/* This Week's Reading — server-rendered, appears instantly */}
+          {/* Milestone Card - if applicable */}
+          {milestone && (
+            <MilestoneCard milestone={milestone} />
+          )}
+
+          {/* This Week's Reading */}
           <div className="rounded-lg border-2 overflow-hidden" style={{ borderColor: 'var(--accent-purple)' }}>
             <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-header)' }}>
               <div className="flex items-center justify-between">
@@ -154,15 +207,79 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          {/* Deferred content: activity, group thinking, recent threads */}
-          {/* Loads client-side after the page shell renders */}
-          <DeferredDashboard
-            weekNumber={currentWeek?.week_number || null}
-            showActivity={!!currentWeek}
-          />
+          {/* Weekly Activity Summary */}
+          {currentWeek && (
+            <WeeklyActivitySummary
+              annotationCount={weekAnnotationCount || 0}
+              threadCount={weekThreadCount || 0}
+              glossaryCount={weekGlossaryCount || 0}
+            />
+          )}
+
+          {/* What the Group is Thinking */}
+          <GroupThinkingOverview annotations={annotations} threads={threads} />
+
+          {/* Recent Threads */}
+          <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
+            <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
+              <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
+                Recent Discussions
+              </h2>
+              <Link href="/threads" className="text-xs font-medium" style={{ color: 'var(--accent-red)' }}>
+                All Threads →
+              </Link>
+            </div>
+            <div style={{ backgroundColor: 'var(--bg-card)' }}>
+              {recentThreads && recentThreads.length > 0 ? (
+                <div className="divide-y" style={{ borderColor: 'var(--border-default)' }}>
+                  {recentThreads.map((thread: any) => {
+                    const replyCount = thread.replies?.[0]?.count ?? 0
+                    return (
+                      <Link
+                        key={thread.id}
+                        href={`/threads/${thread.id}`}
+                        className="block px-5 py-3 transition-colors hover-bg-themed"
+                      >
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <ThreadTypeBadge type={thread.thread_type as ThreadType} />
+                          {thread.pinned && (
+                            <span className="text-xs font-medium px-1.5 py-0.5 rounded" style={{ backgroundColor: 'var(--accent-purple)', color: 'var(--text-inverse)' }}>Pinned</span>
+                          )}
+                        </div>
+                        <h3 className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
+                          {thread.title}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                          <span>{thread.author?.display_name}</span>
+                          <span>·</span>
+                          <TimeAgo date={thread.created_at} />
+                        </div>
+                      </Link>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
+                    The conversation starts here
+                  </p>
+                  <p className="text-xs mb-3" style={{ color: 'var(--text-secondary)' }}>
+                    What&apos;s on your mind after this week&apos;s reading?
+                  </p>
+                  <Link
+                    href="/threads/new"
+                    className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium"
+                    style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}
+                  >
+                    Share with the Group
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Right column: Roles + Quick Links — server-rendered */}
+        {/* Right column: Roles + Quick Links */}
         <div className="space-y-6">
           {/* Your Roles This Week */}
           <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
