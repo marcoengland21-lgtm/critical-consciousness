@@ -14,41 +14,48 @@ const DEFAULT_GROUP_ID = '00000000-0000-0000-0000-000000000001'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
+  const adminSupabase = createAdminClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('display_name, role')
-    .eq('id', user?.id || '')
-    .single()
+  const now = new Date().toISOString()
+
+  // Run all independent queries in parallel for faster page loads
+  const [
+    { data: profile },
+    { data: currentWeekData },
+    { data: recentThreads },
+    { count: memberCount },
+    { count: threadCount },
+    { data: annotationsData },
+    { data: threadsData },
+  ] = await Promise.all([
+    supabase.from('profiles').select('display_name, role').eq('id', user?.id || '').single(),
+    supabase.from('reading_schedule').select(`
+      *,
+      weekly_roles(id, role_type, user:profiles!user_id(id, display_name)),
+      discussion_prompts(id, prompt_text, sort_order)
+    `).gte('due_date', now).order('due_date', { ascending: true }).limit(1),
+    supabase.from('threads').select(`
+      id, title, thread_type, created_at, pinned,
+      author:profiles!author_id(display_name),
+      replies:replies(count)
+    `).order('created_at', { ascending: false }).limit(5),
+    supabase.from('profiles').select('*', { count: 'exact', head: true }),
+    supabase.from('threads').select('*', { count: 'exact', head: true }),
+    adminSupabase.from('annotations').select(`
+      id, body, chapter_id,
+      chapter:text_chapters!chapter_id(chapter_number, title)
+    `).order('created_at', { ascending: false }),
+    supabase.from('threads').select('week_id'),
+  ])
 
   const displayName = profile?.display_name || 'there'
   const isAdmin = profile?.role === 'admin'
-
-  // Get current week (closest upcoming due_date)
-  const now = new Date().toISOString()
-  const { data: currentWeekData } = await supabase
-    .from('reading_schedule')
-    .select(`
-      *,
-      weekly_roles(
-        id, role_type,
-        user:profiles!user_id(id, display_name)
-      ),
-      discussion_prompts(
-        id, prompt_text, sort_order
-      )
-    `)
-    .gte('due_date', now)
-    .order('due_date', { ascending: true })
-    .limit(1)
-
   const currentWeek = currentWeekData?.[0] || null
 
-  // Get user's reading checkin status for current week
+  // Checkin depends on currentWeek, so runs after the parallel batch
   let currentReadingStatus: 'done' | 'partial' | 'behind' | null = null
   if (currentWeek && user) {
-    const adminSupabase = createAdminClient()
     const { data: checkinData } = await adminSupabase
       .from('reading_checkins')
       .select('status')
@@ -62,41 +69,9 @@ export default async function DashboardPage() {
     }
   }
 
-  // Get user's roles for current week
   const myRoles = currentWeek?.weekly_roles?.filter(
     (r: any) => r.user?.id === user?.id
   ) || []
-
-  // Get recent threads
-  const { data: recentThreads } = await supabase
-    .from('threads')
-    .select(`
-      id, title, thread_type, created_at, pinned,
-      author:profiles!author_id(display_name),
-      replies:replies(count)
-    `)
-    .order('created_at', { ascending: false })
-    .limit(5)
-
-  // Get member count
-  const { count: memberCount } = await supabase
-    .from('profiles')
-    .select('*', { count: 'exact', head: true })
-
-  // Get total thread count
-  const { count: threadCount } = await supabase
-    .from('threads')
-    .select('*', { count: 'exact', head: true })
-
-  // Get annotations for GroupThinking overview
-  const adminSupabase = createAdminClient()
-  const { data: annotationsData } = await adminSupabase
-    .from('annotations')
-    .select(`
-      id, body, chapter_id,
-      chapter:text_chapters!chapter_id(chapter_number, title)
-    `)
-    .order('created_at', { ascending: false })
 
   const annotations = annotationsData?.map((ann: any) => ({
     chapter_number: ann.chapter?.chapter_number || 0,
@@ -104,11 +79,6 @@ export default async function DashboardPage() {
     annotation_count: 1,
     body: ann.body,
   })) || []
-
-  // Get thread counts by week
-  const { data: threadsData } = await supabase
-    .from('threads')
-    .select('week_id')
 
   const threadsByWeek = new Map<string, number>()
   threadsData?.forEach((thread: any) => {

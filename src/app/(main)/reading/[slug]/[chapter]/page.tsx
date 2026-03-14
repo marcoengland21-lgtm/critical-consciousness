@@ -64,38 +64,37 @@ export default async function ChapterPage({ params }: Props) {
 
   if (!chapterData) notFound()
 
-  // Get all chapters for navigation
-  const { data: allChapters } = await supabase
-    .from('text_chapters')
-    .select('id, chapter_number, title, sort_order')
-    .eq('document_id', doc.id)
-    .order('sort_order', { ascending: true })
+  // Run remaining queries in parallel — all depend on doc.id or chapterData.id
+  const [
+    { data: allChapters },
+    { data: footnotes },
+    { data: annotations },
+  ] = await Promise.all([
+    supabase.from('text_chapters')
+      .select('id, chapter_number, title, sort_order')
+      .eq('document_id', doc.id)
+      .order('sort_order', { ascending: true }),
+    supabase.from('text_footnotes')
+      .select('*')
+      .eq('chapter_id', chapterData.id)
+      .order('footnote_number', { ascending: true }),
+    supabase.from('annotations')
+      .select(`
+        *,
+        author:profiles!author_id(id, display_name),
+        replies:annotation_replies(
+          id, body, created_at,
+          author:profiles!author_id(id, display_name)
+        )
+      `)
+      .eq('chapter_id', chapterData.id)
+      .order('position_start', { ascending: true }),
+  ])
 
   const chapters = allChapters || []
   const currentIndex = chapters.findIndex((c) => c.chapter_number === chapterNum)
   const prevChapter = currentIndex > 0 ? chapters[currentIndex - 1] : null
   const nextChapter = currentIndex < chapters.length - 1 ? chapters[currentIndex + 1] : null
-
-  // Get footnotes for this chapter
-  const { data: footnotes } = await supabase
-    .from('text_footnotes')
-    .select('*')
-    .eq('chapter_id', chapterData.id)
-    .order('footnote_number', { ascending: true })
-
-  // Get existing annotations for this chapter
-  const { data: annotations } = await supabase
-    .from('annotations')
-    .select(`
-      *,
-      author:profiles!author_id(id, display_name),
-      replies:annotation_replies(
-        id, body, created_at,
-        author:profiles!author_id(id, display_name)
-      )
-    `)
-    .eq('chapter_id', chapterData.id)
-    .order('position_start', { ascending: true })
 
   return (
     <div>

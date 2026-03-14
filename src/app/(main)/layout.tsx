@@ -41,6 +41,15 @@ export default async function MainLayout({
         backgroundColor: 'var(--bg-page)',
       }}
     >
+      {/* Skip to main content — accessibility for keyboard/screen reader users */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm focus:font-medium"
+        style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}
+      >
+        Skip to main content
+      </a>
+
       {/* Navigation Bar */}
       <nav
         className="sticky top-0 z-50 border-b"
@@ -48,6 +57,7 @@ export default async function MainLayout({
           backgroundColor: 'var(--bg-nav)',
           borderColor: 'var(--accent-purple)',
         }}
+        aria-label="Main navigation"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -96,7 +106,7 @@ export default async function MainLayout({
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" role="main">
         {children}
       </main>
     </div>

@@ -207,16 +207,68 @@ export default async function SchedulePage() {
                 {/* Session Notes */}
                 <SessionNotes weekId={week.id} hasSession={!!sessionDate} />
 
-                {/* Thread links */}
-                <div className="pt-2">
-                  <Link
-                    href={`/threads?week=${week.id}`}
-                    className="text-sm font-medium transition-colors"
-                    style={{ color: 'var(--accent-red)' }}
-                  >
-                    View Week {week.week_number} Threads →
-                  </Link>
-                </div>
+                {/* Get a head start — for upcoming weeks */}
+                {!isCurrent && !isPast && (
+                  <div className="p-4 rounded-lg border" style={{ borderColor: 'var(--accent-purple)', backgroundColor: 'var(--bg-card-alt)' }}>
+                    <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: 'var(--accent-purple)' }}>
+                      Get a head start
+                    </p>
+                    <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
+                      Start reading early or browse the glossary to prepare for this week.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <Link
+                        href={`/reading/capital-vol-1/${week.week_number}`}
+                        className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                        style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}
+                      >
+                        Start Reading
+                      </Link>
+                      <Link
+                        href="/glossary"
+                        className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors"
+                        style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}
+                      >
+                        Browse Key Terms
+                      </Link>
+                    </div>
+                  </div>
+                )}
+
+                {/* Read now — for current week */}
+                {isCurrent && (
+                  <div className="p-4 rounded-lg border" style={{ borderColor: 'var(--accent-red)', backgroundColor: 'var(--bg-card-alt)' }}>
+                    <div className="flex flex-wrap gap-2">
+                      <Link
+                        href={`/reading/capital-vol-1/${week.week_number}`}
+                        className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}
+                      >
+                        Read and Annotate
+                      </Link>
+                      <Link
+                        href={`/threads?week=${week.id}`}
+                        className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium border transition-colors"
+                        style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}
+                      >
+                        View Discussions
+                      </Link>
+                    </div>
+                  </div>
+                )}
+
+                {/* Thread links — for past weeks */}
+                {isPast && (
+                  <div className="pt-2">
+                    <Link
+                      href={`/threads?week=${week.id}`}
+                      className="text-sm font-medium transition-colors"
+                      style={{ color: 'var(--accent-red)' }}
+                    >
+                      View Week {week.week_number} Threads
+                    </Link>
+                  </div>
+                )}
               </div>
             </div>
           )
