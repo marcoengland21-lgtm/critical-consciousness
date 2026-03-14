@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
+import { useTheme } from '@/components/layout/ThemeProvider'
 
 interface Props {
   fontSize: number
@@ -26,15 +27,9 @@ export default function ReadingControls({
   onAnnotationKeywordChange,
   matchingAnnotationCount = 0,
 }: Props) {
-  const [isDarkMode, setIsDarkMode] = useState(false)
+  const { isDark: isDarkMode, toggle: toggleTheme } = useTheme()
   const [keywordInput, setKeywordInput] = useState(annotationKeyword)
   const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null)
-
-  useEffect(() => {
-    // Check initial theme
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
-    setIsDarkMode(isDark)
-  }, [])
 
   const handleKeywordChange = useCallback((value: string) => {
     setKeywordInput(value)
@@ -56,12 +51,6 @@ export default function ReadingControls({
     onAnnotationKeywordChange?.('')
   }, [onAnnotationKeywordChange])
 
-  const toggleTheme = () => {
-    const newTheme = isDarkMode ? 'light' : 'dark'
-    document.documentElement.setAttribute('data-theme', newTheme)
-    localStorage.setItem('ccp-theme', newTheme)
-    setIsDarkMode(!isDarkMode)
-  }
   return (
     <div>
       {/* Annotation keyword filter — shown above controls when there are annotations */}

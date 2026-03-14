@@ -5,6 +5,7 @@ import MobileNav from '@/components/layout/MobileNav'
 import NavLink from '@/components/layout/NavLink'
 import LogoutButton from '@/components/layout/LogoutButton'
 import ThemeToggle from '@/components/layout/ThemeToggle'
+import ThemeProvider from '@/components/layout/ThemeProvider'
 
 export default async function MainLayout({
   children,
@@ -33,6 +34,7 @@ export default async function MainLayout({
   }
 
   return (
+    <ThemeProvider>
     <div
       className="min-h-screen"
       style={{
@@ -98,5 +100,6 @@ export default async function MainLayout({
         {children}
       </main>
     </div>
+    </ThemeProvider>
   )
 }

@@ -1,25 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useTheme } from './ThemeProvider'
 
 export default function ThemeToggle() {
-  const [isDark, setIsDark] = useState(false)
-
-  useEffect(() => {
-    const current = document.documentElement.getAttribute('data-theme')
-    setIsDark(current === 'dark')
-  }, [])
-
-  const toggle = () => {
-    const next = isDark ? 'light' : 'dark'
-    if (next === 'dark') {
-      document.documentElement.setAttribute('data-theme', 'dark')
-    } else {
-      document.documentElement.removeAttribute('data-theme')
-    }
-    localStorage.setItem('ccp-theme', next)
-    setIsDark(!isDark)
-  }
+  const { isDark, toggle } = useTheme()
 
   return (
     <button
