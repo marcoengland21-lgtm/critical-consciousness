@@ -46,7 +46,7 @@ export default function GlossaryTooltip({ term, definition, position, onClose }:
   return (
     <div
       ref={tooltipRef}
-      className="fixed z-50 max-w-sm p-3 rounded-lg shadow-lg border animate-fade-in"
+      className="fixed z-50 max-w-sm p-3 rounded-lg shadow-lg border animate-scale-in"
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,
@@ -62,7 +62,7 @@ export default function GlossaryTooltip({ term, definition, position, onClose }:
       </p>
       <button
         onClick={handleNavigateToGlossary}
-        className="text-xs px-2 py-1 rounded transition-colors font-medium"
+        className="text-xs px-2 py-1 rounded btn-transition font-medium"
         style={{
           backgroundColor: 'var(--accent-red)',
           color: 'var(--text-inverse)',

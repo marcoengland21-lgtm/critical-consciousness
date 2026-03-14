@@ -41,7 +41,7 @@ export default function MobileNav({ displayName }: MobileNavProps) {
 
       {isOpen && (
         <div
-          className="md:hidden absolute top-full left-0 right-0 py-2 border-t animate-fade-in"
+          className="md:hidden absolute top-full left-0 right-0 py-2 border-t animate-fade-in stagger-children"
           style={{
             backgroundColor: 'var(--bg-nav)',
             borderColor: 'rgba(107, 76, 154, 0.3)',
@@ -50,8 +50,8 @@ export default function MobileNav({ displayName }: MobileNavProps) {
           <NavLink href="/dashboard" mobile onClick={() => setIsOpen(false)}>Dashboard</NavLink>
           <NavLink href="/reading" mobile onClick={() => setIsOpen(false)}>Reading</NavLink>
           <NavLink href="/threads" mobile onClick={() => setIsOpen(false)}>Threads</NavLink>
-          <NavLink href="/schedule" mobile onClick={() => setIsOpen(false)}>Schedule</NavLink>
           <NavLink href="/glossary" mobile onClick={() => setIsOpen(false)}>Glossary</NavLink>
+          <NavLink href="/schedule" mobile onClick={() => setIsOpen(false)}>Schedule</NavLink>
           <NavLink href="/resources" mobile onClick={() => setIsOpen(false)}>Resources</NavLink>
         </div>
       )}

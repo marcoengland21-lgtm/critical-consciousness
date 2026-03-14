@@ -79,6 +79,10 @@ export default async function ThreadsPage({
 
   const { data: threads, error } = await query
 
+  if (error) {
+    console.error('[CCP] Threads page — query error:', error)
+  }
+
   const threadTypes: { value: string; label: string }[] = [
     { value: '', label: 'All Types' },
     { value: 'discussion', label: 'Discussion' },
@@ -97,7 +101,7 @@ export default async function ThreadsPage({
         </h1>
         <Link
           href="/threads/new"
-          className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium btn-transition"
           style={{
             backgroundColor: 'var(--accent-red)',
             color: 'var(--text-inverse)',
@@ -113,7 +117,7 @@ export default async function ThreadsPage({
           <Link
             key={t.value}
             href={t.value ? `/threads?type=${t.value}` : '/threads'}
-            className="px-3 py-1 rounded-full text-sm font-medium transition-colors border"
+            className="px-3 py-1 rounded-full text-sm font-medium btn-transition border"
             style={{
               backgroundColor: params.type === t.value || (!params.type && !t.value)
                 ? 'var(--text-primary)' : 'var(--bg-card)',
@@ -138,7 +142,7 @@ export default async function ThreadsPage({
           </p>
           <Link
             href="/threads/new"
-            className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium"
+            className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium btn-transition"
             style={{
               backgroundColor: 'var(--accent-red)',
               color: 'var(--text-inverse)',
@@ -148,7 +152,7 @@ export default async function ThreadsPage({
           </Link>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 stagger-children">
           {threads.map((thread: any) => {
             const replyCount = thread.replies?.[0]?.count ?? 0
             const preview = getTextPreview(thread.body || '')

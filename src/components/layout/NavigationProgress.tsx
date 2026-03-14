@@ -92,8 +92,8 @@ export default function NavigationProgress() {
           transition: progress === 0
             ? 'none'
             : progress === 100
-              ? 'width 200ms ease-out, opacity 200ms ease-out 200ms'
-              : 'width 300ms ease-out',
+              ? 'width 250ms cubic-bezier(0.22, 1, 0.36, 1), opacity 250ms ease-out 200ms'
+              : 'width 400ms cubic-bezier(0.22, 1, 0.36, 1)',
           opacity: visible ? 1 : 0,
           boxShadow: '0 0 8px var(--accent-red)',
         }}

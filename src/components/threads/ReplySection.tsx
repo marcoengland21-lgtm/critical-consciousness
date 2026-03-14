@@ -224,6 +224,12 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
                 ref={(el) => { if (el) { nestedReplyRefs.current[reply.id] = el; el.focus() } }}
                 value={nestedReplyBody}
                 onChange={(e) => { setNestedReplyBody(e.target.value); autoResize(e.target) }}
+                onKeyDown={(e) => {
+                  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                    e.preventDefault()
+                    submitReply(reply.id)
+                  }
+                }}
                 placeholder={`Replying to ${reply.author?.display_name}...`}
                 rows={3}
                 className="w-full px-3 py-2 rounded-lg border text-sm resize-none transition-all"
@@ -268,6 +274,12 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
           ref={mainReplyRef}
           value={replyBody}
           onChange={(e) => { setReplyBody(e.target.value); autoResize(e.target) }}
+          onKeyDown={(e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+              e.preventDefault()
+              submitReply(null)
+            }
+          }}
           placeholder="Join the conversation..."
           rows={4}
           className="w-full px-3 py-2 rounded-lg border text-sm resize-none transition-all mb-3"
@@ -277,7 +289,7 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
           <button
             onClick={() => submitReply(null)}
             disabled={submitting || !replyBody.trim()}
-            className="px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
+            className="px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 btn-transition"
             style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}
           >
             {submitting ? 'Posting...' : 'Post Reply'}

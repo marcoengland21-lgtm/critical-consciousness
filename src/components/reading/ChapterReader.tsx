@@ -12,6 +12,7 @@ import ConfusionFlagButton from './ConfusionFlagButton'
 import GlossaryTooltip from './GlossaryTooltip'
 import FootnoteInline from './FootnoteInline'
 import Toast from '@/components/ui/Toast'
+import BackToTop from './BackToTop'
 import { getConfusionFlagCounts, getUserConfusionFlags } from '@/lib/confusion-flags'
 import { findGlossaryTermMatches, buildGlossarySegments, GlossaryTerm, TermMatch } from '@/lib/glossary-utils'
 
@@ -889,6 +890,9 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
           onClose={() => setToast(null)}
         />
       )}
+
+      {/* Back to top */}
+      <BackToTop />
     </div>
   )
 }

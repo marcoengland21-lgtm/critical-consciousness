@@ -151,7 +151,7 @@ export default async function ChapterPage({ params }: Props) {
               <Link
                 key={ch.id}
                 href={`/reading/${slug}/${ch.chapter_number}`}
-                className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                className="px-4 py-2 rounded-lg text-sm font-medium btn-transition"
                 style={{
                   backgroundColor: isActive ? 'var(--text-primary)' : 'var(--bg-card)',
                   color: isActive ? 'var(--bg-page)' : 'var(--text-primary)',
@@ -200,14 +200,14 @@ export default async function ChapterPage({ params }: Props) {
         <div className="flex items-center justify-center gap-3">
           <Link
             href={`/threads/new?chapter=${chapterNum}&section=${encodeURIComponent(chapterData.title)}&chapter_id=${chapterData.id}`}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium btn-transition"
             style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}
           >
             Start a Thread
           </Link>
           <Link
             href="/threads"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium border transition-colors"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium border btn-transition"
             style={{ borderColor: 'var(--border-default)', color: 'var(--text-secondary)' }}
           >
             View Discussions

@@ -1,6 +1,6 @@
 export default function ThreadsLoading() {
   return (
-    <div>
+    <div className="skeleton-shimmer">
       <div className="flex items-center justify-between mb-8">
         <div className="h-9 w-56 rounded" style={{ backgroundColor: 'var(--bg-soft)' }} />
         <div className="h-9 w-28 rounded-lg" style={{ backgroundColor: 'var(--bg-soft)' }} />

@@ -163,17 +163,19 @@ export default function SessionNotes({ weekId, hasSession }: SessionNotesProps) 
           Session Notes
         </h4>
         <span
-          className="transition-transform"
           style={{
             color: 'var(--text-secondary)',
             transform: isOpen ? 'rotate(180deg)' : 'rotate(0)',
+            transition: 'transform var(--duration-normal) var(--ease-out-expo)',
+            display: 'inline-block',
           }}
         >
           ▼
         </span>
       </button>
 
-      {isOpen && (
+      <div className="collapsible-content" data-open={isOpen}>
+        <div className="collapsible-inner">
         <div className="px-5 py-4 space-y-3" style={{ backgroundColor: 'var(--bg-card-alt)' }}>
           <textarea
             value={content}
@@ -204,7 +206,8 @@ export default function SessionNotes({ weekId, hasSession }: SessionNotesProps) 
             </div>
           )}
         </div>
-      )}
+        </div>
+      </div>
     </div>
   )
 }

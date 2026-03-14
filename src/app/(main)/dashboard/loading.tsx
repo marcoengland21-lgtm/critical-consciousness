@@ -1,6 +1,6 @@
 export default function DashboardLoading() {
   return (
-    <div className="animate-pulse">
+    <div className="skeleton-shimmer">
       {/* Header skeleton */}
       <div className="mb-8">
         <div className="h-8 w-72 rounded mb-2" style={{ backgroundColor: 'var(--bg-card-alt)' }} />

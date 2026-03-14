@@ -33,8 +33,8 @@ export default function Toast({ message, type = 'success', duration = 3000, onCl
         backgroundColor: bgColor,
         color: 'var(--text-inverse)',
         opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(8px)',
-        transition: 'opacity 300ms ease, transform 300ms ease',
+        transform: visible ? 'translateY(0) scale(1)' : 'translateY(8px) scale(0.97)',
+        transition: 'opacity 250ms cubic-bezier(0.22, 1, 0.36, 1), transform 250ms cubic-bezier(0.22, 1, 0.36, 1)',
       }}
       role="alert"
     >

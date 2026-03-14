@@ -207,17 +207,20 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
                 key={t.value}
                 type="button"
                 onClick={() => setThreadType(t.value)}
-                className="p-3 rounded-lg border text-left transition-all text-sm"
+                className="p-3 rounded-lg border text-left btn-transition text-sm"
                 style={{
-                  backgroundColor: 'var(--bg-card)',
+                  backgroundColor: isSelected ? 'var(--bg-soft)' : 'var(--bg-card)',
                   borderColor: isSelected ? t.color : 'var(--border-default)',
                   borderWidth: isSelected ? '2px' : '1px',
                 }}
               >
-                <span className="font-medium" style={{ color: isSelected ? t.color : 'var(--text-primary)' }}>
-                  {t.label}
-                </span>
-                <div className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>{t.description}</div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-base" role="img" aria-hidden="true">{t.icon}</span>
+                  <span className="font-medium" style={{ color: isSelected ? t.color : 'var(--text-primary)' }}>
+                    {t.label}
+                  </span>
+                </div>
+                <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>{t.description}</div>
               </button>
             )
           })}
@@ -298,6 +301,12 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
           ref={bodyRef}
           value={body}
           onChange={(e) => { setBody(e.target.value); autoResize() }}
+          onKeyDown={(e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+              e.preventDefault()
+              e.currentTarget.form?.requestSubmit()
+            }
+          }}
           placeholder="Share your thoughts, questions, or reflections on the reading..."
           rows={10}
           className="w-full px-4 py-3 rounded-lg border text-sm resize-none transition-colors focus:outline-none"
@@ -311,7 +320,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
         <button
           type="button"
           onClick={() => router.back()}
-          className="px-4 py-2 rounded-lg text-sm font-medium border transition-colors"
+          className="px-4 py-2 rounded-lg text-sm font-medium border btn-transition"
           style={{ borderColor: 'var(--border-default)', color: 'var(--text-secondary)' }}
         >
           Cancel
@@ -319,7 +328,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
         <button
           type="submit"
           disabled={submitting}
-          className="px-6 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+          className="px-6 py-2 rounded-lg text-sm font-medium btn-transition disabled:opacity-50"
           style={{
             backgroundColor: 'var(--accent-red)',
             color: 'var(--text-inverse)',

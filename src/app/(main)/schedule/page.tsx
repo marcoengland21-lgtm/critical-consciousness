@@ -12,7 +12,7 @@ export default async function SchedulePage() {
   const user = await getSessionUser()
   const supabase = await createClient()
 
-  const { data: weeks } = await supabase
+  const { data: weeks, error: weeksError } = await supabase
     .from('reading_schedule')
     .select(`
       *,
@@ -25,6 +25,10 @@ export default async function SchedulePage() {
       )
     `)
     .order('week_number', { ascending: true })
+
+  if (weeksError) {
+    console.error('[CCP] Schedule page — query error:', weeksError)
+  }
 
   // Determine current week (closest upcoming due_date)
   const now = new Date()

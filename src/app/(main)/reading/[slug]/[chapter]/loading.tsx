@@ -1,6 +1,6 @@
 export default function ChapterLoading() {
   return (
-    <div className="max-w-3xl mx-auto" style={{ color: 'var(--text-primary)' }}>
+    <div className="max-w-3xl mx-auto skeleton-shimmer" style={{ color: 'var(--text-primary)' }}>
       {/* Breadcrumb skeleton */}
       <div className="flex items-center gap-2 mb-6">
         <div className="h-4 w-16 rounded" style={{ backgroundColor: 'var(--bg-soft)' }} />

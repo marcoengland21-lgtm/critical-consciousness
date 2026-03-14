@@ -35,7 +35,7 @@ export default function SelectionToolbar({ rect, onAnnotate, onStartThread, onCl
   return (
     <div
       ref={toolbarRef}
-      className="fixed z-50 flex items-center gap-1 px-1.5 py-1 rounded-lg shadow-lg border animate-fade-in"
+      className="fixed z-50 flex items-center gap-1 px-1.5 py-1 rounded-lg shadow-lg border animate-scale-in"
       style={{
         top: `${top}px`,
         left: `${left}px`,

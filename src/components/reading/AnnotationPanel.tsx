@@ -91,8 +91,11 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
 
   return (
     <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 z-40" />
+      {/* Backdrop — subtle darkening */}
+      <div
+        className="fixed inset-0 z-40 animate-backdrop"
+        style={{ backgroundColor: 'rgba(0, 0, 0, 0.15)' }}
+      />
 
       {/* Panel */}
       <div
@@ -188,7 +191,7 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
               {annotation.thread_id ? (
                 <button
                   onClick={() => router.push(`/threads/${annotation.thread_id}`)}
-                  className="w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  className="w-full px-3 py-2 rounded-lg text-sm font-medium btn-transition flex items-center justify-center gap-2"
                   style={{
                     backgroundColor: 'var(--bg-soft)',
                     color: 'var(--accent-red)',
@@ -218,7 +221,7 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
 
                     router.push(`/threads/new?${params.toString()}`)
                   }}
-                  className="w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  className="w-full px-3 py-2 rounded-lg text-sm font-medium btn-transition flex items-center justify-center gap-2"
                   style={{
                     backgroundColor: 'var(--bg-soft)',
                     color: 'var(--accent-red)',
@@ -238,6 +241,12 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
               id="annotation-reply"
               value={replyBody}
               onChange={(e) => setReplyBody(e.target.value)}
+              onKeyDown={(e) => {
+                if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                  e.preventDefault()
+                  e.currentTarget.form?.requestSubmit()
+                }
+              }}
               placeholder={userId ? 'Reply to this annotation...' : 'Reply as Guest...'}
               rows={2}
               className="w-full px-3 py-2 rounded-lg border text-sm resize-none"
@@ -245,13 +254,14 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
                 borderColor: 'var(--border-default)',
                 color: 'var(--text-primary)',
                 lineHeight: '1.6',
+                transition: 'border-color 150ms ease, box-shadow 150ms ease',
               }}
             />
             <div className="flex justify-end mt-2">
               <button
                 type="submit"
                 disabled={submitting || !replyBody.trim()}
-                className="px-3 py-1.5 text-xs font-medium rounded-lg disabled:opacity-50 transition-colors"
+                className="px-3 py-1.5 text-xs font-medium rounded-lg disabled:opacity-50 btn-transition"
                 style={{
                   backgroundColor: 'var(--accent-red)',
                   color: 'var(--text-inverse)',

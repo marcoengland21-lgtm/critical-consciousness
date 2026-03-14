@@ -164,11 +164,26 @@ nav a, nav button,
 a {
   color: var(--accent-red);
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: color var(--duration-fast) var(--ease-in-out);
 }
 a:hover {
   color: var(--text-secondary);
   text-decoration: underline;
+}
+
+/* Form inputs — smooth focus states */
+input, textarea, select {
+  transition: border-color var(--duration-fast) var(--ease-in-out),
+              box-shadow var(--duration-fast) var(--ease-in-out);
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 0 3px rgba(92, 61, 143, 0.12);
+}
+html[data-theme="dark"] input:focus,
+html[data-theme="dark"] textarea:focus,
+html[data-theme="dark"] select:focus {
+  box-shadow: 0 0 0 3px rgba(168, 140, 212, 0.15);
 }
 
 /* =================================================================
@@ -270,19 +285,31 @@ html[data-theme="dark"] ::selection {
    CARDS & INTERACTIONS
    ================================================================= */
 .card-hover {
-  transition: transform 150ms ease, box-shadow 150ms ease;
+  transition: transform var(--duration-normal) var(--ease-out-expo), box-shadow var(--duration-normal) var(--ease-out-expo);
 }
 .card-hover:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(26, 22, 37, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(26, 22, 37, 0.08);
 }
 html[data-theme="dark"] .card-hover:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 /* Theme-aware hover backgrounds (replaces Tailwind hover:bg-gray-*) */
-.hover-bg-themed { transition: background-color 150ms ease; }
+.hover-bg-themed { transition: background-color var(--duration-fast) var(--ease-in-out); }
 .hover-bg-themed:hover { background-color: var(--bg-hover); }
+
+/* Smooth button transitions — apply to any interactive element */
+.btn-transition {
+  transition: background-color var(--duration-fast) var(--ease-in-out),
+              color var(--duration-fast) var(--ease-in-out),
+              border-color var(--duration-fast) var(--ease-in-out),
+              transform var(--duration-fast) var(--ease-out-expo),
+              box-shadow var(--duration-fast) var(--ease-out-expo);
+}
+.btn-transition:active {
+  transform: scale(0.97);
+}
 
 /* Active nav link indicator */
 .nav-link {
@@ -340,19 +367,93 @@ html[data-theme="dark"] .markdown-body blockquote {
 }
 
 /* =================================================================
-   ANIMATIONS
+   ANIMATIONS — smooth, intentional motion system
+   Easing: cubic-bezier(0.22, 1, 0.36, 1) = "ease-out-expo"
+   Used for entrances, reveals, and state changes.
    ================================================================= */
+
+/* Shared timing variables */
+:root {
+  --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+}
+
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.animate-fade-in { animation: fadeInUp 300ms ease forwards; }
+.animate-fade-in { animation: fadeInUp var(--duration-normal) var(--ease-out-expo) forwards; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in-only { animation: fadeIn var(--duration-normal) var(--ease-out-expo) forwards; }
 
 @keyframes slideInRight {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
 }
-.animate-slide-in-right { animation: slideInRight 200ms ease forwards; }
+.animate-slide-in-right { animation: slideInRight var(--duration-slow) var(--ease-out-expo) forwards; }
+
+@keyframes slideOutRight {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(100%); }
+}
+.animate-slide-out-right { animation: slideOutRight var(--duration-normal) var(--ease-in-out) forwards; }
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-scale-in { animation: scaleIn var(--duration-normal) var(--ease-out-expo) forwards; }
+
+/* Staggered children — apply to parent, children get delayed fade-in */
+.stagger-children > * {
+  opacity: 0;
+  animation: fadeInUp var(--duration-normal) var(--ease-out-expo) forwards;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 250ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 300ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 350ms; }
+
+/* Collapsible content — CSS grid technique for smooth height transitions */
+.collapsible-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--duration-slow) var(--ease-out-expo);
+}
+.collapsible-content[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+.collapsible-content > .collapsible-inner {
+  overflow: hidden;
+}
+
+/* Backdrop fade */
+@keyframes backdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-backdrop { animation: backdropFadeIn var(--duration-normal) var(--ease-in-out) forwards; }
+
+/* Skeleton shimmer — softer than Tailwind's animate-pulse */
+@keyframes shimmer {
+  0% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.5; }
+}
+.skeleton-shimmer {
+  animation: shimmer 1.8s var(--ease-in-out) infinite;
+}
 
 /* =================================================================
    CONFUSION FLAG INTENSITY

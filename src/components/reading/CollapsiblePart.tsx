@@ -17,10 +17,11 @@ export default function CollapsiblePart({ partNumber, partTitle, defaultOpen, ch
       {/* Part header — clickable toggle */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-6 py-3 flex items-center justify-between text-left transition-colors"
+        className="w-full px-6 py-3 flex items-center justify-between text-left btn-transition"
         style={{
-          backgroundColor: 'var(--bg-soft)',
-          borderBottom: isOpen ? '1px solid var(--border-default)' : 'none',
+          backgroundColor: isOpen ? 'var(--bg-soft)' : 'var(--bg-card-alt)',
+          borderBottom: '1px solid',
+          borderColor: isOpen ? 'var(--border-default)' : 'transparent',
         }}
         aria-expanded={isOpen}
         aria-controls={`part-${partNumber}-content`}
@@ -42,10 +43,11 @@ export default function CollapsiblePart({ partNumber, partTitle, defaultOpen, ch
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="flex-shrink-0 transition-transform duration-200"
+          className="flex-shrink-0"
           style={{
             color: 'var(--text-secondary)',
             transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform var(--duration-normal) var(--ease-out-expo)',
           }}
           aria-hidden="true"
         >
@@ -53,16 +55,17 @@ export default function CollapsiblePart({ partNumber, partTitle, defaultOpen, ch
         </svg>
       </button>
 
-      {/* Collapsible content */}
+      {/* Collapsible content — smooth height transition via CSS grid */}
       <div
         id={`part-${partNumber}-content`}
         role="region"
         aria-label={`Part ${partNumber}: ${partTitle}`}
-        style={{
-          display: isOpen ? 'block' : 'none',
-        }}
+        className="collapsible-content"
+        data-open={isOpen}
       >
-        {children}
+        <div className="collapsible-inner">
+          {children}
+        </div>
       </div>
     </div>
   )

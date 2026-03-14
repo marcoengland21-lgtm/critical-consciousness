@@ -1,6 +1,6 @@
 export default function ThreadLoading() {
   return (
-    <div className="max-w-4xl mx-auto animate-pulse">
+    <div className="max-w-4xl mx-auto skeleton-shimmer">
       {/* Back link skeleton */}
       <div className="h-4 w-32 rounded mb-8" style={{ backgroundColor: 'var(--bg-card-alt)' }} />
 

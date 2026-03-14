@@ -2,7 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import CollapsiblePart from '@/components/reading/CollapsiblePart'
 
-export const revalidate = 3600 // Revalidate hourly — chapter list rarely changes
+// Dynamic page — uses cookies() via Supabase client.
+// Removed ISR to prevent stale empty-state caching on deploy.
 
 export const metadata = {
   title: 'Reading | Critical Consciousness',
@@ -63,7 +64,7 @@ export default async function ReadingPage() {
   const now = new Date().toISOString()
 
   // Both queries in parallel (was 2 sequential)
-  const [{ data: currentWeekData }, { data: documents }] = await Promise.all([
+  const [currentWeekResult, documentsResult] = await Promise.all([
     supabase
       .from('reading_schedule')
       .select('id')
@@ -81,6 +82,13 @@ export default async function ReadingPage() {
       `)
       .order('created_at', { ascending: true }),
   ])
+
+  if (documentsResult.error) {
+    console.error('[CCP] Reading page — text_documents query error:', documentsResult.error)
+  }
+
+  const currentWeekData = currentWeekResult.data
+  const documents = documentsResult.data
 
   const currentWeekId = currentWeekData?.[0]?.id || null
 
