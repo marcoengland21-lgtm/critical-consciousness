@@ -11,17 +11,11 @@ export async function generateMetadata({ params }: Props) {
   const { slug, chapter } = await params
   const supabase = await createClient()
 
-  const { data: doc } = await supabase
-    .from('text_documents')
-    .select('title')
-    .eq('slug', slug)
-    .single()
-
-  const { data: ch } = await supabase
-    .from('text_chapters')
-    .select('title')
-    .eq('chapter_number', parseInt(chapter))
-    .single()
+  // Parallel metadata fetch (was 2 sequential queries)
+  const [{ data: doc }, { data: ch }] = await Promise.all([
+    supabase.from('text_documents').select('title').eq('slug', slug).single(),
+    supabase.from('text_chapters').select('title').eq('chapter_number', parseInt(chapter)).single(),
+  ])
 
   return {
     title: ch
@@ -36,38 +30,36 @@ export default async function ChapterPage({ params }: Props) {
 
   // Session-based auth (local JWT, no network call)
   const user = await getSessionUser()
-
   const supabase = await createClient()
 
-  // Get the document
-  const { data: doc } = await supabase
-    .from('text_documents')
-    .select('id, title, slug')
-    .eq('slug', slug)
-    .single()
-
-  if (!doc) notFound()
-
-  // Get the chapter
-  const { data: chapterData } = await supabase
-    .from('text_chapters')
-    .select('*')
-    .eq('document_id', doc.id)
-    .eq('chapter_number', chapterNum)
-    .single()
-
-  if (!chapterData) notFound()
-
-  // Run remaining queries in parallel — all depend on doc.id or chapterData.id
+  // PHASE 1: 3 independent queries in parallel (no dependencies between them)
+  // Was: doc → chapter (sequential), then allChapters in parallel
+  // Now: all 3 at once since we know slug + chapter_number from URL
   const [
+    { data: doc },
+    { data: chapterData },
     { data: allChapters },
+  ] = await Promise.all([
+    supabase.from('text_documents')
+      .select('id, title, slug')
+      .eq('slug', slug)
+      .single(),
+    supabase.from('text_chapters')
+      .select('*')
+      .eq('chapter_number', chapterNum)
+      .single(),
+    supabase.from('text_chapters')
+      .select('id, chapter_number, title, sort_order')
+      .order('sort_order', { ascending: true }),
+  ])
+
+  if (!doc || !chapterData) notFound()
+
+  // PHASE 2: Footnotes + annotations in parallel (need chapterData.id)
+  const [
     { data: footnotes },
     { data: annotations },
   ] = await Promise.all([
-    supabase.from('text_chapters')
-      .select('id, chapter_number, title, sort_order')
-      .eq('document_id', doc.id)
-      .order('sort_order', { ascending: true }),
     supabase.from('text_footnotes')
       .select('*')
       .eq('chapter_id', chapterData.id)

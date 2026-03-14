@@ -17,32 +17,35 @@ export default async function ThreadPage({
   const user = await getSessionUser()
   const supabase = await createClient()
 
-  // Fetch thread with author
-  const { data: thread, error } = await supabase
-    .from('threads')
-    .select('*, author:profiles!author_id(id, display_name, role)')
-    .eq('id', id)
-    .single()
+  // ALL 3 queries in parallel (was 3 sequential: thread → replies → profile)
+  const [
+    { data: thread, error },
+    { data: replies },
+    { data: profile },
+  ] = await Promise.all([
+    supabase
+      .from('threads')
+      .select('*, author:profiles!author_id(id, display_name, role)')
+      .eq('id', id)
+      .single(),
+    supabase
+      .from('replies')
+      .select('*, author:profiles!author_id(id, display_name, role)')
+      .eq('thread_id', id)
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user?.id || '')
+      .single(),
+  ])
 
   if (error || !thread) {
     notFound()
   }
 
-  // Fetch all replies for this thread with authors
-  const { data: replies } = await supabase
-    .from('replies')
-    .select('*, author:profiles!author_id(id, display_name, role)')
-    .eq('thread_id', id)
-    .order('created_at', { ascending: true })
-
-  // Fetch user profile for checking admin
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user?.id || '')
-    .single()
-
-  // Try to find chapter context from thread body (look for quote pattern from reading)
+  // Context chapter lookup — only if thread body contains a passage reference
+  // Single joined query instead of 2 sequential (chapter → doc)
   let contextChapter = null
   let contextDocSlug = null
   let contextChapterNum: number | null = null
@@ -50,28 +53,16 @@ export default async function ThreadPage({
   if (blockquoteMatch) {
     const chapterNum = parseInt(blockquoteMatch[2])
     contextChapterNum = chapterNum
-    // Fetch chapter info to get document slug
+
     const { data: chapters } = await supabase
       .from('text_chapters')
-      .select('id, chapter_number, document_id')
+      .select('id, chapter_number, document:text_documents!document_id(slug)')
       .eq('chapter_number', chapterNum)
       .limit(1)
 
     if (chapters && chapters.length > 0) {
-      const chapterId = chapters[0].id
-      const docId = chapters[0].document_id
-
-      // Get document slug
-      const { data: docs } = await supabase
-        .from('text_documents')
-        .select('slug')
-        .eq('id', docId)
-        .single()
-
-      if (docs) {
-        contextChapter = chapterId
-        contextDocSlug = docs.slug
-      }
+      contextChapter = chapters[0].id
+      contextDocSlug = (chapters[0].document as any)?.slug || null
     }
   }
 

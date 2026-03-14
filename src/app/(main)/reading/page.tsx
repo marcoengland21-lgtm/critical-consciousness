@@ -8,27 +8,29 @@ export const metadata = {
 export default async function ReadingPage() {
   const supabase = await createClient()
 
-  // Get current week to determine default section
   const now = new Date().toISOString()
-  const { data: currentWeekData } = await supabase
-    .from('reading_schedule')
-    .select('id')
-    .gte('due_date', now)
-    .order('due_date', { ascending: true })
-    .limit(1)
+
+  // Both queries in parallel (was 2 sequential)
+  const [{ data: currentWeekData }, { data: documents }] = await Promise.all([
+    supabase
+      .from('reading_schedule')
+      .select('id')
+      .gte('due_date', now)
+      .order('due_date', { ascending: true })
+      .limit(1),
+    supabase
+      .from('text_documents')
+      .select(`
+        *,
+        chapters:text_chapters(
+          id, chapter_number, title, sort_order, week_id,
+          week:reading_schedule!week_id(week_number, title)
+        )
+      `)
+      .order('created_at', { ascending: true }),
+  ])
 
   const currentWeekId = currentWeekData?.[0]?.id || null
-
-  const { data: documents } = await supabase
-    .from('text_documents')
-    .select(`
-      *,
-      chapters:text_chapters(
-        id, chapter_number, title, sort_order, week_id,
-        week:reading_schedule!week_id(week_number, title)
-      )
-    `)
-    .order('created_at', { ascending: true })
 
   if (!documents || documents.length === 0) {
     return (

@@ -9,21 +9,22 @@ export default async function ResourcesPage() {
   const user = await getSessionUser()
   const supabase = await createClient()
 
-  const { data: resources } = await supabase
-    .from('resources')
-    .select('*, creator:profiles!created_by(display_name), week:reading_schedule!week_id(week_number, title)')
-    .order('created_at', { ascending: false })
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user?.id || '')
-    .single()
-
-  const { data: weeks } = await supabase
-    .from('reading_schedule')
-    .select('id, week_number, title')
-    .order('week_number', { ascending: true })
+  // All 3 queries in parallel (was 3 sequential)
+  const [{ data: resources }, { data: profile }, { data: weeks }] = await Promise.all([
+    supabase
+      .from('resources')
+      .select('*, creator:profiles!created_by(display_name), week:reading_schedule!week_id(week_number, title)')
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user?.id || '')
+      .single(),
+    supabase
+      .from('reading_schedule')
+      .select('id, week_number, title')
+      .order('week_number', { ascending: true }),
+  ])
 
   return (
     <div>

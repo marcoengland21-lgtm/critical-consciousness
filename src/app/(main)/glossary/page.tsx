@@ -9,16 +9,18 @@ export default async function GlossaryPage() {
   const user = await getSessionUser()
   const supabase = await createClient()
 
-  const { data: entries } = await supabase
-    .from('glossary_entries')
-    .select('*, creator:profiles!created_by(display_name)')
-    .order('term', { ascending: true })
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user?.id || '')
-    .single()
+  // Both queries in parallel (was 2 sequential)
+  const [{ data: entries }, { data: profile }] = await Promise.all([
+    supabase
+      .from('glossary_entries')
+      .select('*, creator:profiles!created_by(display_name)')
+      .order('term', { ascending: true }),
+    supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user?.id || '')
+      .single(),
+  ])
 
   return (
     <div>
