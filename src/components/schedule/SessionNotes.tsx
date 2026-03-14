@@ -150,7 +150,7 @@ export default function SessionNotes({ weekId, hasSession }: SessionNotesProps) 
   }
 
   return (
-    <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
+    <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full px-5 py-3 flex items-center justify-between transition-colors"

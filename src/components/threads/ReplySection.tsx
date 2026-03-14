@@ -269,7 +269,7 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
       </h2>
 
       {/* Top-level reply form */}
-      <div className="mb-6 p-4 rounded-lg border" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}>
+      <div className="mb-6 p-4 rounded-xl border" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}>
         <textarea
           ref={mainReplyRef}
           value={replyBody}

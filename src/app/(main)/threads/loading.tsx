@@ -16,7 +16,7 @@ export default function ThreadsLoading() {
       {/* Thread cards skeleton */}
       <div className="space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="p-5 rounded-lg border" style={{ borderColor: 'var(--border-default)', backgroundColor: 'var(--bg-card)' }}>
+          <div key={i} className="p-5 rounded-xl border" style={{ borderColor: 'var(--border-default)', backgroundColor: 'var(--bg-card)' }}>
             <div className="flex items-center gap-2 mb-3">
               <div className="h-5 w-20 rounded-full" style={{ backgroundColor: 'var(--bg-soft)' }} />
             </div>

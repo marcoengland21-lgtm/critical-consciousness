@@ -10,6 +10,14 @@ export default function ThemeInitializer() {
                 document.documentElement.setAttribute('data-theme', 'dark');
               }
             } catch (e) {}
+            // Set sidebar width before first paint to prevent layout shift
+            try {
+              if (window.innerWidth >= 768) {
+                document.documentElement.style.setProperty('--sidebar-width', '240px');
+              } else {
+                document.documentElement.style.setProperty('--sidebar-width', '0px');
+              }
+            } catch (e) {}
           })();
         `,
       }}

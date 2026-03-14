@@ -264,7 +264,7 @@ export default function ConceptMap({ entries }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
+      <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
         <div className="bg-white p-4">
           <canvas
             ref={canvasRef}
@@ -281,7 +281,7 @@ export default function ConceptMap({ entries }: Props) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Legend */}
-        <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
+        <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
           <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
             <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
               Legend
@@ -308,7 +308,7 @@ export default function ConceptMap({ entries }: Props) {
 
         {/* Selected Node Details */}
         {selectedNode && (
-          <div className="lg:col-span-2 rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
+          <div className="lg:col-span-2 rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
             <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
               <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
                 {selectedNode.label}

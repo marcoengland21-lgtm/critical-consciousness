@@ -17,7 +17,7 @@ export default function MilestoneCard({ milestone }: MilestoneCardProps) {
 
   return (
     <div
-      className="rounded-lg border-2 p-6 overflow-hidden"
+      className="rounded-xl border-2 p-6 overflow-hidden"
       style={{
         borderColor: 'var(--accent-purple)',
         backgroundColor: 'var(--bg-card-alt)',

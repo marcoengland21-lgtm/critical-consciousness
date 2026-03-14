@@ -25,7 +25,7 @@ export default async function Home() {
             color: 'var(--accent-red)',
           }}
         >
-          Critical Consciousness
+          Capital Study Group
         </h1>
         <p
           className="text-xl mb-8"

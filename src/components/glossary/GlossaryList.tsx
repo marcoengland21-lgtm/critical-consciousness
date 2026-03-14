@@ -257,7 +257,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
                   <div
                     key={entry.id}
                     id={`glossary-term-${entry.term}`}
-                    className="p-4 rounded-lg border transition-colors scroll-mt-16"
+                    className="p-4 rounded-xl border transition-colors scroll-mt-16"
                     style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
                   >
                     <div className="flex items-start justify-between gap-4 mb-2">

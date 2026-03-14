@@ -92,7 +92,7 @@ export default async function ThreadPage({
           <ThreadTypeBadge type={thread.thread_type as ThreadType} />
         </div>
 
-        <h1 className="text-3xl font-bold mb-5" style={{ color: 'var(--accent-red)' }}>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-5" style={{ color: 'var(--accent-red)' }}>
           {thread.title}
         </h1>
 

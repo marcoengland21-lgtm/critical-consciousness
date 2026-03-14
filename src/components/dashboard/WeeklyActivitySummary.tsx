@@ -9,7 +9,7 @@ export default function WeeklyActivitySummary({ annotationCount, threadCount, gl
 
   if (!hasActivity) {
     return (
-      <div className="rounded-lg border p-5" style={{ borderColor: 'var(--border-default)', backgroundColor: 'var(--bg-card-alt)' }}>
+      <div className="rounded-xl border p-5" style={{ borderColor: 'var(--border-default)', backgroundColor: 'var(--bg-card-alt)' }}>
         <p className="text-sm italic" style={{ color: 'var(--text-secondary)' }}>
           The group's activity this week will appear here as people begin reading and annotating.
         </p>
@@ -39,15 +39,29 @@ export default function WeeklyActivitySummary({ annotationCount, threadCount, gl
   }
 
   return (
-    <div className="rounded-lg border p-5" style={{ borderColor: 'var(--border-default)', backgroundColor: 'var(--bg-card-alt)' }}>
+    <div className="rounded-xl border p-5 card-elevated" style={{ borderColor: 'var(--border-default)', backgroundColor: 'var(--bg-card-alt)' }}>
       <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
-        This Week's Activity
+        This Week&apos;s Activity
       </h3>
-      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+      <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
         <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
           {activityDescription}
         </span>
       </p>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+        <span>
+          <span style={{ color: 'var(--accent-purple)' }}>&#x25C6;</span>{' '}
+          <span style={{ color: 'var(--text-secondary)' }}>{annotationCount} {annotationCount === 1 ? 'annotation' : 'annotations'}</span>
+        </span>
+        <span>
+          <span style={{ color: 'var(--accent-red)' }}>&#x25C6;</span>{' '}
+          <span style={{ color: 'var(--text-secondary)' }}>{threadCount} {threadCount === 1 ? 'thread' : 'threads'}</span>
+        </span>
+        <span>
+          <span style={{ color: 'var(--accent-green)' }}>&#x25C6;</span>{' '}
+          <span style={{ color: 'var(--text-secondary)' }}>{glossaryCount} {glossaryCount === 1 ? 'term' : 'terms'}</span>
+        </span>
+      </div>
     </div>
   )
 }

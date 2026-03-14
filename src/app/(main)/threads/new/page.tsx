@@ -2,7 +2,7 @@ import { createClient, getSessionUser } from '@/lib/supabase/server'
 import NewThreadForm from '@/components/threads/NewThreadForm'
 
 export const metadata = {
-  title: 'New Thread | Critical Consciousness',
+  title: 'New Thread | Capital Study Group',
 }
 
 export default async function NewThreadPage() {
@@ -20,7 +20,7 @@ export default async function NewThreadPage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8" style={{ color: 'var(--accent-red)' }}>
+      <h1 className="text-2xl sm:text-3xl font-bold mb-8" style={{ color: 'var(--accent-red)' }}>
         Start a New Thread
       </h1>
       <NewThreadForm weeks={weeks || []} />

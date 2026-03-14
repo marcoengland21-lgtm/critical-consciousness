@@ -6,7 +6,7 @@ import CollapsiblePart from '@/components/reading/CollapsiblePart'
 // Removed ISR to prevent stale empty-state caching on deploy.
 
 export const metadata = {
-  title: 'Reading | Critical Consciousness',
+  title: 'Reading | Capital Study Group',
 }
 
 /**
@@ -95,7 +95,7 @@ export default async function ReadingPage() {
   if (!documents || documents.length === 0) {
     return (
       <div>
-        <h1 className="text-3xl font-bold mb-8" style={{ color: 'var(--accent-red)' }}>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-8" style={{ color: 'var(--accent-red)' }}>
           Reading
         </h1>
         <div className="text-center py-16">
@@ -113,9 +113,12 @@ export default async function ReadingPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--accent-red)' }}>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-1" style={{ color: 'var(--accent-red)' }}>
           Reading
         </h1>
+        <p className="text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>
+          33 chapters across 8 parts
+        </p>
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
           Read the text and annotate together — highlight passages, leave questions, and see what the group is thinking.
         </p>

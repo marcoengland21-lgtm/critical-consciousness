@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { unstable_cache } from 'next/cache'
 import ChapterReader from '@/components/reading/ChapterReader'
+import ChapterSidebar from '@/components/reading/ChapterSidebar'
 
 interface Props {
   params: Promise<{ slug: string; chapter: string }>
@@ -26,6 +27,19 @@ function getChapterLabel(chapterNumber: number): { label: string; shortLabel: st
   }
 }
 
+/** Get the Part number for a given Marx chapter number */
+function getPartNumber(chapterNumber: number): number {
+  const marxChapter = chapterNumber <= 4 ? 1 : chapterNumber - 3
+  if (marxChapter <= 3) return 1
+  if (marxChapter <= 6) return 2
+  if (marxChapter <= 10) return 3
+  if (marxChapter <= 15) return 4
+  if (marxChapter <= 18) return 5
+  if (marxChapter <= 22) return 6
+  if (marxChapter <= 25) return 7
+  return 8
+}
+
 export async function generateMetadata({ params }: Props) {
   const { slug, chapter } = await params
   const supabase = await createClient()
@@ -36,11 +50,11 @@ export async function generateMetadata({ params }: Props) {
     supabase.from('text_chapters').select('title, chapter_number').eq('chapter_number', parseInt(chapter)).single(),
   ])
 
-  if (!ch) return { title: 'Reading | Critical Consciousness' }
+  if (!ch) return { title: 'Reading | Capital Study Group' }
 
   const { label } = getChapterLabel(ch.chapter_number)
   return {
-    title: `${ch.title} | ${label} | ${doc?.title || 'Reading'} | Critical Consciousness`,
+    title: `${ch.title} | ${label} | ${doc?.title || 'Reading'} | Capital Study Group`,
   }
 }
 
@@ -130,7 +144,17 @@ export default async function ChapterPage({ params }: Props) {
   const ch1Sections = chapters.filter(c => c.chapter_number <= 4)
 
   return (
-    <div>
+    <div className="relative">
+      {/* Floating Chapter Sidebar — desktop only */}
+      <ChapterSidebar
+        chapters={chapters}
+        currentChapter={chapterNum}
+        slug={slug}
+      />
+
+      {/* Chapter content — offset on large screens to clear sidebar */}
+      <div className="lg:pl-56">
+
       {/* Breadcrumb navigation */}
       <div className="mb-6 flex items-center gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
         <Link href="/reading" className="hover:underline" style={{ color: 'var(--accent-red)' }}>
@@ -144,16 +168,34 @@ export default async function ChapterPage({ params }: Props) {
         <span style={{ color: 'var(--text-primary)' }}>{currentLabel}</span>
       </div>
 
+      {/* Reading progress bar */}
+      {chapters.length > 0 && (
+        <div className="mb-6 text-center">
+          <p className="text-xs mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+            {currentLabel} of 33 · Part {getPartNumber(chapterNum)}
+          </p>
+          <div className="h-[3px] rounded-full max-w-xs mx-auto" style={{ backgroundColor: 'var(--bg-soft)' }}>
+            <div
+              className="h-full rounded-full"
+              style={{
+                backgroundColor: 'var(--accent-purple)',
+                width: `${Math.round((currentIndex / (chapters.length - 1)) * 100)}%`,
+              }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Section navigation — only show Ch1 section tabs when reading a Ch1 section */}
       {isChapter1Section && (
-        <div className="flex flex-wrap gap-2 mb-10">
+        <div className="flex gap-2 mb-10 overflow-x-auto sm:flex-wrap sm:overflow-visible pb-2 sm:pb-0 scrollbar-hide">
           {ch1Sections.map((ch) => {
             const isActive = ch.chapter_number === chapterNum
             return (
               <Link
                 key={ch.id}
                 href={`/reading/${slug}/${ch.chapter_number}`}
-                className="px-4 py-2 rounded-lg text-sm font-medium btn-transition"
+                className="shrink-0 px-4 py-2 rounded-lg text-sm font-medium btn-transition"
                 style={{
                   backgroundColor: isActive ? 'var(--text-primary)' : 'var(--bg-card)',
                   color: isActive ? 'var(--bg-page)' : 'var(--text-primary)',
@@ -195,22 +237,20 @@ export default async function ChapterPage({ params }: Props) {
       />
 
       {/* Cross-feature prompt */}
-      <div className="mt-12 p-5 rounded-lg border text-center" style={{ borderColor: 'var(--border-default)', backgroundColor: 'var(--bg-card)' }}>
+      <div className="mt-12 p-5 rounded-xl border text-center" style={{ borderColor: 'var(--border-default)', backgroundColor: 'var(--bg-card)' }}>
         <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
           Finished reading? Share your thoughts with the group.
         </p>
         <div className="flex items-center justify-center gap-3">
           <Link
             href={`/threads/new?chapter=${chapterNum}&section=${encodeURIComponent(chapterData.title)}&chapter_id=${chapterData.id}`}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium btn-transition"
-            style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}
+            className="btn-primary text-sm gap-1.5"
           >
             Start a Thread
           </Link>
           <Link
             href="/threads"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium border btn-transition"
-            style={{ borderColor: 'var(--border-default)', color: 'var(--text-secondary)' }}
+            className="btn-secondary text-sm gap-1.5"
           >
             View Discussions
           </Link>
@@ -250,6 +290,7 @@ export default async function ChapterPage({ params }: Props) {
           <div />
         )}
       </div>
+      </div>{/* end lg:pl-56 */}
     </div>
   )
 }

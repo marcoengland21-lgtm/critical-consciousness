@@ -4,7 +4,7 @@ import GlossaryList from '@/components/glossary/GlossaryList'
 export const revalidate = 3600
 
 export const metadata = {
-  title: 'Glossary | Critical Consciousness',
+  title: 'Glossary | Capital Study Group',
 }
 
 export default async function GlossaryPage() {
@@ -27,7 +27,7 @@ export default async function GlossaryPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold" style={{ color: 'var(--accent-red)' }}>
+        <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: 'var(--accent-red)' }}>
           Glossary
         </h1>
       </div>

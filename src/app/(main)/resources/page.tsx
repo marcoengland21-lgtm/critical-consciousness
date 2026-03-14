@@ -2,7 +2,7 @@ import { createClient, getSessionUser } from '@/lib/supabase/server'
 import ResourcesList from '@/components/resources/ResourcesList'
 
 export const metadata = {
-  title: 'Resources | Critical Consciousness',
+  title: 'Resources | Capital Study Group',
 }
 
 export default async function ResourcesPage() {
@@ -28,7 +28,7 @@ export default async function ResourcesPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-8" style={{ color: 'var(--accent-red)' }}>
+      <h1 className="text-2xl sm:text-3xl font-bold mb-8" style={{ color: 'var(--accent-red)' }}>
         Resources
       </h1>
       <ResourcesList

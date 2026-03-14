@@ -11,7 +11,7 @@ export default function DashboardLoading() {
         {/* Left column */}
         <div className="lg:col-span-2 space-y-6">
           {/* This Week's Reading skeleton */}
-          <div className="rounded-lg border-2 overflow-hidden" style={{ borderColor: 'var(--accent-purple)' }}>
+          <div className="rounded-xl border-2 overflow-hidden" style={{ borderColor: 'var(--accent-purple)' }}>
             <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-header)' }}>
               <div className="h-5 w-40 rounded" style={{ backgroundColor: 'var(--accent-purple)', opacity: 0.3 }} />
             </div>
@@ -24,13 +24,13 @@ export default function DashboardLoading() {
           </div>
 
           {/* Activity skeleton */}
-          <div className="rounded-lg border p-5" style={{ borderColor: 'var(--border-default)', backgroundColor: 'var(--bg-card-alt)' }}>
+          <div className="rounded-xl border p-5" style={{ borderColor: 'var(--border-default)', backgroundColor: 'var(--bg-card-alt)' }}>
             <div className="h-4 w-36 rounded mb-2" style={{ backgroundColor: 'var(--bg-card)' }} />
             <div className="h-4 w-full rounded" style={{ backgroundColor: 'var(--bg-card)' }} />
           </div>
 
           {/* Recent Threads skeleton */}
-          <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
+          <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
             <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
               <div className="h-5 w-40 rounded" style={{ backgroundColor: 'var(--bg-card-alt)' }} />
             </div>
@@ -48,7 +48,7 @@ export default function DashboardLoading() {
 
         {/* Right column */}
         <div className="space-y-6">
-          <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
+          <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
             <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
               <div className="h-5 w-24 rounded" style={{ backgroundColor: 'var(--bg-card-alt)' }} />
             </div>
@@ -57,7 +57,7 @@ export default function DashboardLoading() {
             </div>
           </div>
 
-          <div className="rounded-lg border-2 p-5" style={{ borderColor: 'var(--accent-red)', backgroundColor: 'var(--bg-card)' }}>
+          <div className="rounded-xl border-2 p-5" style={{ borderColor: 'var(--accent-red)', backgroundColor: 'var(--bg-card)' }}>
             <div className="h-3 w-24 rounded mb-2" style={{ backgroundColor: 'var(--bg-card-alt)' }} />
             <div className="h-5 w-48 rounded mb-1" style={{ backgroundColor: 'var(--bg-card-alt)' }} />
             <div className="h-3 w-64 rounded" style={{ backgroundColor: 'var(--bg-card-alt)' }} />

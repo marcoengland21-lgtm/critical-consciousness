@@ -45,7 +45,7 @@ export default function GroupThinkingOverview({ annotations, threads, documentSl
       .slice(-3)
       .reverse()
       .map((ann) => ({
-        snippet: ann.body.length > 80 ? ann.body.substring(0, 80).trim() + '...' : ann.body,
+        snippet: ann.body.length > 140 ? ann.body.substring(0, 140).trim() + '...' : ann.body,
         chapter_number: ann.chapter_number,
       }))
 
@@ -59,7 +59,7 @@ export default function GroupThinkingOverview({ annotations, threads, documentSl
 
   if (analysis.totalAnnotations === 0 && analysis.totalThreads === 0) {
     return (
-      <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
+      <div className="rounded-xl border overflow-hidden card-elevated" style={{ borderColor: 'var(--border-default)' }}>
         <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
           <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
             What the Group is Thinking
@@ -67,7 +67,7 @@ export default function GroupThinkingOverview({ annotations, threads, documentSl
         </div>
         <div className="p-5 text-center" style={{ backgroundColor: 'var(--bg-card)' }}>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            The group's thinking will appear here as people begin annotating the text.
+            The group&apos;s thinking will appear here as people begin annotating the text.
           </p>
         </div>
       </div>
@@ -75,7 +75,7 @@ export default function GroupThinkingOverview({ annotations, threads, documentSl
   }
 
   return (
-    <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
+    <div className="rounded-xl border overflow-hidden card-elevated" style={{ borderColor: 'var(--border-default)' }}>
       <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
         <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
           What the Group is Thinking

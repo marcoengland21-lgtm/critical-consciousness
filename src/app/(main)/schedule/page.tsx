@@ -5,7 +5,7 @@ import SessionNotes from '@/components/schedule/SessionNotes'
 import type { WeeklyRoleType } from '@/types/database'
 
 export const metadata = {
-  title: 'Reading Schedule | Critical Consciousness',
+  title: 'Reading Schedule | Capital Study Group',
 }
 
 export default async function SchedulePage() {
@@ -37,7 +37,7 @@ export default async function SchedulePage() {
   if (!weeks || weeks.length === 0) {
     return (
       <div>
-        <h1 className="text-3xl font-bold mb-8" style={{ color: 'var(--accent-red)' }}>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-8" style={{ color: 'var(--accent-red)' }}>
           Reading Schedule
         </h1>
         <div className="text-center py-16">
@@ -54,7 +54,7 @@ export default async function SchedulePage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-8" style={{ color: 'var(--accent-red)' }}>
+      <h1 className="text-2xl sm:text-3xl font-bold mb-8" style={{ color: 'var(--accent-red)' }}>
         Reading Schedule
       </h1>
 
@@ -69,7 +69,7 @@ export default async function SchedulePage() {
           return (
             <div
               key={week.id}
-              className="rounded-lg border-2 overflow-hidden transition-all"
+              className="rounded-xl border-2 overflow-hidden transition-all"
               style={{
                 borderColor: isCurrent ? 'var(--accent-purple)' : isPast ? 'var(--border-strong)' : 'var(--border-default)',
                 opacity: isPast ? 0.7 : 1,

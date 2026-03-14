@@ -170,7 +170,7 @@ export default function ResourcesList({
           {filtered.map((resource) => {
             const typeInfo = typeLabels[resource.resource_type] || typeLabels.other
             return (
-              <div key={resource.id} className="p-4 rounded-lg border" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}>
+              <div key={resource.id} className="p-4 rounded-xl border" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}>
                 <div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-sm mb-1" style={{ color: 'var(--text-primary)' }}>

@@ -33,7 +33,7 @@ function AuthorBadge({ name }: { name: string }) {
 }
 
 export const metadata = {
-  title: 'Discussion Threads | Critical Consciousness',
+  title: 'Discussion Threads | Capital Study Group',
 }
 
 // Strip markdown and plain text preview
@@ -96,16 +96,12 @@ export default async function ThreadsPage({
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold" style={{ color: 'var(--accent-red)' }}>
+        <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: 'var(--accent-red)' }}>
           Discussion Threads
         </h1>
         <Link
           href="/threads/new"
-          className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium btn-transition"
-          style={{
-            backgroundColor: 'var(--accent-red)',
-            color: 'var(--text-inverse)',
-          }}
+          className="btn-primary text-sm"
         >
           New Thread
         </Link>
@@ -142,11 +138,7 @@ export default async function ThreadsPage({
           </p>
           <Link
             href="/threads/new"
-            className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium btn-transition"
-            style={{
-              backgroundColor: 'var(--accent-red)',
-              color: 'var(--text-inverse)',
-            }}
+            className="btn-primary text-sm"
           >
             Start a Discussion
           </Link>
@@ -160,7 +152,7 @@ export default async function ThreadsPage({
               <Link
                 key={thread.id}
                 href={`/threads/${thread.id}`}
-                className="block p-6 rounded-lg border transition-all card-hover"
+                className="block p-6 rounded-xl border transition-all card-hover"
                 style={{
                   backgroundColor: 'var(--bg-card)',
                   borderColor: thread.pinned ? 'var(--accent-purple)' : 'var(--border-default)',

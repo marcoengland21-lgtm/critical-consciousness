@@ -30,7 +30,7 @@ export default async function DashboardPage() {
   const weekStartISO = weekStart.toISOString()
   const weekEndISO = weekEnd.toISOString()
 
-  // All 8 queries in a single parallel batch
+  // All 9 queries in a single parallel batch
   const [
     { data: profile },
     { data: currentWeekData },
@@ -40,6 +40,7 @@ export default async function DashboardPage() {
     { count: weekAnnotationCount },
     { count: weekThreadCount },
     { count: weekGlossaryCount },
+    { count: totalWeeks },
   ] = await Promise.all([
     supabase.from('profiles').select('display_name, role').eq('id', user?.id || '').single(),
     supabase.from('reading_schedule').select(`
@@ -60,6 +61,7 @@ export default async function DashboardPage() {
     supabase.from('annotations').select('*', { count: 'exact', head: true }).gte('created_at', weekStartISO).lte('created_at', weekEndISO),
     supabase.from('threads').select('*', { count: 'exact', head: true }).gte('created_at', weekStartISO).lte('created_at', weekEndISO),
     supabase.from('glossary_entries').select('*', { count: 'exact', head: true }).gte('created_at', weekStartISO).lte('created_at', weekEndISO),
+    supabase.from('reading_schedule').select('*', { count: 'exact', head: true }),
   ])
 
   const displayName = profile?.display_name || 'there'
@@ -102,12 +104,28 @@ export default async function DashboardPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-1" style={{ color: 'var(--accent-red)' }}>
-          {user ? `Welcome back, ${displayName}` : 'Welcome to Critical Consciousness'}
+        <h1 className="text-2xl sm:text-3xl font-bold mb-1" style={{ color: 'var(--accent-red)' }}>
+          {user ? `Welcome back, ${displayName}` : 'Welcome to Capital Study Group'}
         </h1>
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
           Christchurch Capital Reading Group
         </p>
+        {currentWeek && totalWeeks && totalWeeks > 0 && (
+          <div className="mt-3">
+            <p className="text-xs mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+              Week {currentWeek.week_number} of {totalWeeks} · Capital, Volume I
+            </p>
+            <div className="h-[3px] rounded-full max-w-xs" style={{ backgroundColor: 'var(--bg-soft)' }}>
+              <div
+                className="h-full rounded-full"
+                style={{
+                  backgroundColor: 'var(--accent-purple)',
+                  width: `${Math.round((currentWeek.week_number / totalWeeks) * 100)}%`,
+                }}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 stagger-children">
@@ -119,7 +137,7 @@ export default async function DashboardPage() {
           )}
 
           {/* This Week's Reading */}
-          <div className="rounded-lg border-2 overflow-hidden" style={{ borderColor: 'var(--accent-purple)' }}>
+          <div className="rounded-xl border-2 overflow-hidden card-elevated" style={{ borderColor: 'var(--accent-purple)' }}>
             <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-header)' }}>
               <div className="flex items-center justify-between">
                 <h2 className="font-bold" style={{ color: 'var(--text-inverse)' }}>
@@ -221,7 +239,7 @@ export default async function DashboardPage() {
           <GroupThinkingOverview annotations={annotations} threads={threads} />
 
           {/* Recent Threads */}
-          <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
+          <div className="rounded-xl border overflow-hidden card-elevated" style={{ borderColor: 'var(--border-default)' }}>
             <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
               <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
                 Recent Discussions
@@ -283,7 +301,7 @@ export default async function DashboardPage() {
         {/* Right column: Roles + Quick Links */}
         <div className="space-y-6">
           {/* Your Roles This Week */}
-          <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
+          <div className="rounded-xl border overflow-hidden card-elevated" style={{ borderColor: 'var(--border-default)' }}>
             <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
               <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
                 Your Roles
@@ -314,7 +332,7 @@ export default async function DashboardPage() {
 
           {/* All Roles This Week */}
           {currentWeek?.weekly_roles && currentWeek.weekly_roles.length > 0 && (
-            <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
+            <div className="rounded-xl border overflow-hidden card-elevated" style={{ borderColor: 'var(--border-default)' }}>
               <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
                 <h2 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
                   All Roles This Week
@@ -339,7 +357,7 @@ export default async function DashboardPage() {
           {/* Start Reading CTA */}
           <Link
             href={currentWeek?.chapter_ref ? `/reading/capital-vol-1/${currentWeek.week_number}` : '/reading/capital-vol-1/1'}
-            className="block rounded-lg border-2 p-5 transition-all hover:shadow-md card-hover"
+            className="block rounded-xl border-2 p-5 transition-all hover:shadow-md card-hover"
             style={{
               borderColor: 'var(--accent-red)',
               backgroundColor: 'var(--bg-card)',
@@ -357,21 +375,33 @@ export default async function DashboardPage() {
           </Link>
 
           {/* Quick Links */}
-          <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
+          <div className="rounded-xl border overflow-hidden card-elevated" style={{ borderColor: 'var(--border-default)' }}>
             <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
               <h2 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
                 Quick Links
               </h2>
             </div>
             <div style={{ backgroundColor: 'var(--bg-card)' }}>
-              <Link href="/threads/new" className="block px-5 py-3 text-sm transition-colors hover-bg-themed border-b" style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}>
-                Share with the Group
+              <Link href="/threads/new" className="flex items-start gap-3 px-5 py-3 transition-colors hover-bg-themed border-b" style={{ borderColor: 'var(--border-default)' }}>
+                <span className="text-base mt-0.5" style={{ color: 'var(--accent-purple)' }}>&#x25C7;</span>
+                <div>
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Share with the Group</p>
+                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Start a discussion thread</p>
+                </div>
               </Link>
-              <Link href="/glossary" className="block px-5 py-3 text-sm transition-colors hover-bg-themed border-b" style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}>
-                Browse Glossary
+              <Link href="/glossary" className="flex items-start gap-3 px-5 py-3 transition-colors hover-bg-themed border-b" style={{ borderColor: 'var(--border-default)' }}>
+                <span className="text-base mt-0.5" style={{ color: 'var(--accent-purple)' }}>&#x25C7;</span>
+                <div>
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Browse Glossary</p>
+                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Look up or add terms</p>
+                </div>
               </Link>
-              <Link href="/resources" className="block px-5 py-3 text-sm transition-colors hover-bg-themed" style={{ color: 'var(--text-primary)' }}>
-                Resources
+              <Link href="/resources" className="flex items-start gap-3 px-5 py-3 transition-colors hover-bg-themed" style={{ borderColor: 'var(--border-default)' }}>
+                <span className="text-base mt-0.5" style={{ color: 'var(--accent-purple)' }}>&#x25C7;</span>
+                <div>
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Resources</p>
+                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Companion readings and tools</p>
+                </div>
               </Link>
             </div>
           </div>

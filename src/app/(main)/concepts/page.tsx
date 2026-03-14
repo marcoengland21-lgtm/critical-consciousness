@@ -4,7 +4,7 @@ import ConceptMap from '@/components/concepts/ConceptMap'
 export const revalidate = 3600 // Revalidate hourly — glossary entries change infrequently
 
 export const metadata = {
-  title: 'Concepts | Critical Consciousness',
+  title: 'Concepts | Capital Study Group',
 }
 
 export default async function ConceptsPage() {
@@ -19,7 +19,7 @@ export default async function ConceptsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--accent-red)' }}>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: 'var(--accent-red)' }}>
             Concept Map
           </h1>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
