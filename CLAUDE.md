@@ -26,6 +26,98 @@ Last updated: 15 March 2026
 
 ---
 
+## Project Philosophy
+
+### Why This Exists
+
+This platform exists because political education is either locked behind paywalls, delivered as passive content consumption, or happens on platforms designed for dopamine-driven engagement. None of those serve genuine learning. This platform is the alternative — purpose-built for one thing: helping small groups of people think critically about difficult texts together.
+
+The founding insight is from Paulo Freire's *Pedagogy of the Oppressed*: genuine education is not a teacher depositing knowledge into passive students (the "banking model"). It's dialogue between equals where understanding develops collectively. The teacher has more knowledge but is also learning. The students aren't empty vessels — their questions, confusions, and experiences are the raw material of learning.
+
+**Every feature should be tested against this:** does it encourage dialogue between equals, or does it create hierarchy between teacher and student?
+
+### The Banking Model Problem
+
+The biggest risk is accidentally reproducing the banking model in digital form. This happens when:
+
+- The facilitator's content is visually privileged over members' contributions
+- The interface makes it feel like there are "right answers" to find
+- One person dominates discussion while others consume
+- People read passively without articulating their own thinking
+- The platform rewards performance (likes, metrics) over genuine engagement
+
+Design decisions that resist this:
+
+- Admin/facilitator posts look identical to member posts in threads. No special styling, no "teacher" badge.
+- Discussion prompts are QUESTIONS, not instructions. "What do you think Marx means by..." not "Marx means..."
+- Rotating roles distribute intellectual labor — everyone takes turns as Summarizer, Discussion Starter, Connector, Passage Picker. Nobody is permanently the expert.
+- No likes or reactions. The only way to engage with someone's thinking is to reply with your own thinking.
+- Anonymous confusion flags normalize struggle. Seeing that 5 other people are also confused says "you're not stupid, this is genuinely hard."
+
+### The Annotation System Is The Core Pedagogy
+
+Social annotation isn't just a feature — it's the pedagogical engine. Research shows 5-10% comprehension improvement when groups annotate socially versus reading alone (Miller et al., 2018; Novak et al., 2012). But the real value is qualitative:
+
+- **Anchors discussion to specific text** rather than vague impressions. "I don't understand the value-form" becomes "I don't understand THIS sentence" — which is answerable.
+- **Visible confusion is the most valuable data.** When 6 people flag the same paragraph, that's the session agenda writing itself.
+- **Makes the group's collective reading visible.** You can see where attention concentrates, what excites people, what confuses them. The text becomes a shared experience rather than 8 individual readings.
+- **Annotation-to-thread promotion** means rich conversations that start on the text can grow into full discussions without losing the connection to the passage that sparked them.
+
+### Why No Likes/Reactions — The Research
+
+Not an arbitrary preference. Hanus & Fox (2015) found that gamification elements (badges, leaderboards, points) actually REDUCED student motivation and satisfaction. Extrinsic rewards crowd out intrinsic motivation. Once people are performing for likes, they stop engaging for understanding.
+
+In a group of 8, likes would immediately create an implicit hierarchy — whose reflections are "popular." The person who writes a confused, vulnerable post and gets 1 like while someone else's polished analysis gets 7 will never post vulnerably again. And the confused post was more valuable to the group's learning.
+
+### Why Calm Technology — The Research
+
+Gloria Mark's research: it takes 23 minutes and 15 seconds to regain deep focus after an interruption. Capital requires deep reading — the argument builds sentence by sentence. Real-time push notifications would destroy the reading experience.
+
+The platform should be something you CHOOSE to check, not something that demands your attention. No unread counters creating anxiety. No "5 new messages" badges. People come to the site when they want to think. The site waits for them.
+
+### The Weekly Rhythm
+
+The before-during-after pattern structures each week:
+
+**Before session:** Members read the assigned section. They annotate as they go — marking confusions, highlighting key passages, asking questions. The Passage Picker selects key passages. The Discussion Starter posts opening questions. The async discussion begins forming.
+
+**During session:** The group meets (hybrid in-person + Zoom). John can see the annotation heatmap — where confusions concentrated. The session focuses on the hardest passages and the most generative disagreements.
+
+**After session:** The Summarizer posts a recap. The Connector links the week's ideas to previous reading or current events. The glossary grows with newly understood terms. The cycle resets for next week.
+
+This rhythm means the in-person session isn't starting cold — the online preparation means everyone arrives with formed (if incomplete) thoughts. And the post-session continuation means ideas that didn't get airtime in person still have space to develop.
+
+### The Rotating Roles Are Pedagogical
+
+These aren't administrative — they're pedagogical. Research (Schellens et al., 2005) shows role assignment produces significantly higher levels of knowledge construction and cognitive engagement.
+
+Each role forces a different kind of engagement:
+
+- **Summarizer** must synthesise — compresses discussion into key points, requiring understanding of the whole.
+- **Discussion Starter** must generate questions — identifying what's genuinely puzzling rather than obvious.
+- **Connector** must think across contexts — linking Marx to current events or previous chapters, building integrative understanding.
+- **Passage Picker** must make editorial judgments — selecting what's most important or confusing, requiring careful reading.
+
+With 6-10 members and 4 roles, everyone gets a role every 2-3 weeks. This distributes cognitive labor that would otherwise fall entirely on the facilitator.
+
+### Reading Capital Specifically
+
+Capital is one of the most difficult books most people will ever attempt:
+
+- The East Bay DSA syllabus (the best freely available) allocates 5 WEEKS to Chapter 1 alone. The pace should be slow and the platform should never make people feel behind for struggling.
+- Chapter 1, Sections 1-3 are the hardest in the entire book. The value-form discussion in Section 3 is notoriously dense. If the group survives Chapter 1, they'll likely finish the book.
+- Marx's footnotes are part of the argument — some of the sharpest analysis lives there. They should be accessible, not hidden.
+- Concepts build on each other across the entire book. The glossary isn't just a reference — it's a survival tool. By Chapter 15, readers need to remember definitions from Chapter 1. Cross-referencing between glossary and reading page (term highlighting with tooltip definitions) is genuinely important.
+- Different companion resources serve different interpretive traditions: David Harvey (most accessible), Michael Heinrich (most rigorous on early chapters), Harry Cleaver (autonomist/working-class perspective). The platform should eventually support multiple perspectives rather than privileging one reading.
+
+### Multi-Group Future
+
+This platform is designed for one study group right now. But the architecture must support any group, anywhere, reading any text. A group in Auckland reading Capital. A group in London reading *Pedagogy of the Oppressed*. A group in Lagos reading Fanon. The `text_documents`/`text_chapters` schema is text-agnostic. The study group model (schedule, roles, annotation, glossary, threads) works for any difficult text read collectively.
+
+The shared glossary feature (groups reading the same text can optionally import definitions from other groups) means collective intelligence compounds across the platform, not just within one group.
+
+---
+
 ## Tech Stack
 
 | Layer       | Technology                        | Version  |
@@ -235,6 +327,26 @@ Key classes:
 
 ---
 
+## Design Philosophy
+
+### The Metaphor
+
+Community library, not government office. Both are functional public spaces. One makes you want to stay.
+
+### Who The Users Are
+
+Working people, aged 14-80+. Some are politically sharp, some are just beginning to question things. Some are confident online, some are nervous about posting. The person who matters most to design for is the one who's most hesitant — the one who reads everyone else's annotations and thinks "they're all smarter than me." If the platform makes that person feel safe enough to type "I don't understand this paragraph at all" — the design is working.
+
+### The Reading Page Is Sacred
+
+The reading page is where people encounter Marx's actual words. It should feel like a book, not a website. Comfortable typography, constrained width, generous margins, warm highlight colors for annotations. When annotations are hidden (focused mode), it should feel like holding a physical book. When annotations are visible, it should feel like reading a book where a friend has pencilled notes in the margins — intimate, not cluttered.
+
+### Warmth Is Structural, Not Decorative
+
+Warmth doesn't come from slapping earth tones on a generic layout. It comes from: generous whitespace (calm, not cramped), considered typography (someone chose this font for a reason), smooth animations (the interface cares about your experience), thoughtful empty states (the platform speaks to you like a person, not a system), and the absence of anxiety-producing elements (no unread counts, no metrics, no urgency signals).
+
+---
+
 ## Code Conventions
 
 - TypeScript everywhere. Proper interfaces for all data shapes in `src/types/database.ts`. No `any` types (some remain — tech debt).
@@ -307,6 +419,17 @@ These are hard-won. Follow them always.
 18. **Don't remove `// TODO: RE-ENABLE AUTH` code.** It's needed for launch. Just keep it commented until ready.
 19. **Chapter numbering is non-obvious.** Ch1 has 4 sections (chapter_number 1-4), Ch2 starts at 5. Always use `getChapterLabel()`.
 20. **Collapsibles use CSS grid**, not JS height calculation. Set `data-open="true"` on `.collapsible-content`.
+21. **Facilitator posts in threads must NOT be visually distinguished from member posts.** No "teacher" badge, no special styling. Freirean principle: dialogue between equals.
+22. **Discussion prompts are always phrased as questions**, never as instructions or statements.
+23. **If chapter text ever needs correcting, annotation offsets must be migrated.** Never silently change chapter content without a migration plan.
+24. **Confusion flags are genuinely anonymous at the database level.** Not just "hidden" — store counts only, not user IDs. No way, even for admins, to see who flagged what.
+25. **Empty states are invitations, not error states.** Every empty state should feel welcoming, not like something is broken.
+26. **The reading page in focused mode should feel like a physical book.** No chrome, no distractions, just text and comfortable typography.
+27. **Design for the most hesitant member.** When in doubt, ask: "would the most hesitant person in the group feel safe using this?" If not, redesign it.
+28. **Annotation highlights should feel like warm marker pen**, not clinical highlighting. Semi-transparent warm tones that don't fight with the text color.
+29. **Weekly activity summary should tell a story**, not list metrics. "The group annotated 14 passages this week, with the most discussion around the value-form" — not "14 annotations, 3 threads, 2 glossary entries."
+30. **Thread previews show enough body text to decide whether to click** — 2-3 lines minimum. A title alone doesn't convey whether a reflection is worth reading.
+31. **Blockquote styling must look good because it's one of the most-seen elements.** People quote Capital constantly. Left border, subtle background, slight indent — tested in both light and dark mode.
 
 ---
 
