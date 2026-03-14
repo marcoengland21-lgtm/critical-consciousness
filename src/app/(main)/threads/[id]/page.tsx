@@ -49,9 +49,11 @@ export default async function ThreadPage({
   // Try to find chapter context from thread body (look for quote pattern from reading)
   let contextChapter = null
   let contextDocSlug = null
+  let contextChapterNum: number | null = null
   const blockquoteMatch = thread.body.match(/> "(.+?)" — \*(?:§|Section )(\d+), (.+?)\*/)
   if (blockquoteMatch) {
     const chapterNum = parseInt(blockquoteMatch[2])
+    contextChapterNum = chapterNum
     // Fetch chapter info to get document slug
     const { data: chapters } = await supabase
       .from('text_chapters')
@@ -81,33 +83,33 @@ export default async function ThreadPage({
   const isAdmin = profile?.role === 'admin'
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-4xl mx-auto">
       {/* Back link */}
       <Link
         href="/threads"
-        className="inline-flex items-center text-sm mb-6 transition-colors"
+        className="inline-flex items-center text-sm mb-8 transition-colors"
         style={{ color: 'var(--text-secondary)' }}
       >
         ← Back to Threads
       </Link>
 
       {/* Thread Header */}
-      <article className="mb-8">
-        <div className="flex items-center gap-2 mb-3">
+      <article className="mb-10">
+        <div className="flex items-center gap-2 mb-4">
           {thread.pinned && (
             <span className="text-xs font-medium px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: 'var(--accent-purple)', color: 'var(--text-primary)' }}>
+              style={{ backgroundColor: 'var(--accent-purple)', color: 'var(--text-inverse)' }}>
               Pinned
             </span>
           )}
           <ThreadTypeBadge type={thread.thread_type as ThreadType} />
         </div>
 
-        <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--accent-red)' }}>
+        <h1 className="text-3xl font-bold mb-5" style={{ color: 'var(--accent-red)' }}>
           {thread.title}
         </h1>
 
-        <div className="flex items-center gap-3 mb-6 text-sm" style={{ color: 'var(--text-secondary)' }}>
+        <div className="flex items-center gap-3 mb-8 text-sm" style={{ color: 'var(--text-secondary)' }}>
           <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
             {thread.author?.display_name}
           </span>
@@ -127,7 +129,7 @@ export default async function ThreadPage({
         {contextChapter && contextDocSlug && (
           <div className="mt-6 pt-4 border-t" style={{ borderColor: 'var(--border-default)' }}>
             <Link
-              href={`/reading/${contextDocSlug}/${thread.body.match(/(?:§|Section )(\d+)/)?.[1] || '1'}`}
+              href={`/reading/${contextDocSlug}/${contextChapterNum || '1'}`}
               className="inline-flex items-center gap-2 text-sm font-medium transition-colors"
               style={{ color: 'var(--accent-red)' }}
             >

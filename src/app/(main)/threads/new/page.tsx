@@ -20,7 +20,7 @@ export default async function NewThreadPage() {
     .order('week_number', { ascending: true })
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-3xl mx-auto">
       <h1 className="text-3xl font-bold mb-8" style={{ color: 'var(--accent-red)' }}>
         Start a New Thread
       </h1>

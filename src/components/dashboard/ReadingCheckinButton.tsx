@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Toast from '@/components/ui/Toast'
 
@@ -9,13 +9,12 @@ interface ReadingCheckinButtonProps {
   currentStatus?: 'done' | 'partial' | 'behind' | null
 }
 
-const GUEST_ID = 'ad4ce43f-6a30-484b-8f2c-df66f6b0276b'
 const DEFAULT_GROUP_ID = '00000000-0000-0000-0000-000000000001'
 
 const STATUS_OPTIONS = [
-  { value: 'done', label: '✓ Done', icon: '✓' },
-  { value: 'partial', label: '~ Partial', icon: '~' },
-  { value: 'behind', label: '⏳ Behind', icon: '⏳' },
+  { value: 'done', label: 'Done' },
+  { value: 'partial', label: 'Partial' },
+  { value: 'behind', label: 'Behind' },
 ] as const
 
 export default function ReadingCheckinButton({ weekId, currentStatus }: ReadingCheckinButtonProps) {
@@ -29,10 +28,17 @@ export default function ReadingCheckinButton({ weekId, currentStatus }: ReadingC
     const supabase = createClient()
 
     try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        setToast({ message: 'Sign in to track your reading progress', type: 'error' })
+        setSaving(false)
+        return
+      }
+
       const { error } = await supabase
         .from('reading_checkins')
         .upsert({
-          user_id: GUEST_ID,
+          user_id: user.id,
           week_id: weekId,
           group_id: DEFAULT_GROUP_ID,
           status: newStatus,

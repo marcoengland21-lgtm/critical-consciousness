@@ -151,7 +151,7 @@ export default async function ThreadsPage({
           </Link>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {threads.map((thread: any) => {
             const replyCount = thread.replies?.[0]?.count ?? 0
             const preview = getTextPreview(thread.body || '')
@@ -159,43 +159,36 @@ export default async function ThreadsPage({
               <Link
                 key={thread.id}
                 href={`/threads/${thread.id}`}
-                className="block p-5 rounded-lg border transition-all card-hover"
+                className="block p-6 rounded-lg border transition-all card-hover"
                 style={{
                   backgroundColor: 'var(--bg-card)',
                   borderColor: thread.pinned ? 'var(--accent-purple)' : 'var(--border-default)',
                   borderWidth: thread.pinned ? '2px' : '1px',
                 }}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      {thread.pinned && (
-                        <span className="text-xs font-medium px-2 py-0.5 rounded-full"
-                          style={{ backgroundColor: 'var(--accent-purple)', color: 'var(--text-primary)' }}>
-                          Pinned
-                        </span>
-                      )}
-                      <ThreadTypeBadge type={thread.thread_type as ThreadType} />
-                    </div>
-                    <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
-                      {thread.title}
-                    </h3>
-                    {preview && (
-                      <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
-                        {preview}
-                      </p>
-                    )}
-                    <div className="flex flex-col gap-2 text-xs">
-                      <div className="flex items-center gap-2">
-                        <AuthorBadge name={thread.author?.display_name || 'Guest'} />
-                      </div>
-                      <div className="flex items-center gap-2 flex-wrap" style={{ color: 'var(--text-secondary)' }}>
-                        <TimeAgo date={thread.created_at} />
-                        <span>·</span>
-                        <span>{replyCount} {replyCount === 1 ? 'reply' : 'replies'}</span>
-                      </div>
-                    </div>
-                  </div>
+                <div className="flex items-center gap-2 mb-3">
+                  {thread.pinned && (
+                    <span className="text-xs font-medium px-2 py-0.5 rounded-full"
+                      style={{ backgroundColor: 'var(--accent-purple)', color: 'var(--text-inverse)' }}>
+                      Pinned
+                    </span>
+                  )}
+                  <ThreadTypeBadge type={thread.thread_type as ThreadType} />
+                </div>
+                <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+                  {thread.title}
+                </h3>
+                {preview && (
+                  <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                    {preview}
+                  </p>
+                )}
+                <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                  <AuthorBadge name={thread.author?.display_name || 'Guest'} />
+                  <span>·</span>
+                  <TimeAgo date={thread.created_at} />
+                  <span>·</span>
+                  <span>{replyCount} {replyCount === 1 ? 'reply' : 'replies'}</span>
                 </div>
               </Link>
             )

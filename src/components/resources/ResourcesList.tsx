@@ -24,13 +24,13 @@ interface Week {
   title: string
 }
 
-const typeLabels: Record<ResourceType, { label: string; icon: string }> = {
-  primary_text: { label: 'Primary Text', icon: '📕' },
-  companion: { label: 'Companion Text', icon: '📗' },
-  lecture: { label: 'Lecture', icon: '🎓' },
-  article: { label: 'Article', icon: '📰' },
-  tool: { label: 'Tool', icon: '🔧' },
-  other: { label: 'Other', icon: '📎' },
+const typeLabels: Record<ResourceType, { label: string }> = {
+  primary_text: { label: 'Primary Text' },
+  companion: { label: 'Companion' },
+  lecture: { label: 'Lecture' },
+  article: { label: 'Article' },
+  tool: { label: 'Tool' },
+  other: { label: 'Other' },
 }
 
 export default function ResourcesList({
@@ -108,7 +108,7 @@ export default function ResourcesList({
                 borderColor: 'var(--text-secondary)',
               }}
             >
-              {config.icon} {config.label}
+              {config.label}
             </button>
           ))}
         </div>
@@ -140,7 +140,7 @@ export default function ResourcesList({
               className="px-3 py-2 rounded-lg border text-sm"
               style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}>
               {Object.entries(typeLabels).map(([key, config]) => (
-                <option key={key} value={key}>{config.icon} {config.label}</option>
+                <option key={key} value={key}>{config.label}</option>
               ))}
             </select>
             <select value={weekId} onChange={(e) => setWeekId(e.target.value)}
@@ -171,8 +171,7 @@ export default function ResourcesList({
             const typeInfo = typeLabels[resource.resource_type] || typeLabels.other
             return (
               <div key={resource.id} className="p-4 rounded-lg border" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}>
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">{typeInfo.icon}</span>
+                <div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
                       {resource.url ? (

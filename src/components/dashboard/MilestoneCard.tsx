@@ -51,8 +51,7 @@ export default async function MilestoneCard({ weekId, weekNumber }: MilestoneCar
       </div>
 
       <div className="relative z-10">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-2xl">🎓</span>
+        <div className="mb-2">
           <h3 className="font-bold text-lg" style={{ color: 'var(--accent-red)' }}>
             Milestone Reached
           </h3>

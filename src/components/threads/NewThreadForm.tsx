@@ -212,18 +212,15 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
                 onClick={() => setThreadType(t.value)}
                 className="p-3 rounded-lg border text-left transition-all text-sm"
                 style={{
-                  backgroundColor: isSelected ? 'var(--bg-card)' : 'var(--bg-card)',
+                  backgroundColor: 'var(--bg-card)',
                   borderColor: isSelected ? t.color : 'var(--border-default)',
                   borderWidth: isSelected ? '2px' : '1px',
                 }}
               >
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-base">{t.icon}</span>
-                  <span className="font-medium" style={{ color: isSelected ? t.color : 'var(--text-primary)' }}>
-                    {t.label}
-                  </span>
-                </div>
-                <div className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>{t.description}</div>
+                <span className="font-medium" style={{ color: isSelected ? t.color : 'var(--text-primary)' }}>
+                  {t.label}
+                </span>
+                <div className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>{t.description}</div>
               </button>
             )
           })}

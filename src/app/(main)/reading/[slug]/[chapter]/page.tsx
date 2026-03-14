@@ -113,22 +113,25 @@ export default async function ChapterPage({ params }: Props) {
       </div>
 
       {/* Section navigation tabs */}
-      <div className="flex flex-wrap gap-2 mb-8">
-        {chapters.map((ch) => (
-          <Link
-            key={ch.id}
-            href={`/reading/${slug}/${ch.chapter_number}`}
-            className="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
-            style={{
-              backgroundColor: ch.chapter_number === chapterNum ? 'var(--text-primary)' : 'var(--bg-card)',
-              color: ch.chapter_number === chapterNum ? 'var(--bg-page)' : 'var(--text-primary)',
-              border: '1px solid',
-              borderColor: ch.chapter_number === chapterNum ? 'var(--text-primary)' : 'var(--border-default)',
-            }}
-          >
-            S{ch.chapter_number}: {ch.title.length > 30 ? ch.title.slice(0, 30) + '…' : ch.title}
-          </Link>
-        ))}
+      <div className="flex flex-wrap gap-2 mb-10">
+        {chapters.map((ch) => {
+          const isActive = ch.chapter_number === chapterNum
+          return (
+            <Link
+              key={ch.id}
+              href={`/reading/${slug}/${ch.chapter_number}`}
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+              style={{
+                backgroundColor: isActive ? 'var(--text-primary)' : 'var(--bg-card)',
+                color: isActive ? 'var(--bg-page)' : 'var(--text-primary)',
+                border: '1px solid',
+                borderColor: isActive ? 'var(--text-primary)' : 'var(--border-default)',
+              }}
+            >
+              {ch.chapter_number}. {ch.title.length > 35 ? ch.title.slice(0, 35) + '…' : ch.title}
+            </Link>
+          )
+        })}
       </div>
 
       {/* Chapter title */}

@@ -145,7 +145,7 @@ export default async function SchedulePage() {
                   <div className="flex flex-wrap gap-3 text-sm">
                     {week.session_location && (
                       <span className="flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}>
-                        📍 {week.session_location}
+                        {week.session_location}
                       </span>
                     )}
                     {week.zoom_link && (
@@ -156,7 +156,7 @@ export default async function SchedulePage() {
                         className="flex items-center gap-1 underline"
                         style={{ color: 'var(--accent-red)' }}
                       >
-                        🔗 Join Online
+                        Join Online
                       </a>
                     )}
                   </div>

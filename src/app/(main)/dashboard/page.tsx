@@ -10,7 +10,6 @@ import MilestoneCard from '@/components/dashboard/MilestoneCard'
 import GroupThinkingOverview from '@/components/dashboard/GroupThinkingOverview'
 import type { ThreadType, WeeklyRoleType } from '@/types/database'
 
-const GUEST_ID = 'ad4ce43f-6a30-484b-8f2c-df66f6b0276b'
 const DEFAULT_GROUP_ID = '00000000-0000-0000-0000-000000000001'
 
 export default async function DashboardPage() {
@@ -48,12 +47,12 @@ export default async function DashboardPage() {
 
   // Get user's reading checkin status for current week
   let currentReadingStatus: 'done' | 'partial' | 'behind' | null = null
-  if (currentWeek) {
+  if (currentWeek && user) {
     const adminSupabase = createAdminClient()
     const { data: checkinData } = await adminSupabase
       .from('reading_checkins')
       .select('status')
-      .eq('user_id', GUEST_ID)
+      .eq('user_id', user.id)
       .eq('week_id', currentWeek.id)
       .eq('group_id', DEFAULT_GROUP_ID)
       .single()
@@ -263,7 +262,7 @@ export default async function DashboardPage() {
                         <div className="flex items-center gap-2 mb-0.5">
                           <ThreadTypeBadge type={thread.thread_type as ThreadType} />
                           {thread.pinned && (
-                            <span className="text-xs" style={{ color: 'var(--accent-purple)' }}>📌</span>
+                            <span className="text-xs font-medium px-1.5 py-0.5 rounded" style={{ backgroundColor: 'var(--accent-purple)', color: 'var(--text-inverse)' }}>Pinned</span>
                           )}
                         </div>
                         <h3 className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
