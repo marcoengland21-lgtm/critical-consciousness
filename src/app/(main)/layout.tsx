@@ -5,6 +5,7 @@ import NavLink from '@/components/layout/NavLink'
 import LogoutButton from '@/components/layout/LogoutButton'
 import ThemeToggle from '@/components/layout/ThemeToggle'
 import ThemeProvider from '@/components/layout/ThemeProvider'
+import NavigationProgress from '@/components/layout/NavigationProgress'
 
 export default async function MainLayout({
   children,
@@ -15,16 +16,21 @@ export default async function MainLayout({
   // This runs on every page navigation — must be instant
   const user = await getSessionUser()
 
-  // Fetch user profile for display name (guest fallback if not logged in)
+  // Display name: prefer JWT metadata (instant, no network call)
+  // Only query Supabase profile if JWT doesn't have the name
   let displayName = 'Guest'
   if (user) {
-    const supabase = await createClient()
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('display_name')
-      .eq('id', user.id)
-      .single()
-    displayName = profile?.display_name || user.user_metadata?.display_name || 'User'
+    displayName = user.user_metadata?.display_name || 'User'
+    // Only hit Supabase if we couldn't get the name from JWT
+    if (displayName === 'User') {
+      const supabase = await createClient()
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', user.id)
+        .single()
+      if (profile?.display_name) displayName = profile.display_name
+    }
   }
 
   return (
@@ -35,6 +41,7 @@ export default async function MainLayout({
         backgroundColor: 'var(--bg-page)',
       }}
     >
+      <NavigationProgress />
       {/* Skip to main content — accessibility for keyboard/screen reader users */}
       <a
         href="#main-content"

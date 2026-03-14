@@ -1,6 +1,7 @@
 import { createClient, getSessionUser } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { unstable_cache } from 'next/cache'
 import ChapterReader from '@/components/reading/ChapterReader'
 
 interface Props {
@@ -43,43 +44,65 @@ export async function generateMetadata({ params }: Props) {
   }
 }
 
+// Cache static chapter data — text content doesn't change, revalidate daily
+const getStaticChapterData = unstable_cache(
+  async (slug: string, chapterNum: number) => {
+    const supabase = await createClient()
+
+    const [
+      { data: doc },
+      { data: chapterData },
+      { data: allChapters },
+    ] = await Promise.all([
+      supabase.from('text_documents')
+        .select('id, title, slug')
+        .eq('slug', slug)
+        .single(),
+      supabase.from('text_chapters')
+        .select('id, chapter_number, title, content, sort_order')
+        .eq('chapter_number', chapterNum)
+        .single(),
+      supabase.from('text_chapters')
+        .select('id, chapter_number, title, sort_order')
+        .order('sort_order', { ascending: true }),
+    ])
+
+    return { doc, chapterData, allChapters }
+  },
+  ['chapter-static-data'],
+  { revalidate: 86400 } // 24 hours
+)
+
+// Cache footnotes separately (also static, never change)
+const getFootnotes = unstable_cache(
+  async (chapterId: string) => {
+    const supabase = await createClient()
+    const { data } = await supabase.from('text_footnotes')
+      .select('id, footnote_number, content, author')
+      .eq('chapter_id', chapterId)
+      .order('footnote_number', { ascending: true })
+    return data
+  },
+  ['chapter-footnotes'],
+  { revalidate: 86400 }
+)
+
 export default async function ChapterPage({ params }: Props) {
   const { slug, chapter } = await params
   const chapterNum = parseInt(chapter)
 
-  const user = await getSessionUser()
-  const supabase = await createClient()
-
-  // PHASE 1: 3 independent queries in parallel
-  const [
-    { data: doc },
-    { data: chapterData },
-    { data: allChapters },
-  ] = await Promise.all([
-    supabase.from('text_documents')
-      .select('id, title, slug')
-      .eq('slug', slug)
-      .single(),
-    supabase.from('text_chapters')
-      .select('id, chapter_number, title, content, sort_order')
-      .eq('chapter_number', chapterNum)
-      .single(),
-    supabase.from('text_chapters')
-      .select('id, chapter_number, title, sort_order')
-      .order('sort_order', { ascending: true }),
+  // Fetch user (instant local JWT read) and cached static data in parallel
+  const [user, { doc, chapterData, allChapters }] = await Promise.all([
+    getSessionUser(),
+    getStaticChapterData(slug, chapterNum),
   ])
 
   if (!doc || !chapterData) notFound()
 
-  // PHASE 2: Footnotes + annotations in parallel (need chapterData.id)
-  const [
-    { data: footnotes },
-    { data: annotations },
-  ] = await Promise.all([
-    supabase.from('text_footnotes')
-      .select('id, footnote_number, content, author')
-      .eq('chapter_id', chapterData.id)
-      .order('footnote_number', { ascending: true }),
+  // Footnotes (cached) + annotations (dynamic, always fresh) in parallel
+  const supabase = await createClient()
+  const [footnotes, { data: annotations }] = await Promise.all([
+    getFootnotes(chapterData.id),
     supabase.from('annotations')
       .select(`
         *,
@@ -164,7 +187,7 @@ export default async function ChapterPage({ params }: Props) {
       <ChapterReader
         chapter={chapterData}
         annotations={annotations || []}
-        footnotes={footnotes || []}
+        footnotes={(footnotes as any[]) || []}
         userId={user?.id || null}
         documentSlug={slug}
       />
