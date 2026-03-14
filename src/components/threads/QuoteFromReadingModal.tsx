@@ -84,7 +84,7 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
   function handleConfirmQuote() {
     if (!selectedText || !selectedChapter) return
 
-    const quote = `> "${selectedText}" — *§${selectedChapter.chapter_number}, ${selectedChapter.document_title}*`
+    const quote = `> "${selectedText}" — *Section ${selectedChapter.chapter_number}, ${selectedChapter.document_title}*`
     onQuoteSelected(quote)
     onClose()
   }
@@ -165,7 +165,7 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
                       color: 'var(--text-primary)',
                     }}
                   >
-                    <div className="text-sm font-medium mb-1">§{ch.chapter_number}: {ch.title}</div>
+                    <div className="text-sm font-medium mb-1">Section {ch.chapter_number}: {ch.title}</div>
                     <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
                       {ch.document_title}
                     </div>
@@ -180,7 +180,7 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
                   Selected chapter
                 </p>
                 <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                  §{selectedChapter.chapter_number}: {selectedChapter.title}
+                  Section {selectedChapter.chapter_number}: {selectedChapter.title}
                 </p>
               </div>
 

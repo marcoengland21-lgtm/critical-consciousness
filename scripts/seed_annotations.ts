@@ -1,6 +1,13 @@
 /**
- * Seed script: Insert example annotations on Capital Vol.1 Chapter 1, Section 1
+ * Seed script: Insert sample annotations for Chapter 1 of Capital (all 4 sections).
  * Run with: npx tsx scripts/seed_annotations.ts
+ *
+ * Requires NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY env vars.
+ * Uses the admin user as author, or falls back to the first profile found.
+ *
+ * These annotations model the kind of marginal notes a study group facilitator
+ * might leave to spark discussion. They can be re-run safely (clears previous
+ * seed annotations by the same author first).
  */
 import { createClient } from '@supabase/supabase-js'
 
@@ -9,130 +16,190 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
-  console.error('Set SUPABASE_SERVICE_ROLE_KEY in your environment (not the anon key)')
   process.exit(1)
 }
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
-const GUEST_ID = 'ad4ce43f-6a30-484b-8f2c-df66f6b0276b'
 
-async function findTextInChapter(chapterContent: string, searchText: string): Promise<{ start: number; end: number } | null> {
-  const index = chapterContent.indexOf(searchText)
-  if (index === -1) return null
-  return { start: index, end: index + searchText.length }
+interface SeedAnnotation {
+  section: number
+  quote: string
+  body: string
 }
 
+// Annotations designed to spark discussion in a reading group.
+// Each targets a real passage from Chapter 1 of Capital.
+const seedAnnotations: SeedAnnotation[] = [
+  // --- Section 1: The Two Factors of a Commodity ---
+  {
+    section: 1,
+    quote: 'an immense accumulation of commodities',
+    body: 'Notice how Marx opens with appearance ("presents itself as") rather than essence. The entire chapter is about peeling back this surface. Why start with how things look rather than what they are?',
+  },
+  {
+    section: 1,
+    quote: 'A commodity is, in the first place, an object outside us, a thing that by its properties satisfies human wants of some sort or another.',
+    body: 'This is the use-value side. Marx is careful to say "of some sort or another" — he\'s not ranking needs or distinguishing "real" from "artificial" wants here. The point is simply that commodities are useful.',
+  },
+  {
+    section: 1,
+    quote: 'The exchange of commodities is evidently an act characterised by a total abstraction from use-value.',
+    body: 'This is a crucial move. When we exchange, we treat qualitatively different things as equal. A coat and linen become interchangeable. What gets abstracted away is precisely what makes each thing useful.',
+  },
+  {
+    section: 1,
+    quote: 'If then we leave out of consideration the use-value of commodities, they have only one common property left, that of being products of labour.',
+    body: 'The argument by elimination. Once use-value is set aside, what remains? Not weight, colour, or texture — those are all use-value properties. Only the fact that human labour was expended. But what kind of labour?',
+  },
+
+  // --- Section 2: The Twofold Character of the Labour ---
+  {
+    section: 2,
+    quote: 'On the one hand all labour is, speaking physiologically, an expenditure of human labour power',
+    body: 'Abstract labour = labour as pure expenditure of human energy, stripped of its specific form. This creates value. Concrete labour = the specific kind of work (tailoring, weaving). This creates use-value. The duality of the commodity reflects the duality of labour.',
+  },
+  {
+    section: 2,
+    quote: 'Productive activity, if we leave out of account its special form, viz., the useful character of the labour, is nothing but the expenditure of human labour power.',
+    body: 'Can we really separate the "useful character" of labour from the labour itself? Is abstract labour a real abstraction that happens in exchange, or just an analytical tool Marx uses? This is one of the most debated questions in Marx scholarship.',
+  },
+
+  // --- Section 3: The Form of Value ---
+  {
+    section: 3,
+    quote: 'The whole mystery of the form of value lies hidden in this elementary form.',
+    body: 'Marx spends an enormous amount of time on what seems like a trivial point: 20 yards of linen = 1 coat. But the "simple form of value" contains the DNA of money and capital. Worth reading slowly.',
+  },
+  {
+    section: 3,
+    quote: 'The value of the linen can therefore be expressed only relatively',
+    body: 'Value can never appear on its own — it only shows up in a relationship between commodities. There is no "absolute" value you can point to. This is why Marx says value is a social relation, not a physical property.',
+  },
+
+  // --- Section 4: The Fetishism of Commodities ---
+  {
+    section: 4,
+    quote: 'A commodity appears, at first sight, a very trivial thing, and easily understood.',
+    body: 'Here Marx shifts from the technical analysis of value to its social consequences. Commodity fetishism is not about being "tricked" — it\'s about how social relations between people genuinely take the form of relations between things in a commodity-producing society.',
+  },
+  {
+    section: 4,
+    quote: 'material relations between persons and social relations between things.',
+    body: 'Read carefully: Marx says these relations appear as "what they really are." Fetishism is not an illusion — under capitalism, social relations between people really do take the form of relations between things. The commodity form is not a veil hiding the truth; it IS how value actually operates.',
+  },
+  {
+    section: 4,
+    quote: 'The religious world is but the reflex of the real world.',
+    body: 'Marx\'s analogy: just as in religion people create gods and then worship them as if they were independent powers, in commodity production people create value through their labour and then experience it as a property of things. Both are real social processes, not mere errors.',
+  },
+]
+
 async function main() {
-  console.log('Connecting to Supabase...')
-
-  // Get the first chapter (Chapter 1, Section 1) of Capital Vol.1
-  const { data: document } = await supabase
-    .from('text_documents')
-    .select('id')
-    .eq('slug', 'capital-vol-1')
-    .single()
-
-  if (!document) {
-    console.error('Document "capital-vol-1" not found. Run seed_capital.ts first.')
-    process.exit(1)
-  }
-
-  const { data: chapter } = await supabase
-    .from('text_chapters')
-    .select('*')
-    .eq('document_id', document.id)
-    .eq('chapter_number', 1)
-    .single()
-
-  if (!chapter) {
-    console.error('Chapter 1 not found. Run seed_capital.ts first.')
-    process.exit(1)
-  }
-
-  console.log(`Found chapter: "${chapter.title}" (${chapter.content.length} characters)`)
-
-  // Check if annotations already exist for this chapter
-  const { data: existingAnnotations } = await supabase
-    .from('annotations')
-    .select('id')
-    .eq('chapter_id', chapter.id)
-    .eq('author_id', GUEST_ID)
+  // Find an author to attribute annotations to
+  const { data: adminProfile } = await supabase
+    .from('profiles')
+    .select('id, display_name')
+    .eq('role', 'admin')
     .limit(1)
-
-  if (existingAnnotations && existingAnnotations.length > 0) {
-    console.log('Annotations already exist for this chapter. Skipping seed.')
-    process.exit(0)
-  }
-
-  // Annotation 1: "an immense accumulation of commodities"
-  const quote1 = 'an immense accumulation of commodities'
-  const pos1 = await findTextInChapter(chapter.content, quote1)
-
-  if (!pos1) {
-    console.error(`Quote 1 not found: "${quote1}"`)
-    process.exit(1)
-  }
-
-  const prefix1Start = Math.max(0, pos1.start - 30)
-  const suffix1End = Math.min(chapter.content.length, pos1.end + 30)
-
-  const { error: err1, data: ann1Data } = await supabase
-    .from('annotations')
-    .insert({
-      chapter_id: chapter.id,
-      author_id: GUEST_ID,
-      body: 'This is where it all starts — why does Marx begin with the commodity and not with labour or capital?',
-      quote_exact: quote1,
-      position_start: pos1.start,
-      position_end: pos1.end,
-      quote_prefix: chapter.content.slice(prefix1Start, pos1.start),
-      quote_suffix: chapter.content.slice(pos1.end, suffix1End),
-    })
-    .select('id')
     .single()
 
-  if (err1) {
-    console.error('Failed to insert annotation 1:', err1)
+  let authorId: string
+  let authorName: string
+
+  if (adminProfile) {
+    authorId = adminProfile.id
+    authorName = adminProfile.display_name
+  } else {
+    const { data: anyProfile } = await supabase
+      .from('profiles')
+      .select('id, display_name')
+      .limit(1)
+      .single()
+
+    if (!anyProfile) {
+      console.error('No profiles found. Create a user account first.')
+      process.exit(1)
+    }
+    authorId = anyProfile.id
+    authorName = anyProfile.display_name
+  }
+
+  console.log(`Using author: ${authorName} (${authorId})`)
+
+  // Fetch all chapter sections
+  const { data: chapters, error: chErr } = await supabase
+    .from('text_chapters')
+    .select('id, chapter_number, content')
+    .order('chapter_number', { ascending: true })
+
+  if (chErr || !chapters) {
+    console.error('Failed to fetch chapters:', chErr)
     process.exit(1)
   }
 
-  console.log(`✓ Annotation 1 created (ID: ${ann1Data.id})`)
+  const chapterMap = new Map(chapters.map(ch => [ch.chapter_number, ch]))
 
-  // Annotation 2: "A commodity is, in the first place"
-  const quote2 = 'A commodity is, in the first place'
-  const pos2 = await findTextInChapter(chapter.content, quote2)
-
-  if (!pos2) {
-    console.error(`Quote 2 not found: "${quote2}"`)
-    process.exit(1)
-  }
-
-  const prefix2Start = Math.max(0, pos2.start - 30)
-  const suffix2End = Math.min(chapter.content.length, pos2.end + 30)
-
-  const { error: err2, data: ann2Data } = await supabase
+  // Clear previous seed annotations by this author to allow re-running
+  const { count: deleted } = await supabase
     .from('annotations')
-    .insert({
-      chapter_id: chapter.id,
-      author_id: GUEST_ID,
-      body: 'Notice how Marx immediately distinguishes between use-value and exchange-value. This distinction drives everything that follows.',
-      quote_exact: quote2,
-      position_start: pos2.start,
-      position_end: pos2.end,
-      quote_prefix: chapter.content.slice(prefix2Start, pos2.start),
-      quote_suffix: chapter.content.slice(pos2.end, suffix2End),
-    })
-    .select('id')
-    .single()
+    .delete({ count: 'exact' })
+    .eq('author_id', authorId)
 
-  if (err2) {
-    console.error('Failed to insert annotation 2:', err2)
-    process.exit(1)
+  if (deleted && deleted > 0) {
+    console.log(`Cleared ${deleted} existing annotations by ${authorName}`)
   }
 
-  console.log(`✓ Annotation 2 created (ID: ${ann2Data.id})`)
+  let inserted = 0
+  let skipped = 0
 
-  console.log('\nDone! Example annotations seeded successfully.')
+  for (const ann of seedAnnotations) {
+    const chapter = chapterMap.get(ann.section)
+    if (!chapter) {
+      console.warn(`  Skip: Section ${ann.section} not found`)
+      skipped++
+      continue
+    }
+
+    // Find the quote in the chapter content
+    const idx = chapter.content.indexOf(ann.quote)
+    if (idx === -1) {
+      console.warn(`  Skip: Quote not found in Section ${ann.section}: "${ann.quote.slice(0, 50)}..."`)
+      skipped++
+      continue
+    }
+
+    const posStart = idx
+    const posEnd = idx + ann.quote.length
+
+    // Extract prefix/suffix context for robust anchoring
+    const prefixStart = Math.max(0, posStart - 32)
+    const suffixEnd = Math.min(chapter.content.length, posEnd + 32)
+    const prefix = chapter.content.slice(prefixStart, posStart)
+    const suffix = chapter.content.slice(posEnd, suffixEnd)
+
+    const { error: insertErr } = await supabase
+      .from('annotations')
+      .insert({
+        chapter_id: chapter.id,
+        author_id: authorId,
+        body: ann.body,
+        quote_exact: ann.quote,
+        position_start: posStart,
+        position_end: posEnd,
+        quote_prefix: prefix,
+        quote_suffix: suffix,
+      })
+
+    if (insertErr) {
+      console.error(`  Error in Section ${ann.section}:`, insertErr.message)
+      skipped++
+    } else {
+      inserted++
+      console.log(`  ✓ Section ${ann.section}: "${ann.quote.slice(0, 50)}..."`)
+    }
+  }
+
+  console.log(`\nDone: ${inserted} inserted, ${skipped} skipped`)
 }
 
 main().catch(console.error)

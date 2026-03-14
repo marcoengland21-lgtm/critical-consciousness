@@ -1,22 +1,61 @@
 import type { ThreadType } from '@/types/database'
 
-const typeConfig: Record<ThreadType, { label: string; bg: string; text: string }> = {
-  discussion: { label: 'Discussion', bg: 'var(--bg-badge)', text: 'var(--role-summarizer)' },
-  reflection: { label: 'Reflection', bg: 'var(--bg-badge)', text: 'var(--role-discussion)' },
-  summary: { label: 'Summary', bg: 'var(--bg-badge)', text: 'var(--role-connector)' },
-  passage_pick: { label: 'Passage Pick', bg: 'var(--bg-badge)', text: 'var(--role-passage)' },
-  connection: { label: 'Connection', bg: 'var(--bg-badge)', text: 'var(--text-badge)' },
-  general: { label: 'General', bg: 'var(--bg-badge)', text: 'var(--text-badge)' },
+export const threadTypeConfig: Record<ThreadType, {
+  label: string
+  icon: string
+  color: string
+  description: string
+}> = {
+  discussion: {
+    label: 'Discussion',
+    icon: '💬',
+    color: 'var(--role-discussion)',
+    description: 'Open-ended discussion on a topic',
+  },
+  reflection: {
+    label: 'Reflection',
+    icon: '🪞',
+    color: 'var(--role-summarizer)',
+    description: 'Personal reflection on the reading',
+  },
+  summary: {
+    label: 'Summary',
+    icon: '📝',
+    color: 'var(--role-connector)',
+    description: 'Summary of key points from the reading',
+  },
+  passage_pick: {
+    label: 'Passage Pick',
+    icon: '📖',
+    color: 'var(--role-passage)',
+    description: 'Highlight and discuss a specific passage',
+  },
+  connection: {
+    label: 'Connection',
+    icon: '🔗',
+    color: 'var(--accent-purple)',
+    description: 'Connect the reading to current events or other texts',
+  },
+  general: {
+    label: 'General',
+    icon: '📌',
+    color: 'var(--text-secondary)',
+    description: 'General conversation or announcements',
+  },
 }
 
 export default function ThreadTypeBadge({ type }: { type: ThreadType }) {
-  const config = typeConfig[type] || typeConfig.general
+  const config = threadTypeConfig[type] || threadTypeConfig.general
 
   return (
     <span
-      className="text-xs font-medium px-2 py-0.5 rounded-full"
-      style={{ backgroundColor: config.bg, color: config.text }}
+      className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full"
+      style={{
+        backgroundColor: 'var(--bg-badge)',
+        color: config.color,
+      }}
     >
+      <span className="text-[10px]">{config.icon}</span>
       {config.label}
     </span>
   )

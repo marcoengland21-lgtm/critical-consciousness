@@ -109,7 +109,7 @@ export default async function ChapterPage({ params }: Props) {
           {doc.title}
         </Link>
         <span>›</span>
-        <span style={{ color: 'var(--text-primary)' }}>§{chapterNum}</span>
+        <span style={{ color: 'var(--text-primary)' }}>Section {chapterNum}</span>
       </div>
 
       {/* Section navigation tabs */}
@@ -126,7 +126,7 @@ export default async function ChapterPage({ params }: Props) {
               borderColor: ch.chapter_number === chapterNum ? 'var(--text-primary)' : 'var(--border-default)',
             }}
           >
-            §{ch.chapter_number}: {ch.title.length > 30 ? ch.title.slice(0, 30) + '…' : ch.title}
+            S{ch.chapter_number}: {ch.title.length > 30 ? ch.title.slice(0, 30) + '…' : ch.title}
           </Link>
         ))}
       </div>
@@ -168,7 +168,7 @@ export default async function ChapterPage({ params }: Props) {
             <span className="transition-transform group-hover:-translate-x-1">←</span>
             <div>
               <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Previous</p>
-              <p>§{prevChapter.chapter_number}: {prevChapter.title}</p>
+              <p>Section {prevChapter.chapter_number}: {prevChapter.title}</p>
             </div>
           </Link>
         ) : (
@@ -182,7 +182,7 @@ export default async function ChapterPage({ params }: Props) {
           >
             <div>
               <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Next</p>
-              <p>§{nextChapter.chapter_number}: {nextChapter.title}</p>
+              <p>Section {nextChapter.chapter_number}: {nextChapter.title}</p>
             </div>
             <span className="transition-transform group-hover:translate-x-1">→</span>
           </Link>

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import QuoteFromReadingModal from './QuoteFromReadingModal'
+import { threadTypeConfig } from './ThreadTypeBadge'
 import type { ThreadType } from '@/types/database'
 
 interface Week {
@@ -46,7 +47,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
         setBody(bodyParam)
       } else {
         // Legacy: just quote param
-        const sectionInfo = sectionParam ? ` (§${chapterParam}: ${sectionParam})` : ''
+        const sectionInfo = sectionParam ? ` (Section ${chapterParam}: ${sectionParam})` : ''
         setBody(`> ${quoteParam}\n\n`)
       }
       if (typeParam) setThreadType(typeParam)
@@ -117,14 +118,9 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
     autoResize()
   }, [body, autoResize])
 
-  const threadTypes: { value: ThreadType; label: string; description: string }[] = [
-    { value: 'discussion', label: 'Discussion', description: 'Open-ended discussion on a topic' },
-    { value: 'reflection', label: 'Reflection', description: 'Personal reflection on the reading' },
-    { value: 'summary', label: 'Summary', description: 'Summary of key points from the reading' },
-    { value: 'passage_pick', label: 'Passage Pick', description: 'Highlight and discuss a specific passage' },
-    { value: 'connection', label: 'Connection', description: 'Connect the reading to current events or other texts' },
-    { value: 'general', label: 'General', description: 'General conversation or announcements' },
-  ]
+  const threadTypes = (Object.entries(threadTypeConfig) as [ThreadType, typeof threadTypeConfig[ThreadType]][]).map(
+    ([value, config]) => ({ value, ...config })
+  )
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -207,22 +203,30 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
           Thread Type
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {threadTypes.map((t) => (
-            <button
-              key={t.value}
-              type="button"
-              onClick={() => setThreadType(t.value)}
-              className="p-3 rounded-lg border text-left transition-all text-sm"
-              style={{
-                backgroundColor: threadType === t.value ? 'var(--text-primary)' : 'var(--bg-card)',
-                color: threadType === t.value ? 'var(--bg-page)' : 'var(--text-primary)',
-                borderColor: threadType === t.value ? 'var(--text-primary)' : 'var(--border-default)',
-              }}
-            >
-              <div className="font-medium">{t.label}</div>
-              <div className="text-xs mt-0.5 opacity-70">{t.description}</div>
-            </button>
-          ))}
+          {threadTypes.map((t) => {
+            const isSelected = threadType === t.value
+            return (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() => setThreadType(t.value)}
+                className="p-3 rounded-lg border text-left transition-all text-sm"
+                style={{
+                  backgroundColor: isSelected ? 'var(--bg-card)' : 'var(--bg-card)',
+                  borderColor: isSelected ? t.color : 'var(--border-default)',
+                  borderWidth: isSelected ? '2px' : '1px',
+                }}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-base">{t.icon}</span>
+                  <span className="font-medium" style={{ color: isSelected ? t.color : 'var(--text-primary)' }}>
+                    {t.label}
+                  </span>
+                </div>
+                <div className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>{t.description}</div>
+              </button>
+            )
+          })}
         </div>
       </div>
 

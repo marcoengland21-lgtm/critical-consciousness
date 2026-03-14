@@ -47,7 +47,7 @@ export default async function ThreadPage({
   // Try to find chapter context from thread body (look for quote pattern from reading)
   let contextChapter = null
   let contextDocSlug = null
-  const blockquoteMatch = thread.body.match(/> "(.+?)" — \*§(\d+), (.+?)\*/)
+  const blockquoteMatch = thread.body.match(/> "(.+?)" — \*(?:§|Section )(\d+), (.+?)\*/)
   if (blockquoteMatch) {
     const chapterNum = parseInt(blockquoteMatch[2])
     // Fetch chapter info to get document slug
@@ -125,7 +125,7 @@ export default async function ThreadPage({
         {contextChapter && contextDocSlug && (
           <div className="mt-6 pt-4 border-t" style={{ borderColor: 'var(--border-default)' }}>
             <Link
-              href={`/reading/${contextDocSlug}/${thread.body.match(/§(\d+)/)?.[1] || '1'}`}
+              href={`/reading/${contextDocSlug}/${thread.body.match(/(?:§|Section )(\d+)/)?.[1] || '1'}`}
               className="inline-flex items-center gap-2 text-sm font-medium transition-colors"
               style={{ color: 'var(--accent-red)' }}
             >
