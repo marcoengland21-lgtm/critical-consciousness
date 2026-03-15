@@ -56,8 +56,6 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
   }, [collapsed])
 
   const initial = displayName.charAt(0).toUpperCase()
-
-  // Shared transition for all inner content fading
   const labelTransition = 'opacity var(--duration-normal) var(--ease-out-expo)'
 
   return (
@@ -70,67 +68,45 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
         transition: mounted ? 'width var(--duration-slow) var(--ease-out-expo)' : 'none',
       }}
     >
-      {/* Brand + collapse toggle — always in the same row */}
+      {/* Brand area — the "C" monogram IS the collapse/expand toggle */}
       <div
         className="flex items-center py-5 shrink-0"
         style={{
           paddingLeft: '14px',
-          paddingRight: '8px',
+          paddingRight: '14px',
           minHeight: '68px',
         }}
       >
-        {/* Brand */}
-        <Link
-          href="/dashboard"
-          className="flex-1 min-w-0"
-          style={{ color: 'var(--text-inverse)', textDecoration: 'none' }}
-          title={collapsed ? 'Capital Study Group' : undefined}
-        >
-          <div className="flex items-center gap-2.5">
-            {/* "C" monogram — always visible */}
-            <span
-              className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm"
-              style={{
-                backgroundColor: 'rgba(107, 76, 154, 0.3)',
-                color: 'var(--text-inverse)',
-              }}
-            >
-              C
-            </span>
-            {/* Full name — fades with sidebar */}
-            <span
-              className="font-bold text-sm whitespace-nowrap overflow-hidden"
-              style={{
-                opacity: collapsed ? 0 : 1,
-                transition: labelTransition,
-              }}
-            >
-              Capital
-              <span className="block text-xs font-normal" style={{ opacity: 0.7 }}>
-                Study Group
-              </span>
-            </span>
-          </div>
-        </Link>
+        <div className="flex items-center gap-2.5 min-w-0">
+          {/* "C" monogram — always visible, acts as sidebar toggle */}
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="sidebar-toggle-btn shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm btn-transition"
+            style={{
+              backgroundColor: 'rgba(107, 76, 154, 0.3)',
+              color: 'var(--text-inverse)',
+            }}
+            data-sidebar-tooltip={collapsed ? 'Expand menu' : 'Collapse menu'}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            C
+          </button>
 
-        {/* Collapse toggle — sits next to brand, fades out when collapsed */}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="shrink-0 w-7 h-7 flex items-center justify-center rounded-md btn-transition"
-          style={{
-            color: 'var(--text-inverse)',
-            opacity: collapsed ? 0 : 0.5,
-            pointerEvents: collapsed ? 'none' : 'auto',
-            transition: labelTransition,
-          }}
-          title="Collapse sidebar"
-          aria-label="Collapse sidebar"
-        >
-          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="11 17 6 12 11 7" />
-            <polyline points="18 17 13 12 18 7" />
-          </svg>
-        </button>
+          {/* Full name — fades with sidebar, links to dashboard */}
+          <Link
+            href="/dashboard"
+            className="whitespace-nowrap overflow-hidden"
+            style={{
+              color: 'var(--text-inverse)',
+              textDecoration: 'none',
+              opacity: collapsed ? 0 : 1,
+              transition: labelTransition,
+            }}
+          >
+            <span className="font-bold text-sm block">Capital</span>
+            <span className="text-xs block" style={{ opacity: 0.7 }}>Study Group</span>
+          </Link>
+        </div>
       </div>
 
       {/* Separator */}
@@ -175,32 +151,6 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
 
       {/* Bottom Section — user identity + controls */}
       <div className="shrink-0 px-3 py-3" style={{ borderTop: '1px solid rgba(107, 76, 154, 0.2)' }}>
-        {/* When collapsed: expand button + user avatar stacked */}
-        {/* When expanded: theme toggle, user info, no expand button (it's at top) */}
-
-        {/* Expand button — only visible when collapsed */}
-        <button
-          onClick={() => setCollapsed(false)}
-          className="w-full flex items-center justify-center py-2 mb-1 rounded-md btn-transition"
-          style={{
-            color: 'var(--text-inverse)',
-            opacity: collapsed ? 0.5 : 0,
-            pointerEvents: collapsed ? 'auto' : 'none',
-            height: collapsed ? 'auto' : 0,
-            overflow: 'hidden',
-            padding: collapsed ? undefined : 0,
-            margin: collapsed ? undefined : 0,
-            transition: `opacity var(--duration-normal) var(--ease-out-expo)`,
-          }}
-          title="Expand sidebar"
-          aria-label="Expand sidebar"
-        >
-          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="13 17 18 12 13 7" />
-            <polyline points="6 17 11 12 6 7" />
-          </svg>
-        </button>
-
         {/* User avatar — always visible, adapts to collapsed/expanded */}
         <div
           className="flex items-center gap-2 px-1 mb-2 overflow-hidden"
@@ -251,7 +201,7 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
                 </svg>
               </Link>
               <span
-                className="text-sm whitespace-nowrap"
+                className="whitespace-nowrap"
                 style={{
                   opacity: collapsed ? 0 : 1,
                   transition: labelTransition,
@@ -259,8 +209,8 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
               >
                 <Link
                   href="/login"
-                  className="font-medium"
-                  style={{ color: 'var(--text-inverse)', border: 'none' }}
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--text-inverse)' }}
                 >
                   Sign In
                 </Link>
