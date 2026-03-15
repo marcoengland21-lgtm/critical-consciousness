@@ -25,6 +25,19 @@ interface ReadingToolbarProps {
 const MIN_FONT = 14
 const MAX_FONT = 24
 const IDLE_TIMEOUT = 3000 // ms before dock fades
+const DRAG_THRESHOLD = 5 // px before pointer movement counts as drag
+const DOCK_WIDTH = 48
+const DOCK_APPROX_HEIGHT = 400 // rough estimate for clamp calculations
+const POSITION_KEY = 'ccp-toolbar-position'
+
+/** Clamp position so dock stays fully on-screen */
+function clampToViewport(pos: { x: number; y: number }) {
+  if (typeof window === 'undefined') return pos
+  return {
+    x: Math.max(0, Math.min(pos.x, window.innerWidth - DOCK_WIDTH - 8)),
+    y: Math.max(8, Math.min(pos.y, window.innerHeight - 120)),
+  }
+}
 
 export default function ReadingToolbar({
   chapters,
@@ -49,6 +62,12 @@ export default function ReadingToolbar({
   const panelRef = useRef<HTMLDivElement>(null)
   const dockRef = useRef<HTMLDivElement>(null)
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  // ── Drag state ──
+  const [position, setPosition] = useState<{ x: number; y: number } | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const dragStartRef = useRef<{ x: number; y: number; posX: number; posY: number } | null>(null)
+  const hasDraggedRef = useRef(false)
 
   // Keyword filter state (with debounce)
   const [keywordInput, setKeywordInput] = useState(annotationKeyword)
@@ -94,6 +113,47 @@ export default function ReadingToolbar({
     onAnnotationKeywordChange('')
   }, [onAnnotationKeywordChange])
 
+  // ── Calculate default position (left of text) or restore from localStorage ──
+  useEffect(() => {
+    const saved = localStorage.getItem(POSITION_KEY)
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
+          setPosition(clampToViewport(parsed))
+          return
+        }
+      } catch {
+        // Invalid saved position, fall through to default
+      }
+    }
+
+    // Calculate default: left of the reading text column, vertically centered
+    const textEl = document.querySelector('.reading-text')
+    if (textEl) {
+      const rect = textEl.getBoundingClientRect()
+      setPosition({
+        x: Math.max(8, rect.left - DOCK_WIDTH - 12),
+        y: Math.max(8, window.innerHeight / 2 - DOCK_APPROX_HEIGHT / 2),
+      })
+    } else {
+      // Fallback
+      setPosition({
+        x: 16,
+        y: Math.max(8, window.innerHeight / 2 - DOCK_APPROX_HEIGHT / 2),
+      })
+    }
+  }, [])
+
+  // ── Resize handler: keep dock on-screen ──
+  useEffect(() => {
+    function handleResize() {
+      setPosition(prev => prev ? clampToViewport(prev) : prev)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   // ── Idle auto-fade ──
   const resetIdleTimer = useCallback(() => {
     setIsIdle(false)
@@ -110,13 +170,13 @@ export default function ReadingToolbar({
 
   // Reset idle on any interaction
   useEffect(() => {
-    if (isHovered || showChapterNav) {
+    if (isHovered || showChapterNav || isDragging) {
       setIsIdle(false)
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
     } else {
       resetIdleTimer()
     }
-  }, [isHovered, showChapterNav, resetIdleTimer])
+  }, [isHovered, showChapterNav, isDragging, resetIdleTimer])
 
   // ── Scroll progress ──
   useEffect(() => {
@@ -178,33 +238,91 @@ export default function ReadingToolbar({
     }
   }, [showChapterNav])
 
+  // ── Drag handlers ──
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    // Don't initiate drag on interactive elements
+    const target = e.target as HTMLElement
+    if (target.closest('button, a, input')) return
+    if (!position) return
+
+    dragStartRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+      posX: position.x,
+      posY: position.y,
+    }
+    hasDraggedRef.current = false
+    setIsDragging(true)
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+    e.preventDefault() // Prevent text selection
+  }, [position])
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragStartRef.current) return
+    const dx = e.clientX - dragStartRef.current.x
+    const dy = e.clientY - dragStartRef.current.y
+
+    // Only start moving after threshold
+    if (!hasDraggedRef.current) {
+      if (Math.abs(dx) >= DRAG_THRESHOLD || Math.abs(dy) >= DRAG_THRESHOLD) {
+        hasDraggedRef.current = true
+      } else {
+        return
+      }
+    }
+
+    setPosition(clampToViewport({
+      x: dragStartRef.current.posX + dx,
+      y: dragStartRef.current.posY + dy,
+    }))
+  }, [])
+
+  const handlePointerUp = useCallback(() => {
+    if (hasDraggedRef.current && position) {
+      localStorage.setItem(POSITION_KEY, JSON.stringify(position))
+    }
+    dragStartRef.current = null
+    setIsDragging(false)
+  }, [position])
+
   const { shortLabel } = getChapterLabel(currentChapter)
   const showKeywordFilter = annotationCount > 0 && !focusedMode
 
   // Dock opacity: fully visible when hovered or interacting, faded when idle
-  const dockOpacity = isIdle && !isHovered && !showChapterNav ? 0.35 : 1
+  const dockOpacity = isIdle && !isHovered && !showChapterNav && !isDragging ? 0.35 : 1
+
+  // Chapter nav panel: open to LEFT or RIGHT depending on dock position
+  const panelOpensRight = position ? (position.x + DOCK_WIDTH / 2) < window.innerWidth / 2 : false
 
   // ── Shared button style ──
   const btnClass = 'w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-150 hover:scale-110'
   const btnHover = 'hover:bg-white/10'
 
+  // Don't render until position is calculated (prevents flash at wrong position)
+  if (!position) return null
+
   return (
     <>
-      {/* ── Chapter browser panel — opens LEFT of the dock ── */}
+      {/* ── Chapter browser panel — opens LEFT or RIGHT of the dock ── */}
       <div
         ref={panelRef}
         className="fixed z-50 w-72 rounded-xl shadow-xl overflow-hidden"
         style={{
           backgroundColor: 'var(--bg-card)',
           border: '1px solid var(--border-default)',
-          right: 'calc(52px + 1.5rem)',
-          top: '50%',
+          ...(panelOpensRight
+            ? { left: position.x + DOCK_WIDTH + 12 }
+            : { right: window.innerWidth - position.x + 12 }
+          ),
+          top: position.y,
           transform: showChapterNav
-            ? 'translateY(-50%) scale(1)'
-            : 'translateY(-50%) scale(0.97) translateX(8px)',
+            ? 'scale(1)'
+            : panelOpensRight
+              ? 'scale(0.97) translateX(-8px)'
+              : 'scale(0.97) translateX(8px)',
           opacity: showChapterNav ? 1 : 0,
           pointerEvents: showChapterNav ? 'auto' : 'none',
-          transformOrigin: 'center right',
+          transformOrigin: panelOpensRight ? 'center left' : 'center right',
           transition: 'opacity 250ms cubic-bezier(0.22, 1, 0.36, 1), transform 250ms cubic-bezier(0.22, 1, 0.36, 1)',
           maxHeight: '70vh',
           display: 'flex',
@@ -308,18 +426,26 @@ export default function ReadingToolbar({
         </div>
       </div>
 
-      {/* ── The vertical dock ── */}
+      {/* ── The draggable vertical dock ── */}
       <div
         ref={dockRef}
-        className="fixed z-40 right-4"
+        className="fixed z-40"
         style={{
-          top: '50%',
-          transform: 'translateY(-50%)',
+          left: position.x,
+          top: position.y,
           opacity: dockOpacity,
-          transition: 'opacity 400ms cubic-bezier(0.22, 1, 0.36, 1)',
+          transition: isDragging ? 'none' : 'opacity 400ms cubic-bezier(0.22, 1, 0.36, 1)',
+          cursor: isDragging ? 'grabbing' : 'grab',
+          touchAction: 'none',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
         }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
       >
         {isExpanded ? (
           /* ── Expanded vertical dock ── */
@@ -330,7 +456,9 @@ export default function ReadingToolbar({
               backdropFilter: 'blur(16px)',
               WebkitBackdropFilter: 'blur(16px)',
               border: '1px solid var(--border-default)',
-              width: '48px',
+              width: `${DOCK_WIDTH}px`,
+              transform: isDragging ? 'scale(1.04)' : 'scale(1)',
+              transition: isDragging ? 'none' : 'transform 200ms cubic-bezier(0.22, 1, 0.36, 1)',
             }}
           >
             {/* Scroll progress bar — thin line on left edge */}
@@ -347,6 +475,17 @@ export default function ReadingToolbar({
                 }}
               />
             </div>
+
+            {/* ── Drag grip indicator ── */}
+            <div
+              className="w-5 h-1 rounded-full mb-1"
+              style={{
+                backgroundColor: 'var(--text-secondary)',
+                opacity: isHovered || isDragging ? 0.4 : 0.15,
+                transition: 'opacity 200ms ease',
+              }}
+              title="Drag to reposition"
+            />
 
             {/* ── Chapter nav group ── */}
             {/* Prev chapter */}
@@ -519,35 +658,37 @@ export default function ReadingToolbar({
               title="Collapse toolbar"
               aria-label="Collapse toolbar"
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="9 18 15 12 9 6" />
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             </button>
           </div>
         ) : (
-          /* ── Collapsed sliver ── */
+          /* ── Collapsed pill (stays at current position) ── */
           <button
             onClick={() => setIsExpanded(true)}
-            className="flex items-center justify-center rounded-l-xl shadow-lg transition-all duration-200 hover:w-8"
+            className="flex items-center justify-center rounded-xl shadow-lg transition-all duration-200"
             style={{
               backgroundColor: `rgba(var(--bg-card-rgb), 0.85)`,
               backdropFilter: 'blur(16px)',
               WebkitBackdropFilter: 'blur(16px)',
               border: '1px solid var(--border-default)',
-              borderRight: 'none',
-              width: '24px',
-              height: '48px',
+              width: '36px',
+              height: '36px',
               color: 'var(--text-secondary)',
-              position: 'fixed',
-              right: 0,
-              top: '50%',
-              transform: 'translateY(-50%)',
             }}
             title="Show reading toolbar"
             aria-label="Show reading toolbar"
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6" />
+            {/* 6-dot grip icon — position-agnostic */}
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="8" cy="6" r="2" />
+              <circle cx="16" cy="6" r="2" />
+              <circle cx="8" cy="12" r="2" />
+              <circle cx="16" cy="12" r="2" />
+              <circle cx="8" cy="18" r="2" />
+              <circle cx="16" cy="18" r="2" />
             </svg>
           </button>
         )}
