@@ -797,15 +797,22 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     <div className="relative">
       {/* Scroll progress — thin purple bar, sits below NavigationProgress (z-[100]) */}
       <div
-        className="fixed top-0 left-0 z-[99] pointer-events-none"
+        className="fixed top-0 z-[99] pointer-events-none"
         style={{
-          width: `${scrollProgress}%`,
+          left: 'var(--sidebar-width, 0px)',
+          right: 0,
           height: '2px',
-          backgroundColor: 'var(--accent-purple)',
-          transition: 'width 100ms linear',
-          marginLeft: 'var(--sidebar-width, 0px)',
         }}
-      />
+      >
+        <div
+          style={{
+            width: `${scrollProgress}%`,
+            height: '100%',
+            backgroundColor: 'var(--accent-purple)',
+            transition: 'width 100ms linear',
+          }}
+        />
+      </div>
 
       {/* Onboarding hint */}
       <OnboardingHint />

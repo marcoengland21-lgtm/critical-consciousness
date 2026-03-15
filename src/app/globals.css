@@ -565,10 +565,14 @@ html[data-theme="dark"] .card-elevated {
    ================================================================= */
 @keyframes pageEnter {
   from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  to { opacity: 1; transform: none; }
 }
+/* fill-mode: backwards (not both) — applies 'from' values before animation starts
+   (content hidden), but after animation ends ALL values revert to base state.
+   'both' would persist the transform, which breaks position:fixed descendants
+   (ChapterSidebar) by changing their containing block from viewport to this div. */
 .animate-page-enter {
-  animation: pageEnter 300ms var(--ease-out-expo) both;
+  animation: pageEnter 300ms var(--ease-out-expo) backwards;
 }
 
 /* =================================================================

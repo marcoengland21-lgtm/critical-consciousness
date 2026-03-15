@@ -67,7 +67,7 @@ export default function ChapterSidebar({ chapters, currentChapter, slug }: Chapt
 
   return (
     <aside
-      className="hidden lg:block fixed top-0 overflow-y-auto"
+      className="hidden lg:block fixed top-0 overflow-y-auto z-30"
       style={{
         width: '200px',
         height: '100vh',
@@ -76,6 +76,7 @@ export default function ChapterSidebar({ chapters, currentChapter, slug }: Chapt
         paddingLeft: '0.5rem',
         paddingRight: '0.5rem',
         left: 'var(--sidebar-width, 0px)',
+        backgroundColor: 'var(--bg-page)',
       }}
     >
       <p
