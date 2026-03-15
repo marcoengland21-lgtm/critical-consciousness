@@ -7,7 +7,7 @@ import AnnotationPopover from './AnnotationPopover'
 import AnnotationPanel from './AnnotationPanel'
 import SelectionToolbar from './SelectionToolbar'
 import OnboardingHint from './OnboardingHint'
-import ReadingBubble from './ReadingBubble'
+import ReadingToolbar from './ReadingToolbar'
 import ConfusionFlagButton from './ConfusionFlagButton'
 import GlossaryTooltip from './GlossaryTooltip'
 import FootnoteInline from './FootnoteInline'
@@ -423,7 +423,6 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
   } | null>(null)
   const [annotationKeyword, setAnnotationKeyword] = useState('')
   const [renderedCount, setRenderedCount] = useState(INITIAL_RENDER_COUNT)
-  const [scrollProgress, setScrollProgress] = useState(0)
 
   // Build footnote lookup map
   const footnoteMap = useMemo(() => {
@@ -496,19 +495,6 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
       if (rafId) cancelAnimationFrame(rafId)
     }
   }, [chapter.id])
-
-  // Scroll progress indicator — passive feedback, no anxiety
-  useEffect(() => {
-    function handleScrollProgress() {
-      const scrollTop = window.scrollY
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight
-      if (docHeight > 0) {
-        setScrollProgress(Math.min(100, (scrollTop / docHeight) * 100))
-      }
-    }
-    window.addEventListener('scroll', handleScrollProgress, { passive: true })
-    return () => window.removeEventListener('scroll', handleScrollProgress)
-  }, [])
 
   // Save font size preference
   useEffect(() => {
@@ -807,25 +793,6 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
 
   return (
     <div className="relative">
-      {/* Scroll progress — thin purple bar, sits below NavigationProgress (z-[100]) */}
-      <div
-        className="fixed top-0 z-[99] pointer-events-none"
-        style={{
-          left: 'var(--sidebar-width, 0px)',
-          right: 0,
-          height: '2px',
-        }}
-      >
-        <div
-          style={{
-            width: `${scrollProgress}%`,
-            height: '100%',
-            backgroundColor: 'var(--accent-purple)',
-            transition: 'width 100ms linear',
-          }}
-        />
-      </div>
-
       {/* Onboarding hint */}
       <OnboardingHint />
 
@@ -935,8 +902,8 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         />
       )}
 
-      {/* Floating reading bubble — chapter nav + controls */}
-      <ReadingBubble
+      {/* Persistent reading toolbar — chapter nav + controls */}
+      <ReadingToolbar
         chapters={allChapters}
         currentChapter={chapter.chapter_number}
         currentIndex={currentIndex}
