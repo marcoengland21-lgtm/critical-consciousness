@@ -57,7 +57,7 @@ export default async function MainLayout({
           {/* Main Content — animation handled by template.tsx on each navigation */}
           <main
             id="main-content"
-            className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pb-24 md:pb-8"
+            className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8"
             role="main"
           >
             {children}

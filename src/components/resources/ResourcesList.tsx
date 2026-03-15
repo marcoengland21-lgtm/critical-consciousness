@@ -24,13 +24,22 @@ interface Week {
   title: string
 }
 
-const typeLabels: Record<ResourceType, { label: string }> = {
-  primary_text: { label: 'Primary Text' },
-  companion: { label: 'Companion' },
-  lecture: { label: 'Lecture' },
-  article: { label: 'Article' },
-  tool: { label: 'Tool' },
-  other: { label: 'Other' },
+const typeConfig: Record<ResourceType, { label: string; icon: string; sectionTitle: string }> = {
+  primary_text: { label: 'Primary Text', icon: '📕', sectionTitle: 'Primary Texts' },
+  companion: { label: 'Companion', icon: '📗', sectionTitle: 'Companion Texts' },
+  lecture: { label: 'Lecture', icon: '🎓', sectionTitle: 'Lectures' },
+  article: { label: 'Article', icon: '📰', sectionTitle: 'Articles' },
+  tool: { label: 'Tool', icon: '🔧', sectionTitle: 'Tools' },
+  other: { label: 'Other', icon: '📎', sectionTitle: 'Other' },
+}
+
+// Extract domain from URL for display
+function getDomain(url: string): string {
+  try {
+    return new URL(url).hostname.replace('www.', '')
+  } catch {
+    return ''
+  }
 }
 
 export default function ResourcesList({
@@ -97,7 +106,7 @@ export default function ResourcesList({
           >
             All
           </button>
-          {Object.entries(typeLabels).map(([key, config]) => (
+          {Object.entries(typeConfig).map(([key, config]) => (
             <button
               key={key}
               onClick={() => setFilter(key)}
@@ -139,7 +148,7 @@ export default function ResourcesList({
             <select value={resourceType} onChange={(e) => setResourceType(e.target.value as ResourceType)}
               className="px-3 py-2 rounded-lg border text-sm"
               style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}>
-              {Object.entries(typeLabels).map(([key, config]) => (
+              {Object.entries(typeConfig).map(([key, config]) => (
                 <option key={key} value={key}>{config.label}</option>
               ))}
             </select>
@@ -166,36 +175,75 @@ export default function ResourcesList({
           Companion texts, lecture videos, and tools to help with the reading will be collected here.
         </p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((resource) => {
-            const typeInfo = typeLabels[resource.resource_type] || typeLabels.other
+            const typeInfo = typeConfig[resource.resource_type] || typeConfig.other
+            const domain = resource.url ? getDomain(resource.url) : null
             return (
-              <div key={resource.id} className="p-4 rounded-xl border" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}>
-                <div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
-                      {resource.url ? (
-                        <a href={resource.url} target="_blank" rel="noopener noreferrer" className="underline hover:no-underline"
-                          style={{ color: 'var(--accent-red)' }}>
-                          {resource.title}
-                        </a>
-                      ) : resource.title}
-                    </h3>
-                    {resource.description && (
-                      <p className="text-xs mb-2 line-clamp-2" style={{ color: 'var(--text-secondary)' }}>
-                        {resource.description}
-                      </p>
-                    )}
-                    <div className="flex flex-wrap items-center gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                      <span className="px-2 py-0.5 rounded-full" style={{ backgroundColor: 'var(--bg-badge)', color: 'var(--text-badge)' }}>
-                        {typeInfo.label}
-                      </span>
-                      {resource.week && (
-                        <span>Week {resource.week.week_number}</span>
-                      )}
-                      <span>by {resource.creator?.display_name || 'Unknown'}</span>
-                    </div>
-                  </div>
+              <div
+                key={resource.id}
+                className="p-4 rounded-xl border transition-all card-hover flex flex-col"
+                style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
+              >
+                {/* Type icon + badge */}
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-base">{typeInfo.icon}</span>
+                  <span
+                    className="text-xs font-medium px-2 py-0.5 rounded-full"
+                    style={{ backgroundColor: 'var(--bg-badge)', color: 'var(--text-secondary)' }}
+                  >
+                    {typeInfo.label}
+                  </span>
+                  {resource.week && (
+                    <span
+                      className="text-xs px-2 py-0.5 rounded-full"
+                      style={{ backgroundColor: 'var(--bg-badge)', color: 'var(--text-secondary)' }}
+                    >
+                      Week {resource.week.week_number}
+                    </span>
+                  )}
+                </div>
+
+                {/* Title */}
+                <h3 className="font-semibold text-sm mb-1.5" style={{ color: 'var(--text-primary)' }}>
+                  {resource.title}
+                </h3>
+
+                {/* Description */}
+                {resource.description && (
+                  <p
+                    className="text-xs mb-3 flex-1"
+                    style={{
+                      color: 'var(--text-secondary)',
+                      lineHeight: '1.6',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {resource.description}
+                  </p>
+                )}
+
+                {/* Footer: domain + open link */}
+                <div className="flex items-center justify-between mt-auto pt-2">
+                  {domain && (
+                    <span className="text-xs truncate" style={{ color: 'var(--text-secondary)', opacity: 0.6 }}>
+                      {domain}
+                    </span>
+                  )}
+                  {resource.url && (
+                    <a
+                      href={resource.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-medium shrink-0 transition-colors"
+                      style={{ color: 'var(--accent-red)' }}
+                    >
+                      Open →
+                    </a>
+                  )}
                 </div>
               </div>
             )
