@@ -64,10 +64,14 @@ export default function ReadingToolbar({
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // ── Drag state ──
+  // Position lives in a ref during drag for zero-lag DOM updates.
+  // React state only updates on mount and on drag end (to trigger panel repositioning).
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null)
+  const positionRef = useRef<{ x: number; y: number } | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const dragStartRef = useRef<{ x: number; y: number; posX: number; posY: number } | null>(null)
   const hasDraggedRef = useRef(false)
+  const rafRef = useRef<number | null>(null)
 
   // Keyword filter state (with debounce)
   const [keywordInput, setKeywordInput] = useState(annotationKeyword)
@@ -115,40 +119,54 @@ export default function ReadingToolbar({
 
   // ── Calculate default position (left of text) or restore from localStorage ──
   useEffect(() => {
+    let pos: { x: number; y: number } | null = null
+
     const saved = localStorage.getItem(POSITION_KEY)
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
         if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
-          setPosition(clampToViewport(parsed))
-          return
+          pos = clampToViewport(parsed)
         }
       } catch {
         // Invalid saved position, fall through to default
       }
     }
 
-    // Calculate default: left of the reading text column, vertically centered
-    const textEl = document.querySelector('.reading-text')
-    if (textEl) {
-      const rect = textEl.getBoundingClientRect()
-      setPosition({
-        x: Math.max(8, rect.left - DOCK_WIDTH - 12),
-        y: Math.max(8, window.innerHeight / 2 - DOCK_APPROX_HEIGHT / 2),
-      })
-    } else {
-      // Fallback
-      setPosition({
-        x: 16,
-        y: Math.max(8, window.innerHeight / 2 - DOCK_APPROX_HEIGHT / 2),
-      })
+    if (!pos) {
+      // Calculate default: left of the reading text column, vertically centered
+      const textEl = document.querySelector('.reading-text')
+      if (textEl) {
+        const rect = textEl.getBoundingClientRect()
+        pos = {
+          x: Math.max(8, rect.left - DOCK_WIDTH - 12),
+          y: Math.max(8, window.innerHeight / 2 - DOCK_APPROX_HEIGHT / 2),
+        }
+      } else {
+        pos = {
+          x: 16,
+          y: Math.max(8, window.innerHeight / 2 - DOCK_APPROX_HEIGHT / 2),
+        }
+      }
     }
+
+    positionRef.current = pos
+    setPosition(pos)
   }, [])
 
   // ── Resize handler: keep dock on-screen ──
   useEffect(() => {
     function handleResize() {
-      setPosition(prev => prev ? clampToViewport(prev) : prev)
+      if (positionRef.current) {
+        const clamped = clampToViewport(positionRef.current)
+        positionRef.current = clamped
+        // Direct DOM update for instant response
+        if (dockRef.current) {
+          dockRef.current.style.left = `${clamped.x}px`
+          dockRef.current.style.top = `${clamped.y}px`
+        }
+        setPosition(clamped)
+      }
     }
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
@@ -238,24 +256,25 @@ export default function ReadingToolbar({
     }
   }, [showChapterNav])
 
-  // ── Drag handlers ──
+  // ── Drag handlers (DOM-direct for zero lag) ──
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    // Don't initiate drag on interactive elements
+    // Allow drag from anywhere EXCEPT links and inputs (buttons are OK —
+    // we use hasDraggedRef to distinguish click from drag on buttons too,
+    // which lets the collapsed pill be draggable)
     const target = e.target as HTMLElement
-    if (target.closest('button, a, input')) return
-    if (!position) return
+    if (target.closest('a, input')) return
+    if (!positionRef.current) return
 
     dragStartRef.current = {
       x: e.clientX,
       y: e.clientY,
-      posX: position.x,
-      posY: position.y,
+      posX: positionRef.current.x,
+      posY: positionRef.current.y,
     }
     hasDraggedRef.current = false
-    setIsDragging(true)
     ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
     e.preventDefault() // Prevent text selection
-  }, [position])
+  }, [])
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
     if (!dragStartRef.current) return
@@ -266,24 +285,49 @@ export default function ReadingToolbar({
     if (!hasDraggedRef.current) {
       if (Math.abs(dx) >= DRAG_THRESHOLD || Math.abs(dy) >= DRAG_THRESHOLD) {
         hasDraggedRef.current = true
+        setIsDragging(true)
       } else {
         return
       }
     }
 
-    setPosition(clampToViewport({
+    // Direct DOM update — bypasses React for zero-lag dragging
+    const clamped = clampToViewport({
       x: dragStartRef.current.posX + dx,
       y: dragStartRef.current.posY + dy,
-    }))
+    })
+    positionRef.current = clamped
+
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    rafRef.current = requestAnimationFrame(() => {
+      if (dockRef.current) {
+        dockRef.current.style.left = `${clamped.x}px`
+        dockRef.current.style.top = `${clamped.y}px`
+      }
+    })
   }, [])
 
   const handlePointerUp = useCallback(() => {
-    if (hasDraggedRef.current && position) {
-      localStorage.setItem(POSITION_KEY, JSON.stringify(position))
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
+
+    if (hasDraggedRef.current && positionRef.current) {
+      // Commit final position to React state (for chapter panel positioning)
+      // and persist to localStorage
+      const finalPos = positionRef.current
+      setPosition(finalPos)
+      localStorage.setItem(POSITION_KEY, JSON.stringify(finalPos))
     }
     dragStartRef.current = null
     setIsDragging(false)
-  }, [position])
+  }, [])
+
+  // Prevent button clicks from firing if user was dragging
+  const handleClickCapture = useCallback((e: React.MouseEvent) => {
+    if (hasDraggedRef.current) {
+      e.stopPropagation()
+      e.preventDefault()
+    }
+  }, [])
 
   const { shortLabel } = getChapterLabel(currentChapter)
   const showKeywordFilter = annotationCount > 0 && !focusedMode
@@ -446,6 +490,7 @@ export default function ReadingToolbar({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
+        onClickCapture={handleClickCapture}
       >
         {isExpanded ? (
           /* ── Expanded vertical dock ── */
@@ -665,9 +710,12 @@ export default function ReadingToolbar({
             </button>
           </div>
         ) : (
-          /* ── Collapsed pill (stays at current position) ── */
-          <button
-            onClick={() => setIsExpanded(true)}
+          /* ── Collapsed pill (stays at current position, draggable) ── */
+          <div
+            onClick={() => {
+              // Only expand if this wasn't a drag
+              if (!hasDraggedRef.current) setIsExpanded(true)
+            }}
             className="flex items-center justify-center rounded-xl shadow-lg transition-all duration-200"
             style={{
               backgroundColor: `rgba(var(--bg-card-rgb), 0.85)`,
@@ -677,9 +725,18 @@ export default function ReadingToolbar({
               width: '36px',
               height: '36px',
               color: 'var(--text-secondary)',
+              cursor: isDragging ? 'grabbing' : 'grab',
             }}
-            title="Show reading toolbar"
+            title="Click to expand · Drag to reposition"
+            role="button"
+            tabIndex={0}
             aria-label="Show reading toolbar"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                setIsExpanded(true)
+              }
+            }}
           >
             {/* 6-dot grip icon — position-agnostic */}
             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
@@ -690,7 +747,7 @@ export default function ReadingToolbar({
               <circle cx="8" cy="18" r="2" />
               <circle cx="16" cy="18" r="2" />
             </svg>
-          </button>
+          </div>
         )}
       </div>
     </>
