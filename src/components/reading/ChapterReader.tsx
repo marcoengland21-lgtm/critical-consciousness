@@ -406,7 +406,12 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     }
     return 18
   })
-  const [focusedMode, setFocusedMode] = useState(false)
+  const [focusedMode, setFocusedMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('ccp-focused-mode') === 'true'
+    }
+    return false
+  })
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [confusionFlagCounts, setConfusionFlagCounts] = useState<Map<number, number>>(new Map())
   const [userConfusionFlags, setUserConfusionFlags] = useState<Set<number>>(new Set())
@@ -509,6 +514,11 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
   useEffect(() => {
     localStorage.setItem('ccp-font-size', String(fontSize))
   }, [fontSize])
+
+  // Save focused mode preference
+  useEffect(() => {
+    localStorage.setItem('ccp-focused-mode', String(focusedMode))
+  }, [focusedMode])
 
   // Load confusion flags on mount
   useEffect(() => {
