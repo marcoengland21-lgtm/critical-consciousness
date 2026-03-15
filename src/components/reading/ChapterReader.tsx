@@ -7,7 +7,7 @@ import AnnotationPopover from './AnnotationPopover'
 import AnnotationPanel from './AnnotationPanel'
 import SelectionToolbar from './SelectionToolbar'
 import OnboardingHint from './OnboardingHint'
-import ReadingControls from './ReadingControls'
+import ReadingBubble from './ReadingBubble'
 import ConfusionFlagButton from './ConfusionFlagButton'
 import GlossaryTooltip from './GlossaryTooltip'
 import FootnoteInline from './FootnoteInline'
@@ -57,6 +57,8 @@ interface Props {
   footnotes: Footnote[]
   userId: string | null
   documentSlug: string
+  allChapters: { chapter_number: number; title: string }[]
+  currentIndex: number
 }
 
 // Guest ID for unauthenticated annotation
@@ -384,7 +386,7 @@ const MemoizedParagraph = memo(function Paragraph({
 // ====================================================================
 // Main ChapterReader component
 // ====================================================================
-export default function ChapterReader({ chapter, annotations: initialAnnotations, footnotes, userId, documentSlug }: Props) {
+export default function ChapterReader({ chapter, annotations: initialAnnotations, footnotes, userId, documentSlug, allChapters, currentIndex }: Props) {
 
   const router = useRouter()
   const textRef = useRef<HTMLDivElement>(null)
@@ -817,17 +819,16 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
       {/* Onboarding hint */}
       <OnboardingHint />
 
-      {/* Reading controls */}
-      <ReadingControls
-        fontSize={fontSize}
-        onFontSizeChange={setFontSize}
-        focusedMode={focusedMode}
-        onFocusedModeChange={setFocusedMode}
-        annotationCount={annotations.length}
-        annotationKeyword={annotationKeyword}
-        onAnnotationKeywordChange={setAnnotationKeyword}
-        matchingAnnotationCount={matchingCount}
-      />
+      {/* Persistent annotation hint — shown inline when no annotations exist */}
+      {annotations.length === 0 && !focusedMode && (
+        <div className="mb-3 flex items-center gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-purple)', opacity: 0.7 }}>
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+          </svg>
+          <span>Select any text to leave a note for the group</span>
+        </div>
+      )}
 
       {/* The reading text */}
       <div
@@ -923,6 +924,22 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
           onClose={() => setToast(null)}
         />
       )}
+
+      {/* Floating reading bubble — chapter nav + controls */}
+      <ReadingBubble
+        chapters={allChapters}
+        currentChapter={chapter.chapter_number}
+        currentIndex={currentIndex}
+        slug={documentSlug}
+        fontSize={fontSize}
+        onFontSizeChange={setFontSize}
+        focusedMode={focusedMode}
+        onFocusedModeChange={setFocusedMode}
+        annotationCount={annotations.length}
+        annotationKeyword={annotationKeyword}
+        onAnnotationKeywordChange={setAnnotationKeyword}
+        matchingAnnotationCount={matchingCount}
+      />
 
       {/* Back to top */}
       <BackToTop />

@@ -3,41 +3,10 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { unstable_cache } from 'next/cache'
 import ChapterReader from '@/components/reading/ChapterReader'
-import ChapterSidebar from '@/components/reading/ChapterSidebar'
+import { getChapterLabel, getPartNumber } from '@/lib/chapter-utils'
 
 interface Props {
   params: Promise<{ slug: string; chapter: string }>
-}
-
-/**
- * Map internal chapter_number to Marx's actual structure.
- * chapter_number 1-4 = Chapter 1 sections, 5-36 = Chapters 2-33
- */
-function getChapterLabel(chapterNumber: number): { label: string; shortLabel: string } {
-  if (chapterNumber <= 4) {
-    return {
-      label: `Chapter 1, Section ${chapterNumber}`,
-      shortLabel: `1.${chapterNumber}`,
-    }
-  }
-  const marxChapter = chapterNumber - 3 // 5 -> 2, 6 -> 3, etc.
-  return {
-    label: `Chapter ${marxChapter}`,
-    shortLabel: `Ch ${marxChapter}`,
-  }
-}
-
-/** Get the Part number for a given Marx chapter number */
-function getPartNumber(chapterNumber: number): number {
-  const marxChapter = chapterNumber <= 4 ? 1 : chapterNumber - 3
-  if (marxChapter <= 3) return 1
-  if (marxChapter <= 6) return 2
-  if (marxChapter <= 10) return 3
-  if (marxChapter <= 15) return 4
-  if (marxChapter <= 18) return 5
-  if (marxChapter <= 22) return 6
-  if (marxChapter <= 25) return 7
-  return 8
 }
 
 export async function generateMetadata({ params }: Props) {
@@ -145,16 +114,6 @@ export default async function ChapterPage({ params }: Props) {
 
   return (
     <div className="relative">
-      {/* Floating Chapter Sidebar — desktop only */}
-      <ChapterSidebar
-        chapters={chapters}
-        currentChapter={chapterNum}
-        slug={slug}
-      />
-
-      {/* Chapter content — offset on large screens to clear sidebar */}
-      <div className="lg:pl-56">
-
       {/* Breadcrumb navigation */}
       <div className="mb-6 flex items-center gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
         <Link href="/reading" className="hover:underline" style={{ color: 'var(--accent-red)' }}>
@@ -167,24 +126,6 @@ export default async function ChapterPage({ params }: Props) {
         <span>›</span>
         <span style={{ color: 'var(--text-primary)' }}>{currentLabel}</span>
       </div>
-
-      {/* Reading progress bar */}
-      {chapters.length > 0 && (
-        <div className="mb-6 text-center">
-          <p className="text-xs mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-            {currentLabel} of 33 · Part {getPartNumber(chapterNum)}
-          </p>
-          <div className="h-[3px] rounded-full max-w-xs mx-auto" style={{ backgroundColor: 'var(--bg-soft)' }}>
-            <div
-              className="h-full rounded-full"
-              style={{
-                backgroundColor: 'var(--accent-purple)',
-                width: `${Math.round((currentIndex / (chapters.length - 1)) * 100)}%`,
-              }}
-            />
-          </div>
-        </div>
-      )}
 
       {/* Section navigation — only show Ch1 section tabs when reading a Ch1 section */}
       {isChapter1Section && (
@@ -234,6 +175,8 @@ export default async function ChapterPage({ params }: Props) {
         footnotes={(footnotes as any[]) || []}
         userId={user?.id || null}
         documentSlug={slug}
+        allChapters={chapters}
+        currentIndex={currentIndex}
       />
 
       {/* Cross-feature prompt */}
@@ -300,7 +243,6 @@ export default async function ChapterPage({ params }: Props) {
           <div />
         )}
       </div>
-      </div>{/* end lg:pl-56 */}
     </div>
   )
 }
