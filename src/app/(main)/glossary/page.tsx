@@ -11,8 +11,8 @@ export default async function GlossaryPage() {
   const user = await getSessionUser()
   const supabase = await createClient()
 
-  // Both queries in parallel (was 2 sequential)
-  const [{ data: entries }, { data: profile }] = await Promise.all([
+  // All queries in parallel
+  const [{ data: entries }, { data: profile }, { data: weeks }] = await Promise.all([
     supabase
       .from('glossary_entries')
       .select('*, creator:profiles!created_by(display_name)')
@@ -22,6 +22,10 @@ export default async function GlossaryPage() {
       .select('role')
       .eq('id', user?.id || '')
       .single(),
+    supabase
+      .from('reading_schedule')
+      .select('id, week_number')
+      .order('week_number', { ascending: true }),
   ])
 
   return (
@@ -35,6 +39,7 @@ export default async function GlossaryPage() {
         entries={entries || []}
         currentUserId={user?.id || ''}
         isAdmin={profile?.role === 'admin'}
+        weeks={weeks || []}
       />
     </div>
   )

@@ -7,7 +7,7 @@ interface Node {
   id: string
   label: string
   definition: string
-  week: number | null
+  week: string | null // UUID FK to reading_schedule.id
   x: number
   y: number
   vx: number
@@ -188,7 +188,12 @@ export default function ConceptMap({ entries }: Props) {
       } else if (isHovered) {
         color = computedStyle.getPropertyValue('--text-primary').trim() || '#1a1625'
       } else if (node.week) {
-        const hue = ((node.week - 1) * 30) % 360
+        // Use a simple hash of the UUID to generate a consistent hue
+        let hash = 0
+        for (let i = 0; i < node.week.length; i++) {
+          hash = ((hash << 5) - hash + node.week.charCodeAt(i)) | 0
+        }
+        const hue = Math.abs(hash) % 360
         const rgb = hslToRgb(hue, 60, 50)
         color = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`
       }

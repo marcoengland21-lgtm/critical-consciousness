@@ -8,11 +8,16 @@ import { findGlossaryTermMatches } from '@/lib/glossary-utils'
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
+interface Week {
+  id: string
+  week_number: number
+}
+
 interface GlossaryEntry {
   id: string
   term: string
   definition: string
-  first_appearance_week: number | null
+  first_appearance_week: string | null // UUID FK to reading_schedule.id
   related_terms: string[] | null
   created_by: string
   creator?: { display_name: string }
@@ -24,13 +29,22 @@ interface GlossaryListProps {
   entries: GlossaryEntry[]
   currentUserId: string
   isAdmin: boolean
+  weeks: Week[]
 }
 
 type GroupMode = 'alphabetical' | 'chapter'
 
 // ── Component ───────────────────────────────────────────────────────────────
 
-export default function GlossaryList({ entries, currentUserId, isAdmin }: GlossaryListProps) {
+export default function GlossaryList({ entries, currentUserId, isAdmin, weeks }: GlossaryListProps) {
+  // Build a lookup map from week UUID → week_number for display
+  const weekNumberMap = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const w of weeks) {
+      map.set(w.id, w.week_number)
+    }
+    return map
+  }, [weeks])
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -82,8 +96,8 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
     if (groupMode === 'chapter') {
       const groups: Record<string, GlossaryEntry[]> = {}
       for (const entry of filtered) {
-        const week = entry.first_appearance_week
-        const key = week ? `Week ${week}` : 'Ungrouped'
+        const weekNum = entry.first_appearance_week ? weekNumberMap.get(entry.first_appearance_week) : null
+        const key = weekNum ? `Week ${weekNum}` : 'Ungrouped'
         if (!groups[key]) groups[key] = []
         groups[key].push(entry)
       }
@@ -121,7 +135,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
         term: term.trim(),
         definition: definition.trim(),
         created_by: currentUserId,
-        first_appearance_week: firstWeek ? parseInt(firstWeek) : null,
+        first_appearance_week: firstWeek || null,
         related_terms: relatedTerms
           ? relatedTerms.split(',').map((t) => t.trim()).filter(Boolean)
           : null,
@@ -327,9 +341,9 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
               }}
             >
               <option value="">First appears: (select week)</option>
-              {Array.from({ length: 20 }, (_, i) => (
-                <option key={i + 1} value={i + 1}>
-                  Week {i + 1}
+              {weeks.map((w) => (
+                <option key={w.id} value={w.id}>
+                  Week {w.week_number}
                 </option>
               ))}
             </select>
@@ -427,7 +441,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
                         }}
                       >
                         <span className="font-medium">{entry.term}</span>
-                        {entry.first_appearance_week && (
+                        {entry.first_appearance_week && weekNumberMap.get(entry.first_appearance_week) && (
                           <span
                             className="ml-2 text-xs px-1.5 py-0.5 rounded-full"
                             style={{
@@ -435,7 +449,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
                               color: 'var(--text-secondary)',
                             }}
                           >
-                            W{entry.first_appearance_week}
+                            W{weekNumberMap.get(entry.first_appearance_week)}
                           </span>
                         )}
                       </button>
@@ -508,7 +522,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
 
               {/* Metadata */}
               <div className="flex flex-wrap gap-2 mb-4">
-                {selectedEntry.first_appearance_week && (
+                {selectedEntry.first_appearance_week && weekNumberMap.get(selectedEntry.first_appearance_week) && (
                   <span
                     className="text-xs px-2 py-1 rounded-full"
                     style={{
@@ -516,7 +530,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin }: Glossa
                       color: 'var(--text-secondary)',
                     }}
                   >
-                    First appears: Week {selectedEntry.first_appearance_week}
+                    First appears: Week {weekNumberMap.get(selectedEntry.first_appearance_week)}
                   </span>
                 )}
                 <span

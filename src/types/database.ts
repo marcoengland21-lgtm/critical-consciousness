@@ -86,7 +86,7 @@ export interface GlossaryEntry {
   id: string;
   term: string;
   definition: string;
-  first_appearance_week: number | null;
+  first_appearance_week: string | null; // UUID FK to reading_schedule.id
   related_terms: string[] | null;
   created_by: string;
   updated_by: string | null;
@@ -155,13 +155,11 @@ export interface AnnotationReply {
   updated_at: string;
 }
 
-export interface ConfusionFlag {
+export interface ConfusionCount {
   id: string;
   chapter_id: string;
   paragraph_index: number;
-  user_id: string;
-  group_id: string;
-  created_at: string;
+  count: number;
 }
 
 // Extended Types with Joined Data

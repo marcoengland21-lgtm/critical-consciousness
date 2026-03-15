@@ -902,7 +902,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         />
       )}
 
-      {/* Persistent reading toolbar — chapter nav + controls */}
+      {/* Floating pill toolbar — chapter nav + reading controls */}
       <ReadingToolbar
         chapters={allChapters}
         currentChapter={chapter.chapter_number}
