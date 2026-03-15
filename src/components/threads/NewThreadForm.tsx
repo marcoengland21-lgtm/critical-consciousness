@@ -13,9 +13,24 @@ interface Week {
   title: string
 }
 
+// Per-type placeholder text — guides the writer toward the thread type's purpose
+const placeholderByType: Record<ThreadType, string> = {
+  discussion: "What question came up for you during this week's reading?",
+  reflection: "What stood out to you? What challenged your thinking?",
+  summary: "What were the key points from this week's session?",
+  passage_pick: "Which passage do you want the group to look at closely? Use 'Quote from reading' to insert it.",
+  connection: "How does this week's reading connect to something outside the text?",
+  general: "What's on your mind?",
+}
+
 const DRAFT_KEY = 'ccp-thread-draft'
 
-export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
+interface NewThreadFormProps {
+  weeks: Week[]
+  currentWeek?: Week | null
+}
+
+export default function NewThreadForm({ weeks, currentWeek }: NewThreadFormProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const bodyRef = useRef<HTMLTextAreaElement>(null)
@@ -188,6 +203,25 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
         />
       )}
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Current week context banner */}
+      {currentWeek && (
+        <div
+          className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm"
+          style={{
+            backgroundColor: 'var(--bg-badge)',
+            color: 'var(--text-primary)',
+          }}
+        >
+          <span style={{ color: 'var(--accent-purple)' }}>📖</span>
+          <span>
+            You&apos;re discussing:{' '}
+            <strong>
+              Week {currentWeek.week_number} — {currentWeek.title}
+            </strong>
+          </span>
+        </div>
+      )}
+
       {error && (
         <div className="p-3 rounded-lg text-sm" style={{ backgroundColor: 'var(--bg-soft)', color: 'var(--accent-red)', border: '1px solid var(--accent-red)' }}>
           {error}
@@ -267,33 +301,36 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
         />
       </div>
 
+      {/* Quote from reading — prominent placement */}
+      <button
+        type="button"
+        onClick={() => setShowQuoteModal(true)}
+        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg border text-sm font-medium btn-transition"
+        style={{
+          borderColor: 'var(--accent-purple)',
+          borderStyle: 'dashed',
+          color: 'var(--accent-purple)',
+          backgroundColor: 'transparent',
+        }}
+      >
+        📖 Quote from reading — insert a passage into your thread
+      </button>
+
       {/* Body */}
       <div>
         <div className="flex items-center justify-between mb-2">
           <label htmlFor="body" className="block text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
             Body
           </label>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
               Supports **bold**, *italic*, &gt; blockquotes
-              {draftSaved && (
-                <span className="ml-2 text-xs" style={{ color: 'var(--bg-soft)' }}>
-                  Draft saved
-                </span>
-              )}
             </span>
-            <button
-              type="button"
-              onClick={() => setShowQuoteModal(true)}
-              className="px-2 py-1 text-xs font-medium rounded transition-colors"
-              style={{
-                backgroundColor: 'var(--bg-soft)',
-                color: 'var(--accent-red)',
-                border: '1px solid var(--accent-purple)',
-              }}
-            >
-              Quote from reading
-            </button>
+            {draftSaved && (
+              <span className="text-xs font-medium" style={{ color: 'var(--accent-green)' }}>
+                ✓ Draft saved
+              </span>
+            )}
           </div>
         </div>
         <textarea
@@ -307,7 +344,7 @@ export default function NewThreadForm({ weeks }: { weeks: Week[] }) {
               e.currentTarget.form?.requestSubmit()
             }
           }}
-          placeholder="Share your thoughts, questions, or reflections on the reading..."
+          placeholder={placeholderByType[threadType] || "Share your thoughts, questions, or reflections on the reading..."}
           rows={10}
           className="w-full px-4 py-3 rounded-lg border text-sm resize-none transition-colors focus:outline-none"
           style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)', lineHeight: '1.85', minHeight: '200px' }}

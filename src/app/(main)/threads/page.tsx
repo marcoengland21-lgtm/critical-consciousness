@@ -1,55 +1,10 @@
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
-import ThreadTypeBadge from '@/components/threads/ThreadTypeBadge'
-import TimeAgo from '@/components/ui/TimeAgo'
+import { createClient, getSessionUser } from '@/lib/supabase/server'
+import ThreadListClient from '@/components/threads/ThreadListClient'
 import type { ThreadType } from '@/types/database'
-
-// Author badge component with color-coded initials
-function AuthorBadge({ name }: { name: string }) {
-  const colors = [
-    '#a31545', '#2e7d6e', '#6b4c9a', '#7b6b3d',
-    '#6B4C7D', '#2D7A8A', '#8A4B3D', '#4A7B4F',
-  ]
-  let hash = 0
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  const color = colors[Math.abs(hash) % colors.length]
-  const initial = name.charAt(0).toUpperCase()
-
-  return (
-    <span className="flex items-center gap-1.5">
-      <span
-        className="w-5 h-5 rounded-full flex items-center justify-center font-bold text-white text-[10px] flex-shrink-0"
-        style={{ backgroundColor: color }}
-      >
-        {initial}
-      </span>
-      <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
-        {name}
-      </span>
-    </span>
-  )
-}
 
 export const metadata = {
   title: 'Discussion Threads | Capital Study Group',
-}
-
-// Strip markdown and plain text preview
-function getTextPreview(text: string, maxLines: number = 3): string {
-  // Remove markdown formatting
-  let plain = text
-    .replace(/^>\s+/gm, '') // Remove blockquotes
-    .replace(/\*\*(.+?)\*\*/g, '$1') // Remove bold
-    .replace(/\*(.+?)\*/g, '$1') // Remove italic
-    .replace(/^#+\s+/gm, '') // Remove headers
-    .split('\n')
-    .filter(line => line.trim())
-    .slice(0, maxLines)
-    .join(' ')
-
-  return plain.length > 200 ? plain.slice(0, 200) + '...' : plain
 }
 
 export default async function ThreadsPage({
@@ -58,136 +13,235 @@ export default async function ThreadsPage({
   searchParams: Promise<{ type?: string; week?: string }>
 }) {
   const params = await searchParams
+  const user = await getSessionUser()
   const supabase = await createClient()
 
-  let query = supabase
-    .from('threads')
-    .select(`
-      *,
-      author:profiles!author_id(id, display_name, role),
-      replies:replies(count)
-    `)
-    .order('pinned', { ascending: false })
-    .order('created_at', { ascending: false })
+  const now = new Date().toISOString()
 
-  if (params.type) {
-    query = query.eq('thread_type', params.type)
+  // Parallel fetch: threads, weeks, latest replies, prompts, user role
+  const [
+    { data: rawThreads },
+    { data: weeks },
+    { data: latestReplies },
+    { data: currentWeekData },
+    { data: userRoles },
+  ] = await Promise.all([
+    // All threads with author + reply count
+    supabase
+      .from('threads')
+      .select('*, author:profiles!author_id(id, display_name), replies:replies(count)')
+      .order('pinned', { ascending: false })
+      .order('created_at', { ascending: false }),
+
+    // All weeks for labels + filter
+    supabase
+      .from('reading_schedule')
+      .select('id, week_number, title, due_date, session_date')
+      .order('week_number', { ascending: true }),
+
+    // Latest reply per thread (fetch recent replies, dedup client-side)
+    supabase
+      .from('replies')
+      .select('thread_id, created_at, author:profiles!author_id(display_name)')
+      .order('created_at', { ascending: false })
+      .limit(200),
+
+    // Current week with prompts (first upcoming or most recent)
+    supabase
+      .from('reading_schedule')
+      .select('id, week_number, title, discussion_prompts(id, prompt_text, sort_order)')
+      .gte('due_date', now)
+      .order('due_date', { ascending: true })
+      .limit(1),
+
+    // Current user's weekly roles
+    user
+      ? supabase
+          .from('weekly_roles')
+          .select('role_type, week:reading_schedule!week_id(id, week_number, title, due_date)')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(5)
+      : Promise.resolve({ data: null }),
+  ])
+
+  // Build latest reply lookup: thread_id → { created_at, authorName }
+  const lastReplyMap = new Map<string, { created_at: string; authorName: string }>()
+  if (latestReplies) {
+    for (const reply of latestReplies) {
+      if (!lastReplyMap.has(reply.thread_id)) {
+        lastReplyMap.set(reply.thread_id, {
+          created_at: reply.created_at,
+          authorName: (reply.author as any)?.display_name || 'Someone',
+        })
+      }
+    }
   }
-  if (params.week) {
-    query = query.eq('week_id', params.week)
+
+  // Transform threads to client-ready shape
+  const threads = (rawThreads || []).map((t: any) => ({
+    id: t.id,
+    title: t.title,
+    body: t.body,
+    thread_type: t.thread_type as ThreadType,
+    pinned: t.pinned,
+    created_at: t.created_at,
+    week_id: t.week_id,
+    author: t.author || { id: '', display_name: 'Guest' },
+    replyCount: t.replies?.[0]?.count ?? 0,
+    lastReply: lastReplyMap.get(t.id) || null,
+  }))
+
+  // Current week info for sidebar
+  const currentWeek = currentWeekData?.[0] || null
+  const prompts = currentWeek?.discussion_prompts || []
+  // Sort prompts by sort_order
+  const sortedPrompts = [...prompts].sort(
+    (a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0)
+  )
+
+  // Find user's role for the current week
+  const currentRole = userRoles?.find(
+    (r: any) => r.week?.id === currentWeek?.id
+  )
+
+  const roleLabels: Record<string, string> = {
+    summarizer: 'Summarizer',
+    discussion_starter: 'Discussion Starter',
+    connector: 'Connector',
+    passage_picker: 'Passage Picker',
   }
 
-  const { data: threads, error } = await query
-
-  if (error) {
-    console.error('[CCP] Threads page — query error:', error)
+  const roleNudges: Record<string, string> = {
+    summarizer: 'Post a summary of the key points from the session.',
+    discussion_starter: 'Post your opening questions to get the conversation going.',
+    connector: 'Share how this week\u2019s reading connects to other ideas or current events.',
+    passage_picker: 'Highlight a key passage for the group to discuss closely.',
   }
-
-  const threadTypes: { value: string; label: string }[] = [
-    { value: '', label: 'All Types' },
-    { value: 'discussion', label: 'Discussion' },
-    { value: 'reflection', label: 'Reflection' },
-    { value: 'summary', label: 'Summary' },
-    { value: 'passage_pick', label: 'Passage Pick' },
-    { value: 'connection', label: 'Connection' },
-    { value: 'general', label: 'General' },
-  ]
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: 'var(--accent-red)' }}>
-          Discussion Threads
-        </h1>
-        <Link
-          href="/threads/new"
-          className="btn-primary text-sm"
-        >
-          New Thread
-        </Link>
+    <div className="flex gap-8">
+      {/* Main content */}
+      <div className="flex-1 min-w-0">
+        <ThreadListClient
+          initialThreads={threads}
+          weeks={(weeks || []).map((w: any) => ({
+            id: w.id,
+            week_number: w.week_number,
+            title: w.title,
+          }))}
+          initialType={params.type || null}
+          initialWeek={params.week || null}
+        />
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        {threadTypes.map((t) => (
-          <Link
-            key={t.value}
-            href={t.value ? `/threads?type=${t.value}` : '/threads'}
-            className="px-3 py-1 rounded-full text-sm font-medium btn-transition border"
+      {/* Contextual sidebar — desktop only */}
+      <aside
+        className="hidden xl:block w-64 shrink-0 space-y-5"
+        style={{ position: 'sticky', top: '2rem', alignSelf: 'flex-start' }}
+      >
+        {/* This Week's Prompts */}
+        {currentWeek && sortedPrompts.length > 0 && (
+          <div
+            className="rounded-xl border p-4"
             style={{
-              backgroundColor: params.type === t.value || (!params.type && !t.value)
-                ? 'var(--text-primary)' : 'var(--bg-card)',
-              color: params.type === t.value || (!params.type && !t.value)
-                ? 'var(--bg-page)' : 'var(--text-primary)',
-              borderColor: 'var(--text-secondary)',
+              backgroundColor: 'var(--bg-card)',
+              borderColor: 'var(--border-default)',
             }}
           >
-            {t.label}
-          </Link>
-        ))}
-      </div>
+            <h3
+              className="text-xs font-bold tracking-wide uppercase mb-3"
+              style={{ color: 'var(--accent-purple)' }}
+            >
+              Week {currentWeek.week_number} Prompts
+            </h3>
+            <ul className="space-y-2.5">
+              {sortedPrompts.map((p: any) => (
+                <li
+                  key={p.id}
+                  className="text-xs leading-relaxed"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  {p.prompt_text}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
-      {/* Thread List */}
-      {!threads || threads.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="text-lg mb-2" style={{ color: 'var(--text-primary)' }}>
-            The conversation starts here
-          </p>
-          <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
-            What&apos;s on your mind after this week&apos;s reading?
-          </p>
-          <Link
-            href="/threads/new"
-            className="btn-primary text-sm"
+        {/* Your Role This Week */}
+        {currentRole && (
+          <div
+            className="rounded-xl border p-4"
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              borderColor: 'var(--border-default)',
+            }}
           >
-            Start a Discussion
-          </Link>
+            <h3
+              className="text-xs font-bold tracking-wide uppercase mb-2"
+              style={{ color: 'var(--accent-purple)' }}
+            >
+              Your Role This Week
+            </h3>
+            <p
+              className="text-sm font-semibold mb-1.5"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              {roleLabels[(currentRole as any).role_type] || (currentRole as any).role_type}
+            </p>
+            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+              {roleNudges[(currentRole as any).role_type] || 'Share your thoughts with the group.'}
+            </p>
+            <Link
+              href="/threads/new"
+              className="inline-block mt-3 text-xs font-medium"
+              style={{ color: 'var(--accent-red)' }}
+            >
+              Post now →
+            </Link>
+          </div>
+        )}
+
+        {/* Quick Links */}
+        <div
+          className="rounded-xl border p-4"
+          style={{
+            backgroundColor: 'var(--bg-card)',
+            borderColor: 'var(--border-default)',
+          }}
+        >
+          <h3
+            className="text-xs font-bold tracking-wide uppercase mb-3"
+            style={{ color: 'var(--accent-purple)' }}
+          >
+            Quick Links
+          </h3>
+          <div className="space-y-2">
+            <Link
+              href="/reading"
+              className="flex items-center gap-2 text-xs font-medium transition-colors"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              📖 Continue Reading
+            </Link>
+            <Link
+              href="/glossary"
+              className="flex items-center gap-2 text-xs font-medium transition-colors"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              📚 Glossary
+            </Link>
+            <Link
+              href="/schedule"
+              className="flex items-center gap-2 text-xs font-medium transition-colors"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              📅 Schedule
+            </Link>
+          </div>
         </div>
-      ) : (
-        <div className="space-y-4 stagger-children">
-          {threads.map((thread: any) => {
-            const replyCount = thread.replies?.[0]?.count ?? 0
-            const preview = getTextPreview(thread.body || '')
-            return (
-              <Link
-                key={thread.id}
-                href={`/threads/${thread.id}`}
-                className="block p-6 rounded-xl border transition-all card-hover"
-                style={{
-                  backgroundColor: 'var(--bg-card)',
-                  borderColor: thread.pinned ? 'var(--accent-purple)' : 'var(--border-default)',
-                  borderWidth: thread.pinned ? '2px' : '1px',
-                }}
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  {thread.pinned && (
-                    <span className="text-xs font-medium px-2 py-0.5 rounded-full"
-                      style={{ backgroundColor: 'var(--accent-purple)', color: 'var(--text-inverse)' }}>
-                      Pinned
-                    </span>
-                  )}
-                  <ThreadTypeBadge type={thread.thread_type as ThreadType} />
-                </div>
-                <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
-                  {thread.title}
-                </h3>
-                {preview && (
-                  <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                    {preview}
-                  </p>
-                )}
-                <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                  <AuthorBadge name={thread.author?.display_name || 'Guest'} />
-                  <span>·</span>
-                  <TimeAgo date={thread.created_at} />
-                  <span>·</span>
-                  <span>{replyCount} {replyCount === 1 ? 'reply' : 'replies'}</span>
-                </div>
-              </Link>
-            )
-          })}
-        </div>
-      )}
+      </aside>
     </div>
   )
 }

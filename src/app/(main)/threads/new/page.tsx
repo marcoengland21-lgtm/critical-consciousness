@@ -12,18 +12,30 @@ export default async function NewThreadPage() {
   // TODO: RE-ENABLE AUTH — Restore redirect when reviewer access is no longer needed
   // if (!user) redirect('/')
 
-  // Fetch weeks for optional week association
-  const { data: weeks } = await supabase
-    .from('reading_schedule')
-    .select('id, week_number, title')
-    .order('week_number', { ascending: true })
+  const now = new Date().toISOString()
+
+  // Fetch weeks + find current week (first upcoming based on due_date)
+  const [{ data: weeks }, { data: currentWeekData }] = await Promise.all([
+    supabase
+      .from('reading_schedule')
+      .select('id, week_number, title')
+      .order('week_number', { ascending: true }),
+    supabase
+      .from('reading_schedule')
+      .select('id, week_number, title')
+      .gte('due_date', now)
+      .order('due_date', { ascending: true })
+      .limit(1),
+  ])
+
+  const currentWeek = currentWeekData?.[0] || null
 
   return (
     <div className="max-w-3xl mx-auto">
       <h1 className="text-2xl sm:text-3xl font-bold mb-8" style={{ color: 'var(--accent-red)' }}>
         Start a New Thread
       </h1>
-      <NewThreadForm weeks={weeks || []} />
+      <NewThreadForm weeks={weeks || []} currentWeek={currentWeek} />
     </div>
   )
 }
