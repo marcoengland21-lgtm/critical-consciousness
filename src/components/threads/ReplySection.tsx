@@ -140,11 +140,6 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
             <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
               {reply.author?.display_name}
             </span>
-            {reply.author?.role === 'admin' && (
-              <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: 'var(--bg-soft)', color: 'var(--bg-card)' }}>
-                admin
-              </span>
-            )}
             <span style={{ color: 'var(--text-secondary)' }}>·</span>
             <TimeAgo date={reply.created_at} />
             {reply.updated_at !== reply.created_at && (

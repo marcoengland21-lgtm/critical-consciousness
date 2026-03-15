@@ -296,15 +296,7 @@ export default function ReadingBubble({
                 </>
               )}
             </svg>
-            {focusedMode ? 'Notes' : 'Focus'}
-            {!focusedMode && annotationCount > 0 && (
-              <span
-                className="ml-0.5 px-1 py-0.5 rounded-full text-[9px]"
-                style={{ backgroundColor: 'var(--bg-badge)', color: 'var(--text-primary)' }}
-              >
-                {annotationCount}
-              </span>
-            )}
+            {focusedMode ? 'Show Notes' : 'Focus Mode'}
           </button>
         </div>
 

@@ -100,11 +100,6 @@ export default async function ThreadPage({
           <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
             {thread.author?.display_name}
           </span>
-          {thread.author?.role === 'admin' && (
-            <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: 'var(--bg-soft)', color: 'var(--bg-card)' }}>
-              admin
-            </span>
-          )}
           <span>·</span>
           <TimeAgo date={thread.created_at} />
         </div>
