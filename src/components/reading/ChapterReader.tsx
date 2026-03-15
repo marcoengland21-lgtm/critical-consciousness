@@ -304,8 +304,8 @@ const MemoizedParagraph = memo(function Paragraph({
           return (
             <span
               key={sIdx}
-              className="cursor-pointer border-b border-dotted"
-              style={{ borderColor: 'var(--text-secondary)', color: 'inherit', opacity: 1 }}
+              className="cursor-pointer rounded-sm transition-colors duration-150 hover:bg-[var(--bg-soft)]"
+              style={{ color: 'inherit' }}
               onClick={(e) => onGlossaryTermClick(seg.termData!.term, seg.termData!.definition, e)}
               title={`Click to see definition of "${seg.termData.term}"`}
             >
@@ -331,9 +331,8 @@ const MemoizedParagraph = memo(function Paragraph({
             return (
               <mark
                 key={sIdx}
-                className={`${density > 1 ? 'annotation-highlight-dense' : 'annotation-highlight'} border-b border-dotted cursor-pointer`}
+                className={`${density > 1 ? 'annotation-highlight-dense' : 'annotation-highlight'} cursor-pointer`}
                 style={{
-                  borderColor: 'var(--accent-purple)',
                   opacity: showKeywordStats && !isMatchingAnnotation ? 0.2 : undefined,
                   transition: 'opacity 200ms ease',
                 }}

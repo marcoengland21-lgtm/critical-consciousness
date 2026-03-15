@@ -155,6 +155,23 @@ export interface AnnotationReply {
   updated_at: string;
 }
 
+export interface GlossaryComment {
+  id: string;
+  entry_id: string;
+  author_id: string;
+  body: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GlossaryVersion {
+  id: string;
+  entry_id: string;
+  definition: string;
+  updated_by: string;
+  created_at: string;
+}
+
 export interface ConfusionCount {
   id: string;
   chapter_id: string;
