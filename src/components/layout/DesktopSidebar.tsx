@@ -68,25 +68,24 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
         transition: mounted ? 'width var(--duration-slow) var(--ease-out-expo)' : 'none',
       }}
     >
-      {/* Brand area — the "C" monogram IS the collapse/expand toggle */}
+      {/* Brand area */}
       <div
-        className="flex items-center py-5 shrink-0"
+        className="flex items-center justify-between py-5 shrink-0"
         style={{
           paddingLeft: '14px',
-          paddingRight: '14px',
+          paddingRight: collapsed ? '14px' : '10px',
           minHeight: '68px',
         }}
       >
         <div className="flex items-center gap-2.5 min-w-0">
-          {/* "C" monogram — always visible, acts as sidebar toggle */}
+          {/* "C" monogram — click to expand when collapsed, click to collapse when expanded */}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="sidebar-toggle-btn shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm btn-transition"
+            className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm btn-transition"
             style={{
               backgroundColor: 'rgba(107, 76, 154, 0.3)',
               color: 'var(--text-inverse)',
             }}
-            data-sidebar-tooltip={collapsed ? 'Expand menu' : 'Collapse menu'}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             C
@@ -107,6 +106,24 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
             <span className="text-xs block" style={{ opacity: 0.7 }}>Study Group</span>
           </Link>
         </div>
+
+        {/* << collapse chevron — visible when expanded, fades out when collapsed */}
+        <button
+          onClick={() => setCollapsed(true)}
+          className="shrink-0 w-7 h-7 flex items-center justify-center rounded-md btn-transition"
+          style={{
+            color: 'var(--text-inverse)',
+            opacity: collapsed ? 0 : 0.4,
+            pointerEvents: collapsed ? 'none' : 'auto',
+            transition: labelTransition,
+          }}
+          aria-label="Collapse sidebar"
+        >
+          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="11 17 6 12 11 7" />
+            <polyline points="18 17 13 12 18 7" />
+          </svg>
+        </button>
       </div>
 
       {/* Separator */}

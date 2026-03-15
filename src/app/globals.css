@@ -693,36 +693,6 @@ html[data-theme="dark"] .reading-text .blockquote {
   opacity: 1;
 }
 
-/* Sidebar toggle button (the "C" monogram) — hover state + tooltip */
-.sidebar-toggle-btn {
-  position: relative;
-  cursor: pointer;
-}
-.sidebar-toggle-btn:hover {
-  background-color: rgba(107, 76, 154, 0.5) !important;
-}
-.sidebar-toggle-btn::after {
-  content: attr(data-sidebar-tooltip);
-  position: absolute;
-  left: calc(100% + 10px);
-  top: 50%;
-  transform: translateY(-50%);
-  padding: 5px 12px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  white-space: nowrap;
-  background-color: var(--text-primary);
-  color: var(--bg-page);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--duration-fast) var(--ease-out-expo);
-  z-index: 50;
-}
-.sidebar-toggle-btn:hover::after {
-  opacity: 1;
-}
-
 /* =================================================================
    MOBILE TAB BAR
    ================================================================= */
