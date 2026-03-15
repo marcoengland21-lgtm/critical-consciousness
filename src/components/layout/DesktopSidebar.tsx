@@ -16,24 +16,31 @@ const COLLAPSED_WIDTH = '60px'
 const EXPANDED_WIDTH = '240px'
 
 export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarProps) {
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('ccp-sidebar-collapsed') === 'true'
+  // Initialize as false unconditionally to avoid hydration mismatch.
+  // Server always renders expanded; useEffect syncs from localStorage on mount.
+  const [collapsed, setCollapsed] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  // Read saved preference on mount (after hydration)
+  useEffect(() => {
+    const saved = localStorage.getItem('ccp-sidebar-collapsed')
+    if (saved === 'true') {
+      setCollapsed(true)
     }
-    return false
-  })
+    setMounted(true)
+  }, [])
 
   // Sync --sidebar-width with collapsed state
   useEffect(() => {
+    if (!mounted) return
     const width = collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH
     document.documentElement.style.setProperty('--sidebar-width', width)
     localStorage.setItem('ccp-sidebar-collapsed', String(collapsed))
-  }, [collapsed])
+  }, [collapsed, mounted])
 
-  // On mount, set the initial width (overrides the CSS media query default)
+  // Handle resize — mobile always 0px
   useEffect(() => {
     const handleResize = () => {
-      // On mobile (below md breakpoint), always 0px
       if (window.innerWidth < 768) {
         document.documentElement.style.setProperty('--sidebar-width', '0px')
       } else {
@@ -48,21 +55,34 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
     return () => window.removeEventListener('resize', handleResize)
   }, [collapsed])
 
+  // First letter of display name for collapsed avatar
+  const initial = displayName.charAt(0).toUpperCase()
+
   return (
     <aside
       className="hidden md:flex flex-col fixed top-0 left-0 h-screen z-40"
       style={{
         width: collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH,
         backgroundColor: 'var(--bg-nav)',
-        transition: 'width var(--duration-normal) var(--ease-out-expo)',
+        transition: mounted ? 'width var(--duration-normal) var(--ease-out-expo)' : 'none',
       }}
     >
       {/* Brand */}
-      <div className="px-5 py-6" style={{ overflow: 'hidden', whiteSpace: 'nowrap' }}>
+      <div
+        className="py-6"
+        style={{
+          overflow: 'hidden',
+          whiteSpace: 'nowrap',
+          paddingLeft: collapsed ? '0' : '1.25rem',
+          paddingRight: collapsed ? '0' : '1.25rem',
+          textAlign: collapsed ? 'center' : 'left',
+        }}
+      >
         <Link
           href="/dashboard"
           className="block font-bold text-lg"
           style={{ color: 'var(--text-inverse)' }}
+          title={collapsed ? 'Capital Study Group — Dashboard' : undefined}
         >
           {collapsed ? 'C' : (
             <>
@@ -116,13 +136,14 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
       </nav>
 
       {/* Bottom Section */}
-      <div className="px-4 py-4 space-y-3" style={{ borderTop: '1px solid rgba(107, 76, 154, 0.2)' }}>
+      <div className="px-3 py-4 space-y-2" style={{ borderTop: '1px solid rgba(107, 76, 154, 0.2)' }}>
+        {/* Expanded: full controls */}
         {!collapsed && (
           <>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between px-1">
               <ThemeToggle />
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between px-1">
               <span
                 className="text-sm truncate"
                 style={{ color: 'var(--text-inverse)', opacity: 0.8 }}
@@ -144,7 +165,45 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
           </>
         )}
 
-        {/* Collapse toggle */}
+        {/* Collapsed: user identity — initial avatar or sign-in icon */}
+        {collapsed && (
+          <div className="flex justify-center">
+            {hasUser ? (
+              <Link
+                href="/profile"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+                style={{
+                  backgroundColor: 'rgba(107, 76, 154, 0.3)',
+                  color: 'var(--text-inverse)',
+                }}
+                title={displayName}
+                aria-label={`Profile — ${displayName}`}
+              >
+                {initial}
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="w-8 h-8 rounded-full flex items-center justify-center"
+                style={{
+                  backgroundColor: 'rgba(107, 76, 154, 0.2)',
+                  color: 'var(--text-inverse)',
+                  opacity: 0.7,
+                }}
+                title="Sign In"
+                aria-label="Sign In"
+              >
+                <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                  <polyline points="10 17 15 12 10 7" />
+                  <line x1="15" y1="12" x2="3" y2="12" />
+                </svg>
+              </Link>
+            )}
+          </div>
+        )}
+
+        {/* Collapse/expand toggle */}
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="w-full flex items-center justify-center py-2 rounded-lg btn-transition"

@@ -18,7 +18,7 @@ export default function SidebarNavLink({ href, icon, label, collapsed = false }:
   return (
     <Link
       href={href}
-      className="sidebar-link"
+      className={`sidebar-link ${collapsed ? 'sidebar-link-collapsed' : ''}`}
       style={{
         color: isActive ? 'var(--accent-purple)' : 'var(--text-inverse)',
         backgroundColor: isActive ? 'rgba(107, 76, 154, 0.15)' : 'transparent',
@@ -26,7 +26,8 @@ export default function SidebarNavLink({ href, icon, label, collapsed = false }:
         justifyContent: collapsed ? 'center' : 'flex-start',
         padding: collapsed ? '0.625rem' : '0.625rem 1rem',
       }}
-      title={collapsed ? label : undefined}
+      aria-label={collapsed ? label : undefined}
+      data-tooltip={collapsed ? label : undefined}
     >
       <NavIcon name={icon} size={18} />
       {!collapsed && <span>{label}</span>}
