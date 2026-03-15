@@ -55,8 +55,10 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
     return () => window.removeEventListener('resize', handleResize)
   }, [collapsed])
 
-  // First letter of display name for collapsed avatar
   const initial = displayName.charAt(0).toUpperCase()
+
+  // Shared transition for all inner content fading
+  const labelTransition = 'opacity var(--duration-normal) var(--ease-out-expo)'
 
   return (
     <aside
@@ -64,42 +66,78 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
       style={{
         width: collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH,
         backgroundColor: 'var(--bg-nav)',
-        transition: mounted ? 'width var(--duration-normal) var(--ease-out-expo)' : 'none',
+        overflow: 'hidden',
+        transition: mounted ? 'width var(--duration-slow) var(--ease-out-expo)' : 'none',
       }}
     >
-      {/* Brand */}
+      {/* Brand + collapse toggle — always in the same row */}
       <div
-        className="py-6"
+        className="flex items-center py-5 shrink-0"
         style={{
-          overflow: 'hidden',
-          whiteSpace: 'nowrap',
-          paddingLeft: collapsed ? '0' : '1.25rem',
-          paddingRight: collapsed ? '0' : '1.25rem',
-          textAlign: collapsed ? 'center' : 'left',
+          paddingLeft: '14px',
+          paddingRight: '8px',
+          minHeight: '68px',
         }}
       >
+        {/* Brand */}
         <Link
           href="/dashboard"
-          className="block font-bold text-lg"
-          style={{ color: 'var(--text-inverse)' }}
-          title={collapsed ? 'Capital Study Group — Dashboard' : undefined}
+          className="flex-1 min-w-0"
+          style={{ color: 'var(--text-inverse)', textDecoration: 'none' }}
+          title={collapsed ? 'Capital Study Group' : undefined}
         >
-          {collapsed ? 'C' : (
-            <>
+          <div className="flex items-center gap-2.5">
+            {/* "C" monogram — always visible */}
+            <span
+              className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm"
+              style={{
+                backgroundColor: 'rgba(107, 76, 154, 0.3)',
+                color: 'var(--text-inverse)',
+              }}
+            >
+              C
+            </span>
+            {/* Full name — fades with sidebar */}
+            <span
+              className="font-bold text-sm whitespace-nowrap overflow-hidden"
+              style={{
+                opacity: collapsed ? 0 : 1,
+                transition: labelTransition,
+              }}
+            >
               Capital
-              <span className="block text-sm font-normal" style={{ opacity: 0.7 }}>
+              <span className="block text-xs font-normal" style={{ opacity: 0.7 }}>
                 Study Group
               </span>
-            </>
-          )}
+            </span>
+          </div>
         </Link>
+
+        {/* Collapse toggle — sits next to brand, fades out when collapsed */}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="shrink-0 w-7 h-7 flex items-center justify-center rounded-md btn-transition"
+          style={{
+            color: 'var(--text-inverse)',
+            opacity: collapsed ? 0 : 0.5,
+            pointerEvents: collapsed ? 'none' : 'auto',
+            transition: labelTransition,
+          }}
+          title="Collapse sidebar"
+          aria-label="Collapse sidebar"
+        >
+          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="11 17 6 12 11 7" />
+            <polyline points="18 17 13 12 18 7" />
+          </svg>
+        </button>
       </div>
 
       {/* Separator */}
-      <div className="mx-4 mb-2" style={{ borderBottom: '1px solid rgba(107, 76, 154, 0.3)' }} />
+      <div className="mx-4 mb-2 shrink-0" style={{ borderBottom: '1px solid rgba(107, 76, 154, 0.3)' }} />
 
       {/* Navigation Links */}
-      <nav className="flex-1 px-3 space-y-1 overflow-y-auto" aria-label="Main navigation">
+      <nav className="flex-1 px-3 space-y-1 overflow-y-auto overflow-x-hidden" aria-label="Main navigation">
         {/* Primary nav: Dashboard, Reading, Threads */}
         {navItems
           .filter((item) => item.mobileTab && item.href !== '/profile')
@@ -113,7 +151,7 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
             />
           ))}
 
-        {/* Divider between primary and secondary nav */}
+        {/* Divider */}
         <div className="my-2 mx-2" style={{ borderBottom: '1px solid rgba(107, 76, 154, 0.2)' }} />
 
         {/* Secondary nav: Glossary, Schedule, Resources */}
@@ -129,62 +167,75 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
             />
           ))}
 
-        {/* Profile — below secondary, only when logged in */}
+        {/* Profile */}
         {hasUser && (
           <SidebarNavLink href="/profile" icon="user" label="Profile" collapsed={collapsed} />
         )}
       </nav>
 
-      {/* Bottom Section */}
-      <div className="px-3 py-4 space-y-2" style={{ borderTop: '1px solid rgba(107, 76, 154, 0.2)' }}>
-        {/* Expanded: full controls */}
-        {!collapsed && (
-          <>
-            <div className="flex items-center justify-between px-1">
-              <ThemeToggle />
-            </div>
-            <div className="flex items-center justify-between px-1">
-              <span
-                className="text-sm truncate"
-                style={{ color: 'var(--text-inverse)', opacity: 0.8 }}
-              >
-                {displayName}
-              </span>
-              {hasUser ? (
-                <LogoutButton />
-              ) : (
-                <Link
-                  href="/login"
-                  className="text-sm font-medium px-3 py-1 rounded"
-                  style={{ color: 'var(--text-inverse)', border: '1px solid var(--accent-purple)' }}
-                >
-                  Sign In
-                </Link>
-              )}
-            </div>
-          </>
-        )}
+      {/* Bottom Section — user identity + controls */}
+      <div className="shrink-0 px-3 py-3" style={{ borderTop: '1px solid rgba(107, 76, 154, 0.2)' }}>
+        {/* When collapsed: expand button + user avatar stacked */}
+        {/* When expanded: theme toggle, user info, no expand button (it's at top) */}
 
-        {/* Collapsed: user identity — initial avatar or sign-in icon */}
-        {collapsed && (
-          <div className="flex justify-center">
-            {hasUser ? (
+        {/* Expand button — only visible when collapsed */}
+        <button
+          onClick={() => setCollapsed(false)}
+          className="w-full flex items-center justify-center py-2 mb-1 rounded-md btn-transition"
+          style={{
+            color: 'var(--text-inverse)',
+            opacity: collapsed ? 0.5 : 0,
+            pointerEvents: collapsed ? 'auto' : 'none',
+            height: collapsed ? 'auto' : 0,
+            overflow: 'hidden',
+            padding: collapsed ? undefined : 0,
+            margin: collapsed ? undefined : 0,
+            transition: `opacity var(--duration-normal) var(--ease-out-expo)`,
+          }}
+          title="Expand sidebar"
+          aria-label="Expand sidebar"
+        >
+          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="13 17 18 12 13 7" />
+            <polyline points="6 17 11 12 6 7" />
+          </svg>
+        </button>
+
+        {/* User avatar — always visible, adapts to collapsed/expanded */}
+        <div
+          className="flex items-center gap-2 px-1 mb-2 overflow-hidden"
+          style={{ minHeight: '32px' }}
+        >
+          {hasUser ? (
+            <>
               <Link
                 href="/profile"
-                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+                className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
                 style={{
                   backgroundColor: 'rgba(107, 76, 154, 0.3)',
                   color: 'var(--text-inverse)',
                 }}
-                title={displayName}
+                title={collapsed ? displayName : undefined}
                 aria-label={`Profile — ${displayName}`}
               >
                 {initial}
               </Link>
-            ) : (
+              <span
+                className="text-sm truncate whitespace-nowrap"
+                style={{
+                  color: 'var(--text-inverse)',
+                  opacity: collapsed ? 0 : 0.8,
+                  transition: labelTransition,
+                }}
+              >
+                {displayName}
+              </span>
+            </>
+          ) : (
+            <>
               <Link
                 href="/login"
-                className="w-8 h-8 rounded-full flex items-center justify-center"
+                className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
                 style={{
                   backgroundColor: 'rgba(107, 76, 154, 0.2)',
                   color: 'var(--text-inverse)',
@@ -199,36 +250,37 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
                   <line x1="15" y1="12" x2="3" y2="12" />
                 </svg>
               </Link>
-            )}
-          </div>
-        )}
+              <span
+                className="text-sm whitespace-nowrap"
+                style={{
+                  opacity: collapsed ? 0 : 1,
+                  transition: labelTransition,
+                }}
+              >
+                <Link
+                  href="/login"
+                  className="font-medium"
+                  style={{ color: 'var(--text-inverse)', border: 'none' }}
+                >
+                  Sign In
+                </Link>
+              </span>
+            </>
+          )}
+        </div>
 
-        {/* Collapse/expand toggle */}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="w-full flex items-center justify-center py-2 rounded-lg btn-transition"
-          style={{ color: 'var(--text-inverse)', opacity: 0.6 }}
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        {/* Theme toggle + logout — fade with sidebar */}
+        <div
+          className="flex items-center justify-between px-1 overflow-hidden"
+          style={{
+            opacity: collapsed ? 0 : 1,
+            height: collapsed ? 0 : 'auto',
+            transition: `opacity var(--duration-normal) var(--ease-out-expo), height var(--duration-slow) var(--ease-out-expo)`,
+          }}
         >
-          <svg
-            width={16}
-            height={16}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            style={{
-              transform: collapsed ? 'rotate(180deg)' : 'rotate(0deg)',
-              transition: 'transform var(--duration-normal) var(--ease-out-expo)',
-            }}
-          >
-            <polyline points="11 17 6 12 11 7" />
-            <polyline points="18 17 13 12 18 7" />
-          </svg>
-        </button>
+          <ThemeToggle />
+          {hasUser && <LogoutButton />}
+        </div>
       </div>
     </aside>
   )

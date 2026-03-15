@@ -25,12 +25,23 @@ export default function SidebarNavLink({ href, icon, label, collapsed = false }:
         opacity: isActive ? 1 : 0.7,
         justifyContent: collapsed ? 'center' : 'flex-start',
         padding: collapsed ? '0.625rem' : '0.625rem 1rem',
+        overflow: 'hidden',
+        transition: 'background-color var(--duration-fast) var(--ease-out-expo), padding var(--duration-slow) var(--ease-out-expo)',
       }}
       aria-label={collapsed ? label : undefined}
       data-tooltip={collapsed ? label : undefined}
     >
       <NavIcon name={icon} size={18} />
-      {!collapsed && <span>{label}</span>}
+      {/* Always render label — opacity transition instead of conditional removal */}
+      <span
+        className="whitespace-nowrap"
+        style={{
+          opacity: collapsed ? 0 : 1,
+          transition: 'opacity var(--duration-normal) var(--ease-out-expo)',
+        }}
+      >
+        {label}
+      </span>
     </Link>
   )
 }
