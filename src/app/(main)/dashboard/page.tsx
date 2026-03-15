@@ -136,7 +136,7 @@ export default async function DashboardPage() {
             <MilestoneCard milestone={milestone} />
           )}
 
-          {/* This Week's Reading */}
+          {/* Card 1: Reading Assignment */}
           <div className="rounded-xl border-2 overflow-hidden card-elevated" style={{ borderColor: 'var(--accent-purple)' }}>
             <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-header)' }}>
               <div className="flex items-center justify-between">
@@ -152,7 +152,7 @@ export default async function DashboardPage() {
               {currentWeek ? (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--accent-purple)' }}>
+                    <span className="text-xs font-bold tracking-wide" style={{ color: 'var(--accent-purple)' }}>
                       Week {currentWeek.week_number}
                     </span>
                     <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
@@ -163,54 +163,19 @@ export default async function DashboardPage() {
                     {currentWeek.title}
                   </h3>
                   {currentWeek.chapter_ref && (
-                    <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
+                    <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
                       {currentWeek.chapter_ref}
                       {currentWeek.page_start && currentWeek.page_end && (
                         <span> (pp. {currentWeek.page_start}–{currentWeek.page_end})</span>
                       )}
                     </p>
                   )}
-                  {currentWeek.description && (
-                    <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
-                      {currentWeek.description}
-                    </p>
-                  )}
-
-                  {/* Session info */}
-                  {currentWeek.session_date && (
-                    <div className="text-sm p-3 rounded-lg mb-3" style={{ backgroundColor: 'var(--bg-card-alt)' }}>
-                      <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
-                        Next Session:{' '}
-                        {new Date(currentWeek.session_date).toLocaleDateString('en-NZ', {
-                          weekday: 'long', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit',
-                          timeZone: 'Pacific/Auckland',
-                        })}
-                      </span>
-                      {currentWeek.session_location && (
-                        <span style={{ color: 'var(--text-secondary)' }}> · {currentWeek.session_location}</span>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Discussion prompts */}
-                  {currentWeek.discussion_prompts?.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
-                        Discussion Prompts
-                      </h4>
-                      <ol className="space-y-1 list-decimal list-inside">
-                        {currentWeek.discussion_prompts
-                          .sort((a: any, b: any) => a.sort_order - b.sort_order)
-                          .map((prompt: any) => (
-                            <li key={prompt.id} className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                              {prompt.prompt_text}
-                            </li>
-                          ))}
-                      </ol>
-                    </div>
-                  )}
-
-                  {/* Reading Checkin */}
+                  <Link
+                    href={`/reading/capital-vol-1/${currentWeek.week_number}`}
+                    className="btn-primary text-sm inline-flex items-center gap-1.5 mb-1"
+                  >
+                    Read Now →
+                  </Link>
                   <ReadingCheckinButton weekId={currentWeek.id} currentStatus={currentReadingStatus} />
                 </div>
               ) : (
@@ -219,12 +184,58 @@ export default async function DashboardPage() {
                     The reading journey hasn&apos;t started yet
                   </p>
                   <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                    Once the schedule is set, you&apos;ll see this week&apos;s reading, discussion prompts, and session details here.
+                    Once the schedule is set, you&apos;ll see this week&apos;s reading and session details here.
                   </p>
                 </div>
               )}
             </div>
           </div>
+
+          {/* Card 2: Next Session — only if session date exists */}
+          {currentWeek?.session_date && (
+            <div className="rounded-xl border overflow-hidden card-elevated" style={{ borderColor: 'var(--border-default)' }}>
+              <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
+                <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
+                  Next Session
+                </h2>
+              </div>
+              <div className="p-5" style={{ backgroundColor: 'var(--bg-card)' }}>
+                <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                  {new Date(currentWeek.session_date).toLocaleDateString('en-NZ', {
+                    weekday: 'long', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit',
+                    timeZone: 'Pacific/Auckland',
+                  })}
+                </p>
+                {currentWeek.session_location && (
+                  <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+                    {currentWeek.session_location}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Card 3: Discussion Prompts — only if prompts exist */}
+          {currentWeek?.discussion_prompts?.length > 0 && (
+            <div className="rounded-xl border overflow-hidden card-elevated" style={{ borderColor: 'var(--border-default)' }}>
+              <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
+                <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
+                  Discussion Prompts
+                </h2>
+              </div>
+              <div className="p-5" style={{ backgroundColor: 'var(--bg-card)' }}>
+                <ol className="space-y-2 list-decimal list-inside">
+                  {currentWeek.discussion_prompts
+                    .sort((a: any, b: any) => a.sort_order - b.sort_order)
+                    .map((prompt: any) => (
+                      <li key={prompt.id} className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                        {prompt.prompt_text}
+                      </li>
+                    ))}
+                </ol>
+              </div>
+            </div>
+          )}
 
           {/* Weekly Activity Summary */}
           {currentWeek && (
@@ -363,7 +374,7 @@ export default async function DashboardPage() {
               backgroundColor: 'var(--bg-card)',
             }}
           >
-            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--accent-red)' }}>
+            <p className="text-xs font-bold tracking-wide mb-1" style={{ color: 'var(--accent-red)' }}>
               Annotate Together
             </p>
             <p className="font-bold" style={{ color: 'var(--text-primary)', fontFamily: "'Lora', Georgia, serif" }}>

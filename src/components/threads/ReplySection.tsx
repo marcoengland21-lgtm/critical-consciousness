@@ -158,6 +158,12 @@ export default function ReplySection({ threadId, replies: initialReplies, curren
                 ref={(el) => { if (el) editReplyRefs.current[reply.id] = el }}
                 value={editBody}
                 onChange={(e) => { setEditBody(e.target.value); autoResize(e.target) }}
+                onKeyDown={(e) => {
+                  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                    e.preventDefault()
+                    updateReply(reply.id)
+                  }
+                }}
                 rows={3}
                 className="w-full px-3 py-2 rounded-lg border text-sm resize-none transition-all"
                 style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)', minHeight: '80px' }}

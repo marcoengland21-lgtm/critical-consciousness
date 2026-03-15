@@ -27,7 +27,7 @@ export default function CollapsiblePart({ partNumber, partTitle, defaultOpen, ch
         aria-controls={`part-${partNumber}-content`}
       >
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--accent-purple)' }}>
+          <p className="text-xs font-bold tracking-wide" style={{ color: 'var(--accent-purple)' }}>
             Part {partNumber}
           </p>
           <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>

@@ -49,6 +49,13 @@
   --role-connector: #4a6a8c;
   --role-passage: #8c4a6a;
 
+  /* Thread type badge backgrounds — tinted per type */
+  --badge-bg-discussion: rgba(58, 122, 92, 0.1);
+  --badge-bg-reflection: rgba(124, 95, 166, 0.1);
+  --badge-bg-summary: rgba(74, 106, 140, 0.1);
+  --badge-bg-passage: rgba(140, 74, 106, 0.1);
+  --badge-bg-connection: rgba(92, 61, 143, 0.1);
+
   /* Typography */
   --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --line-height-relaxed: 1.75;
@@ -60,7 +67,15 @@
   --radius-badge: 9999px;       /* pill shape */
 
   /* Layout */
-  --sidebar-width: 0px;         /* Set by ThemeInitializer on desktop */
+  --sidebar-width: 0px;
+}
+
+/* Sidebar width responds to viewport — single source of truth.
+   Replaces the JS-based ThemeInitializer approach so it updates on resize. */
+@media (min-width: 48rem) { /* md breakpoint = 768px, matches Tailwind md: */
+  :root {
+    --sidebar-width: 240px;
+  }
 }
 
 /* =================================================================
@@ -97,6 +112,13 @@ html[data-theme="dark"] {
   --role-discussion: #5cc98a;
   --role-connector: #6a9acc;
   --role-passage: #cc6a9a;
+
+  /* Badge backgrounds — higher opacity on dark backgrounds */
+  --badge-bg-discussion: rgba(92, 201, 138, 0.15);
+  --badge-bg-reflection: rgba(168, 140, 212, 0.15);
+  --badge-bg-summary: rgba(106, 154, 204, 0.15);
+  --badge-bg-passage: rgba(204, 106, 154, 0.15);
+  --badge-bg-connection: rgba(168, 140, 212, 0.15);
 }
 
 /* =================================================================
@@ -243,8 +265,8 @@ html[data-theme="dark"] [style*="1px solid #e2dfe8"] {
   color: var(--text-primary);
   max-width: 68ch;
   margin: 0 auto;
-  padding-left: 1.25rem;
-  padding-right: 1.25rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
 }
 
 .reading-text p {

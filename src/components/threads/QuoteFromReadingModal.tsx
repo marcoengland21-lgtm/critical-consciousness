@@ -176,7 +176,7 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
           ) : selectedChapter ? (
             <div className="space-y-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
+                <p className="text-xs font-semibold tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
                   Selected chapter
                 </p>
                 <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
@@ -185,7 +185,7 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
               </div>
 
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
+                <p className="text-xs font-semibold tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
                   Highlight text to select a quote
                 </p>
                 <div
@@ -214,7 +214,7 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
                     color: 'var(--text-secondary)',
                   }}
                 >
-                  <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: 'var(--text-secondary)' }}>
+                  <p className="text-xs font-semibold tracking-wide mb-1" style={{ color: 'var(--text-secondary)' }}>
                     Selected
                   </p>
                   <p className="text-sm italic">&ldquo;{selectedText}&rdquo;</p>

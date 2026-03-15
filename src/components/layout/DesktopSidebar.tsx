@@ -39,18 +39,37 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
 
       {/* Navigation Links */}
       <nav className="flex-1 px-3 space-y-1 overflow-y-auto" aria-label="Main navigation">
-        {navItems.map((item) => {
-          // Hide Profile link when no user
-          if (item.href === '/profile' && !hasUser) return null
-          return (
+        {/* Primary nav: Dashboard, Reading, Threads */}
+        {navItems
+          .filter((item) => item.mobileTab && item.href !== '/profile')
+          .map((item) => (
             <SidebarNavLink
               key={item.href}
               href={item.href}
               icon={item.icon}
               label={item.label}
             />
-          )
-        })}
+          ))}
+
+        {/* Divider between primary and secondary nav */}
+        <div className="my-2 mx-2" style={{ borderBottom: '1px solid rgba(107, 76, 154, 0.2)' }} />
+
+        {/* Secondary nav: Glossary, Schedule, Resources */}
+        {navItems
+          .filter((item) => !item.mobileTab)
+          .map((item) => (
+            <SidebarNavLink
+              key={item.href}
+              href={item.href}
+              icon={item.icon}
+              label={item.label}
+            />
+          ))}
+
+        {/* Profile — below secondary, only when logged in */}
+        {hasUser && (
+          <SidebarNavLink href="/profile" icon="user" label="Profile" />
+        )}
       </nav>
 
       {/* Bottom Section */}

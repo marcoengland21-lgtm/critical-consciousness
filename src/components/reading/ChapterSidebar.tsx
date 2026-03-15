@@ -75,11 +75,11 @@ export default function ChapterSidebar({ chapters, currentChapter, slug }: Chapt
         paddingBottom: '2rem',
         paddingLeft: '0.5rem',
         paddingRight: '0.5rem',
-        marginLeft: 'var(--sidebar-width, 0px)',
+        left: 'var(--sidebar-width, 0px)',
       }}
     >
       <p
-        className="text-xs font-semibold uppercase tracking-wider mb-3 px-2"
+        className="text-xs font-semibold tracking-wide mb-3 px-2"
         style={{ color: 'var(--text-secondary)' }}
       >
         Chapters

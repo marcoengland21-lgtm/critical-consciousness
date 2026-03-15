@@ -128,7 +128,7 @@ The shared glossary feature (groups reading the same text can optionally import 
 | Auth        | Supabase Auth (email/password)    | —        |
 | CSS         | Tailwind CSS v4                   | 4.2.1    |
 | Hosting     | Netlify                           | —        |
-| Fonts       | Lora (serif, reading), system-ui  | —        |
+| Fonts       | Lora (serif, reading), Inter (UI), system-ui | —        |
 | Language    | TypeScript                        | 5.9.3    |
 
 **Deployment:** Push to `main` on GitHub → Netlify auto-deploys. Build command: `next build`. Takes ~30-40 seconds.
@@ -148,13 +148,13 @@ src/
 │   ├── layout.tsx               # Root layout (html, head, Lora font, ThemeInitializer)
 │   ├── page.tsx                 # Root "/" — redirects to /dashboard
 │   ├── (auth)/
-│   │   ├── layout.tsx           # Auth pages layout (minimal, no nav)
+│   │   ├── layout.tsx           # Auth pages layout — split panel (brand left, form right), two-line "Capital / Study Group" branding
 │   │   ├── login/page.tsx       # Login page
 │   │   └── register/
 │   │       ├── page.tsx         # Registration page (invite code required)
 │   │       └── actions.ts       # Server actions for registration
 │   └── (main)/
-│       ├── layout.tsx           # Main layout — nav bar, user display, theme toggle
+│       ├── layout.tsx           # Main layout — DesktopSidebar + MobileTabBar, user display
 │       ├── dashboard/page.tsx   # Dashboard — welcome, this week, activity, roles
 │       ├── reading/
 │       │   ├── page.tsx         # Table of contents — all parts/chapters
@@ -168,9 +168,9 @@ src/
 │       ├── resources/page.tsx   # Resources with type filters and add form
 │       └── concepts/page.tsx    # Concept map (hidden from nav, in-progress)
 ├── components/
-│   ├── reading/                 # ChapterReader, AnnotationPanel, SelectionToolbar, etc.
+│   ├── reading/                 # ChapterReader, ChapterSidebar, ReadingControls, BackToTop, AnnotationPanel, SelectionToolbar, GlossaryTooltip, etc.
 │   ├── threads/                 # NewThreadForm, ThreadTypeBadge, ReplySection, etc.
-│   ├── layout/                  # ThemeProvider, ThemeToggle, NavLink, MobileNav, etc.
+│   ├── layout/                  # DesktopSidebar, MobileTabBar, MobileMoreDrawer, SidebarNavLink, NavIcon, NavigationProgress, ThemeProvider, ThemeToggle, ThemeInitializer, LogoutButton
 │   ├── dashboard/               # ReadingCheckinButton, WeeklyActivitySummary, etc.
 │   ├── schedule/                # SessionNotes
 │   ├── glossary/                # GlossaryList, GlossaryVersionHistory
@@ -184,6 +184,7 @@ src/
 │   │   ├── client.ts            # Browser-side Supabase client
 │   │   ├── admin.ts             # Service role client (bypasses RLS)
 │   │   └── middleware.ts        # Session refresh middleware
+│   ├── nav-config.ts             # Navigation items config (label, href, icon, mobileTab flag)
 │   ├── confusion-flags.ts       # Confusion flag utilities
 │   └── glossary-utils.ts        # Glossary search/matching
 ├── types/
@@ -298,9 +299,10 @@ All colors are CSS custom properties. **Never use raw hex values.** Always use `
 
 ### Typography
 
-- **UI text:** system-ui, -apple-system, sans-serif
+- **UI text:** 'Inter', system-ui, -apple-system, sans-serif (Google Fonts)
 - **Reading text:** 'Lora', Georgia, 'Times New Roman', serif (Google Fonts)
-- `.reading-text`: font-size 1.125rem, line-height 1.8, max-width 68ch
+- `.reading-text`: font-size 1.125rem, line-height 1.8, max-width 68ch, padding 1.5rem
+- Labels use `text-xs font-bold tracking-wide` — no `uppercase` (removed to reduce visual noise)
 
 ### Animation System
 
@@ -322,8 +324,14 @@ Key classes:
 - Inline styles for theme-aware colors: `style={{ color: 'var(--text-primary)' }}`
 - Tailwind for layout/spacing: `className="flex items-center gap-3 px-4 py-2"`
 - Semantic CSS utility classes exist: `.text-primary`, `.bg-card`, `.border-themed`, etc.
+- `.btn-primary` — red CTA button with hover/active states, `var(--accent-red)` background
+- `.btn-secondary` — outlined secondary button with `var(--bg-button-secondary)` background
+- `.card-elevated` — card with subtle box-shadow for visual weight
+- `.card-hover` — card with hover transform/shadow transition
 - Collapsibles use `data-open` attribute, not React state, for CSS animation
 - Blockquotes: left border `var(--accent-purple)`, subtle background, italic, indent
+- Thread type badges: per-type tinted backgrounds via `--badge-bg-{type}` CSS variables
+- Nav sidebar: primary (Dashboard, Reading, Threads) / secondary (Glossary, Schedule, Resources) groups with divider
 
 ---
 
@@ -378,6 +386,21 @@ Warmth doesn't come from slapping earth tones on a generic layout. It comes from
 - ~~Session time timezone~~ — Added `timeZone: 'Pacific/Auckland'` to all date formatting (commit 59ae23e)
 - ~~Chapter page crash~~ — `cookies()` inside `unstable_cache()`, fixed with `createStaticClient()` (commit bff9776)
 
+### Fixed (design comparison session)
+- ~~ChapterSidebar overlays reading text~~ — Changed `marginLeft` to `left` on fixed-position aside
+- ~~Sidebar width not responsive on resize~~ — Replaced JS-based `--sidebar-width` with CSS media query
+- ~~React hydration mismatch in ThemeProvider~~ — Changed `useState` initializer to always return `false`
+- ~~Dashboard "This Week" monolith card~~ — Split into 3 focused cards: Reading Assignment, Next Session, Discussion Prompts
+- ~~Thread type badges all look the same~~ — Per-type tinted backgrounds via CSS custom properties
+- ~~ReadingCheckinButton all same color when selected~~ — Semantic colors: Done=green, Partial=purple, Behind=gray
+- ~~Uppercase overuse in labels~~ — Removed `uppercase` from all section labels across components
+- ~~Flat chapter navigation~~ — Replaced with card-style prev/next blocks showing chapter titles
+- ~~No reading progress indicator~~ — Added 2px purple scroll progress bar on reading pages
+- ~~Login/register buttons inconsistent~~ — Now use `btn-primary` class for consistent hover/active states
+- ~~Mobile brand name single line~~ — Two-line layout ("Capital" / "Study Group") matching desktop
+- ~~Edit textarea missing Cmd+Enter~~ — Added to ReplySection edit textarea
+- ~~AnnotationPanel reply textarea fixed height~~ — Added auto-resize on input
+
 ---
 
 ## Decision Log
@@ -392,6 +415,11 @@ Warmth doesn't come from slapping earth tones on a generic layout. It comes from
 | Explicit `timeZone: 'Pacific/Auckland'` | Netlify server may render in UTC. The reading group is in Christchurch. Always be explicit. |
 | Tailwind v4 with CSS custom properties | No `tailwind.config.js`. All theming via CSS vars in `globals.css`. Enables dark mode without JS class toggling. |
 | Guest bypass for testing | Auth redirects commented out with `// TODO: RE-ENABLE AUTH`. Lets reviewers access all pages. Auth code is preserved — don't delete it. |
+| `--sidebar-width` via CSS media query | Replaced JS-based approach (ThemeInitializer blocking script) with CSS `@media (min-width: 48rem)`. Auto-responds to viewport changes — single source of truth, no resize bugs. |
+| ThemeProvider hydration fix | `useState(false)` unconditionally, `useEffect` syncs with DOM after mount. ThemeInitializer prevents visual flash, so the state mismatch for one render cycle is invisible. |
+| ChapterSidebar uses `left` not `marginLeft` | Fixed-position elements need explicit `left` for reliable positioning. `marginLeft` on fixed elements doesn't reliably offset from the viewport edge. |
+| Scroll progress bar is purple, not red | Differentiates from the red NavigationProgress (route transition) bar. Purple = reading progress, red = page navigation. Both are passive, non-anxiety-producing feedback. |
+| "Behind" reading status uses muted gray | The platform never shames people for struggling. Behind uses `var(--text-secondary)` (gray), NOT red. Semantic colors: Done=green, Partial=purple. |
 
 ---
 

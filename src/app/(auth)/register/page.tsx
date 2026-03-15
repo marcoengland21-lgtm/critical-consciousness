@@ -186,8 +186,7 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 rounded-lg font-semibold text-white transition-opacity disabled:opacity-50"
-          style={{ backgroundColor: 'var(--accent-red)' }}
+          className="w-full btn-primary text-base disabled:opacity-50"
         >
           {loading ? 'Creating account...' : 'Join the Study Group'}
         </button>

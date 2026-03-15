@@ -17,13 +17,9 @@ export function useTheme() {
 }
 
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
-  // Initialize from DOM (set by ThemeInitializer before hydration)
-  const [isDark, setIsDark] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return document.documentElement.getAttribute('data-theme') === 'dark'
-    }
-    return false
-  })
+  // Always initialize as false — ThemeInitializer handles the visual appearance
+  // before hydration (no flash). The useEffect below syncs React state immediately.
+  const [isDark, setIsDark] = useState(false)
 
   // Sync if the attribute was set after initial render (edge case)
   useEffect(() => {

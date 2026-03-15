@@ -212,7 +212,7 @@ export default async function ChapterPage({ params }: Props) {
 
       {/* Chapter title */}
       <div className="mb-10 text-center">
-        <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--accent-purple)' }}>
+        <p className="text-xs font-bold tracking-wide mb-2" style={{ color: 'var(--accent-purple)' }}>
           {currentLabel}
         </p>
         <h1
@@ -257,19 +257,24 @@ export default async function ChapterPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Chapter navigation footer */}
-      <div className="mt-8 pt-8 border-t flex items-center justify-between" style={{ borderColor: 'var(--border-default)' }}>
+      {/* Chapter navigation footer — card-style */}
+      <div className="mt-12 grid grid-cols-2 gap-4">
         {prevChapter ? (
           <Link
             href={`/reading/${slug}/${prevChapter.chapter_number}`}
-            className="group flex items-center gap-2 text-sm font-medium max-w-[45%]"
-            style={{ color: 'var(--accent-red)' }}
+            className="group p-4 rounded-xl border card-hover"
+            style={{ borderColor: 'var(--border-default)', backgroundColor: 'var(--bg-card)' }}
           >
-            <span className="transition-transform group-hover:-translate-x-1 flex-shrink-0">←</span>
-            <div className="min-w-0">
-              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Previous</p>
-              <p className="truncate">{getChapterLabel(prevChapter.chapter_number).label}: {prevChapter.title}</p>
-            </div>
+            <p className="text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+              Previous
+            </p>
+            <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+              <span className="mr-1 transition-transform inline-block group-hover:-translate-x-1">←</span>
+              {getChapterLabel(prevChapter.chapter_number).label}
+            </p>
+            <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-secondary)' }}>
+              {prevChapter.title}
+            </p>
           </Link>
         ) : (
           <div />
@@ -277,14 +282,19 @@ export default async function ChapterPage({ params }: Props) {
         {nextChapter ? (
           <Link
             href={`/reading/${slug}/${nextChapter.chapter_number}`}
-            className="group flex items-center gap-2 text-sm font-medium text-right max-w-[45%]"
-            style={{ color: 'var(--accent-red)' }}
+            className="group p-4 rounded-xl border text-right card-hover"
+            style={{ borderColor: 'var(--border-default)', backgroundColor: 'var(--bg-card)' }}
           >
-            <div className="min-w-0">
-              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Next</p>
-              <p className="truncate">{getChapterLabel(nextChapter.chapter_number).label}: {nextChapter.title}</p>
-            </div>
-            <span className="transition-transform group-hover:translate-x-1 flex-shrink-0">→</span>
+            <p className="text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+              Next
+            </p>
+            <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+              {getChapterLabel(nextChapter.chapter_number).label}
+              <span className="ml-1 transition-transform inline-block group-hover:translate-x-1">→</span>
+            </p>
+            <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-secondary)' }}>
+              {nextChapter.title}
+            </p>
           </Link>
         ) : (
           <div />

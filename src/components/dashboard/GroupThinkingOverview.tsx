@@ -88,7 +88,7 @@ export default function GroupThinkingOverview({ annotations, threads, documentSl
         {/* By section summary — clickable links to each section */}
         {analysis.byChapter.length > 0 && (
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--accent-purple)' }}>
+            <h3 className="text-xs font-bold tracking-wide mb-3" style={{ color: 'var(--accent-purple)' }}>
               By Section
             </h3>
             <div className="space-y-2">
@@ -124,7 +124,7 @@ export default function GroupThinkingOverview({ annotations, threads, documentSl
         {/* Themes being explored — clickable to the relevant section */}
         {analysis.recentSnippets.length > 0 && (
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--accent-purple)' }}>
+            <h3 className="text-xs font-bold tracking-wide mb-3" style={{ color: 'var(--accent-purple)' }}>
               Themes Being Explored
             </h3>
             <div className="space-y-2">

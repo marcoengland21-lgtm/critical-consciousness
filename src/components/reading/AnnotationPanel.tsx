@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import TimeAgo from '@/components/ui/TimeAgo'
@@ -40,6 +40,12 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
   const [replyBody, setReplyBody] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
+
+  // Auto-resize reply textarea as content grows
+  const autoResize = useCallback((el: HTMLTextAreaElement) => {
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
+  }, [])
 
   // Close on Escape key
   useEffect(() => {
@@ -166,7 +172,7 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
           {/* Replies */}
           {replies.length > 0 && (
             <div className="space-y-3 pl-3 border-l-2" style={{ borderColor: 'var(--border-default)' }}>
-              <h4 className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>
+              <h4 className="text-xs font-semibold tracking-wide" style={{ color: 'var(--text-secondary)' }}>
                 {replies.length} {replies.length === 1 ? 'Reply' : 'Replies'}
               </h4>
               {replies.map((reply) => (
@@ -240,7 +246,7 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
             <textarea
               id="annotation-reply"
               value={replyBody}
-              onChange={(e) => setReplyBody(e.target.value)}
+              onChange={(e) => { setReplyBody(e.target.value); autoResize(e.target) }}
               onKeyDown={(e) => {
                 if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
                   e.preventDefault()

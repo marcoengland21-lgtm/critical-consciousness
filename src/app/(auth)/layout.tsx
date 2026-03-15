@@ -66,7 +66,10 @@ export default function AuthLayout({
             className="text-2xl font-bold"
             style={{ color: 'var(--accent-red)' }}
           >
-            Capital Study Group
+            Capital
+            <span className="block text-lg font-normal mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+              Study Group
+            </span>
           </h1>
           <p
             className="text-sm mt-1"

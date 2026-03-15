@@ -86,7 +86,7 @@ export default async function SchedulePage() {
                   <div>
                     <div className="flex items-center gap-3 mb-1">
                       <span
-                        className="text-xs font-bold uppercase tracking-wide"
+                        className="text-xs font-bold tracking-wide"
                         style={{ color: isCurrent ? 'var(--accent-purple)' : 'var(--text-secondary)' }}
                       >
                         Week {week.week_number}
@@ -214,7 +214,7 @@ export default async function SchedulePage() {
                 {/* Get a head start — for upcoming weeks */}
                 {!isCurrent && !isPast && (
                   <div className="p-4 rounded-lg border" style={{ borderColor: 'var(--accent-purple)', backgroundColor: 'var(--bg-card-alt)' }}>
-                    <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: 'var(--accent-purple)' }}>
+                    <p className="text-xs font-semibold tracking-wide mb-1" style={{ color: 'var(--accent-purple)' }}>
                       Get a head start
                     </p>
                     <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>

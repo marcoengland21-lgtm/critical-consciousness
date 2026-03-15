@@ -416,6 +416,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
   } | null>(null)
   const [annotationKeyword, setAnnotationKeyword] = useState('')
   const [renderedCount, setRenderedCount] = useState(INITIAL_RENDER_COUNT)
+  const [scrollProgress, setScrollProgress] = useState(0)
 
   // Build footnote lookup map
   const footnoteMap = useMemo(() => {
@@ -488,6 +489,19 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
       if (rafId) cancelAnimationFrame(rafId)
     }
   }, [chapter.id])
+
+  // Scroll progress indicator — passive feedback, no anxiety
+  useEffect(() => {
+    function handleScrollProgress() {
+      const scrollTop = window.scrollY
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight
+      if (docHeight > 0) {
+        setScrollProgress(Math.min(100, (scrollTop / docHeight) * 100))
+      }
+    }
+    window.addEventListener('scroll', handleScrollProgress, { passive: true })
+    return () => window.removeEventListener('scroll', handleScrollProgress)
+  }, [])
 
   // Save font size preference
   useEffect(() => {
@@ -781,6 +795,18 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
 
   return (
     <div className="relative">
+      {/* Scroll progress — thin purple bar, sits below NavigationProgress (z-[100]) */}
+      <div
+        className="fixed top-0 left-0 z-[99] pointer-events-none"
+        style={{
+          width: `${scrollProgress}%`,
+          height: '2px',
+          backgroundColor: 'var(--accent-purple)',
+          transition: 'width 100ms linear',
+          marginLeft: 'var(--sidebar-width, 0px)',
+        }}
+      />
+
       {/* Onboarding hint */}
       <OnboardingHint />
 

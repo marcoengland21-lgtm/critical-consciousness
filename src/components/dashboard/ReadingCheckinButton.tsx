@@ -12,9 +12,9 @@ interface ReadingCheckinButtonProps {
 const DEFAULT_GROUP_ID = '00000000-0000-0000-0000-000000000001'
 
 const STATUS_OPTIONS = [
-  { value: 'done', label: 'Done' },
-  { value: 'partial', label: 'Partial' },
-  { value: 'behind', label: 'Behind' },
+  { value: 'done', label: 'Done', activeBg: 'var(--accent-green)', activeColor: '#ffffff' },
+  { value: 'partial', label: 'Partial', activeBg: 'var(--accent-purple)', activeColor: 'var(--text-inverse)' },
+  { value: 'behind', label: 'Behind', activeBg: 'var(--text-secondary)', activeColor: 'var(--bg-page)' },
 ] as const
 
 export default function ReadingCheckinButton({ weekId, currentStatus }: ReadingCheckinButtonProps) {
@@ -61,7 +61,7 @@ export default function ReadingCheckinButton({ weekId, currentStatus }: ReadingC
   return (
     <>
       <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border-default)' }}>
-        <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: 'var(--accent-purple)' }}>
+        <p className="text-xs font-semibold mb-2 tracking-wide" style={{ color: 'var(--accent-purple)' }}>
           Your Progress
         </p>
         <div className="flex gap-2">
@@ -72,9 +72,9 @@ export default function ReadingCheckinButton({ weekId, currentStatus }: ReadingC
               disabled={saving}
               className="flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all border"
               style={{
-                backgroundColor: status === option.value ? 'var(--text-primary)' : 'var(--bg-card)',
-                color: status === option.value ? 'var(--bg-page)' : 'var(--text-primary)',
-                borderColor: status === option.value ? 'var(--text-primary)' : 'var(--border-default)',
+                backgroundColor: status === option.value ? option.activeBg : 'var(--bg-card)',
+                color: status === option.value ? option.activeColor : 'var(--text-primary)',
+                borderColor: status === option.value ? option.activeBg : 'var(--border-default)',
                 opacity: saving ? 0.6 : 1,
               }}
             >

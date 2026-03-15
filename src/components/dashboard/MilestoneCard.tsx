@@ -57,7 +57,7 @@ export default function MilestoneCard({ milestone }: MilestoneCardProps) {
 
         {milestone.reflection_prompt && (
           <div className="p-4 rounded-lg border" style={{ borderColor: 'var(--accent-purple)', backgroundColor: 'var(--bg-card)' }}>
-            <p className="text-xs font-semibold mb-1 uppercase tracking-wide" style={{ color: 'var(--accent-purple)' }}>
+            <p className="text-xs font-semibold mb-1 tracking-wide" style={{ color: 'var(--accent-purple)' }}>
               Reflection Prompt
             </p>
             <p className="text-sm" style={{ color: 'var(--text-primary)', fontStyle: 'italic' }}>
