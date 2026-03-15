@@ -721,12 +721,14 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     (term: string, definition: string, event: React.MouseEvent) => {
       event.stopPropagation()
       const rect = (event.target as HTMLElement).getBoundingClientRect()
+      // getBoundingClientRect() returns viewport-relative coords, which is what
+      // position:fixed needs — no scrollY/scrollX offset
       setGlossaryTooltip({
         term,
         definition,
         position: {
-          top: rect.bottom + window.scrollY + 8,
-          left: rect.left + window.scrollX,
+          top: rect.bottom + 8,
+          left: rect.left,
         },
       })
     },

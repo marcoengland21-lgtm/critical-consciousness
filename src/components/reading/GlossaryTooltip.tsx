@@ -31,9 +31,10 @@ export default function GlossaryTooltip({ term, definition, position, onClose }:
     if (left < pad) left = pad
 
     // Vertical: if tooltip would go off bottom, flip above the term
-    if (top + rect.height > window.innerHeight + window.scrollY - pad) {
-      // Position above the clicked element (position.top already includes scrollY + 8px offset)
-      top = position.top - rect.height - 48
+    // Position is viewport-relative (fixed positioning), so compare against innerHeight
+    if (top + rect.height > window.innerHeight - pad) {
+      // Flip above: position.top is rect.bottom + 8, so subtract tooltip height + gap
+      top = position.top - rect.height - 24
     }
 
     setAdjustedPos({ top, left })
