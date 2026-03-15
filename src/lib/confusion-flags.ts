@@ -1,124 +1,125 @@
+/**
+ * Confusion Flags — Genuinely Anonymous
+ *
+ * CLAUDE.md Rule 24: "Confusion flags are genuinely anonymous at the database level.
+ * Not just 'hidden' — store counts only, not user IDs."
+ *
+ * The database stores ONLY counts per paragraph (confusion_counts table).
+ * Client-side localStorage tracks what the current browser has flagged.
+ * Even with full database access, there's no way to determine who flagged what.
+ */
+
 import { createClient } from '@/lib/supabase/client'
 
-export const GUEST_ID = 'ad4ce43f-6a30-484b-8f2c-df66f6b0276b'
-export const DEFAULT_GROUP_ID = '00000000-0000-0000-0000-000000000001'
+const STORAGE_KEY = 'ccp-confusion-flags'
 
-export interface ConfusionFlag {
-  chapter_id: string
-  paragraph_index: number
-  user_id: string
-  group_id: string
-  created_at: string
+// ── localStorage helpers ──────────────────────────────────────────────
+
+/** Get the set of paragraph indices this browser has flagged for a chapter */
+function getLocalFlags(chapterId: string): Set<number> {
+  if (typeof window === 'undefined') return new Set()
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (!stored) return new Set()
+    const parsed = JSON.parse(stored)
+    const flagged = parsed[chapterId]
+    return flagged ? new Set(flagged) : new Set()
+  } catch {
+    return new Set()
+  }
 }
 
-/** Toggle a confusion flag for a paragraph */
+/** Save flagged paragraph indices for a chapter */
+function setLocalFlags(chapterId: string, flags: Set<number>) {
+  if (typeof window === 'undefined') return
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    const parsed = stored ? JSON.parse(stored) : {}
+    parsed[chapterId] = Array.from(flags)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed))
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+// ── Public API ────────────────────────────────────────────────────────
+
+/** Toggle a confusion flag for a paragraph. Returns new count and flag state. */
 export async function toggleConfusionFlag(
   chapterId: string,
   paragraphIndex: number
 ): Promise<{ count: number; isSet: boolean }> {
   const supabase = createClient()
+  const localFlags = getLocalFlags(chapterId)
+  const wasSet = localFlags.has(paragraphIndex)
 
-  // First, check if this flag already exists
-  const { data: existing, error: fetchError } = await supabase
-    .from('confusion_flags')
-    .select('id')
-    .eq('chapter_id', chapterId)
-    .eq('paragraph_index', paragraphIndex)
-    .eq('user_id', GUEST_ID)
-    .eq('group_id', DEFAULT_GROUP_ID)
-    .single()
-
-  if (fetchError && fetchError.code !== 'PGRST116') {
-    // PGRST116 is "no rows" which is expected
-    throw fetchError
-  }
-
-  if (existing) {
-    // Delete the flag
-    const { error: deleteError } = await supabase
-      .from('confusion_flags')
-      .delete()
-      .eq('id', existing.id)
-
-    if (deleteError) throw deleteError
-
-    // Get new count
-    const { count } = await supabase
-      .from('confusion_flags')
-      .select('*', { count: 'exact', head: true })
-      .eq('chapter_id', chapterId)
-      .eq('paragraph_index', paragraphIndex)
-
-    return { count: count || 0, isSet: false }
-  } else {
-    // Create the flag
-    const { error: insertError } = await supabase.from('confusion_flags').insert({
-      chapter_id: chapterId,
-      paragraph_index: paragraphIndex,
-      user_id: GUEST_ID,
-      group_id: DEFAULT_GROUP_ID,
+  if (wasSet) {
+    // Decrement — user is un-flagging this paragraph
+    const { data, error } = await supabase.rpc('decrement_confusion', {
+      p_chapter_id: chapterId,
+      p_paragraph_index: paragraphIndex,
     })
 
-    if (insertError) throw insertError
+    if (error) {
+      console.error('[CCP] Failed to decrement confusion flag:', error)
+      throw error
+    }
 
-    // Get new count
-    const { count } = await supabase
-      .from('confusion_flags')
-      .select('*', { count: 'exact', head: true })
-      .eq('chapter_id', chapterId)
-      .eq('paragraph_index', paragraphIndex)
+    localFlags.delete(paragraphIndex)
+    setLocalFlags(chapterId, localFlags)
 
-    return { count: count || 0, isSet: true }
+    return { count: data ?? 0, isSet: false }
+  } else {
+    // Increment — user is flagging this paragraph
+    const { data, error } = await supabase.rpc('increment_confusion', {
+      p_chapter_id: chapterId,
+      p_paragraph_index: paragraphIndex,
+    })
+
+    if (error) {
+      console.error('[CCP] Failed to increment confusion flag:', error)
+      throw error
+    }
+
+    localFlags.add(paragraphIndex)
+    setLocalFlags(chapterId, localFlags)
+
+    return { count: data ?? 1, isSet: true }
   }
 }
 
-/** Get confusion flag counts for a chapter */
+/** Get confusion flag counts for all paragraphs in a chapter */
 export async function getConfusionFlagCounts(
   chapterId: string
 ): Promise<Map<number, number>> {
   const supabase = createClient()
 
   const { data, error } = await supabase
-    .from('confusion_flags')
-    .select('paragraph_index', { count: 'exact' })
+    .from('confusion_counts')
+    .select('paragraph_index, count')
     .eq('chapter_id', chapterId)
 
   if (error) {
-    console.error('Error fetching confusion flags:', error)
+    console.error('[CCP] Error fetching confusion counts:', error)
     return new Map()
   }
 
   if (!data) return new Map()
 
-  // Count occurrences per paragraph
   const counts = new Map<number, number>()
   for (const row of data) {
-    const idx = row.paragraph_index
-    counts.set(idx, (counts.get(idx) || 0) + 1)
+    if (row.count > 0) {
+      counts.set(row.paragraph_index, row.count)
+    }
   }
 
   return counts
 }
 
-/** Get user's confusion flags for a chapter */
+/** Get which paragraphs this browser has flagged (from localStorage) */
 export async function getUserConfusionFlags(
   chapterId: string
 ): Promise<Set<number>> {
-  const supabase = createClient()
-
-  const { data, error } = await supabase
-    .from('confusion_flags')
-    .select('paragraph_index')
-    .eq('chapter_id', chapterId)
-    .eq('user_id', GUEST_ID)
-    .eq('group_id', DEFAULT_GROUP_ID)
-
-  if (error) {
-    console.error('Error fetching user confusion flags:', error)
-    return new Set()
-  }
-
-  if (!data) return new Set()
-
-  return new Set(data.map(row => row.paragraph_index))
+  // Purely client-side — no database query needed
+  return getLocalFlags(chapterId)
 }

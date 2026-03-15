@@ -578,7 +578,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         {
           event: '*',
           schema: 'public',
-          table: 'confusion_flags',
+          table: 'confusion_counts',
           filter: `chapter_id=eq.${chapter.id}`,
         },
         async () => {
