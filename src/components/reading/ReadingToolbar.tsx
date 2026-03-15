@@ -24,6 +24,7 @@ interface ReadingToolbarProps {
 
 const MIN_FONT = 14
 const MAX_FONT = 24
+const IDLE_TIMEOUT = 3000 // ms before dock fades
 
 export default function ReadingToolbar({
   chapters,
@@ -41,9 +42,13 @@ export default function ReadingToolbar({
 }: ReadingToolbarProps) {
   const [isExpanded, setIsExpanded] = useState(true)
   const [showChapterNav, setShowChapterNav] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
+  const [isIdle, setIsIdle] = useState(false)
+  const [scrollProgress, setScrollProgress] = useState(0)
   const { isDark: isDarkMode, toggle: toggleTheme } = useTheme()
   const panelRef = useRef<HTMLDivElement>(null)
-  const pillRef = useRef<HTMLDivElement>(null)
+  const dockRef = useRef<HTMLDivElement>(null)
+  const idleTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Keyword filter state (with debounce)
   const [keywordInput, setKeywordInput] = useState(annotationKeyword)
@@ -56,11 +61,8 @@ export default function ReadingToolbar({
   const togglePart = (part: number) => {
     setExpandedParts((prev) => {
       const next = new Set(prev)
-      if (next.has(part)) {
-        next.delete(part)
-      } else {
-        next.add(part)
-      }
+      if (next.has(part)) next.delete(part)
+      else next.add(part)
       return next
     })
   }
@@ -92,47 +94,77 @@ export default function ReadingToolbar({
     onAnnotationKeywordChange('')
   }, [onAnnotationKeywordChange])
 
-  // Keyboard shortcuts
+  // ── Idle auto-fade ──
+  const resetIdleTimer = useCallback(() => {
+    setIsIdle(false)
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
+    idleTimerRef.current = setTimeout(() => setIsIdle(true), IDLE_TIMEOUT)
+  }, [])
+
+  useEffect(() => {
+    resetIdleTimer()
+    return () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
+    }
+  }, [resetIdleTimer])
+
+  // Reset idle on any interaction
+  useEffect(() => {
+    if (isHovered || showChapterNav) {
+      setIsIdle(false)
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
+    } else {
+      resetIdleTimer()
+    }
+  }, [isHovered, showChapterNav, resetIdleTimer])
+
+  // ── Scroll progress ──
+  useEffect(() => {
+    function handleScroll() {
+      const scrollTop = window.scrollY
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight
+      if (docHeight > 0) {
+        setScrollProgress(Math.min(1, scrollTop / docHeight))
+      }
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll() // Initial
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // ── Keyboard shortcuts ──
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
-      // Don't intercept when user is typing in an input/textarea
       const tag = (e.target as HTMLElement).tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
 
       switch (e.key) {
         case 'ArrowLeft':
-          if (prevChapter) {
-            window.location.href = `/reading/${slug}/${prevChapter.chapter_number}`
-          }
+          if (prevChapter) window.location.href = `/reading/${slug}/${prevChapter.chapter_number}`
           break
         case 'ArrowRight':
-          if (nextChapter) {
-            window.location.href = `/reading/${slug}/${nextChapter.chapter_number}`
-          }
+          if (nextChapter) window.location.href = `/reading/${slug}/${nextChapter.chapter_number}`
           break
         case 'f':
           e.preventDefault()
           onFocusedModeChange(!focusedMode)
           break
         case 'Escape':
-          if (showChapterNav) {
-            setShowChapterNav(false)
-          }
+          if (showChapterNav) setShowChapterNav(false)
           break
       }
     }
-
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
   }, [prevChapter, nextChapter, slug, focusedMode, onFocusedModeChange, showChapterNav])
 
-  // Click outside chapter nav panel to close
+  // ── Click outside chapter nav panel ──
   useEffect(() => {
     if (!showChapterNav) return
     function handleClickOutside(e: MouseEvent) {
       if (
         panelRef.current && !panelRef.current.contains(e.target as Node) &&
-        pillRef.current && !pillRef.current.contains(e.target as Node)
+        dockRef.current && !dockRef.current.contains(e.target as Node)
       ) {
         setShowChapterNav(false)
       }
@@ -149,23 +181,32 @@ export default function ReadingToolbar({
   const { shortLabel } = getChapterLabel(currentChapter)
   const showKeywordFilter = annotationCount > 0 && !focusedMode
 
+  // Dock opacity: fully visible when hovered or interacting, faded when idle
+  const dockOpacity = isIdle && !isHovered && !showChapterNav ? 0.35 : 1
+
+  // ── Shared button style ──
+  const btnClass = 'w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-150 hover:scale-110'
+  const btnHover = 'hover:bg-white/10'
+
   return (
     <>
-      {/* Chapter navigation panel — floats above the pill */}
+      {/* ── Chapter browser panel — opens LEFT of the dock ── */}
       <div
         ref={panelRef}
         className="fixed z-50 w-72 rounded-xl shadow-xl overflow-hidden"
         style={{
           backgroundColor: 'var(--bg-card)',
           border: '1px solid var(--border-default)',
-          right: '1rem',
-          bottom: isExpanded ? 'calc(5rem + 52px)' : 'calc(5rem + 44px)',
+          right: 'calc(52px + 1.5rem)',
+          top: '50%',
+          transform: showChapterNav
+            ? 'translateY(-50%) scale(1)'
+            : 'translateY(-50%) scale(0.97) translateX(8px)',
           opacity: showChapterNav ? 1 : 0,
-          transform: showChapterNav ? 'scale(1) translateY(0)' : 'scale(0.97) translateY(8px)',
           pointerEvents: showChapterNav ? 'auto' : 'none',
-          transformOrigin: 'bottom right',
+          transformOrigin: 'center right',
           transition: 'opacity 250ms cubic-bezier(0.22, 1, 0.36, 1), transform 250ms cubic-bezier(0.22, 1, 0.36, 1)',
-          maxHeight: '50vh',
+          maxHeight: '70vh',
           display: 'flex',
           flexDirection: 'column',
         }}
@@ -210,13 +251,11 @@ export default function ReadingToolbar({
             )}
           </div>
         )}
-
-        {/* Divider */}
         {showKeywordFilter && (
           <div className="mx-3" style={{ borderBottom: '1px solid var(--border-default)' }} />
         )}
 
-        {/* Chapter list — scrollable */}
+        {/* Chapter list */}
         <div className="flex-1 overflow-y-auto px-3 py-2 min-h-0">
           <p className="text-[10px] font-semibold tracking-wide mb-1.5 px-1" style={{ color: 'var(--text-secondary)' }}>
             Chapters
@@ -232,21 +271,14 @@ export default function ReadingToolbar({
                     style={{ color: 'var(--text-secondary)' }}
                     title={partTitles[partNum]}
                   >
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        transform: isPartExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                        fontSize: '8px',
-                        transition: 'transform 200ms cubic-bezier(0.22, 1, 0.36, 1)',
-                      }}
-                    >
-                      ▶
-                    </span>
-                    <span className="truncate">
-                      Part {partNum}: {partTitles[partNum]}
-                    </span>
+                    <span style={{
+                      display: 'inline-block',
+                      transform: isPartExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                      fontSize: '8px',
+                      transition: 'transform 200ms cubic-bezier(0.22, 1, 0.36, 1)',
+                    }}>▶</span>
+                    <span className="truncate">Part {partNum}: {partTitles[partNum]}</span>
                   </button>
-
                   {isPartExpanded && (
                     <div className="ml-2.5 space-y-px">
                       {partChapters.map((ch) => {
@@ -276,71 +308,135 @@ export default function ReadingToolbar({
         </div>
       </div>
 
-      {/* The floating pill */}
+      {/* ── The vertical dock ── */}
       <div
-        ref={pillRef}
-        className="fixed z-40"
+        ref={dockRef}
+        className="fixed z-40 right-4"
         style={{
-          right: '1rem',
-          bottom: '5rem',
-          transition: 'opacity 250ms cubic-bezier(0.22, 1, 0.36, 1), transform 250ms cubic-bezier(0.22, 1, 0.36, 1)',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          opacity: dockOpacity,
+          transition: 'opacity 400ms cubic-bezier(0.22, 1, 0.36, 1)',
         }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
         {isExpanded ? (
-          /* ── Expanded pill ── */
+          /* ── Expanded vertical dock ── */
           <div
-            className="flex items-center gap-0.5 px-2 rounded-full shadow-lg"
+            className="relative flex flex-col items-center gap-0.5 py-2 px-1 rounded-2xl shadow-lg"
             style={{
-              backgroundColor: 'var(--bg-card)',
+              backgroundColor: `rgba(var(--bg-card-rgb), 0.85)`,
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
               border: '1px solid var(--border-default)',
-              height: '44px',
+              width: '48px',
             }}
           >
-            {/* Collapse button */}
-            <button
-              onClick={() => {
-                setIsExpanded(false)
-                setShowChapterNav(false)
-              }}
-              className="w-7 h-7 flex items-center justify-center rounded-full transition-colors hover:bg-black/5"
-              style={{ color: 'var(--text-secondary)' }}
-              title="Collapse toolbar"
-              aria-label="Collapse toolbar"
+            {/* Scroll progress bar — thin line on left edge */}
+            <div
+              className="absolute left-0 top-2 bottom-2 rounded-full overflow-hidden"
+              style={{ width: '3px' }}
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
+              <div
+                className="absolute top-0 left-0 w-full rounded-full"
+                style={{
+                  height: `${scrollProgress * 100}%`,
+                  backgroundColor: 'var(--accent-purple)',
+                  transition: 'height 100ms linear',
+                }}
+              />
+            </div>
+
+            {/* ── Chapter nav group ── */}
+            {/* Prev chapter */}
+            {prevChapter ? (
+              <Link
+                href={`/reading/${slug}/${prevChapter.chapter_number}`}
+                className={`${btnClass} ${btnHover}`}
+                style={{ color: 'var(--text-secondary)' }}
+                title={`Previous: ${getChapterLabel(prevChapter.chapter_number).label} (←)`}
+                aria-label={`Previous: ${getChapterLabel(prevChapter.chapter_number).label}`}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="18 15 12 9 6 15" />
+                </svg>
+              </Link>
+            ) : (
+              <span className={`${btnClass} opacity-20`} style={{ color: 'var(--text-secondary)' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="18 15 12 9 6 15" />
+                </svg>
+              </span>
+            )}
+
+            {/* Chapter position — clickable */}
+            <button
+              onClick={() => setShowChapterNav(!showChapterNav)}
+              className={`${btnClass} text-[10px] font-semibold leading-tight`}
+              style={{
+                color: showChapterNav ? 'var(--accent-purple)' : 'var(--text-primary)',
+              }}
+              title="Browse all chapters"
+              aria-label="Browse all chapters"
+              aria-expanded={showChapterNav}
+            >
+              <span className="tabular-nums">{shortLabel}</span>
             </button>
 
-            {/* Divider */}
-            <div className="w-px h-5 mx-0.5" style={{ backgroundColor: 'var(--border-default)' }} />
+            {/* Next chapter */}
+            {nextChapter ? (
+              <Link
+                href={`/reading/${slug}/${nextChapter.chapter_number}`}
+                className={`${btnClass} ${btnHover}`}
+                style={{ color: 'var(--text-secondary)' }}
+                title={`Next: ${getChapterLabel(nextChapter.chapter_number).label} (→)`}
+                aria-label={`Next: ${getChapterLabel(nextChapter.chapter_number).label}`}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </Link>
+            ) : (
+              <span className={`${btnClass} opacity-20`} style={{ color: 'var(--text-secondary)' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </span>
+            )}
+
+            {/* ── Divider ── */}
+            <div className="h-px w-7 my-0.5" style={{ backgroundColor: 'var(--border-default)' }} />
 
             {/* Font size controls */}
             <button
               onClick={() => onFontSizeChange(Math.max(MIN_FONT, fontSize - 2))}
               disabled={fontSize <= MIN_FONT}
-              className="w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold transition-colors disabled:opacity-30 hover:bg-black/5"
+              className={`${btnClass} ${btnHover} text-xs font-bold disabled:opacity-30`}
               style={{ color: 'var(--text-secondary)' }}
               title="Decrease font size"
               aria-label="Decrease font size"
             >
-              A<span className="text-[9px]">−</span>
+              A<span className="text-[8px]">−</span>
             </button>
             <button
               onClick={() => onFontSizeChange(Math.min(MAX_FONT, fontSize + 2))}
               disabled={fontSize >= MAX_FONT}
-              className="w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold transition-colors disabled:opacity-30 hover:bg-black/5"
+              className={`${btnClass} ${btnHover} text-xs font-bold disabled:opacity-30`}
               style={{ color: 'var(--text-secondary)' }}
               title="Increase font size"
               aria-label="Increase font size"
             >
-              A<span className="text-[10px]">+</span>
+              A<span className="text-[9px]">+</span>
             </button>
+
+            {/* ── Divider ── */}
+            <div className="h-px w-7 my-0.5" style={{ backgroundColor: 'var(--border-default)' }} />
 
             {/* Theme toggle */}
             <button
               onClick={toggleTheme}
-              className="w-7 h-7 flex items-center justify-center rounded-full transition-colors hover:bg-black/5"
+              className={`${btnClass} ${btnHover}`}
               style={{ color: 'var(--text-secondary)' }}
               title={isDarkMode ? 'Light mode' : 'Dark mode'}
               aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -367,7 +463,7 @@ export default function ReadingToolbar({
             {/* Focus mode */}
             <button
               onClick={() => onFocusedModeChange(!focusedMode)}
-              className="w-7 h-7 flex items-center justify-center rounded-full transition-colors"
+              className={`${btnClass}`}
               style={{
                 backgroundColor: focusedMode ? 'var(--text-primary)' : 'transparent',
                 color: focusedMode ? 'var(--bg-page)' : 'var(--text-secondary)',
@@ -376,7 +472,7 @@ export default function ReadingToolbar({
               aria-label={focusedMode ? 'Show annotations' : 'Hide annotations for focused reading'}
               aria-pressed={focusedMode}
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 {focusedMode ? (
                   <>
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -391,87 +487,12 @@ export default function ReadingToolbar({
               </svg>
             </button>
 
-            {/* Divider */}
-            <div className="w-px h-5 mx-0.5" style={{ backgroundColor: 'var(--border-default)' }} />
-
-            {/* Prev chapter */}
-            {prevChapter ? (
-              <Link
-                href={`/reading/${slug}/${prevChapter.chapter_number}`}
-                className="w-7 h-7 flex items-center justify-center rounded-full transition-colors hover:bg-black/5"
-                style={{ color: 'var(--text-secondary)' }}
-                title={`Previous: ${getChapterLabel(prevChapter.chapter_number).label} (←)`}
-                aria-label={`Previous: ${getChapterLabel(prevChapter.chapter_number).label}`}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="15 18 9 12 15 6" />
-                </svg>
-              </Link>
-            ) : (
-              <span className="w-7 h-7 flex items-center justify-center opacity-20" style={{ color: 'var(--text-secondary)' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="15 18 9 12 15 6" />
-                </svg>
-              </span>
-            )}
-
-            {/* Current position — clickable to open chapter nav */}
-            <button
-              onClick={() => setShowChapterNav(!showChapterNav)}
-              className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-colors hover:bg-black/5"
-              style={{
-                color: showChapterNav ? 'var(--accent-purple)' : 'var(--text-primary)',
-              }}
-              title="Browse all chapters"
-              aria-label="Browse all chapters"
-              aria-expanded={showChapterNav}
-            >
-              <span className="tabular-nums whitespace-nowrap">{shortLabel}</span>
-              <svg
-                width="10"
-                height="10"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{
-                  transform: showChapterNav ? 'rotate(180deg)' : 'rotate(0deg)',
-                  transition: 'transform 200ms cubic-bezier(0.22, 1, 0.36, 1)',
-                }}
-              >
-                <polyline points="18 15 12 9 6 15" />
-              </svg>
-            </button>
-
-            {/* Next chapter */}
-            {nextChapter ? (
-              <Link
-                href={`/reading/${slug}/${nextChapter.chapter_number}`}
-                className="w-7 h-7 flex items-center justify-center rounded-full transition-colors hover:bg-black/5"
-                style={{ color: 'var(--text-secondary)' }}
-                title={`Next: ${getChapterLabel(nextChapter.chapter_number).label} (→)`}
-                aria-label={`Next: ${getChapterLabel(nextChapter.chapter_number).label}`}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
-              </Link>
-            ) : (
-              <span className="w-7 h-7 flex items-center justify-center opacity-20" style={{ color: 'var(--text-secondary)' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
-              </span>
-            )}
-
-            {/* Annotation count badge */}
+            {/* Annotation count */}
             {!focusedMode && annotationCount > 0 && (
               <>
-                <div className="w-px h-5 mx-0.5" style={{ backgroundColor: 'var(--border-default)' }} />
+                <div className="h-px w-7 my-0.5" style={{ backgroundColor: 'var(--border-default)' }} />
                 <span
-                  className="flex items-center gap-1 px-1.5 text-xs"
+                  className="w-9 h-9 flex flex-col items-center justify-center rounded-lg text-[10px]"
                   style={{ color: 'var(--text-secondary)' }}
                   title={`${annotationCount} annotation${annotationCount !== 1 ? 's' : ''}`}
                 >
@@ -479,28 +500,54 @@ export default function ReadingToolbar({
                     <path d="M12 20h9" />
                     <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
                   </svg>
-                  <span className="tabular-nums">{annotationCount}</span>
+                  <span className="tabular-nums leading-none mt-0.5">{annotationCount}</span>
                 </span>
               </>
             )}
+
+            {/* ── Divider ── */}
+            <div className="h-px w-7 my-0.5" style={{ backgroundColor: 'var(--border-default)' }} />
+
+            {/* Collapse */}
+            <button
+              onClick={() => {
+                setIsExpanded(false)
+                setShowChapterNav(false)
+              }}
+              className={`${btnClass} ${btnHover}`}
+              style={{ color: 'var(--text-secondary)' }}
+              title="Collapse toolbar"
+              aria-label="Collapse toolbar"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
           </div>
         ) : (
-          /* ── Collapsed pill ── */
+          /* ── Collapsed sliver ── */
           <button
             onClick={() => setIsExpanded(true)}
-            className="flex items-center gap-1.5 px-3 rounded-full shadow-lg transition-colors hover:bg-black/5"
+            className="flex items-center justify-center rounded-l-xl shadow-lg transition-all duration-200 hover:w-8"
             style={{
-              backgroundColor: 'var(--bg-card)',
+              backgroundColor: `rgba(var(--bg-card-rgb), 0.85)`,
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
               border: '1px solid var(--border-default)',
-              height: '36px',
+              borderRight: 'none',
+              width: '24px',
+              height: '48px',
               color: 'var(--text-secondary)',
+              position: 'fixed',
+              right: 0,
+              top: '50%',
+              transform: 'translateY(-50%)',
             }}
             title="Show reading toolbar"
             aria-label="Show reading toolbar"
           >
-            <span className="text-xs font-medium tabular-nums">{shortLabel}</span>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="18 15 12 9 6 15" />
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
             </svg>
           </button>
         )}

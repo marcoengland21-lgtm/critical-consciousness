@@ -9,6 +9,7 @@
   /* Backgrounds — layered from deepest to lightest */
   --bg-page: #faf9fc;              /* Page background */
   --bg-card: #ffffff;              /* Cards, containers */
+  --bg-card-rgb: 255, 255, 255;   /* RGB for rgba() glassmorphism */
   --bg-card-alt: #faf9fc;         /* Alternate card background */
   --bg-soft: #ede8f5;             /* Subtle highlight backgrounds */
   --bg-nav: #1a1625;              /* Navigation bar */
@@ -85,6 +86,7 @@
 html[data-theme="dark"] {
   --bg-page: #0f0d17;
   --bg-card: #1a1625;
+  --bg-card-rgb: 26, 22, 37;
   --bg-card-alt: #1e1a28;
   --bg-soft: #231e30;
   --bg-nav: #0a0814;
