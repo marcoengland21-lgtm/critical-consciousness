@@ -72,6 +72,20 @@ const getFootnotes = unstable_cache(
   { revalidate: 86400 }
 )
 
+// Cache glossary terms — shared across all chapters, revalidate hourly
+// Fetched server-side to avoid client-side auth/RLS issues across browsers
+const getGlossaryTerms = unstable_cache(
+  async () => {
+    const supabase = createStaticClient()
+    const { data } = await supabase.from('glossary_entries')
+      .select('id, term, definition')
+      .order('term', { ascending: true })
+    return data
+  },
+  ['glossary-terms'],
+  { revalidate: 3600 } // 1 hour
+)
+
 export default async function ChapterPage({ params }: Props) {
   const { slug, chapter } = await params
   const chapterNum = parseInt(chapter)
@@ -84,10 +98,11 @@ export default async function ChapterPage({ params }: Props) {
 
   if (!doc || !chapterData) notFound()
 
-  // Footnotes (cached) + annotations (dynamic, always fresh) in parallel
+  // Footnotes + glossary (cached) + annotations (dynamic, always fresh) in parallel
   const supabase = await createClient()
-  const [footnotes, { data: annotations }] = await Promise.all([
+  const [footnotes, glossaryTerms, { data: annotations }] = await Promise.all([
     getFootnotes(chapterData.id),
+    getGlossaryTerms(),
     supabase.from('annotations')
       .select(`
         *,
@@ -173,6 +188,7 @@ export default async function ChapterPage({ params }: Props) {
         chapter={chapterData}
         annotations={annotations || []}
         footnotes={(footnotes as any[]) || []}
+        glossaryTerms={(glossaryTerms as any[]) || []}
         userId={user?.id || null}
         documentSlug={slug}
         allChapters={chapters}

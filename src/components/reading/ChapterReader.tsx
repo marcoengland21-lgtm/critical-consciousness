@@ -55,6 +55,7 @@ interface Props {
   chapter: Chapter
   annotations: Annotation[]
   footnotes: Footnote[]
+  glossaryTerms: GlossaryTerm[]
   userId: string | null
   documentSlug: string
   allChapters: { chapter_number: number; title: string }[]
@@ -375,7 +376,7 @@ const MemoizedParagraph = memo(function Paragraph({
 // ====================================================================
 // Main ChapterReader component
 // ====================================================================
-export default function ChapterReader({ chapter, annotations: initialAnnotations, footnotes, userId, documentSlug, allChapters, currentIndex }: Props) {
+export default function ChapterReader({ chapter, annotations: initialAnnotations, footnotes, glossaryTerms: initialGlossaryTerms, userId, documentSlug, allChapters, currentIndex }: Props) {
 
   const router = useRouter()
   const textRef = useRef<HTMLDivElement>(null)
@@ -404,7 +405,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [confusionFlagCounts, setConfusionFlagCounts] = useState<Map<number, number>>(new Map())
   const [userConfusionFlags, setUserConfusionFlags] = useState<Set<number>>(new Set())
-  const [glossaryTerms, setGlossaryTerms] = useState<GlossaryTerm[]>([])
+  const [glossaryTerms, setGlossaryTerms] = useState<GlossaryTerm[]>(initialGlossaryTerms)
   const [glossaryTooltip, setGlossaryTooltip] = useState<{
     term: string
     definition: string
@@ -510,28 +511,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     loadConfusionFlags()
   }, [chapter.id])
 
-  // Load glossary terms on mount
-  useEffect(() => {
-    async function loadGlossaryTerms() {
-      try {
-        const supabase = createClient()
-        const { data, error } = await supabase
-          .from('glossary_entries')
-          .select('id, term, definition')
-          .order('term', { ascending: true })
 
-        if (!error && data) {
-          setGlossaryTerms(data)
-          if (isDev) console.log('[CCP] Loaded glossary terms:', data.length)
-        } else if (error) {
-          console.error('[CCP] Failed to load glossary terms:', error)
-        }
-      } catch (error) {
-        console.error('[CCP] Failed to load glossary terms:', error)
-      }
-    }
-    loadGlossaryTerms()
-  }, [])
 
   // Listen for Supabase realtime annotation changes
   useEffect(() => {
