@@ -28,9 +28,14 @@ export default async function ResourcesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl sm:text-3xl font-bold mb-8" style={{ color: 'var(--accent-red)' }}>
-        Resources
-      </h1>
+      <div className="mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: 'var(--accent-red)' }}>
+          Resources
+        </h1>
+        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+          Companion texts, lectures, and tools to help with the reading. Anyone can add a resource.
+        </p>
+      </div>
       <ResourcesList
         resources={resources || []}
         weeks={weeks || []}

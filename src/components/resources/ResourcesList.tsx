@@ -42,6 +42,91 @@ function getDomain(url: string): string {
   }
 }
 
+// Reusable resource card component
+function ResourceCard({ resource }: { resource: ResourceData }) {
+  const typeInfo = typeConfig[resource.resource_type] || typeConfig.other
+  const domain = resource.url ? getDomain(resource.url) : null
+
+  return (
+    <div
+      className="p-4 rounded-xl border transition-all card-hover flex flex-col"
+      style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
+    >
+      {/* Type badge + week */}
+      <div className="flex items-center gap-2 mb-2">
+        <span
+          className="text-xs font-medium px-2 py-0.5 rounded-full"
+          style={{ backgroundColor: 'var(--bg-badge)', color: 'var(--text-secondary)' }}
+        >
+          {typeInfo.icon} {typeInfo.label}
+        </span>
+        {resource.week && (
+          <span
+            className="text-xs px-2 py-0.5 rounded-full"
+            style={{ backgroundColor: 'var(--bg-badge)', color: 'var(--text-secondary)' }}
+          >
+            Week {resource.week.week_number}
+          </span>
+        )}
+      </div>
+
+      {/* Title */}
+      <h3 className="font-semibold text-sm mb-1.5" style={{ color: 'var(--text-primary)' }}>
+        {resource.url ? (
+          <a
+            href={resource.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:underline"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            {resource.title}
+          </a>
+        ) : (
+          resource.title
+        )}
+      </h3>
+
+      {/* Description */}
+      {resource.description && (
+        <p
+          className="text-xs mb-3 flex-1"
+          style={{
+            color: 'var(--text-secondary)',
+            lineHeight: '1.6',
+            display: '-webkit-box',
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+          }}
+        >
+          {resource.description}
+        </p>
+      )}
+
+      {/* Footer: domain + open link */}
+      <div className="flex items-center justify-between mt-auto pt-2">
+        {domain && (
+          <span className="text-xs truncate" style={{ color: 'var(--text-secondary)', opacity: 0.6 }}>
+            {domain}
+          </span>
+        )}
+        {resource.url && (
+          <a
+            href={resource.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs font-medium shrink-0 transition-colors"
+            style={{ color: 'var(--accent-red)' }}
+          >
+            Open \u2192
+          </a>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function ResourcesList({
   resources,
   weeks,
@@ -174,78 +259,42 @@ export default function ResourcesList({
         <p className="text-center py-12 text-sm" style={{ color: 'var(--text-secondary)' }}>
           Companion texts, lecture videos, and tools to help with the reading will be collected here.
         </p>
-      ) : (
+      ) : filter ? (
+        /* Flat grid when a specific type is filtered */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((resource) => {
-            const typeInfo = typeConfig[resource.resource_type] || typeConfig.other
-            const domain = resource.url ? getDomain(resource.url) : null
+          {filtered.map((resource) => (
+            <ResourceCard key={resource.id} resource={resource} />
+          ))}
+        </div>
+      ) : (
+        /* Grouped by type when showing "All" */
+        <div className="space-y-10">
+          {(Object.entries(typeConfig) as [ResourceType, typeof typeConfig[ResourceType]][]).map(([type, config]) => {
+            const typeResources = resources.filter((r) => r.resource_type === type)
+            if (typeResources.length === 0) return null
             return (
-              <div
-                key={resource.id}
-                className="p-4 rounded-xl border transition-all card-hover flex flex-col"
-                style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
-              >
-                {/* Type icon + badge */}
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-base">{typeInfo.icon}</span>
+              <section key={type}>
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-lg">{config.icon}</span>
+                  <h2
+                    className="text-base font-bold"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    {config.sectionTitle}
+                  </h2>
                   <span
-                    className="text-xs font-medium px-2 py-0.5 rounded-full"
+                    className="text-xs px-2 py-0.5 rounded-full"
                     style={{ backgroundColor: 'var(--bg-badge)', color: 'var(--text-secondary)' }}
                   >
-                    {typeInfo.label}
+                    {typeResources.length}
                   </span>
-                  {resource.week && (
-                    <span
-                      className="text-xs px-2 py-0.5 rounded-full"
-                      style={{ backgroundColor: 'var(--bg-badge)', color: 'var(--text-secondary)' }}
-                    >
-                      Week {resource.week.week_number}
-                    </span>
-                  )}
                 </div>
-
-                {/* Title */}
-                <h3 className="font-semibold text-sm mb-1.5" style={{ color: 'var(--text-primary)' }}>
-                  {resource.title}
-                </h3>
-
-                {/* Description */}
-                {resource.description && (
-                  <p
-                    className="text-xs mb-3 flex-1"
-                    style={{
-                      color: 'var(--text-secondary)',
-                      lineHeight: '1.6',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    {resource.description}
-                  </p>
-                )}
-
-                {/* Footer: domain + open link */}
-                <div className="flex items-center justify-between mt-auto pt-2">
-                  {domain && (
-                    <span className="text-xs truncate" style={{ color: 'var(--text-secondary)', opacity: 0.6 }}>
-                      {domain}
-                    </span>
-                  )}
-                  {resource.url && (
-                    <a
-                      href={resource.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs font-medium shrink-0 transition-colors"
-                      style={{ color: 'var(--accent-red)' }}
-                    >
-                      Open →
-                    </a>
-                  )}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {typeResources.map((resource) => (
+                    <ResourceCard key={resource.id} resource={resource} />
+                  ))}
                 </div>
-              </div>
+              </section>
             )
           })}
         </div>
