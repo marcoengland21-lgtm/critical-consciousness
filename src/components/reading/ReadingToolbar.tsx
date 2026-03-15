@@ -319,13 +319,18 @@ export default function ReadingToolbar({
     }
     dragStartRef.current = null
     setIsDragging(false)
+    // Fallback: reset hasDraggedRef after the click event has had time to fire.
+    // The click fires synchronously after pointerup → mouseup, so rAF runs after.
+    requestAnimationFrame(() => { hasDraggedRef.current = false })
   }, [])
 
-  // Prevent button clicks from firing if user was dragging
+  // Prevent the click that fires at the end of a drag gesture, then reset
   const handleClickCapture = useCallback((e: React.MouseEvent) => {
     if (hasDraggedRef.current) {
       e.stopPropagation()
       e.preventDefault()
+      // Reset so subsequent clicks work normally
+      hasDraggedRef.current = false
     }
   }, [])
 
