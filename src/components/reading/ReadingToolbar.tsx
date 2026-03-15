@@ -258,11 +258,11 @@ export default function ReadingToolbar({
 
   // ── Drag handlers (DOM-direct for zero lag) ──
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    // Allow drag from anywhere EXCEPT links and inputs (buttons are OK —
-    // we use hasDraggedRef to distinguish click from drag on buttons too,
-    // which lets the collapsed pill be draggable)
+    // Skip drag on interactive elements — their clicks must fire normally.
+    // The collapsed pill is a <div> (not <button>), so it passes this check
+    // and remains draggable. Its onClick checks hasDraggedRef to distinguish.
     const target = e.target as HTMLElement
-    if (target.closest('a, input')) return
+    if (target.closest('a, button, input')) return
     if (!positionRef.current) return
 
     dragStartRef.current = {
