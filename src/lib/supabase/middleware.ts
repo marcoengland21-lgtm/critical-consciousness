@@ -34,21 +34,22 @@ export async function updateSession(request: NextRequest) {
   // where we need verified auth.
   const { data: { session } } = await supabase.auth.getSession()
 
-  // TODO: RE-ENABLE AUTH — Uncomment both redirect blocks below when reviewer access is no longer needed
-  // const isAuthPage = request.nextUrl.pathname.startsWith('/login') ||
-  //                    request.nextUrl.pathname.startsWith('/register')
-  //
-  // if (!session && !isAuthPage && request.nextUrl.pathname !== '/') {
-  //   const url = request.nextUrl.clone()
-  //   url.pathname = '/login'
-  //   return NextResponse.redirect(url)
-  // }
+  const isAuthPage = request.nextUrl.pathname.startsWith('/login') ||
+                     request.nextUrl.pathname.startsWith('/register')
 
-  // if (session && isAuthPage) {
-  //   const url = request.nextUrl.clone()
-  //   url.pathname = '/dashboard'
-  //   return NextResponse.redirect(url)
-  // }
+  // Redirect unauthenticated users to login (except auth pages and root)
+  if (!session && !isAuthPage && request.nextUrl.pathname !== '/') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
+  // Redirect authenticated users away from auth pages
+  if (session && isAuthPage) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/dashboard'
+    return NextResponse.redirect(url)
+  }
 
   return supabaseResponse
 }

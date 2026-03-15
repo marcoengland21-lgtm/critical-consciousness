@@ -3,8 +3,8 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 /**
  * Server-only Supabase client using the service role key.
  * Bypasses RLS — use only for server-side data fetching, never expose to the client.
- * TODO: RE-ENABLE AUTH — Once RLS policies are properly configured for all roles,
- * switch back to the cookie-based client for user-scoped queries.
+ * NOTE: Use sparingly. Prefer the cookie-based createClient() for user-scoped queries
+ * that should respect RLS policies.
  */
 export function createAdminClient() {
   return createSupabaseClient(

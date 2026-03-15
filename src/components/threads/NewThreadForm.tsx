@@ -150,9 +150,8 @@ export default function NewThreadForm({ weeks, currentWeek }: NewThreadFormProps
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
-    // TODO: RE-ENABLE AUTH — Restore this check when reviewer access is no longer needed
     if (!user) {
-      setError('You must be logged in to post. Guest posting coming soon.')
+      setError('You must be logged in to post.')
       setSubmitting(false)
       return
     }
