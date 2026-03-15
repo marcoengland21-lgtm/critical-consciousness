@@ -305,7 +305,7 @@ const MemoizedParagraph = memo(function Paragraph({
             <span
               key={sIdx}
               className="cursor-pointer border-b border-dotted"
-              style={{ borderColor: 'var(--accent-purple)', color: 'var(--accent-red)' }}
+              style={{ borderColor: 'var(--text-secondary)', color: 'inherit', opacity: 1 }}
               onClick={(e) => onGlossaryTermClick(seg.termData!.term, seg.termData!.definition, e)}
               title={`Click to see definition of "${seg.termData.term}"`}
             >
