@@ -2,7 +2,7 @@
 
 Read this file at the start of every session. It is your memory of this project.
 
-Last updated: 15 March 2026
+Last updated: 16 March 2026
 
 ---
 
@@ -168,8 +168,8 @@ src/
 │       ├── resources/page.tsx   # Resources with type filters and add form
 │       └── concepts/page.tsx    # Concept map (hidden from nav, in-progress)
 ├── components/
-│   ├── reading/                 # ChapterReader, ChapterSidebar, ReadingControls, BackToTop, AnnotationPanel, SelectionToolbar, GlossaryTooltip, etc.
-│   ├── threads/                 # NewThreadForm, ThreadTypeBadge, ReplySection, etc.
+│   ├── reading/                 # ChapterReader, ReadingToolbar, BackToTop, AnnotationPanel, SelectionToolbar, ConfusionFlagButton, GlossaryTooltip, etc.
+│   ├── threads/                 # ThreadListClient, NewThreadForm, ThreadTypeBadge, ReplySection, ThreadActions, etc.
 │   ├── layout/                  # DesktopSidebar, MobileTabBar, MobileMoreDrawer, SidebarNavLink, NavIcon, NavigationProgress, ThemeProvider, ThemeToggle, ThemeInitializer, LogoutButton
 │   ├── dashboard/               # ReadingCheckinButton, WeeklyActivitySummary, etc.
 │   ├── schedule/                # SessionNotes
@@ -185,8 +185,12 @@ src/
 │   │   ├── admin.ts             # Service role client (bypasses RLS)
 │   │   └── middleware.ts        # Session refresh middleware
 │   ├── nav-config.ts             # Navigation items config (label, href, icon, mobileTab flag)
-│   ├── confusion-flags.ts       # Confusion flag utilities
-│   └── glossary-utils.ts        # Glossary search/matching
+│   ├── chapter-utils.ts          # getChapterLabel, getPartNumber, partTitles — shared server/client
+│   ├── confusion-flags.ts       # Anonymous confusion flag utilities (localStorage + RPC)
+│   ├── glossary-utils.ts        # Glossary search/matching
+│   ├── seed-glossary.sql        # Seed 15 Chapter 1 glossary terms
+│   ├── seed-resources.sql       # Seed 14 essential resources
+│   └── confusion-flags-schema.sql # confusion_counts table + RPC functions
 ├── types/
 │   └── database.ts              # TypeScript interfaces for all database tables
 └── middleware.ts                 # Next.js middleware entry point
@@ -251,6 +255,7 @@ Always use `getChapterLabel()` or `getChapterMapping()` to display the correct l
 | `text_footnotes` | Marx and Engels footnotes | `chapter_id`, `footnote_number`, `content`, `author` (marx/engels) |
 | `annotations` | Text annotations on chapters | `chapter_id`, `author_id`, `body`, `quote_exact`, `position_start`, `position_end` |
 | `annotation_replies` | Replies to annotations | `annotation_id`, `author_id`, `body` |
+| `confusion_counts` | Anonymous confusion flags (counts only) | `chapter_id`, `paragraph_index`, `count` — **no user_id** |
 | `reading_checkins` | Weekly reading progress | `user_id`, `week_id`, `group_id`, `status` |
 | `reading_milestones` | Group milestones | `week_number`, `title`, `description`, `reflection_prompt` |
 
@@ -368,17 +373,23 @@ Warmth doesn't come from slapping earth tones on a generic layout. It comes from
 
 ## Known Issues
 
-### Must fix before launch
-1. **Re-enable auth middleware** — Uncomment redirect blocks in `middleware.ts`. Audit `createAdminClient()` usage. Test login/register flow end-to-end.
-2. **Confusion flags table** — `confusion-flags.ts` and `ConfusionFlagButton.tsx` exist, but no `confusion_flags` table in `schema.sql`. Needs database table or feature update.
-
 ### Should fix
 1. **`any` types in server components** — `doc: any`, `chapter: any` in reading pages, `thread: any` in dashboard. Should use interfaces from `database.ts`.
 2. **ChapterReader.tsx is too large** — Consider breaking out text selection logic, annotation rendering, and footnote handling into separate hooks or sub-components.
 3. **No tests** — No test files, no testing framework configured.
 4. **Concepts page** — Route exists at `/concepts` but not in nav. Either finish and add or remove.
+5. **Run SQL seeds** — `seed-glossary.sql` and `seed-resources.sql` and `confusion-flags-schema.sql` need to be run via Supabase SQL editor.
 
-### Fixed (this session)
+### Fixed (build ticket session)
+- ~~Auth middleware disabled~~ — Re-enabled. Unauthenticated users redirect to `/login`. All `// TODO: RE-ENABLE AUTH` comments removed.
+- ~~Confusion flags table missing~~ — Created `confusion_counts` table (genuinely anonymous, counts only). Old per-user approach replaced with RPC functions + localStorage.
+- ~~Admin badges in threads~~ — Removed from `threads/[id]/page.tsx` and `ReplySection.tsx` (violated Rule 21: dialogue between equals)
+- ~~Focused mode resets on navigation~~ — Now persisted in localStorage (same pattern as fontSize)
+- ~~Reading bubble requires tap to access controls~~ — Replaced with persistent bottom toolbar (ReadingToolbar.tsx)
+- ~~ChapterSidebar takes horizontal space~~ — Deleted. Chapter nav moved to ReadingToolbar panel.
+- ~~ReadingControls inline above text~~ — Deleted. Controls moved to ReadingToolbar.
+
+### Fixed (earlier sessions)
 - ~~React #418 hydration mismatch~~ — Fixed with `suppressHydrationWarning` on TimeAgo component (commit 59ae23e)
 - ~~Reading TOC "Read →" invisible on mobile~~ — Now `opacity-100 sm:opacity-0 sm:group-hover:opacity-100` (commit 59ae23e)
 - ~~Reading TOC missing aria-labels~~ — Added descriptive `aria-label` to all chapter links (commit 59ae23e)
@@ -414,12 +425,19 @@ Warmth doesn't come from slapping earth tones on a generic layout. It comes from
 | "Read →" visible on mobile, hover on desktop | Touch devices have no hover state. Users aged 14-80+ need clear clickability cues. `opacity-100 sm:opacity-0 sm:group-hover:opacity-100`. |
 | Explicit `timeZone: 'Pacific/Auckland'` | Netlify server may render in UTC. The reading group is in Christchurch. Always be explicit. |
 | Tailwind v4 with CSS custom properties | No `tailwind.config.js`. All theming via CSS vars in `globals.css`. Enables dark mode without JS class toggling. |
-| Guest bypass for testing | Auth redirects commented out with `// TODO: RE-ENABLE AUTH`. Lets reviewers access all pages. Auth code is preserved — don't delete it. |
+| Auth re-enabled | Middleware redirects unauthenticated users to `/login`. Auth was disabled during development for reviewer access. Now live. |
 | `--sidebar-width` via CSS media query | Replaced JS-based approach (ThemeInitializer blocking script) with CSS `@media (min-width: 48rem)`. Auto-responds to viewport changes — single source of truth, no resize bugs. |
 | ThemeProvider hydration fix | `useState(false)` unconditionally, `useEffect` syncs with DOM after mount. ThemeInitializer prevents visual flash, so the state mismatch for one render cycle is invisible. |
 | ChapterSidebar uses `left` not `marginLeft` | Fixed-position elements need explicit `left` for reliable positioning. `marginLeft` on fixed elements doesn't reliably offset from the viewport edge. |
 | Scroll progress bar is purple, not red | Differentiates from the red NavigationProgress (route transition) bar. Purple = reading progress, red = page navigation. Both are passive, non-anxiety-producing feedback. |
 | "Behind" reading status uses muted gray | The platform never shames people for struggling. Behind uses `var(--text-secondary)` (gray), NOT red. Semantic colors: Done=green, Partial=purple. |
+| Confusion flags use counts-only table | `confusion_counts` stores (chapter_id, paragraph_index, count) — no user_id. Client-side localStorage tracks what this browser flagged. RPC functions for atomic increment/decrement. Genuinely anonymous by design (Rule 24). |
+| ReadingToolbar replaces ReadingBubble | Persistent bottom toolbar always visible vs. floating bubble that required a tap. All controls accessible without interaction: font size, theme, focus mode, chapter nav. Minimizable with chevron. |
+| Threads use Discord-style compact layout | Replies show avatar + colored name + body in a single compact row. Hover-reveal actions. Max 2 nesting levels. Sticky reply input at bottom. Realtime subscription for live updates. |
+| Glossary uses two-pane dictionary layout | Left: searchable term list with alphabetical/week grouping. Right: full definition with cross-linked terms, related terms, inline edit. URL param support (`?term=`) for deep linking from reading page. |
+| Resources grouped by type with section headers | When showing "All" resources, groups under type headers (Primary Texts, Companion Texts, etc.) with counts. When filtered, flat grid. |
+| ThreadListClient is a client component | Server component fetches all data and transforms it, then passes to ThreadListClient for interactive rendering with realtime subscription, client-side sorting/filtering. Hybrid SSR+CSR pattern. |
+| Chapter navigation via keyboard shortcuts | `←`/`→` for prev/next chapter, `f` for focus mode toggle, `Escape` to close panels. Only active when not typing in an input. |
 
 ---
 
@@ -444,7 +462,7 @@ These are hard-won. Follow them always.
 15. **After modifying any page layout, verify nav order** matches the standard.
 16. **Thread types are visual cards, not a plain dropdown.** 6 types, each with emoji and description.
 17. **The admin interface must be usable by a non-technical person.** If it's confusing, it's not done.
-18. **Don't remove `// TODO: RE-ENABLE AUTH` code.** It's needed for launch. Just keep it commented until ready.
+18. **Auth is now enabled.** Middleware redirects unauthenticated users to `/login`. All `// TODO: RE-ENABLE AUTH` comments have been removed.
 19. **Chapter numbering is non-obvious.** Ch1 has 4 sections (chapter_number 1-4), Ch2 starts at 5. Always use `getChapterLabel()`.
 20. **Collapsibles use CSS grid**, not JS height calculation. Set `data-open="true"` on `.collapsible-content`.
 21. **Facilitator posts in threads must NOT be visually distinguished from member posts.** No "teacher" badge, no special styling. Freirean principle: dialogue between equals.
