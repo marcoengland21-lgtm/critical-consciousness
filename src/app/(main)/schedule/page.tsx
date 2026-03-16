@@ -88,7 +88,14 @@ export default async function SchedulePage() {
         Reading Schedule
       </h1>
 
-      <div className="space-y-6">
+      <div className="relative">
+        {/* Timeline vertical line — hidden on mobile */}
+        <div
+          className="absolute left-4 top-0 bottom-0 w-0.5 hidden sm:block"
+          style={{ backgroundColor: 'var(--border-default)' }}
+        />
+
+        <div className="space-y-6 sm:pl-12">
         {typedWeeks.map((week) => {
           const isCurrent = currentWeek?.id === week.id
           const isPast = new Date(week.due_date) < now && !isCurrent
@@ -97,8 +104,35 @@ export default async function SchedulePage() {
           const prompts = [...(week.discussion_prompts || [])].sort((a, b) => a.sort_order - b.sort_order)
 
           return (
+            <div key={week.id} className="relative">
+              {/* Timeline node — circular indicator */}
+              <div
+                className="absolute -left-12 top-6 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold hidden sm:flex z-10"
+                style={{
+                  backgroundColor: isCurrent
+                    ? 'var(--accent-amber)'
+                    : isPast
+                      ? 'var(--accent-green)'
+                      : 'var(--bg-card)',
+                  color: isCurrent || isPast ? '#fff' : 'var(--text-secondary)',
+                  border: isCurrent
+                    ? '3px solid rgba(var(--accent-amber-rgb), 0.3)'
+                    : isPast
+                      ? 'none'
+                      : '2px dashed var(--border-strong)',
+                  boxShadow: isCurrent ? '0 0 12px rgba(var(--accent-amber-rgb), 0.3)' : 'none',
+                }}
+              >
+                {isPast ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                ) : (
+                  week.week_number
+                )}
+              </div>
+
             <div
-              key={week.id}
               className="card-base transition-all"
               style={{
                 borderColor: isCurrent ? 'var(--accent-purple)' : isPast ? 'var(--border-strong)' : undefined,
@@ -302,8 +336,10 @@ export default async function SchedulePage() {
                 )}
               </div>
             </div>
+            </div>
           )
         })}
+        </div>
       </div>
     </div>
   )

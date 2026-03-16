@@ -95,8 +95,8 @@ export default async function ReadingPage() {
 
   const now = new Date().toISOString()
 
-  // Both queries in parallel (was 2 sequential)
-  const [currentWeekResult, documentsResult] = await Promise.all([
+  // All queries in parallel
+  const [currentWeekResult, documentsResult, annotationCountsResult] = await Promise.all([
     supabase
       .from('reading_schedule')
       .select('id')
@@ -113,6 +113,10 @@ export default async function ReadingPage() {
         )
       `)
       .order('created_at', { ascending: true }),
+    // Count annotations per chapter for badges
+    supabase
+      .from('annotations')
+      .select('chapter_id'),
   ])
 
   if (documentsResult.error) {
@@ -123,6 +127,14 @@ export default async function ReadingPage() {
   const documents = documentsResult.data
 
   const currentWeekId = currentWeekData?.[0]?.id || null
+
+  // Build annotation count map: chapter_id -> count
+  const annotationCounts = new Map<string, number>()
+  if (annotationCountsResult.data) {
+    for (const ann of annotationCountsResult.data) {
+      annotationCounts.set(ann.chapter_id, (annotationCounts.get(ann.chapter_id) || 0) + 1)
+    }
+  }
 
   const typedDocuments = (documents || []) as unknown as DocumentWithChapters[]
 
@@ -290,6 +302,18 @@ export default async function ReadingPage() {
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
+                                  {/* Annotation count badge */}
+                                  {(annotationCounts.get(chapter.id) || 0) > 0 && (
+                                    <span
+                                      className="text-[10px] font-medium px-1.5 py-0.5 rounded-full"
+                                      style={{
+                                        backgroundColor: 'rgba(var(--accent-purple-rgb), 0.1)',
+                                        color: 'var(--accent-purple)',
+                                      }}
+                                    >
+                                      {annotationCounts.get(chapter.id)} notes
+                                    </span>
+                                  )}
                                   {isCurrentWeek && (
                                     <span
                                       className="text-xs font-medium px-2 py-0.5 rounded-full"
@@ -355,6 +379,18 @@ export default async function ReadingPage() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
+                              {/* Annotation count badge */}
+                              {(annotationCounts.get(chapter.id) || 0) > 0 && (
+                                <span
+                                  className="text-[10px] font-medium px-1.5 py-0.5 rounded-full"
+                                  style={{
+                                    backgroundColor: 'rgba(var(--accent-purple-rgb), 0.1)',
+                                    color: 'var(--accent-purple)',
+                                  }}
+                                >
+                                  {annotationCounts.get(chapter.id)} notes
+                                </span>
+                              )}
                               {isCurrentWeek && (
                                 <span
                                   className="text-xs font-medium px-2 py-0.5 rounded-full"
