@@ -177,46 +177,46 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      {/* Hero welcome card — warm gradient background */}
-      <div
-        className="mb-8 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 relative overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, rgba(var(--accent-purple-rgb), 0.06) 0%, rgba(var(--accent-amber-rgb), 0.04) 50%, rgba(var(--accent-red-rgb), 0.03) 100%)',
-          borderBottom: '1px solid var(--border-default)',
-        }}
-      >
-        {/* Subtle decorative circle */}
-        <div
-          className="absolute -top-20 -right-20 w-64 h-64 rounded-full opacity-[0.03]"
-          style={{ backgroundColor: 'var(--accent-purple)' }}
-        />
-        <h1 className="text-2xl sm:text-3xl font-bold mb-1 relative" style={{ color: 'var(--accent-red)' }}>
-          {user ? `Welcome back, ${displayName}` : 'Welcome to Capital Study Group'}
-        </h1>
-        <p className="text-sm relative" style={{ color: 'var(--text-secondary)' }}>
-          Christchurch Capital Reading Group
-        </p>
-        {currentWeek && totalWeeks && totalWeeks > 0 && (
-          <div className="mt-3 relative">
-            <p className="text-xs mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-              Week {currentWeek.week_number} of {totalWeeks} · Capital, Volume I
-            </p>
-            <div className="h-[3px] rounded-full max-w-xs" style={{ backgroundColor: 'var(--bg-soft)' }}>
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{
-                  backgroundColor: 'var(--accent-purple)',
-                  width: `${Math.round((currentWeek.week_number / totalWeeks) * 100)}%`,
-                }}
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 stagger-children">
         {/* Left column: Current Week + Activity + Group Thinking + Threads */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Welcome card — integrated into the grid */}
+          <div className="card-base" style={{ borderLeft: '3px solid var(--accent-amber)' }}>
+            <div className="card-body">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-bold mb-0.5" style={{ color: 'var(--text-primary)' }}>
+                    {user ? `Welcome back, ${displayName}` : 'Welcome to Capital Study Group'}
+                  </h1>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    Christchurch Capital Reading Group
+                  </p>
+                </div>
+              </div>
+              {currentWeek && totalWeeks && totalWeeks > 0 && (
+                <div className="mt-3">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                      Week {currentWeek.week_number} of {totalWeeks}
+                    </p>
+                    <p className="text-xs font-medium" style={{ color: 'var(--accent-purple)' }}>
+                      {Math.round((currentWeek.week_number / totalWeeks) * 100)}%
+                    </p>
+                  </div>
+                  <div className="h-[3px] rounded-full" style={{ backgroundColor: 'var(--bg-soft)' }}>
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{
+                        backgroundColor: 'var(--accent-purple)',
+                        width: `${Math.round((currentWeek.week_number / totalWeeks) * 100)}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Milestone Card - if applicable */}
           {milestone && (
             <MilestoneCard milestone={milestone} />

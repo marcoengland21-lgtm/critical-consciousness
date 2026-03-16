@@ -20,6 +20,10 @@ interface ReadingToolbarProps {
   annotationKeyword: string
   onAnnotationKeywordChange: (keyword: string) => void
   matchingAnnotationCount: number
+  // Glossary panel
+  glossaryTermCount: number
+  showGlossaryPanel: boolean
+  onGlossaryPanelToggle: () => void
 }
 
 const MIN_FONT = 14
@@ -52,6 +56,9 @@ export default function ReadingToolbar({
   annotationKeyword,
   onAnnotationKeywordChange,
   matchingAnnotationCount,
+  glossaryTermCount,
+  showGlossaryPanel,
+  onGlossaryPanelToggle,
 }: ReadingToolbarProps) {
   // On mobile, start collapsed to avoid overlapping reading text
   const [isExpanded, setIsExpanded] = useState(() => {
@@ -240,6 +247,12 @@ export default function ReadingToolbar({
           e.preventDefault()
           onFocusedModeChange(!focusedMode)
           break
+        case 'g':
+          if (!focusedMode && glossaryTermCount > 0) {
+            e.preventDefault()
+            onGlossaryPanelToggle()
+          }
+          break
         case 'Escape':
           if (showChapterNav) setShowChapterNav(false)
           break
@@ -247,7 +260,7 @@ export default function ReadingToolbar({
     }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
-  }, [prevChapter, nextChapter, slug, focusedMode, onFocusedModeChange, showChapterNav])
+  }, [prevChapter, nextChapter, slug, focusedMode, onFocusedModeChange, showChapterNav, glossaryTermCount, onGlossaryPanelToggle])
 
   // ── Click outside chapter nav panel ──
   useEffect(() => {
@@ -688,6 +701,26 @@ export default function ReadingToolbar({
                 )}
               </svg>
             </button>
+
+            {/* Glossary quick-access */}
+            {!focusedMode && glossaryTermCount > 0 && (
+              <button
+                onClick={onGlossaryPanelToggle}
+                className={`${btnClass}`}
+                style={{
+                  backgroundColor: showGlossaryPanel ? 'var(--accent-purple)' : 'transparent',
+                  color: showGlossaryPanel ? 'var(--bg-page)' : 'var(--text-secondary)',
+                }}
+                title={`${glossaryTermCount} glossary term${glossaryTermCount !== 1 ? 's' : ''} in this chapter (g)`}
+                aria-label={showGlossaryPanel ? 'Close glossary panel' : 'Show glossary terms in this chapter'}
+                aria-expanded={showGlossaryPanel}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                </svg>
+              </button>
+            )}
 
             {/* Annotation count */}
             {!focusedMode && annotationCount > 0 && (

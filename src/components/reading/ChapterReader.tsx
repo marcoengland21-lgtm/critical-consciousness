@@ -11,11 +11,12 @@ import ReadingToolbar from './ReadingToolbar'
 import ConfusionHeatmap from './ConfusionHeatmap'
 import ReadingPresence from './ReadingPresence'
 import GlossaryTooltip from './GlossaryTooltip'
+import GlossaryQuickAccess from './GlossaryQuickAccess'
 import FootnoteInline from './FootnoteInline'
 import Toast from '@/components/ui/Toast'
 import BackToTop from './BackToTop'
 import { getConfusionFlagCounts, getUserConfusionFlags } from '@/lib/confusion-flags'
-import { findGlossaryTermMatches, buildGlossarySegments, GlossaryTerm, TermMatch } from '@/lib/glossary-utils'
+import { findGlossaryTermMatches, buildGlossarySegments, findChapterGlossaryTerms, GlossaryTerm, TermMatch } from '@/lib/glossary-utils'
 import { useScrollPersistence } from '@/hooks/useScrollPersistence'
 
 interface Annotation {
@@ -414,6 +415,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     position: { top: number; left: number }
   } | null>(null)
   const [annotationKeyword, setAnnotationKeyword] = useState('')
+  const [showGlossaryPanel, setShowGlossaryPanel] = useState(false)
   const [renderedCount, setRenderedCount] = useState(INITIAL_RENDER_COUNT)
 
   // Build footnote lookup map
@@ -424,6 +426,12 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     }
     return map
   }, [footnotes])
+
+  // Chapter-level glossary terms for the quick-access panel (deduplicated + sorted)
+  const chapterGlossaryTerms = useMemo(
+    () => findChapterGlossaryTerms(chapter.content, glossaryTerms),
+    [chapter.content, glossaryTerms]
+  )
 
   // Pre-compute paragraph splits and offsets — only recompute when content changes
   const paragraphData = useMemo(() => {
@@ -493,9 +501,10 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     localStorage.setItem('ccp-font-size', String(fontSize))
   }, [fontSize])
 
-  // Save focused mode preference
+  // Save focused mode preference + close glossary panel
   useEffect(() => {
     localStorage.setItem('ccp-focused-mode', String(focusedMode))
+    if (focusedMode) setShowGlossaryPanel(false)
   }, [focusedMode])
 
   // Load confusion flags on mount
@@ -863,6 +872,26 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         />
       )}
 
+      {/* Glossary quick-access panel — slides in from left */}
+      {showGlossaryPanel && !focusedMode && (
+        <GlossaryQuickAccess
+          terms={chapterGlossaryTerms}
+          onTermClick={(term, definition) => {
+            setShowGlossaryPanel(false)
+            // Show the tooltip centered in the viewport
+            setGlossaryTooltip({
+              term,
+              definition,
+              position: {
+                top: Math.min(window.innerHeight / 3, window.innerHeight - 300),
+                left: Math.max(16, window.innerWidth / 2 - 150),
+              },
+            })
+          }}
+          onClose={() => setShowGlossaryPanel(false)}
+        />
+      )}
+
       {/* Glossary tooltip */}
       {glossaryTooltip && (
         <GlossaryTooltip
@@ -896,6 +925,9 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         annotationKeyword={annotationKeyword}
         onAnnotationKeywordChange={setAnnotationKeyword}
         matchingAnnotationCount={matchingCount}
+        glossaryTermCount={chapterGlossaryTerms.length}
+        showGlossaryPanel={showGlossaryPanel}
+        onGlossaryPanelToggle={() => setShowGlossaryPanel((prev) => !prev)}
       />
 
       {/* Back to top */}

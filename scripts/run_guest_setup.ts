@@ -44,7 +44,7 @@ async function main() {
     console.error('Chapter read error:', chError)
   } else {
     console.log(`  ✓ Found ${chapters?.length || 0} chapters`)
-    chapters?.forEach((c: any) => console.log(`    - §${c.chapter_number}: ${c.title}`))
+    chapters?.forEach((c: any) => console.log(`    - Sec ${c.chapter_number}: ${c.title}`))
   }
 
   // 4. Test annotation insert as guest

@@ -13,7 +13,7 @@ export function getChapterLabel(chapterNumber: number): { label: string; shortLa
   if (chapterNumber <= 4) {
     return {
       label: `Chapter 1, Section ${chapterNumber}`,
-      shortLabel: `Ch 1, §${chapterNumber}`,
+      shortLabel: `Ch 1, Sec ${chapterNumber}`,
     }
   }
   const marxChapter = chapterNumber - 3

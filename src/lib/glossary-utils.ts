@@ -139,3 +139,46 @@ export function buildGlossarySegments(
 
   return segments
 }
+
+/**
+ * Find all unique glossary terms that appear in a chapter's full text.
+ * Returns deduplicated terms sorted alphabetically.
+ * Used by the GlossaryQuickAccess panel to show which terms exist in the chapter.
+ */
+export function findChapterGlossaryTerms(
+  chapterContent: string,
+  glossaryTerms: GlossaryTerm[]
+): GlossaryTerm[] {
+  if (glossaryTerms.length === 0 || !chapterContent) return []
+
+  // Sort terms by length (longest first) so longer matches take priority
+  const sortedTerms = [...glossaryTerms].sort((a, b) => b.term.length - a.term.length)
+
+  const escapedTerms = sortedTerms.map((t) =>
+    t.term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  )
+
+  const pattern = new RegExp(`\\b(${escapedTerms.join('|')})\\b`, 'gi')
+
+  // Build lookup from lowercase term -> original glossary entry
+  const termLookup = new Map<string, GlossaryTerm>()
+  for (const gt of sortedTerms) {
+    const key = gt.term.toLowerCase()
+    if (!termLookup.has(key)) termLookup.set(key, gt)
+  }
+
+  const foundTerms = new Set<string>()
+  const result: GlossaryTerm[] = []
+
+  let match: RegExpExecArray | null
+  while ((match = pattern.exec(chapterContent)) !== null) {
+    const matchedText = match[1].toLowerCase()
+    if (!foundTerms.has(matchedText)) {
+      foundTerms.add(matchedText)
+      const entry = termLookup.get(matchedText)
+      if (entry) result.push(entry)
+    }
+  }
+
+  return result.sort((a, b) => a.term.localeCompare(b.term))
+}
