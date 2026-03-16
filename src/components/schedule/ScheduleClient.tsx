@@ -247,7 +247,7 @@ export default function ScheduleClient({ weeks, currentWeekId, userId }: Schedul
                       </span>
                       {isCurrent && (
                         <span
-                          className="text-xs font-medium px-2 py-0.5 rounded-full shrink-0"
+                          className="text-xs font-medium px-2.5 py-1 rounded-full leading-none shrink-0"
                           style={{
                             backgroundColor: 'var(--accent-purple)',
                             color: 'var(--text-inverse)',

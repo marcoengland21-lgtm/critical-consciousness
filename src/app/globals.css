@@ -272,7 +272,16 @@ a {
 }
 a:hover {
   color: var(--accent-red-hover);
-  text-decoration: underline;
+  /* Underlines only on explicit .hover\:underline or .underline —
+     global underlines break nav links, card links, and badge links */
+}
+
+/* Clean underline offset for links that DO show underlines */
+.hover\:underline:hover,
+.group-hover\:underline:hover,
+.underline {
+  text-underline-offset: 3px;
+  text-decoration-skip-ink: auto;
 }
 
 /* Form inputs — smooth focus states */
@@ -1019,56 +1028,90 @@ html[data-theme="dark"] .reading-text .blockquote {
    ================================================================= */
 
 /* ── Global font size override ──
-   --global-font-size is set by AccessibilityProvider.
-   When present, overrides the base font-size on body so all rem-based
-   text scales proportionally. */
-html[style*="--global-font-size"] body {
+   --global-font-size is set by AccessibilityProvider on <html>.
+   Must be on html (not body) because rem units are relative to the root
+   element — setting body font-size has no effect on rem-based Tailwind
+   classes like text-sm, text-xs, etc. */
+html[style*="--global-font-size"] {
   font-size: var(--global-font-size) !important;
 }
 
 /* ── High Contrast Mode ──
-   Stronger borders, bolder text, higher contrast ratios.
-   Designed for low-vision users and bright environments. */
+   Dramatically stronger borders, bolder text, maximum contrast ratios.
+   Designed for low-vision users and bright environments.
+   Must be visually obvious when toggled — subtle changes feel broken. */
 html[data-high-contrast="true"] {
   --bg-page: #ffffff;
   --bg-card: #ffffff;
-  --bg-card-alt: #f5f5f5;
-  --bg-soft: #e8e8e8;
-  --bg-hover: #e0e0e0;
+  --bg-card-alt: #f0f0f0;
+  --bg-soft: #e0e0e0;
+  --bg-hover: #d4d4d4;
   --bg-input: #ffffff;
+  --bg-badge: #e0e0e0;
   --text-primary: #000000;
-  --text-secondary: #333333;
-  --text-badge: #222222;
-  --border-default: #666666;
-  --border-strong: #333333;
-  --shadow-warm: rgba(0, 0, 0, 0.12);
+  --text-secondary: #1a1a1a;
+  --text-badge: #000000;
+  --border-default: #000000;
+  --border-strong: #000000;
+  --shadow-warm: rgba(0, 0, 0, 0.2);
+  --accent-red: #8b0000;
+  --accent-purple: #3b0080;
+  --accent-green: #005500;
+}
+
+html[data-high-contrast="true"] * {
+  text-shadow: none !important;
 }
 
 html[data-high-contrast="true"] h1,
 html[data-high-contrast="true"] h2,
 html[data-high-contrast="true"] h3,
-html[data-high-contrast="true"] h4 {
+html[data-high-contrast="true"] h4,
+html[data-high-contrast="true"] h5 {
   font-weight: 800 !important;
+}
+
+html[data-high-contrast="true"] p,
+html[data-high-contrast="true"] span,
+html[data-high-contrast="true"] li,
+html[data-high-contrast="true"] a {
+  font-weight: 500;
 }
 
 html[data-high-contrast="true"] .card-base,
 html[data-high-contrast="true"] .card-elevated {
   border-width: 2px !important;
+  border-color: #000000 !important;
+  box-shadow: none !important;
+}
+
+html[data-high-contrast="true"] .reading-text {
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+html[data-high-contrast="true"] a:hover {
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px !important;
 }
 
 /* High contrast + dark mode */
 html[data-high-contrast="true"][data-theme="dark"] {
   --bg-page: #000000;
   --bg-card: #0a0a0a;
-  --bg-card-alt: #141414;
+  --bg-card-alt: #111111;
   --bg-soft: #1a1a1a;
-  --bg-hover: #222222;
+  --bg-hover: #252525;
   --bg-input: #0a0a0a;
+  --bg-badge: #222222;
   --text-primary: #ffffff;
-  --text-secondary: #cccccc;
-  --text-badge: #dddddd;
-  --border-default: #888888;
-  --border-strong: #cccccc;
+  --text-secondary: #e0e0e0;
+  --text-badge: #ffffff;
+  --border-default: #ffffff;
+  --border-strong: #ffffff;
+  --accent-red: #ff4d6d;
+  --accent-purple: #b388ff;
+  --accent-green: #69f0ae;
 }
 
 /* ── Dyslexia-Friendly Font Mode ──

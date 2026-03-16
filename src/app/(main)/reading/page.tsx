@@ -305,7 +305,7 @@ export default async function ReadingPage() {
                                   {/* Annotation count badge */}
                                   {(annotationCounts.get(chapter.id) || 0) > 0 && (
                                     <span
-                                      className="text-[10px] font-medium px-1.5 py-0.5 rounded-full"
+                                      className="text-[10px] font-medium px-1.5 py-1 rounded-full leading-none"
                                       style={{
                                         backgroundColor: 'rgba(var(--accent-purple-rgb), 0.1)',
                                         color: 'var(--accent-purple)',
@@ -316,7 +316,7 @@ export default async function ReadingPage() {
                                   )}
                                   {isCurrentWeek && (
                                     <span
-                                      className="text-xs font-medium px-2 py-0.5 rounded-full"
+                                      className="text-xs font-medium px-2.5 py-1 rounded-full leading-none"
                                       style={{ backgroundColor: 'var(--accent-purple)', color: 'var(--text-inverse)' }}
                                     >
                                       This Week
@@ -382,7 +382,7 @@ export default async function ReadingPage() {
                               {/* Annotation count badge */}
                               {(annotationCounts.get(chapter.id) || 0) > 0 && (
                                 <span
-                                  className="text-[10px] font-medium px-1.5 py-0.5 rounded-full"
+                                  className="text-[10px] font-medium px-1.5 py-1 rounded-full leading-none"
                                   style={{
                                     backgroundColor: 'rgba(var(--accent-purple-rgb), 0.1)',
                                     color: 'var(--accent-purple)',
@@ -393,7 +393,7 @@ export default async function ReadingPage() {
                               )}
                               {isCurrentWeek && (
                                 <span
-                                  className="text-xs font-medium px-2 py-0.5 rounded-full"
+                                  className="text-xs font-medium px-2.5 py-1 rounded-full leading-none"
                                   style={{ backgroundColor: 'var(--accent-purple)', color: 'var(--text-inverse)' }}
                                 >
                                   This Week

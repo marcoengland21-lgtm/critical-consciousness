@@ -129,20 +129,20 @@ export default async function ThreadPage({
           <div className="flex items-center gap-2 mb-4 flex-wrap">
             {thread.pinned && (
               <span
-                className="text-xs font-medium px-2 py-0.5 rounded-full"
+                className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full leading-none"
                 style={{
                   backgroundColor: 'var(--accent-purple)',
                   color: 'var(--text-inverse)',
                 }}
               >
-                📌 Pinned
+                <span className="text-[10px]">📌</span> Pinned
               </span>
             )}
             <ThreadTypeBadge type={thread.thread_type as ThreadType} />
             {threadWeek && (
               <Link
                 href={`/threads?week=${threadWeek.id}`}
-                className="text-xs font-medium px-2 py-0.5 rounded-full transition-colors"
+                className="text-xs font-medium px-2.5 py-1 rounded-full leading-none transition-colors"
                 style={{
                   backgroundColor: 'var(--bg-badge)',
                   color: 'var(--text-secondary)',

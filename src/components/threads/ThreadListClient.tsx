@@ -131,19 +131,19 @@ function ThreadCard({
       <div className="flex items-center gap-2 mb-2.5 flex-wrap">
         {thread.pinned && (
           <span
-            className="text-xs font-medium px-2 py-0.5 rounded-full"
+            className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full leading-none"
             style={{
               backgroundColor: 'var(--accent-purple)',
               color: 'var(--text-inverse)',
             }}
           >
-            📌 Pinned
+            <span className="text-[10px]">📌</span> Pinned
           </span>
         )}
         <ThreadTypeBadge type={thread.thread_type} />
         {week && (
           <span
-            className="text-xs font-medium px-2 py-0.5 rounded-full"
+            className="text-xs font-medium px-2.5 py-1 rounded-full leading-none"
             style={{
               backgroundColor: 'var(--bg-badge)',
               color: 'var(--text-secondary)',
@@ -154,9 +154,9 @@ function ThreadCard({
         )}
         {activity === 'active' && (
           <span
-            className="text-xs font-medium px-2 py-0.5 rounded-full"
+            className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full leading-none"
             style={{
-              backgroundColor: 'rgba(74, 103, 65, 0.15)',
+              backgroundColor: 'rgba(var(--accent-green-rgb), 0.15)',
               color: 'var(--accent-green)',
             }}
           >
@@ -223,10 +223,15 @@ function ThreadCard({
 
         <div className="flex items-center gap-2 shrink-0">
           {/* Reply count */}
-          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-            {thread.replyCount > 0
-              ? `💬 ${thread.replyCount} ${thread.replyCount === 1 ? 'reply' : 'replies'}`
-              : 'No replies yet'}
+          <span className="inline-flex items-center gap-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
+            {thread.replyCount > 0 ? (
+              <>
+                <span className="text-[10px]">💬</span>
+                {thread.replyCount} {thread.replyCount === 1 ? 'reply' : 'replies'}
+              </>
+            ) : (
+              'No replies yet'
+            )}
           </span>
         </div>
       </div>
