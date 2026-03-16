@@ -517,6 +517,7 @@ These are hard-won. Follow them always.
 30. **Thread previews show enough body text to decide whether to click** — 2-3 lines minimum. A title alone doesn't convey whether a reflection is worth reading.
 31. **Blockquote styling must look good because it's one of the most-seen elements.** People quote Capital constantly. Left border, subtle background, slight indent — tested in both light and dark mode.
 32. **Author avatar colors are shared from `src/lib/author-colors.ts`.** Never duplicate the AUTHOR_COLORS array or hashColor function in individual components.
+33. **Always push and merge when asked to commit.** When the user asks to push, also merge the working branch into `main` and push `main` to origin. Don't ask — just do both.
 
 ---
 
