@@ -58,6 +58,38 @@ function getChapterMapping(chapterNumber: number): MarxChapter | null {
   }
 }
 
+// Query-specific join shapes for Supabase responses
+interface ChapterWeek {
+  week_number: number
+  title: string
+}
+
+interface ChapterRow {
+  id: string
+  chapter_number: number
+  title: string
+  sort_order: number
+  week_id: string | null
+  week: ChapterWeek | null
+}
+
+interface DocumentWithChapters {
+  id: string
+  title: string
+  slug: string
+  chapters: ChapterRow[] | null
+}
+
+interface ChapterWithMapping extends ChapterRow {
+  mapping: MarxChapter
+}
+
+interface PartGroup {
+  part: number
+  partTitle: string
+  items: ChapterWithMapping[]
+}
+
 export default async function ReadingPage() {
   const supabase = await createClient()
 
@@ -92,7 +124,9 @@ export default async function ReadingPage() {
 
   const currentWeekId = currentWeekData?.[0]?.id || null
 
-  if (!documents || documents.length === 0) {
+  const typedDocuments = (documents || []) as unknown as DocumentWithChapters[]
+
+  if (typedDocuments.length === 0) {
     return (
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold mb-8" style={{ color: 'var(--accent-red)' }}>
@@ -125,12 +159,12 @@ export default async function ReadingPage() {
       </div>
 
       <div className="space-y-8">
-        {documents.map((doc: any) => {
-          const chapters = doc.chapters?.sort((a: any, b: any) => a.sort_order - b.sort_order) || []
+        {typedDocuments.map((doc) => {
+          const chapters = (doc.chapters || []).sort((a: ChapterRow, b: ChapterRow) => a.sort_order - b.sort_order)
 
           // Group chapters by Part
-          const parts: { part: number; partTitle: string; items: any[] }[] = []
-          let currentPart: { part: number; partTitle: string; items: any[] } | null = null
+          const parts: PartGroup[] = []
+          let currentPart: PartGroup | null = null
 
           for (const chapter of chapters) {
             const mapping = getChapterMapping(chapter.chapter_number)
@@ -172,11 +206,11 @@ export default async function ReadingPage() {
               >
                 {parts.map((partGroup, partIdx) => {
                   // Group Ch1 sections together under a parent label
-                  const ch1Sections = partGroup.items.filter((item: any) => item.mapping.isSection)
-                  const standaloneChapters = partGroup.items.filter((item: any) => !item.mapping.isSection)
+                  const ch1Sections = partGroup.items.filter((item: ChapterWithMapping) => item.mapping.isSection)
+                  const standaloneChapters = partGroup.items.filter((item: ChapterWithMapping) => !item.mapping.isSection)
 
                   // First 3 parts open by default, rest collapsed
-                  const hasCurrentWeek = partGroup.items.some((item: any) => item.week_id === currentWeekId)
+                  const hasCurrentWeek = partGroup.items.some((item: ChapterWithMapping) => item.week_id === currentWeekId)
                   const defaultOpen = hasCurrentWeek || partGroup.part <= 3
 
                   return (
@@ -213,7 +247,7 @@ export default async function ReadingPage() {
                           </div>
 
                           {/* Individual sections of Ch1 */}
-                          {ch1Sections.map((chapter: any, i: number) => {
+                          {ch1Sections.map((chapter: ChapterWithMapping, i: number) => {
                             const isCurrentWeek = chapter.week_id === currentWeekId
                             const isLast = i === ch1Sections.length - 1 && standaloneChapters.length === 0
                             const sectionLabel = `Read Chapter 1, Section ${chapter.chapter_number}: ${chapter.title}`
@@ -278,7 +312,7 @@ export default async function ReadingPage() {
                       )}
 
                       {/* Standalone chapters (Ch 2+) */}
-                      {standaloneChapters.map((chapter: any, i: number) => {
+                      {standaloneChapters.map((chapter: ChapterWithMapping, i: number) => {
                         const isCurrentWeek = chapter.week_id === currentWeekId
                         const isLast = i === standaloneChapters.length - 1
                         const chapterLabel = `Read Chapter ${chapter.mapping.marxChapter}: ${chapter.title}`

@@ -12,6 +12,21 @@ interface Chapter {
   document_slug?: string
 }
 
+// Query-specific shapes for Supabase responses
+interface ChapterQueryRow {
+  id: string
+  chapter_number: number
+  title: string
+  content: string
+  document_id: string
+}
+
+interface DocumentRow {
+  id: string
+  title: string
+  slug: string
+}
+
 interface QuoteFromReadingModalProps {
   onQuoteSelected: (quote: string) => void
   onClose: () => void
@@ -45,15 +60,17 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
 
       if (data) {
         // Fetch document titles
-        const docIds = [...new Set(data.map((c: any) => c.document_id))]
+        const typedData = data as ChapterQueryRow[]
+        const docIds = [...new Set(typedData.map((c) => c.document_id))]
         const { data: docs } = await supabase
           .from('text_documents')
           .select('id, title, slug')
           .in('id', docIds)
 
-        const docMap = new Map(docs?.map((d: any) => [d.id, { title: d.title, slug: d.slug }]) || [])
+        const typedDocs = (docs || []) as DocumentRow[]
+        const docMap = new Map(typedDocs.map((d) => [d.id, { title: d.title, slug: d.slug }]))
 
-        const chaptersWithDocs = data.map((ch: any) => ({
+        const chaptersWithDocs = typedData.map((ch) => ({
           id: ch.id,
           chapter_number: ch.chapter_number,
           title: ch.title,

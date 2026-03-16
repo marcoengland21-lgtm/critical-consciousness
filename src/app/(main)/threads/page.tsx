@@ -3,6 +3,55 @@ import { createClient, getSessionUser } from '@/lib/supabase/server'
 import ThreadListClient from '@/components/threads/ThreadListClient'
 import type { ThreadType } from '@/types/database'
 
+// Query-specific join shapes for Supabase responses
+interface ReplyAuthor {
+  display_name: string
+}
+
+interface ReplyRow {
+  thread_id: string
+  created_at: string
+  author: ReplyAuthor | null
+}
+
+interface RawThread {
+  id: string
+  title: string
+  body: string
+  thread_type: string
+  pinned: boolean
+  created_at: string
+  week_id: string | null
+  author: { id: string; display_name: string } | null
+  replies: { count: number }[]
+}
+
+interface WeekRow {
+  id: string
+  week_number: number
+  title: string
+  due_date: string
+  session_date: string | null
+}
+
+interface DiscussionPrompt {
+  id: string
+  prompt_text: string
+  sort_order: number
+}
+
+interface CurrentWeekWithPrompts {
+  id: string
+  week_number: number
+  title: string
+  discussion_prompts: DiscussionPrompt[] | null
+}
+
+interface UserRoleRow {
+  role_type: string
+  week: { id: string; week_number: number; title: string; due_date: string } | null
+}
+
 export const metadata = {
   title: 'Discussion Threads | Capital Study Group',
 }
@@ -70,16 +119,18 @@ export default async function ThreadsPage({
   if (latestReplies) {
     for (const reply of latestReplies) {
       if (!lastReplyMap.has(reply.thread_id)) {
+        const replyAuthor = reply.author as ReplyAuthor | ReplyAuthor[] | null
+        const authorName = Array.isArray(replyAuthor) ? replyAuthor[0]?.display_name : replyAuthor?.display_name
         lastReplyMap.set(reply.thread_id, {
           created_at: reply.created_at,
-          authorName: (reply.author as any)?.display_name || 'Someone',
+          authorName: authorName || 'Someone',
         })
       }
     }
   }
 
   // Transform threads to client-ready shape
-  const threads = (rawThreads || []).map((t: any) => ({
+  const threads = ((rawThreads || []) as unknown as RawThread[]).map((t) => ({
     id: t.id,
     title: t.title,
     body: t.body,
@@ -94,15 +145,15 @@ export default async function ThreadsPage({
 
   // Current week info for sidebar
   const currentWeek = currentWeekData?.[0] || null
-  const prompts = currentWeek?.discussion_prompts || []
+  const prompts = (currentWeek?.discussion_prompts || []) as unknown as DiscussionPrompt[]
   // Sort prompts by sort_order
   const sortedPrompts = [...prompts].sort(
-    (a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0)
+    (a, b) => (a.sort_order || 0) - (b.sort_order || 0)
   )
 
   // Find user's role for the current week
-  const currentRole = userRoles?.find(
-    (r: any) => r.week?.id === currentWeek?.id
+  const currentRole = ((userRoles || []) as unknown as UserRoleRow[]).find(
+    (r) => r.week?.id === currentWeek?.id
   )
 
   const roleLabels: Record<string, string> = {
@@ -125,7 +176,7 @@ export default async function ThreadsPage({
       <div className="flex-1 min-w-0">
         <ThreadListClient
           initialThreads={threads}
-          weeks={(weeks || []).map((w: any) => ({
+          weeks={((weeks || []) as unknown as WeekRow[]).map((w) => ({
             id: w.id,
             week_number: w.week_number,
             title: w.title,
@@ -156,7 +207,7 @@ export default async function ThreadsPage({
               Week {currentWeek.week_number} Prompts
             </h3>
             <ul className="space-y-2.5">
-              {sortedPrompts.map((p: any) => (
+              {sortedPrompts.map((p) => (
                 <li
                   key={p.id}
                   className="text-xs leading-relaxed"
@@ -188,10 +239,10 @@ export default async function ThreadsPage({
               className="text-sm font-semibold mb-1.5"
               style={{ color: 'var(--text-primary)' }}
             >
-              {roleLabels[(currentRole as any).role_type] || (currentRole as any).role_type}
+              {roleLabels[currentRole.role_type] || currentRole.role_type}
             </p>
             <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-              {roleNudges[(currentRole as any).role_type] || 'Share your thoughts with the group.'}
+              {roleNudges[currentRole.role_type] || 'Share your thoughts with the group.'}
             </p>
             <Link
               href="/threads/new"

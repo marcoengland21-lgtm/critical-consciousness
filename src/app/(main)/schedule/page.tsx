@@ -4,6 +4,35 @@ import RoleBadge from '@/components/roles/RoleBadge'
 import SessionNotes from '@/components/schedule/SessionNotes'
 import type { WeeklyRoleType } from '@/types/database'
 
+// Query-specific join shapes for Supabase responses
+interface WeeklyRoleRow {
+  id: string
+  role_type: string
+  user: { id: string; display_name: string } | null
+}
+
+interface DiscussionPrompt {
+  id: string
+  prompt_text: string
+  sort_order: number
+}
+
+interface ScheduleWeek {
+  id: string
+  week_number: number
+  title: string
+  due_date: string
+  session_date: string | null
+  session_location: string | null
+  zoom_link: string | null
+  chapter_ref: string | null
+  page_start: number | null
+  page_end: number | null
+  description: string | null
+  weekly_roles: WeeklyRoleRow[] | null
+  discussion_prompts: DiscussionPrompt[] | null
+}
+
 export const metadata = {
   title: 'Reading Schedule | Capital Study Group',
 }
@@ -32,9 +61,10 @@ export default async function SchedulePage() {
 
   // Determine current week (closest upcoming due_date)
   const now = new Date()
-  const currentWeek = weeks?.find((w: any) => new Date(w.due_date) >= now) || weeks?.[weeks.length - 1]
+  const typedWeeks = (weeks || []) as unknown as ScheduleWeek[]
+  const currentWeek = typedWeeks.find((w) => new Date(w.due_date) >= now) || typedWeeks[typedWeeks.length - 1]
 
-  if (!weeks || weeks.length === 0) {
+  if (typedWeeks.length === 0) {
     return (
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold mb-8" style={{ color: 'var(--accent-red)' }}>
@@ -59,12 +89,12 @@ export default async function SchedulePage() {
       </h1>
 
       <div className="space-y-6">
-        {weeks.map((week: any) => {
+        {typedWeeks.map((week) => {
           const isCurrent = currentWeek?.id === week.id
           const isPast = new Date(week.due_date) < now && !isCurrent
           const dueDate = new Date(week.due_date)
           const sessionDate = week.session_date ? new Date(week.session_date) : null
-          const prompts = week.discussion_prompts?.sort((a: any, b: any) => a.sort_order - b.sort_order) || []
+          const prompts = [...(week.discussion_prompts || [])].sort((a, b) => a.sort_order - b.sort_order)
 
           return (
             <div
@@ -173,7 +203,7 @@ export default async function SchedulePage() {
                       Roles This Week
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {week.weekly_roles.map((role: any) => (
+                      {(week.weekly_roles as unknown as WeeklyRoleRow[]).map((role) => (
                         <div
                           key={role.id}
                           className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border"
@@ -199,7 +229,7 @@ export default async function SchedulePage() {
                       Discussion Prompts
                     </h3>
                     <ol className="space-y-2 list-decimal list-inside">
-                      {prompts.map((prompt: any) => (
+                      {prompts.map((prompt) => (
                         <li key={prompt.id} className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                           {prompt.prompt_text}
                         </li>

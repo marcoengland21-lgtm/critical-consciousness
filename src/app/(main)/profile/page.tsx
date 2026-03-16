@@ -7,6 +7,42 @@ import type { ThreadType, WeeklyRoleType } from '@/types/database'
 import RoleBadge from '@/components/roles/RoleBadge'
 import { getChapterLabel } from '@/lib/chapter-utils'
 
+// Query-specific join shapes for Supabase responses
+interface AnnotationWithChapter {
+  id: string
+  body: string
+  created_at: string
+  chapter: { chapter_number: number; title: string } | null
+}
+
+interface ThreadWithReplies {
+  id: string
+  title: string
+  thread_type: string
+  created_at: string
+  replies: { count: number }[]
+}
+
+interface GlossaryEntryBasic {
+  id: string
+  term: string
+  created_at: string
+}
+
+interface CheckinWithWeek {
+  id: string
+  status: string
+  created_at: string
+  week: { week_number: number; title: string } | null
+}
+
+interface RoleWithWeek {
+  id: string
+  role_type: string
+  created_at: string
+  week: { week_number: number; title: string } | null
+}
+
 export const metadata = {
   title: 'Profile | Capital Study Group',
 }
@@ -117,7 +153,7 @@ export default async function ProfilePage() {
             <div style={{ backgroundColor: 'var(--bg-card)' }}>
               {recentAnnotations && recentAnnotations.length > 0 ? (
                 <div className="divide-y" style={{ borderColor: 'var(--border-default)' }}>
-                  {recentAnnotations.map((ann: any) => (
+                  {(recentAnnotations as unknown as AnnotationWithChapter[]).map((ann) => (
                     <Link
                       key={ann.id}
                       href={`/reading/capital-vol-1/${ann.chapter?.chapter_number || 1}`}
@@ -164,7 +200,7 @@ export default async function ProfilePage() {
             <div style={{ backgroundColor: 'var(--bg-card)' }}>
               {recentThreads && recentThreads.length > 0 ? (
                 <div className="divide-y" style={{ borderColor: 'var(--border-default)' }}>
-                  {recentThreads.map((thread: any) => {
+                  {(recentThreads as unknown as ThreadWithReplies[]).map((thread) => {
                     const replies = thread.replies?.[0]?.count ?? 0
                     return (
                       <Link
@@ -220,7 +256,7 @@ export default async function ProfilePage() {
             <div className="p-5" style={{ backgroundColor: 'var(--bg-card)' }}>
               {glossaryEntries && glossaryEntries.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {glossaryEntries.map((entry: any) => (
+                  {(glossaryEntries as unknown as GlossaryEntryBasic[]).map((entry) => (
                     <Link
                       key={entry.id}
                       href="/glossary"
@@ -252,7 +288,7 @@ export default async function ProfilePage() {
             <div className="p-5" style={{ backgroundColor: 'var(--bg-card)' }}>
               {checkins && checkins.length > 0 ? (
                 <div className="space-y-2">
-                  {checkins.map((checkin: any) => (
+                  {(checkins as unknown as CheckinWithWeek[]).map((checkin) => (
                     <div key={checkin.id} className="flex items-center justify-between text-sm">
                       <span style={{ color: 'var(--text-primary)' }}>
                         Week {checkin.week?.week_number}
@@ -291,7 +327,7 @@ export default async function ProfilePage() {
             <div className="p-5" style={{ backgroundColor: 'var(--bg-card)' }}>
               {roleHistory && roleHistory.length > 0 ? (
                 <div className="space-y-3">
-                  {roleHistory.map((role: any) => (
+                  {(roleHistory as unknown as RoleWithWeek[]).map((role) => (
                     <div key={role.id} className="flex items-center justify-between">
                       <RoleBadge type={role.role_type as WeeklyRoleType} />
                       <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>

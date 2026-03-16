@@ -10,6 +10,27 @@ import type { ThreadType } from '@/types/database'
 
 import { hashColor } from '@/lib/author-colors'
 
+// Query-specific join shapes for Supabase responses
+interface ChapterDocSlug {
+  id: string
+  chapter_number: number
+  document: { slug: string } | null
+}
+
+interface SidebarThread {
+  id: string
+  title: string
+  thread_type: string
+  created_at: string
+  week_id?: string | null
+}
+
+interface ThreadWeek {
+  id: string
+  week_number: number
+  title: string
+}
+
 export default async function ThreadPage({
   params,
 }: {
@@ -71,7 +92,7 @@ export default async function ThreadPage({
 
     if (chapters && chapters.length > 0) {
       contextChapter = chapters[0].id
-      contextDocSlug = (chapters[0].document as any)?.slug || null
+      contextDocSlug = (chapters[0].document as unknown as ChapterDocSlug['document'])?.slug || null
     }
   }
 
@@ -82,11 +103,11 @@ export default async function ThreadPage({
   const authorInitial = authorName.charAt(0).toUpperCase()
 
   // Week info
-  const threadWeek = (thread as any).week
+  const threadWeek = (thread as { week?: ThreadWeek }).week || null
 
   // Other threads from same week (for sidebar)
   const sameWeekThreads = thread.week_id
-    ? (weekThreads || []).filter((t: any) => t.week_id === thread.week_id).slice(0, 5)
+    ? ((weekThreads || []) as unknown as SidebarThread[]).filter((t) => t.week_id === thread.week_id).slice(0, 5)
     : []
 
   return (
@@ -249,7 +270,7 @@ export default async function ThreadPage({
               Week {threadWeek.week_number} Threads
             </h3>
             <ul className="space-y-2">
-              {sameWeekThreads.map((t: any) => (
+              {sameWeekThreads.map((t) => (
                 <li key={t.id}>
                   <Link
                     href={`/threads/${t.id}`}

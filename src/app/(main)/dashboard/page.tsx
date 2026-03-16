@@ -9,6 +9,44 @@ import MilestoneCard from '@/components/dashboard/MilestoneCard'
 import GroupThinkingOverview from '@/components/dashboard/GroupThinkingOverview'
 import type { ThreadType, WeeklyRoleType } from '@/types/database'
 
+// Query-specific join shapes for Supabase responses
+interface MilestoneRow {
+  id: string
+  week_number: number
+  title: string
+  description: string
+  reflection_prompt: string
+}
+
+interface WeeklyRoleRow {
+  id: string
+  role_type: string
+  user: { id: string; display_name: string } | null
+}
+
+interface AnnotationWithChapter {
+  id: string
+  body: string
+  chapter_id: string
+  chapter: { chapter_number: number; title: string } | null
+}
+
+interface ThreadWithAuthor {
+  id: string
+  title: string
+  thread_type: string
+  created_at: string
+  pinned: boolean
+  author: { display_name: string } | null
+  replies: { count: number }[]
+}
+
+interface DiscussionPrompt {
+  id: string
+  prompt_text: string
+  sort_order: number
+}
+
 const DEFAULT_GROUP_ID = '00000000-0000-0000-0000-000000000001'
 
 export default async function DashboardPage() {
@@ -69,7 +107,7 @@ export default async function DashboardPage() {
 
   // Find milestone for current week (if any)
   const milestone = currentWeek
-    ? milestoneData?.find((m: any) => m.week_number === currentWeek.week_number) || null
+    ? (milestoneData as MilestoneRow[] | null)?.find((m) => m.week_number === currentWeek.week_number) || null
     : null
 
   // Checkin depends on currentWeek, so runs after the parallel batch
@@ -88,11 +126,12 @@ export default async function DashboardPage() {
     }
   }
 
-  const myRoles = currentWeek?.weekly_roles?.filter(
-    (r: any) => r.user?.id === user?.id
-  ) || []
+  const weeklyRoles = (currentWeek?.weekly_roles || []) as unknown as WeeklyRoleRow[]
+  const myRoles = weeklyRoles.filter((r) => r.user?.id === user?.id)
+  const discussionPrompts = (currentWeek?.discussion_prompts || []) as unknown as DiscussionPrompt[]
+  const typedRecentThreads = (recentThreads || []) as unknown as ThreadWithAuthor[]
 
-  const annotations = recentAnnotations?.map((ann: any) => ({
+  const annotations = (recentAnnotations as unknown as AnnotationWithChapter[] | null)?.map((ann) => ({
     chapter_number: ann.chapter?.chapter_number || 0,
     chapter_title: ann.chapter?.title || 'Unknown',
     annotation_count: 1,
@@ -216,7 +255,7 @@ export default async function DashboardPage() {
           )}
 
           {/* Card 3: Discussion Prompts — only if prompts exist */}
-          {currentWeek?.discussion_prompts?.length > 0 && (
+          {discussionPrompts.length > 0 && (
             <div className="rounded-xl border overflow-hidden card-elevated" style={{ borderColor: 'var(--border-default)' }}>
               <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
                 <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
@@ -225,9 +264,9 @@ export default async function DashboardPage() {
               </div>
               <div className="p-5" style={{ backgroundColor: 'var(--bg-card)' }}>
                 <ol className="space-y-2 list-decimal list-inside">
-                  {currentWeek.discussion_prompts
-                    .sort((a: any, b: any) => a.sort_order - b.sort_order)
-                    .map((prompt: any) => (
+                  {[...discussionPrompts]
+                    .sort((a, b) => a.sort_order - b.sort_order)
+                    .map((prompt) => (
                       <li key={prompt.id} className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                         {prompt.prompt_text}
                       </li>
@@ -260,9 +299,9 @@ export default async function DashboardPage() {
               </Link>
             </div>
             <div style={{ backgroundColor: 'var(--bg-card)' }}>
-              {recentThreads && recentThreads.length > 0 ? (
+              {typedRecentThreads.length > 0 ? (
                 <div className="divide-y" style={{ borderColor: 'var(--border-default)' }}>
-                  {recentThreads.map((thread: any) => {
+                  {typedRecentThreads.map((thread) => {
                     const replyCount = thread.replies?.[0]?.count ?? 0
                     return (
                       <Link
@@ -321,7 +360,7 @@ export default async function DashboardPage() {
             <div className="p-5" style={{ backgroundColor: 'var(--bg-card)' }}>
               {myRoles.length > 0 ? (
                 <div className="space-y-3">
-                  {myRoles.map((role: any) => (
+                  {myRoles.map((role: WeeklyRoleRow) => (
                     <div key={role.id} className="p-3 rounded-lg" style={{ backgroundColor: 'var(--bg-card-alt)' }}>
                       <RoleBadge type={role.role_type as WeeklyRoleType} />
                       <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
@@ -342,7 +381,7 @@ export default async function DashboardPage() {
           </div>
 
           {/* All Roles This Week */}
-          {currentWeek?.weekly_roles && currentWeek.weekly_roles.length > 0 && (
+          {weeklyRoles.length > 0 && (
             <div className="rounded-xl border overflow-hidden card-elevated" style={{ borderColor: 'var(--border-default)' }}>
               <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
                 <h2 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
@@ -350,7 +389,7 @@ export default async function DashboardPage() {
                 </h2>
               </div>
               <div className="p-5 space-y-2" style={{ backgroundColor: 'var(--bg-card)' }}>
-                {currentWeek.weekly_roles.map((role: any) => (
+                {weeklyRoles.map((role) => (
                   <div key={role.id} className="flex items-center justify-between text-sm">
                     <RoleBadge type={role.role_type as WeeklyRoleType} />
                     <span style={{ color: 'var(--text-primary)' }}>

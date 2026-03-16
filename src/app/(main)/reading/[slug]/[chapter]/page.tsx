@@ -4,6 +4,15 @@ import Link from 'next/link'
 import { unstable_cache } from 'next/cache'
 import ChapterReader from '@/components/reading/ChapterReader'
 import { getChapterLabel, getPartNumber } from '@/lib/chapter-utils'
+import type { GlossaryTerm } from '@/lib/glossary-utils'
+
+// Query-specific shapes for cached Supabase responses
+interface Footnote {
+  id: string
+  footnote_number: number
+  content: string
+  author: 'marx' | 'engels'
+}
 
 interface Props {
   params: Promise<{ slug: string; chapter: string }>
@@ -187,8 +196,8 @@ export default async function ChapterPage({ params }: Props) {
       <ChapterReader
         chapter={chapterData}
         annotations={annotations || []}
-        footnotes={(footnotes as any[]) || []}
-        glossaryTerms={(glossaryTerms as any[]) || []}
+        footnotes={(footnotes as Footnote[]) || []}
+        glossaryTerms={(glossaryTerms as GlossaryTerm[]) || []}
         userId={user?.id || null}
         documentSlug={slug}
         allChapters={chapters}
