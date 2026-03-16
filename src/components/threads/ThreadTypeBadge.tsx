@@ -56,7 +56,7 @@ export default function ThreadTypeBadge({ type }: { type: ThreadType }) {
 
   return (
     <span
-      className="inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full"
+      className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full leading-none"
       style={{
         backgroundColor: config.bgColor,
         color: config.color,

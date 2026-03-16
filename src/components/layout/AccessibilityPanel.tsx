@@ -106,7 +106,7 @@ export default function AccessibilityPanel({ variant }: AccessibilityPanelProps)
         />
         <ToggleRow
           label="Reading Guide"
-          description="Highlight strip follows your cursor"
+          description="Warm torch glow follows your cursor"
           checked={readingGuide}
           onChange={setReadingGuide}
           isMobile={isMobile}
