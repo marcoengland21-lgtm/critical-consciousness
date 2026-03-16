@@ -515,6 +515,11 @@ html[data-theme="dark"] .markdown-body blockquote {
 }
 .animate-scale-in { animation: scaleIn var(--duration-normal) var(--ease-spring) forwards; }
 
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 /* Staggered children — apply to parent, children get delayed fade-in */
 .stagger-children > * {
   opacity: 0;

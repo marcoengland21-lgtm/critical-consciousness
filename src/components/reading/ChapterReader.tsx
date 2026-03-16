@@ -8,7 +8,8 @@ import AnnotationPanel from './AnnotationPanel'
 import SelectionToolbar from './SelectionToolbar'
 import OnboardingHint from './OnboardingHint'
 import ReadingToolbar from './ReadingToolbar'
-import ConfusionFlagButton from './ConfusionFlagButton'
+import ConfusionHeatmap from './ConfusionHeatmap'
+import ReadingPresence from './ReadingPresence'
 import GlossaryTooltip from './GlossaryTooltip'
 import FootnoteInline from './FootnoteInline'
 import Toast from '@/components/ui/Toast'
@@ -276,29 +277,28 @@ const MemoizedParagraph = memo(function Paragraph({
 
   return (
     <p data-offset={pStart} className="relative group/para">
-      {/* Margin controls */}
-      <span className="absolute -left-16 top-1 flex gap-1 items-center opacity-40 group-hover/para:opacity-100 transition-opacity hidden lg:flex">
-        <ConfusionFlagButton
-          chapterId={chapterId}
-          paragraphIndex={pIdx}
-          initialCount={confusionCount}
-          isUserFlagged={isUserFlagged}
-          hidden={focusedMode}
-        />
+      {/* Confusion heatmap margin — warm strip showing collective struggle */}
+      <ConfusionHeatmap
+        chapterId={chapterId}
+        paragraphIndex={pIdx}
+        initialCount={confusionCount}
+        isUserFlagged={isUserFlagged}
+        hidden={focusedMode}
+      />
 
-        {annotationCount > 0 && (
-          <span
-            className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium"
-            style={{
-              backgroundColor: annotationCount > 2 ? 'var(--accent-purple)' : 'var(--bg-soft)',
-              color: 'var(--text-primary)',
-            }}
-            title={`${annotationCount} annotation${annotationCount > 1 ? 's' : ''}`}
-          >
-            {annotationCount}
-          </span>
-        )}
-      </span>
+      {/* Annotation count badge — shown in left margin on desktop */}
+      {annotationCount > 0 && !focusedMode && (
+        <span
+          className="absolute -left-14 top-1 hidden lg:flex w-6 h-6 rounded-full items-center justify-center text-xs font-medium opacity-40 group-hover/para:opacity-100 transition-opacity"
+          style={{
+            backgroundColor: annotationCount > 2 ? 'var(--accent-purple)' : 'var(--bg-soft)',
+            color: annotationCount > 2 ? 'var(--text-inverse)' : 'var(--text-primary)',
+          }}
+          title={`${annotationCount} annotation${annotationCount > 1 ? 's' : ''}`}
+        >
+          {annotationCount}
+        </span>
+      )}
 
       {mergedSegments.map((seg, sIdx) => {
         // Glossary term only
@@ -768,6 +768,13 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     <div className="relative">
       {/* Onboarding hint */}
       <OnboardingHint />
+
+      {/* Reading presence — shows when others are reading this chapter */}
+      {!focusedMode && (
+        <div className="mb-3">
+          <ReadingPresence chapterId={chapter.id} />
+        </div>
+      )}
 
       {/* Persistent annotation hint — shown inline when no annotations exist */}
       {annotations.length === 0 && !focusedMode && (

@@ -7,6 +7,8 @@ import ReadingCheckinButton from '@/components/dashboard/ReadingCheckinButton'
 import WeeklyActivitySummary from '@/components/dashboard/WeeklyActivitySummary'
 import MilestoneCard from '@/components/dashboard/MilestoneCard'
 import GroupThinkingOverview from '@/components/dashboard/GroupThinkingOverview'
+import PassageSpotlight from '@/components/dashboard/PassageSpotlight'
+import ReflectionJournal from '@/components/dashboard/ReflectionJournal'
 import type { ThreadType, WeeklyRoleType } from '@/types/database'
 
 // Query-specific join shapes for Supabase responses
@@ -139,6 +141,39 @@ export default async function DashboardPage() {
   })) || []
 
   const threads = weekThreadCount ? [{ week_number: 1, thread_count: weekThreadCount }] : []
+
+  // Find the most-annotated passage for the Passage Spotlight
+  // Group recent annotations by their quote to find the most-discussed passage
+  const passageGroups = new Map<string, { quote: string; count: number; chapterNumber: number; chapterTitle: string }>()
+  for (const ann of annotations) {
+    // Use first 100 chars of body as a rough passage grouping
+    const key = `${ann.chapter_number}`
+    const existing = passageGroups.get(key)
+    if (existing) {
+      existing.count++
+    } else {
+      passageGroups.set(key, {
+        quote: ann.body || '',
+        count: 1,
+        chapterNumber: ann.chapter_number,
+        chapterTitle: ann.chapter_title,
+      })
+    }
+  }
+  // Find chapter with most annotations
+  let spotlightPassage: { quote: string; chapterTitle: string; chapterNumber: number; documentSlug: string; annotationCount: number } | null = null
+  if (passageGroups.size > 0) {
+    const topPassage = Array.from(passageGroups.values()).sort((a, b) => b.count - a.count)[0]
+    if (topPassage && topPassage.count >= 2) {
+      spotlightPassage = {
+        quote: topPassage.quote,
+        chapterTitle: topPassage.chapterTitle,
+        chapterNumber: topPassage.chapterNumber,
+        documentSlug: 'capital-vol-1',
+        annotationCount: topPassage.count,
+      }
+    }
+  }
 
   return (
     <div>
@@ -275,6 +310,9 @@ export default async function DashboardPage() {
               </div>
             </div>
           )}
+
+          {/* Passage Spotlight — what the group is annotating most */}
+          <PassageSpotlight passage={spotlightPassage} />
 
           {/* Weekly Activity Summary */}
           {currentWeek && (
@@ -454,6 +492,14 @@ export default async function DashboardPage() {
               </Link>
             </div>
           </div>
+
+          {/* Reflection Journal — private weekly notes */}
+          {currentWeek && user && (
+            <ReflectionJournal
+              weekTitle={currentWeek.title}
+              weekNumber={currentWeek.week_number}
+            />
+          )}
         </div>
       </div>
     </div>
