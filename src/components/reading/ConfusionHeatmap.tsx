@@ -73,14 +73,23 @@ export default function ConfusionHeatmap({
       disabled={isLoading}
       className="absolute -left-6 top-0 bottom-0 w-[6px] rounded-sm cursor-pointer transition-all duration-200 group/heat disabled:opacity-50"
       style={{
-        backgroundColor: heatColor,
+        backgroundColor: count === 0 ? 'transparent' : heatColor,
         border: isSet ? '1px solid var(--accent-amber)' : '1px solid transparent',
-        opacity: count === 0 ? 0 : 1,
       }}
       title={tooltipText}
       aria-label={`Toggle confusion flag for paragraph ${paragraphIndex + 1}. ${tooltipText}`}
     >
-      {/* Hover indicator — shows even when count is 0, so users discover the feature */}
+      {/* Hover indicator — shows on paragraph hover, so users discover the feature.
+          Always visible when hovering to teach Maria she can flag confusion. */}
+      <span
+        className="absolute inset-0 rounded-sm transition-opacity duration-200"
+        style={{
+          backgroundColor: count === 0 ? 'var(--heatmap-low)' : heatColor,
+          filter: count === 0 ? 'none' : 'brightness(1.2)',
+          opacity: 0,
+        }}
+      />
+      {/* CSS hover: use group-hover on the paragraph to show the strip */}
       <span
         className="absolute inset-0 rounded-sm opacity-0 group-hover/para:opacity-100 transition-opacity duration-200"
         style={{

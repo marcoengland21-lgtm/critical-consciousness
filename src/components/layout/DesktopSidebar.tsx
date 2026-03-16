@@ -34,30 +34,27 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
     setMounted(true)
   }, [])
 
-  // Sync --sidebar-width with collapsed state
+  // Sync --sidebar-width with collapsed state + viewport
+  // Combined into one effect to avoid race condition where collapsed sync
+  // sets 240px on mobile before the resize handler can correct it.
   useEffect(() => {
     if (!mounted) return
-    const width = collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH
-    document.documentElement.style.setProperty('--sidebar-width', width)
-    localStorage.setItem('ccp-sidebar-collapsed', String(collapsed))
-  }, [collapsed, mounted])
 
-  // Handle resize — mobile always 0px
-  useEffect(() => {
-    const handleResize = () => {
+    const syncWidth = () => {
       if (window.innerWidth < 768) {
         document.documentElement.style.setProperty('--sidebar-width', '0px')
       } else {
-        document.documentElement.style.setProperty(
-          '--sidebar-width',
-          collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH
-        )
+        const width = collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH
+        document.documentElement.style.setProperty('--sidebar-width', width)
       }
     }
-    handleResize()
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [collapsed])
+
+    syncWidth()
+    localStorage.setItem('ccp-sidebar-collapsed', String(collapsed))
+
+    window.addEventListener('resize', syncWidth)
+    return () => window.removeEventListener('resize', syncWidth)
+  }, [collapsed, mounted])
 
   // Close accessibility panel when clicking outside
   useEffect(() => {
@@ -305,7 +302,7 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
             <button
               ref={a11yBtnRef}
               onClick={() => setA11yOpen(!a11yOpen)}
-              className="p-1.5 rounded-md transition-colors text-sm btn-transition"
+              className="p-2.5 rounded-md transition-colors text-sm btn-transition"
               style={{
                 color: 'var(--text-inverse)',
                 opacity: a11yOpen ? 1 : 0.8,

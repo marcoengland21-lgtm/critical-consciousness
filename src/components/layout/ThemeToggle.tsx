@@ -8,7 +8,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      className="p-1.5 rounded-md transition-colors text-sm"
+      className="p-2.5 rounded-md transition-colors text-sm"
       style={{
         color: 'var(--text-inverse)',
         opacity: 0.8,

@@ -23,10 +23,10 @@ interface ReadingToolbarProps {
 }
 
 const MIN_FONT = 14
-const MAX_FONT = 24
+const MAX_FONT = 30
 const IDLE_TIMEOUT = 3000 // ms before dock fades
 const DRAG_THRESHOLD = 5 // px before pointer movement counts as drag
-const DOCK_WIDTH = 48
+const DOCK_WIDTH = 56
 const DOCK_APPROX_HEIGHT = 400 // rough estimate for clamp calculations
 const POSITION_KEY = 'ccp-toolbar-position'
 
@@ -53,7 +53,11 @@ export default function ReadingToolbar({
   onAnnotationKeywordChange,
   matchingAnnotationCount,
 }: ReadingToolbarProps) {
-  const [isExpanded, setIsExpanded] = useState(true)
+  // On mobile, start collapsed to avoid overlapping reading text
+  const [isExpanded, setIsExpanded] = useState(() => {
+    if (typeof window !== 'undefined') return window.innerWidth >= 768
+    return true
+  })
   const [showChapterNav, setShowChapterNav] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
   const [isIdle, setIsIdle] = useState(false)
@@ -134,18 +138,27 @@ export default function ReadingToolbar({
     }
 
     if (!pos) {
-      // Calculate default: left of the reading text column, vertically centered
-      const textEl = document.querySelector('.reading-text')
-      if (textEl) {
-        const rect = textEl.getBoundingClientRect()
+      const isMobile = window.innerWidth < 768
+      if (isMobile) {
+        // Mobile: bottom-right corner, above the tab bar (64px height + 16px margin)
         pos = {
-          x: Math.max(8, rect.left - DOCK_WIDTH - 12),
-          y: Math.max(8, window.innerHeight / 2 - DOCK_APPROX_HEIGHT / 2),
+          x: window.innerWidth - DOCK_WIDTH - 16,
+          y: window.innerHeight - 120,
         }
       } else {
-        pos = {
-          x: 16,
-          y: Math.max(8, window.innerHeight / 2 - DOCK_APPROX_HEIGHT / 2),
+        // Desktop: left of the reading text column, vertically centered
+        const textEl = document.querySelector('.reading-text')
+        if (textEl) {
+          const rect = textEl.getBoundingClientRect()
+          pos = {
+            x: Math.max(8, rect.left - DOCK_WIDTH - 12),
+            y: Math.max(8, window.innerHeight / 2 - DOCK_APPROX_HEIGHT / 2),
+          }
+        } else {
+          pos = {
+            x: 16,
+            y: Math.max(8, window.innerHeight / 2 - DOCK_APPROX_HEIGHT / 2),
+          }
         }
       }
     }
@@ -344,7 +357,7 @@ export default function ReadingToolbar({
   const panelOpensRight = position ? (position.x + DOCK_WIDTH / 2) < window.innerWidth / 2 : false
 
   // ── Shared button style ──
-  const btnClass = 'w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-150 hover:scale-110'
+  const btnClass = 'w-11 h-11 flex items-center justify-center rounded-lg transition-all duration-150 hover:scale-110'
   const btnHover = 'hover:bg-white/10'
 
   // Don't render until position is calculated (prevents flash at wrong position)
@@ -681,7 +694,7 @@ export default function ReadingToolbar({
               <>
                 <div className="h-px w-7 my-0.5" style={{ backgroundColor: 'var(--border-default)' }} />
                 <span
-                  className="w-9 h-9 flex flex-col items-center justify-center rounded-lg text-[10px]"
+                  className="w-11 h-11 flex flex-col items-center justify-center rounded-lg text-[10px]"
                   style={{ color: 'var(--text-secondary)' }}
                   title={`${annotationCount} annotation${annotationCount !== 1 ? 's' : ''}`}
                 >
