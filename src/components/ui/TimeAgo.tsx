@@ -17,7 +17,7 @@ function getTimeAgo(dateStr: string): string {
   const weeks = Math.floor(days / 7)
   if (weeks < 4) return `${weeks}w ago`
 
-  return date.toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' })
+  return date.toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Pacific/Auckland' })
 }
 
 export default function TimeAgo({ date }: { date: string }) {
@@ -36,7 +36,7 @@ export default function TimeAgo({ date }: { date: string }) {
   }, [date])
 
   return (
-    <time dateTime={date} title={new Date(date).toLocaleString('en-NZ')} suppressHydrationWarning>
+    <time dateTime={date} title={new Date(date).toLocaleString('en-NZ', { timeZone: 'Pacific/Auckland' })} suppressHydrationWarning>
       {timeAgo}
     </time>
   )

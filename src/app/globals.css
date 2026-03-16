@@ -13,6 +13,8 @@
   --bg-card-alt: #faf9fc;         /* Alternate card background */
   --bg-soft: #ede8f5;             /* Subtle highlight backgrounds */
   --bg-nav: #1a1625;              /* Navigation bar */
+  --nav-accent: rgba(107, 76, 154, 0.3);    /* Nav active/brand highlights */
+  --nav-accent-subtle: rgba(107, 76, 154, 0.2); /* Nav dividers/hover states */
   --bg-header: #1a1625;           /* Section headers (e.g. This Week's Reading) */
   --bg-input: #ffffff;            /* Form inputs */
   --bg-badge: #ede8f5;            /* Tag/badge backgrounds */
@@ -90,6 +92,8 @@ html[data-theme="dark"] {
   --bg-card-alt: #1e1a28;
   --bg-soft: #231e30;
   --bg-nav: #0a0814;
+  --nav-accent: rgba(168, 140, 212, 0.3);
+  --nav-accent-subtle: rgba(168, 140, 212, 0.2);
   --bg-header: #231e30;
   --bg-input: #1a1625;
   --bg-badge: #2d2740;

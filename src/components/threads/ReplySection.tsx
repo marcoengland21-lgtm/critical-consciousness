@@ -32,18 +32,7 @@ interface ReplySectionProps {
 
 // ── Author Avatar ───────────────────────────────────────────────────────────
 
-const AUTHOR_COLORS = [
-  '#a31545', '#2e7d6e', '#6b4c9a', '#7b6b3d',
-  '#6B4C7D', '#2D7A8A', '#8A4B3D', '#4A7B4F',
-]
-
-function hashColor(name: string): string {
-  let hash = 0
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  return AUTHOR_COLORS[Math.abs(hash) % AUTHOR_COLORS.length]
-}
+import { hashColor } from '@/lib/author-colors'
 
 function AuthorAvatar({ name, size = 28 }: { name: string; size?: number }) {
   return (

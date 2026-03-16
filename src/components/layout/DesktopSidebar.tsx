@@ -83,7 +83,7 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
             onClick={() => setCollapsed(!collapsed)}
             className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm btn-transition"
             style={{
-              backgroundColor: 'rgba(107, 76, 154, 0.3)',
+              backgroundColor: 'var(--nav-accent)',
               color: 'var(--text-inverse)',
             }}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -128,7 +128,7 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
       </div>
 
       {/* Separator */}
-      <div className="mx-4 mb-2 shrink-0" style={{ borderBottom: '1px solid rgba(107, 76, 154, 0.3)' }} />
+      <div className="mx-4 mb-2 shrink-0" style={{ borderBottom: '1px solid var(--nav-accent)' }} />
 
       {/* Navigation Links */}
       <nav className="flex-1 px-2 space-y-1 overflow-y-auto overflow-x-hidden" aria-label="Main navigation">
@@ -146,7 +146,7 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
           ))}
 
         {/* Divider */}
-        <div className="my-2 mx-2" style={{ borderBottom: '1px solid rgba(107, 76, 154, 0.2)' }} />
+        <div className="my-2 mx-2" style={{ borderBottom: '1px solid var(--nav-accent-subtle)' }} />
 
         {/* Secondary nav: Glossary, Schedule, Resources */}
         {navItems
@@ -168,7 +168,7 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
       </nav>
 
       {/* Bottom Section — user identity + controls */}
-      <div className="shrink-0 px-2 py-3" style={{ borderTop: '1px solid rgba(107, 76, 154, 0.2)' }}>
+      <div className="shrink-0 px-2 py-3" style={{ borderTop: '1px solid var(--nav-accent-subtle)' }}>
         {/* User avatar — always visible, adapts to collapsed/expanded */}
         <div
           className="flex items-center gap-2 px-1 mb-2 overflow-hidden"
@@ -180,7 +180,7 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
                 href="/profile"
                 className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
                 style={{
-                  backgroundColor: 'rgba(107, 76, 154, 0.3)',
+                  backgroundColor: 'var(--nav-accent)',
                   color: 'var(--text-inverse)',
                 }}
                 title={collapsed ? displayName : undefined}
@@ -205,7 +205,7 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
                 href="/login"
                 className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
                 style={{
-                  backgroundColor: 'rgba(107, 76, 154, 0.2)',
+                  backgroundColor: 'var(--nav-accent-subtle)',
                   color: 'var(--text-inverse)',
                   opacity: 0.7,
                 }}

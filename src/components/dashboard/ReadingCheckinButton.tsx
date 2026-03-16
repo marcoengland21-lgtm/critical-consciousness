@@ -12,7 +12,7 @@ interface ReadingCheckinButtonProps {
 const DEFAULT_GROUP_ID = '00000000-0000-0000-0000-000000000001'
 
 const STATUS_OPTIONS = [
-  { value: 'done', label: 'Done', activeBg: 'var(--accent-green)', activeColor: '#ffffff' },
+  { value: 'done', label: 'Done', activeBg: 'var(--accent-green)', activeColor: 'var(--text-inverse)' },
   { value: 'partial', label: 'Partial', activeBg: 'var(--accent-purple)', activeColor: 'var(--text-inverse)' },
   { value: 'behind', label: 'Behind', activeBg: 'var(--text-secondary)', activeColor: 'var(--bg-page)' },
 ] as const

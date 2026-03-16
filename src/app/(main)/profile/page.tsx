@@ -5,15 +5,10 @@ import ThreadTypeBadge from '@/components/threads/ThreadTypeBadge'
 import TimeAgo from '@/components/ui/TimeAgo'
 import type { ThreadType, WeeklyRoleType } from '@/types/database'
 import RoleBadge from '@/components/roles/RoleBadge'
+import { getChapterLabel } from '@/lib/chapter-utils'
 
 export const metadata = {
   title: 'Profile | Capital Study Group',
-}
-
-/** Map internal chapter_number to Marx's label */
-function getChapterLabel(chapterNumber: number): string {
-  if (chapterNumber <= 4) return `Chapter 1, Section ${chapterNumber}`
-  return `Chapter ${chapterNumber - 3}`
 }
 
 export default async function ProfilePage() {
@@ -132,7 +127,7 @@ export default async function ProfilePage() {
                         {ann.body.length > 140 ? ann.body.substring(0, 140).trim() + '...' : ann.body}
                       </p>
                       <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                        <span>on {getChapterLabel(ann.chapter?.chapter_number || 0)}</span>
+                        <span>on {getChapterLabel(ann.chapter?.chapter_number || 0).label}</span>
                         <span>·</span>
                         <TimeAgo date={ann.created_at} />
                       </div>

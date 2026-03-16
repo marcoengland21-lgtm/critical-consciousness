@@ -117,7 +117,7 @@ export default function RegisterPage() {
             required
             placeholder="Enter your invite code"
             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
-            style={{ borderColor: 'var(--text-secondary)' }}
+            style={{ borderColor: 'var(--text-secondary)', '--tw-ring-color': 'var(--accent-purple)' } as React.CSSProperties}
           />
           <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
             You need an invite code from an existing member to join.
@@ -140,7 +140,7 @@ export default function RegisterPage() {
             required
             placeholder="How you want to be known in the group"
             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
-            style={{ borderColor: 'var(--text-secondary)' }}
+            style={{ borderColor: 'var(--text-secondary)', '--tw-ring-color': 'var(--accent-purple)' } as React.CSSProperties}
           />
         </div>
 
@@ -159,7 +159,7 @@ export default function RegisterPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
-            style={{ borderColor: 'var(--text-secondary)' }}
+            style={{ borderColor: 'var(--text-secondary)', '--tw-ring-color': 'var(--accent-purple)' } as React.CSSProperties}
           />
         </div>
 
@@ -179,7 +179,7 @@ export default function RegisterPage() {
             required
             minLength={6}
             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
-            style={{ borderColor: 'var(--text-secondary)' }}
+            style={{ borderColor: 'var(--text-secondary)', '--tw-ring-color': 'var(--accent-purple)' } as React.CSSProperties}
           />
         </div>
 
