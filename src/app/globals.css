@@ -712,3 +712,80 @@ html[data-theme="dark"] .reading-text .blockquote {
   border-top: 1px solid var(--border-default);
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
+
+/* =================================================================
+   PRINT STYLES — Reading pages
+   Clean, book-like output for printing chapters.
+   Hides all chrome (nav, toolbar, buttons). Full-width black-on-white
+   text at 12pt with proper page margins and orphan/widow control.
+   ================================================================= */
+@media print {
+  /* Hide navigation and interactive elements */
+  nav,
+  .desktop-sidebar,
+  .mobile-tab-bar,
+  .reading-toolbar,
+  button,
+  [role="toolbar"],
+  .sticky {
+    display: none !important;
+  }
+
+  /* Reset reading text to print-friendly defaults */
+  .reading-text {
+    font-size: 12pt !important;
+    line-height: 1.6 !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    color: #000 !important;
+  }
+
+  /* Convert annotation highlights to subtle dotted underlines */
+  mark {
+    background: none !important;
+    color: #000 !important;
+    text-decoration: underline dotted #666 !important;
+  }
+
+  /* Page layout */
+  @page {
+    margin: 2cm 2.5cm;
+  }
+
+  /* Prevent orphans and widows — keep at least 3 lines together */
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Keep headings with following content */
+  h1, h2, h3, h4 {
+    break-after: avoid;
+    color: #000 !important;
+  }
+
+  /* Prevent page breaks inside blockquotes */
+  blockquote {
+    break-inside: avoid;
+    border-left-color: #666 !important;
+    background: none !important;
+    color: #000 !important;
+  }
+
+  /* Footnote references should be visible */
+  sup {
+    color: #000 !important;
+  }
+
+  /* White background everywhere */
+  body, html {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  /* Remove box shadows and borders on cards */
+  [class*="card"] {
+    box-shadow: none !important;
+    border: none !important;
+  }
+}
