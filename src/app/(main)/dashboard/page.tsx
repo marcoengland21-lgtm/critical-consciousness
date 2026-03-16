@@ -107,6 +107,11 @@ export default async function DashboardPage() {
   const displayName = profile?.display_name || 'there'
   const currentWeek = currentWeekData?.[0] || null
 
+  // Time-of-day greeting (NZ timezone for Christchurch group)
+  const nzHourStr = now.toLocaleString('en-NZ', { hour: 'numeric', hour12: false, timeZone: 'Pacific/Auckland' })
+  const nzHour = parseInt(nzHourStr, 10)
+  const greeting = nzHour < 12 ? 'Good morning' : nzHour < 17 ? 'Good afternoon' : 'Good evening'
+
   // Find milestone for current week (if any)
   const milestone = currentWeek
     ? (milestoneData as MilestoneRow[] | null)?.find((m) => m.week_number === currentWeek.week_number) || null
@@ -180,40 +185,144 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 stagger-children">
         {/* Left column: Current Week + Activity + Group Thinking + Threads */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Welcome card — integrated into the grid */}
-          <div className="card-base" style={{ borderLeft: '3px solid var(--accent-amber)' }}>
+          {/* Welcome card — contextual hub with journey progress, role, and session info */}
+          <div className="card-base overflow-hidden">
+            {/* Top accent bar — warm gradient */}
+            <div className="h-1" style={{ background: 'linear-gradient(to right, var(--accent-amber), var(--accent-purple))' }} />
+
             <div className="card-body">
-              <div className="flex items-start justify-between">
-                <div>
+              {/* Greeting row */}
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
                   <h1 className="text-xl sm:text-2xl font-bold mb-0.5" style={{ color: 'var(--text-primary)' }}>
-                    {user ? `Welcome back, ${displayName}` : 'Welcome to Capital Study Group'}
+                    {user ? `${greeting}, ${displayName}` : 'Welcome to Capital Study Group'}
                   </h1>
                   <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                     Christchurch Capital Reading Group
                   </p>
                 </div>
-              </div>
-              {currentWeek && totalWeeks && totalWeeks > 0 && (
-                <div className="mt-3">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                      Week {currentWeek.week_number} of {totalWeeks}
-                    </p>
-                    <p className="text-xs font-medium" style={{ color: 'var(--accent-purple)' }}>
-                      {Math.round((currentWeek.week_number / totalWeeks) * 100)}%
-                    </p>
-                  </div>
-                  <div className="h-[3px] rounded-full" style={{ backgroundColor: 'var(--bg-soft)' }}>
+
+                {/* Session countdown chip — only if session_date exists */}
+                {currentWeek?.session_date && (() => {
+                  const sessionDate = new Date(currentWeek.session_date)
+                  const diffMs = sessionDate.getTime() - now.getTime()
+                  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+                  const countdownText = diffDays < 0 ? 'Session was recently' : diffDays === 0 ? 'Session today' : diffDays === 1 ? 'Session tomorrow' : `Session in ${diffDays} days`
+                  const sessionTime = sessionDate.toLocaleString('en-NZ', { weekday: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Pacific/Auckland' })
+                  return (
                     <div
-                      className="h-full rounded-full transition-all duration-500"
+                      className="flex-shrink-0 text-right px-3 py-2 rounded-lg"
+                      style={{ backgroundColor: 'var(--bg-card-alt)' }}
+                    >
+                      <p className="text-xs font-semibold" style={{ color: diffDays <= 1 ? 'var(--accent-amber)' : 'var(--text-primary)' }}>
+                        {countdownText}
+                      </p>
+                      <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                        {sessionTime}
+                        {currentWeek.session_location && ` · ${currentWeek.session_location}`}
+                      </p>
+                    </div>
+                  )
+                })()}
+              </div>
+
+              {/* Journey progress section */}
+              {currentWeek && totalWeeks && totalWeeks > 0 && (
+                <div className="mt-4 p-3 rounded-lg" style={{ backgroundColor: 'var(--bg-card-alt)' }}>
+                  {/* Week label + percentage */}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold" style={{ color: 'var(--accent-purple)' }}>
+                        Week {currentWeek.week_number}
+                      </span>
+                      <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                        of {totalWeeks}
+                      </span>
+                    </div>
+                    <span className="text-xs font-semibold tabular-nums" style={{ color: 'var(--accent-purple)' }}>
+                      {Math.round((currentWeek.week_number / totalWeeks) * 100)}%
+                    </span>
+                  </div>
+
+                  {/* Progress bar — segmented style */}
+                  <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--bg-soft)' }}>
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
                       style={{
-                        backgroundColor: 'var(--accent-purple)',
+                        background: 'linear-gradient(to right, var(--accent-green), var(--accent-purple))',
                         width: `${Math.round((currentWeek.week_number / totalWeeks) * 100)}%`,
                       }}
                     />
                   </div>
+
+                  {/* Current reading title */}
+                  <p className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
+                    Currently reading: <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{currentWeek.title}</span>
+                  </p>
                 </div>
               )}
+
+              {/* Context chips — role + reading status + group activity */}
+              <div className="flex flex-wrap gap-2 mt-3">
+                {/* Your role this week */}
+                {myRoles.length > 0 && (
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs"
+                    style={{ backgroundColor: 'rgba(var(--accent-purple-rgb), 0.08)', color: 'var(--accent-purple)' }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" />
+                      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                    <span className="font-medium capitalize">
+                      {myRoles.map((r) => r.role_type.replace('_', ' ')).join(' & ')}
+                    </span>
+                  </div>
+                )}
+
+                {/* Reading status */}
+                {currentReadingStatus && (
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium"
+                    style={{
+                      backgroundColor: currentReadingStatus === 'done'
+                        ? 'rgba(var(--accent-green-rgb), 0.1)'
+                        : currentReadingStatus === 'partial'
+                          ? 'rgba(var(--accent-purple-rgb), 0.08)'
+                          : 'var(--bg-soft)',
+                      color: currentReadingStatus === 'done'
+                        ? 'var(--accent-green)'
+                        : currentReadingStatus === 'partial'
+                          ? 'var(--accent-purple)'
+                          : 'var(--text-secondary)',
+                    }}
+                  >
+                    {currentReadingStatus === 'done' && (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                    {currentReadingStatus === 'done' ? 'Reading complete' : currentReadingStatus === 'partial' ? 'Partially read' : 'Not started'}
+                  </div>
+                )}
+
+                {/* Group activity pulse */}
+                {((weekAnnotationCount || 0) + (weekThreadCount || 0) + (weekGlossaryCount || 0)) > 0 && (
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs"
+                    style={{ backgroundColor: 'rgba(var(--accent-amber-rgb), 0.08)', color: 'var(--accent-amber)' }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                    </svg>
+                    <span>
+                      {weekAnnotationCount || 0} annotations · {weekThreadCount || 0} threads this week
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

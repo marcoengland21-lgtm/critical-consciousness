@@ -16,7 +16,7 @@ import FootnoteInline from './FootnoteInline'
 import Toast from '@/components/ui/Toast'
 import BackToTop from './BackToTop'
 import { getConfusionFlagCounts, getUserConfusionFlags } from '@/lib/confusion-flags'
-import { findGlossaryTermMatches, buildGlossarySegments, findChapterGlossaryTerms, GlossaryTerm, TermMatch } from '@/lib/glossary-utils'
+import { findGlossaryTermMatches, buildGlossarySegments, findChapterGlossaryTerms, GlossaryTerm, GlossaryTermWithCount, TermMatch } from '@/lib/glossary-utils'
 import { useScrollPersistence } from '@/hooks/useScrollPersistence'
 
 interface Annotation {
