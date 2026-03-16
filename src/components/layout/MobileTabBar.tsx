@@ -36,12 +36,19 @@ export default function MobileTabBar({ displayName, hasUser }: MobileTabBarProps
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex flex-col items-center justify-center flex-1 py-1"
+                className="flex flex-col items-center justify-center flex-1 py-1 relative"
                 style={{
                   color: isActive ? 'var(--accent-purple)' : 'var(--text-secondary)',
                   opacity: isActive ? 1 : 0.6,
                 }}
               >
+                {/* Active top accent bar */}
+                {isActive && (
+                  <span
+                    className="absolute top-0 left-1/4 right-1/4 h-0.5 rounded-full"
+                    style={{ backgroundColor: 'var(--accent-purple)' }}
+                  />
+                )}
                 <NavIcon name={item.icon} size={20} />
                 <span className="text-[10px] mt-0.5 font-medium">{item.label}</span>
               </Link>

@@ -26,10 +26,11 @@ export default function SidebarNavLink({ href, icon, label, collapsed = false }:
       style={{
         color: isActive ? 'var(--accent-purple)' : 'var(--text-inverse)',
         backgroundColor: isActive ? 'rgba(107, 76, 154, 0.15)' : 'transparent',
+        borderLeft: isActive ? '3px solid var(--accent-purple)' : '3px solid transparent',
         opacity: isActive ? 1 : 0.7,
         overflow: 'hidden',
-        padding: collapsed ? '0.625rem 0.5rem 0.625rem 13px' : '0.625rem 1rem 0.625rem 14px',
-        transition: 'background-color var(--duration-fast) var(--ease-out-expo), padding var(--duration-slow) var(--ease-out-expo)',
+        padding: collapsed ? '0.625rem 0.5rem 0.625rem 10px' : '0.625rem 1rem 0.625rem 11px',
+        transition: 'background-color var(--duration-fast) var(--ease-out-expo), border-color var(--duration-fast) var(--ease-out-expo), padding var(--duration-slow) var(--ease-out-expo)',
       }}
       aria-label={collapsed ? label : undefined}
       data-tooltip={collapsed ? label : undefined}

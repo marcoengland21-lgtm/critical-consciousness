@@ -132,6 +132,18 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
 
       {/* Navigation Links */}
       <nav className="flex-1 px-2 space-y-1 overflow-y-auto overflow-x-hidden" aria-label="Main navigation">
+        {/* Section label — Main */}
+        <div
+          className="text-[10px] font-semibold tracking-wider px-3 pt-1 pb-0.5 whitespace-nowrap"
+          style={{
+            color: 'var(--text-inverse)',
+            opacity: collapsed ? 0 : 0.35,
+            transition: labelTransition,
+          }}
+        >
+          Main
+        </div>
+
         {/* Primary nav: Dashboard, Reading, Threads */}
         {navItems
           .filter((item) => item.mobileTab && item.href !== '/profile')
@@ -147,6 +159,18 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
 
         {/* Divider */}
         <div className="my-2 mx-2" style={{ borderBottom: '1px solid var(--nav-accent-subtle)' }} />
+
+        {/* Section label — Tools */}
+        <div
+          className="text-[10px] font-semibold tracking-wider px-3 pt-1 pb-0.5 whitespace-nowrap"
+          style={{
+            color: 'var(--text-inverse)',
+            opacity: collapsed ? 0 : 0.35,
+            transition: labelTransition,
+          }}
+        >
+          Tools
+        </div>
 
         {/* Secondary nav: Glossary, Schedule, Resources */}
         {navItems
@@ -168,7 +192,13 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
       </nav>
 
       {/* Bottom Section — user identity + controls */}
-      <div className="shrink-0 px-2 py-3" style={{ borderTop: '1px solid var(--nav-accent-subtle)' }}>
+      <div
+        className="shrink-0 mx-2 mb-2 px-1 py-3 rounded-lg"
+        style={{
+          backgroundColor: 'rgba(var(--accent-purple-rgb), 0.06)',
+          borderTop: '1px solid var(--nav-accent-subtle)',
+        }}
+      >
         {/* User avatar — always visible, adapts to collapsed/expanded */}
         <div
           className="flex items-center gap-2 px-1 mb-2 overflow-hidden"

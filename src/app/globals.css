@@ -6,42 +6,53 @@
      All components should use these vars, never raw hex values.
      ================================================================= */
 
-  /* Backgrounds — layered from deepest to lightest */
-  --bg-page: #faf9fc;              /* Page background */
-  --bg-card: #ffffff;              /* Cards, containers */
-  --bg-card-rgb: 255, 255, 255;   /* RGB for rgba() glassmorphism */
-  --bg-card-alt: #faf9fc;         /* Alternate card background */
-  --bg-soft: #ede8f5;             /* Subtle highlight backgrounds */
-  --bg-nav: #1a1625;              /* Navigation bar */
+  /* Backgrounds — layered from deepest to lightest
+     Warm cream base (not cool lavender) — feels like paper, not a screen */
+  --bg-page: #faf8f5;              /* Warm cream page background */
+  --bg-card: #fffefa;              /* Warm white cards — feels like paper */
+  --bg-card-rgb: 255, 254, 250;   /* RGB for rgba() glassmorphism */
+  --bg-card-alt: #f7f5f1;         /* Warm parchment alternate */
+  --bg-soft: #eae6f0;             /* Purple-tinted soft bg (keeps purple identity) */
+  --bg-nav: #1a1625;              /* Navigation bar — purple-black identity stays */
   --nav-accent: rgba(107, 76, 154, 0.3);    /* Nav active/brand highlights */
   --nav-accent-subtle: rgba(107, 76, 154, 0.2); /* Nav dividers/hover states */
-  --bg-header: #1a1625;           /* Section headers (e.g. This Week's Reading) */
-  --bg-input: #ffffff;            /* Form inputs */
-  --bg-badge: #ede8f5;            /* Tag/badge backgrounds */
-  --bg-button-secondary: #f0edf5; /* Secondary/cancel button bg */
-  --bg-hover: #f5f2fa;            /* Hover states */
+  --bg-header: #1a1625;           /* Section headers */
+  --bg-input: #fffefa;            /* Warm white form inputs */
+  --bg-badge: #eae6f0;            /* Purple-tinted badge backgrounds */
+  --bg-button-secondary: #efedf2; /* Purple-ish secondary button bg */
+  --bg-hover: #f5f3f0;            /* Warm hover states */
 
-  /* Text */
-  --text-primary: #1a1625;        /* Main body text */
-  --text-secondary: #5a5368;      /* Secondary/muted text (WCAG AA 7:1 on white) */
-  --text-inverse: #faf9fc;        /* Text on dark backgrounds */
+  /* Text — warm near-blacks, keep purple undertone */
+  --text-primary: #1c1917;        /* Warm near-black body text */
+  --text-secondary: #585260;      /* Warm purple-gray (WCAG AA on warm white) */
+  --text-inverse: #faf8f5;        /* Text on dark backgrounds */
   --text-badge: #4d3d5c;          /* Badge/tag text (improved contrast) */
 
-  /* Borders */
-  --border-default: #e2dfe8;      /* Standard borders */
-  --border-strong: #d4d0dc;       /* Stronger borders */
+  /* Borders — slightly warmer */
+  --border-default: #dfdce4;      /* Warm border */
+  --border-strong: #d1ced6;       /* Stronger warm border */
 
-  /* Accents */
+  /* Accents — purple stays core identity, amber is new warm accent */
   --accent-red: #a31545;          /* Primary CTA, links */
   --accent-red-hover: #8b1039;    /* Hover state */
-  --accent-purple: #5c3d8f;       /* Secondary accent (WCAG AA 4.5:1 on white) */
+  --accent-purple: #5c3d8f;       /* Secondary accent — the scholarly purple stays */
   --accent-purple-hover: #4a3070; /* Hover state */
   --accent-green: #4a6741;        /* Success states */
+  --accent-amber: #b8860b;        /* NEW warm accent — heatmap, presence, warmup */
+  --accent-amber-hover: #9a7009;
 
-  /* Raw RGB values for rgba() usage in alert classes */
+  /* Raw RGB values for rgba() usage */
   --accent-red-rgb: 163, 21, 69;
   --accent-green-rgb: 74, 103, 65;
   --accent-purple-rgb: 92, 61, 143;
+  --accent-amber-rgb: 184, 134, 11;
+
+  /* Warm shadows — replaces cool gray shadows */
+  --shadow-warm: rgba(120, 100, 80, 0.06);
+  --shadow-sm: 0 1px 2px var(--shadow-warm);
+  --shadow-md: 0 2px 8px var(--shadow-warm), 0 1px 3px var(--shadow-warm);
+  --shadow-lg: 0 4px 16px var(--shadow-warm), 0 2px 6px var(--shadow-warm);
+  --shadow-xl: 0 8px 32px var(--shadow-warm), 0 4px 12px var(--shadow-warm);
 
   /* Legacy aliases (for existing var() references) */
   --color-deep-red: var(--accent-red);
@@ -64,15 +75,32 @@
   --badge-bg-passage: rgba(140, 74, 106, 0.15);
   --badge-bg-connection: rgba(92, 61, 143, 0.15);
 
-  /* Typography */
+  /* Typography — modular scale (1.2 ratio, minor third) */
   --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --line-height-relaxed: 1.75;
   --line-height-loose: 2;
+  --text-xs: 0.75rem;           /* 12px */
+  --text-sm: 0.875rem;          /* 14px */
+  --text-base: 1rem;            /* 16px */
+  --text-lg: 1.125rem;          /* 18px — reading base */
+  --text-xl: 1.25rem;           /* 20px */
+  --text-2xl: 1.5rem;           /* 24px */
+  --text-3xl: 1.875rem;         /* 30px */
+  --text-4xl: 2.25rem;          /* 36px */
+  --heading-weight: 700;
+  --heading-tracking: -0.02em;
 
-  /* Border Radius */
-  --radius-card: 0.75rem;       /* 12px — cards */
-  --radius-button: 0.5rem;      /* 8px — buttons, inputs */
+  /* Border Radius — friendlier, more tactile */
+  --radius-card: 1rem;          /* 16px — rounder cards feel warmer */
+  --radius-button: 0.625rem;    /* 10px — slightly softer buttons */
   --radius-badge: 9999px;       /* pill shape */
+  --radius-input: 0.625rem;     /* matches button radius */
+
+  /* Heatmap colors — for confusion visualization */
+  --heatmap-none: transparent;
+  --heatmap-low: rgba(var(--accent-amber-rgb), 0.12);
+  --heatmap-mid: rgba(var(--accent-amber-rgb), 0.3);
+  --heatmap-high: rgba(var(--accent-amber-rgb), 0.5);
 
   /* Layout */
   --sidebar-width: 0px;
@@ -91,23 +119,24 @@
    Maintains the Marxist red + scholarly purple identity
    ================================================================= */
 html[data-theme="dark"] {
-  --bg-page: #0f0d17;
-  --bg-card: #1a1625;
-  --bg-card-rgb: 26, 22, 37;
-  --bg-card-alt: #1e1a28;
+  /* Warmer dark neutrals — lamplight feel, still purple-tinted */
+  --bg-page: #110f15;
+  --bg-card: #19171f;
+  --bg-card-rgb: 25, 23, 31;
+  --bg-card-alt: #1d1a22;
   --bg-soft: #231e30;
-  --bg-nav: #0a0814;
+  --bg-nav: #0a0814;             /* Keep deep dark purple nav */
   --nav-accent: rgba(168, 140, 212, 0.3);
   --nav-accent-subtle: rgba(168, 140, 212, 0.2);
   --bg-header: #231e30;
-  --bg-input: #1a1625;
+  --bg-input: #19171f;
   --bg-badge: #2d2740;
   --bg-button-secondary: #231e30;
   --bg-hover: #2d2740;
 
-  --text-primary: #eae6f2;
-  --text-secondary: #b0a8c2;      /* Improved contrast on dark bg */
-  --text-inverse: #faf9fc;        /* Always light — used on always-dark nav/headers */
+  --text-primary: #ebe8f0;       /* Very slightly warmer */
+  --text-secondary: #aea7bc;
+  --text-inverse: #faf8f5;
   --text-badge: #c4b8d4;
 
   --border-default: #2d2740;
@@ -118,10 +147,16 @@ html[data-theme="dark"] {
   --accent-purple: #a88cd4;
   --accent-purple-hover: #bda3e0;
   --accent-green: #6abf69;
+  --accent-amber: #d4a843;       /* Brighter amber for dark mode */
+  --accent-amber-hover: #e0b84f;
 
   --accent-red-rgb: 232, 74, 122;
   --accent-green-rgb: 106, 191, 105;
   --accent-purple-rgb: 168, 140, 212;
+  --accent-amber-rgb: 212, 168, 67;
+
+  /* Warm shadows in dark mode */
+  --shadow-warm: rgba(0, 0, 0, 0.15);
 
   --role-summarizer: #a88cd4;
   --role-discussion: #5cc98a;
@@ -153,17 +188,27 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-family-sans);
   font-weight: 600;
-  line-height: 1.3;
+  line-height: 1.25;
   color: var(--text-primary);
 }
 
 h1 {
-  font-weight: 700;
-  letter-spacing: -0.025em;
+  font-size: var(--text-3xl);
+  font-weight: var(--heading-weight);
+  letter-spacing: var(--heading-tracking);
 }
 
 h2 {
+  font-size: var(--text-2xl);
   letter-spacing: -0.015em;
+}
+
+h3 {
+  font-size: var(--text-xl);
+}
+
+h4 {
+  font-size: var(--text-lg);
 }
 
 /* Ensure minimum touch target size for standalone interactive elements (WCAG 2.5.8) */
@@ -232,12 +277,12 @@ input, textarea, select {
 }
 input:focus, textarea:focus, select:focus {
   border-color: var(--accent-purple);
-  box-shadow: 0 0 0 3px rgba(92, 61, 143, 0.12);
+  box-shadow: 0 0 0 3px rgba(var(--accent-purple-rgb), 0.12), var(--shadow-sm);
 }
 html[data-theme="dark"] input:focus,
 html[data-theme="dark"] textarea:focus,
 html[data-theme="dark"] select:focus {
-  box-shadow: 0 0 0 3px rgba(168, 140, 212, 0.15);
+  box-shadow: 0 0 0 3px rgba(var(--accent-purple-rgb), 0.15), var(--shadow-sm);
 }
 
 /* =================================================================
@@ -345,10 +390,7 @@ html[data-theme="dark"] ::selection {
 }
 .card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(26, 22, 37, 0.08);
-}
-html[data-theme="dark"] .card-hover:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-lg);
 }
 
 /* Theme-aware hover backgrounds (replaces Tailwind hover:bg-gray-*) */
@@ -432,6 +474,7 @@ html[data-theme="dark"] .markdown-body blockquote {
 :root {
   --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* Playful overshoot for popovers */
   --duration-fast: 150ms;
   --duration-normal: 250ms;
   --duration-slow: 400ms;
@@ -465,7 +508,7 @@ html[data-theme="dark"] .markdown-body blockquote {
   from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
 }
-.animate-scale-in { animation: scaleIn var(--duration-normal) var(--ease-out-expo) forwards; }
+.animate-scale-in { animation: scaleIn var(--duration-normal) var(--ease-spring) forwards; }
 
 /* Staggered children — apply to parent, children get delayed fade-in */
 .stagger-children > * {
@@ -562,10 +605,7 @@ body *:not([class*="animate-"]):not([class*="skeleton"]) {
    CARD ELEVATION — subtle depth between cards and page background
    ================================================================= */
 .card-elevated {
-  box-shadow: 0 1px 3px rgba(26, 22, 37, 0.04), 0 1px 2px rgba(26, 22, 37, 0.06);
-}
-html[data-theme="dark"] .card-elevated {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-md);
 }
 
 /* =================================================================
@@ -604,16 +644,20 @@ html[data-theme="dark"] .card-elevated {
   border-radius: var(--radius-button);
   border: none;
   cursor: pointer;
+  box-shadow: 0 1px 3px rgba(var(--accent-red-rgb), 0.2);
   transition: background-color var(--duration-fast) var(--ease-in-out),
-              transform var(--duration-fast) var(--ease-out-expo);
+              transform var(--duration-fast) var(--ease-out-expo),
+              box-shadow var(--duration-fast) var(--ease-out-expo);
 }
 .btn-primary:hover {
   background-color: var(--accent-red-hover);
+  box-shadow: 0 2px 8px rgba(var(--accent-red-rgb), 0.25);
   text-decoration: none;
   color: var(--text-inverse);
 }
 .btn-primary:active {
   transform: scale(0.97);
+  box-shadow: none;
 }
 
 .btn-secondary {
@@ -646,7 +690,7 @@ html[data-theme="dark"] .card-elevated {
    ================================================================= */
 .input-base {
   border: 1px solid var(--border-default);
-  border-radius: var(--radius-button);
+  border-radius: var(--radius-input);
   padding: 0.5rem 1rem;
   background-color: var(--bg-input);
   color: var(--text-primary);
@@ -661,7 +705,7 @@ html[data-theme="dark"] .card-elevated {
 .input-base:focus {
   outline: none;
   border-color: var(--accent-purple);
-  box-shadow: 0 0 0 3px rgba(var(--accent-purple-rgb), 0.12);
+  box-shadow: 0 0 0 3px rgba(var(--accent-purple-rgb), 0.12), var(--shadow-sm);
 }
 
 /* Textarea variant — same as input-base but with vertical resize */
@@ -678,11 +722,24 @@ textarea.input-base {
   background-color: var(--bg-card);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-card);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
-html[data-theme="dark"] .card-base {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+
+/* Paper texture — barely-visible grain that reads as "paper" subconsciously */
+.surface-paper {
+  position: relative;
+}
+.surface-paper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.015;
+  background-image: repeating-conic-gradient(var(--text-primary) 0% 25%, transparent 0% 50%);
+  background-size: 4px 4px;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 0;
 }
 
 .card-header {
