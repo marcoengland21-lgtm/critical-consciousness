@@ -1,11 +1,13 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { NavItem } from '@/lib/nav-config'
 import NavIcon from './NavIcon'
 import ThemeToggle from './ThemeToggle'
 import LogoutButton from './LogoutButton'
+import AccessibilityPanel from './AccessibilityPanel'
 
 interface MobileMoreDrawerProps {
   isOpen: boolean
@@ -23,6 +25,7 @@ export default function MobileMoreDrawer({
   hasUser,
 }: MobileMoreDrawerProps) {
   const pathname = usePathname()
+  const [a11yExpanded, setA11yExpanded] = useState(false)
 
   if (!isOpen) return null
 
@@ -75,6 +78,41 @@ export default function MobileMoreDrawer({
             )
           })}
         </nav>
+
+        {/* Accessibility section */}
+        <div className="px-4 pb-2">
+          <button
+            onClick={() => setA11yExpanded(!a11yExpanded)}
+            className="flex items-center gap-3 py-3 px-3 rounded-lg w-full"
+            style={{
+              color: 'var(--text-primary)',
+              backgroundColor: a11yExpanded ? 'var(--bg-soft)' : 'transparent',
+              minHeight: '48px',
+            }}
+            aria-expanded={a11yExpanded}
+          >
+            {/* Accessibility icon */}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="4" r="1.5" />
+              <path d="M7 8h10" />
+              <path d="M12 8v4" />
+              <path d="M9 20l3-8 3 8" />
+            </svg>
+            <span className="text-sm font-medium">Accessibility</span>
+            <svg
+              width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              className="ml-auto transition-transform duration-200"
+              style={{ transform: a11yExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          {a11yExpanded && (
+            <div className="px-3 pb-2">
+              <AccessibilityPanel variant="mobile" />
+            </div>
+          )}
+        </div>
 
         {/* Footer: theme + user */}
         <div

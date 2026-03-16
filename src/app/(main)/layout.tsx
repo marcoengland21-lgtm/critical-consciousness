@@ -2,6 +2,8 @@ import { createClient, getSessionUser } from '@/lib/supabase/server'
 import DesktopSidebar from '@/components/layout/DesktopSidebar'
 import MobileTabBar from '@/components/layout/MobileTabBar'
 import ThemeProvider from '@/components/layout/ThemeProvider'
+import AccessibilityProvider from '@/components/layout/AccessibilityProvider'
+import ReadingGuide from '@/components/reading/ReadingGuide'
 import NavigationProgress from '@/components/layout/NavigationProgress'
 
 export default async function MainLayout({
@@ -32,41 +34,46 @@ export default async function MainLayout({
 
   return (
     <ThemeProvider>
-      <div
-        className="min-h-screen"
-        style={{
-          backgroundColor: 'var(--bg-page)',
-        }}
-      >
-        {/* Skip to main content — accessibility for keyboard/screen reader users */}
-        <a
-          href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm focus:font-medium"
-          style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}
+      <AccessibilityProvider>
+        <div
+          className="min-h-screen"
+          style={{
+            backgroundColor: 'var(--bg-page)',
+          }}
         >
-          Skip to main content
-        </a>
-
-        {/* Desktop Sidebar Navigation */}
-        <DesktopSidebar displayName={displayName} hasUser={!!user} />
-
-        {/* Content Area — offset by sidebar width on desktop */}
-        <div style={{ marginLeft: 'var(--sidebar-width, 0px)' }}>
-          <NavigationProgress />
-
-          {/* Main Content — animation handled by template.tsx on each navigation */}
-          <main
-            id="main-content"
-            className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8"
-            role="main"
+          {/* Skip to main content — accessibility for keyboard/screen reader users */}
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm focus:font-medium"
+            style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}
           >
-            {children}
-          </main>
-        </div>
+            Skip to main content
+          </a>
 
-        {/* Mobile Bottom Tab Bar */}
-        <MobileTabBar displayName={displayName} hasUser={!!user} />
-      </div>
+          {/* Desktop Sidebar Navigation */}
+          <DesktopSidebar displayName={displayName} hasUser={!!user} />
+
+          {/* Content Area — offset by sidebar width on desktop */}
+          <div style={{ marginLeft: 'var(--sidebar-width, 0px)' }}>
+            <NavigationProgress />
+
+            {/* Main Content — animation handled by template.tsx on each navigation */}
+            <main
+              id="main-content"
+              className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8"
+              role="main"
+            >
+              {children}
+            </main>
+          </div>
+
+          {/* Mobile Bottom Tab Bar */}
+          <MobileTabBar displayName={displayName} hasUser={!!user} />
+
+          {/* Reading guide overlay — follows cursor for line tracking */}
+          <ReadingGuide />
+        </div>
+      </AccessibilityProvider>
     </ThemeProvider>
   )
 }

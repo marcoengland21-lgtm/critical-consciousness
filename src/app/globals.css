@@ -230,6 +230,11 @@ nav a, nav button,
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+  /* Disable transform-based animations */
+  .card-hover:hover { transform: none !important; }
+  .btn-transition:active { transform: none !important; }
+  .animate-page-enter { transform: none !important; opacity: 1 !important; }
+  body { transition: none !important; }
 }
 
 /* Screen-reader only class */
@@ -995,4 +1000,98 @@ html[data-theme="dark"] .reading-text .blockquote {
     box-shadow: none !important;
     border: none !important;
   }
+}
+
+/* =================================================================
+   ACCESSIBILITY MODES
+   Controlled by data attributes on <html>, set via AccessibilityProvider.
+   ================================================================= */
+
+/* ── Global font size override ──
+   --global-font-size is set by AccessibilityProvider.
+   When present, overrides the base font-size on body so all rem-based
+   text scales proportionally. */
+html[style*="--global-font-size"] body {
+  font-size: var(--global-font-size) !important;
+}
+
+/* ── High Contrast Mode ──
+   Stronger borders, bolder text, higher contrast ratios.
+   Designed for low-vision users and bright environments. */
+html[data-high-contrast="true"] {
+  --bg-page: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-alt: #f5f5f5;
+  --bg-soft: #e8e8e8;
+  --bg-hover: #e0e0e0;
+  --bg-input: #ffffff;
+  --text-primary: #000000;
+  --text-secondary: #333333;
+  --text-badge: #222222;
+  --border-default: #666666;
+  --border-strong: #333333;
+  --shadow-warm: rgba(0, 0, 0, 0.12);
+}
+
+html[data-high-contrast="true"] h1,
+html[data-high-contrast="true"] h2,
+html[data-high-contrast="true"] h3,
+html[data-high-contrast="true"] h4 {
+  font-weight: 800 !important;
+}
+
+html[data-high-contrast="true"] .card-base,
+html[data-high-contrast="true"] .card-elevated {
+  border-width: 2px !important;
+}
+
+/* High contrast + dark mode */
+html[data-high-contrast="true"][data-theme="dark"] {
+  --bg-page: #000000;
+  --bg-card: #0a0a0a;
+  --bg-card-alt: #141414;
+  --bg-soft: #1a1a1a;
+  --bg-hover: #222222;
+  --bg-input: #0a0a0a;
+  --text-primary: #ffffff;
+  --text-secondary: #cccccc;
+  --text-badge: #dddddd;
+  --border-default: #888888;
+  --border-strong: #cccccc;
+}
+
+/* ── Dyslexia-Friendly Font Mode ──
+   Uses Lexend (Google Font) with increased letter/word spacing.
+   Research shows Lexend significantly improves reading fluency
+   for readers with dyslexia. */
+html[data-dyslexia-font="true"] body {
+  font-family: 'Lexend', system-ui, sans-serif !important;
+  letter-spacing: 0.05em;
+  word-spacing: 0.1em;
+}
+
+html[data-dyslexia-font="true"] h1,
+html[data-dyslexia-font="true"] h2,
+html[data-dyslexia-font="true"] h3,
+html[data-dyslexia-font="true"] h4,
+html[data-dyslexia-font="true"] h5,
+html[data-dyslexia-font="true"] h6 {
+  font-family: 'Lexend', system-ui, sans-serif !important;
+  letter-spacing: 0.02em;
+}
+
+/* Reading text gets extra line height and spacing for comfort */
+html[data-dyslexia-font="true"] .reading-text {
+  font-family: 'Lexend', system-ui, sans-serif !important;
+  letter-spacing: 0.03em;
+  line-height: 2 !important;
+  word-spacing: 0.12em;
+}
+
+/* Sidebar, nav, and small UI text also gets Lexend */
+html[data-dyslexia-font="true"] nav,
+html[data-dyslexia-font="true"] aside,
+html[data-dyslexia-font="true"] .sidebar-link {
+  font-family: 'Lexend', system-ui, sans-serif !important;
+  letter-spacing: 0.03em;
 }
