@@ -132,6 +132,10 @@ export default async function ChapterPage({ params }: Props) {
 
   const { label: currentLabel } = getChapterLabel(chapterNum)
 
+  // Reading time estimate — 200 wpm for dense academic text like Capital
+  const wordCount = chapterData.content.split(/\s+/).filter(Boolean).length
+  const readingTimeMinutes = Math.max(1, Math.round(wordCount / 200))
+
   // Determine if we're in Ch1 sections or a standalone chapter
   const isChapter1Section = chapterNum <= 4
   const ch1Sections = chapters.filter(c => c.chapter_number <= 4)
@@ -178,7 +182,7 @@ export default async function ChapterPage({ params }: Props) {
       {/* Chapter title */}
       <div className="mb-10 text-center">
         <p className="text-xs font-bold tracking-wide mb-2" style={{ color: 'var(--accent-purple)' }}>
-          {currentLabel}
+          {currentLabel} · ~{readingTimeMinutes} min read
         </p>
         <h1
           className="text-2xl sm:text-3xl font-bold mb-3"

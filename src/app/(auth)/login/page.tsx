@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useState } from 'react'
+import { FormEvent, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -61,7 +62,17 @@ export default function LoginPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form
+        ref={formRef}
+        onSubmit={handleSubmit}
+        onKeyDown={(e) => {
+          if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+            e.preventDefault()
+            formRef.current?.requestSubmit()
+          }
+        }}
+        className="space-y-4"
+      >
         <div>
           <label
             htmlFor="email"

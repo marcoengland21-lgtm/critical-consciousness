@@ -15,6 +15,7 @@ import Toast from '@/components/ui/Toast'
 import BackToTop from './BackToTop'
 import { getConfusionFlagCounts, getUserConfusionFlags } from '@/lib/confusion-flags'
 import { findGlossaryTermMatches, buildGlossarySegments, GlossaryTerm, TermMatch } from '@/lib/glossary-utils'
+import { useScrollPersistence } from '@/hooks/useScrollPersistence'
 
 interface Annotation {
   id: string
@@ -379,6 +380,7 @@ const MemoizedParagraph = memo(function Paragraph({
 export default function ChapterReader({ chapter, annotations: initialAnnotations, footnotes, glossaryTerms: initialGlossaryTerms, userId, documentSlug, allChapters, currentIndex }: Props) {
 
   const router = useRouter()
+  useScrollPersistence(chapter.chapter_number)
   const textRef = useRef<HTMLDivElement>(null)
   const [annotations, setAnnotations] = useState(initialAnnotations)
   const [selection, setSelection] = useState<{
