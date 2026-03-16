@@ -2,7 +2,7 @@
 
 Read this file at the start of every session. It is your memory of this project.
 
-Last updated: 16 March 2026
+Last updated: 16 March 2026 (overnight session)
 
 ---
 
@@ -155,17 +155,33 @@ src/
 │   │       └── actions.ts       # Server actions for registration
 │   └── (main)/
 │       ├── layout.tsx           # Main layout — DesktopSidebar + MobileTabBar, user display
-│       ├── dashboard/page.tsx   # Dashboard — welcome, this week, activity, roles
+│       ├── dashboard/
+│       │   ├── page.tsx         # Dashboard — welcome, this week, activity, roles
+│       │   ├── loading.tsx      # Skeleton loader
+│       │   └── error.tsx        # Error boundary
 │       ├── reading/
 │       │   ├── page.tsx         # Table of contents — all parts/chapters
 │       │   └── [slug]/[chapter]/
 │       │       ├── page.tsx     # Chapter reading page — text, footnotes, annotations
 │       │       ├── loading.tsx  # Skeleton loader
 │       │       └── error.tsx    # Error boundary
-│       ├── threads/             # Thread list, new thread, thread detail
-│       ├── glossary/page.tsx    # Glossary with search and add term
-│       ├── schedule/page.tsx    # Reading schedule with weekly cards
-│       ├── resources/page.tsx   # Resources with type filters and add form
+│       ├── threads/             # Thread list, new thread, thread detail (each with error.tsx)
+│       ├── glossary/
+│       │   ├── page.tsx         # Glossary with search and add term
+│       │   ├── loading.tsx      # Skeleton loader
+│       │   └── error.tsx        # Error boundary
+│       ├── schedule/
+│       │   ├── page.tsx         # Reading schedule with weekly cards
+│       │   ├── loading.tsx      # Skeleton loader
+│       │   └── error.tsx        # Error boundary
+│       ├── resources/
+│       │   ├── page.tsx         # Resources with type filters and add form
+│       │   ├── loading.tsx      # Skeleton loader
+│       │   └── error.tsx        # Error boundary
+│       ├── profile/
+│       │   ├── page.tsx         # User profile page
+│       │   ├── loading.tsx      # Skeleton loader
+│       │   └── error.tsx        # Error boundary
 │       └── concepts/page.tsx    # Concept map (hidden from nav, in-progress)
 ├── components/
 │   ├── reading/                 # ChapterReader, ReadingToolbar, BackToTop, AnnotationPanel, SelectionToolbar, ConfusionFlagButton, GlossaryTooltip, etc.
@@ -173,7 +189,7 @@ src/
 │   ├── layout/                  # DesktopSidebar, MobileTabBar, MobileMoreDrawer, SidebarNavLink, NavIcon, NavigationProgress, ThemeProvider, ThemeToggle, ThemeInitializer, LogoutButton
 │   ├── dashboard/               # ReadingCheckinButton, WeeklyActivitySummary, etc.
 │   ├── schedule/                # SessionNotes
-│   ├── glossary/                # GlossaryList, GlossaryVersionHistory
+│   ├── glossary/                # GlossaryList
 │   ├── resources/               # ResourcesList
 │   ├── concepts/                # ConceptMap
 │   ├── roles/                   # RoleBadge
@@ -186,11 +202,15 @@ src/
 │   │   └── middleware.ts        # Session refresh middleware
 │   ├── nav-config.ts             # Navigation items config (label, href, icon, mobileTab flag)
 │   ├── chapter-utils.ts          # getChapterLabel, getPartNumber, partTitles — shared server/client
+│   ├── author-colors.ts          # Shared AUTHOR_COLORS array + hashColor function
+│   ├── scroll-persistence.ts     # localStorage scroll position save/restore per chapter
 │   ├── confusion-flags.ts       # Anonymous confusion flag utilities (localStorage + RPC)
 │   ├── glossary-utils.ts        # Glossary search/matching
 │   ├── seed-glossary.sql        # Seed 15 Chapter 1 glossary terms
 │   ├── seed-resources.sql       # Seed 14 essential resources
 │   └── confusion-flags-schema.sql # confusion_counts table + RPC functions
+├── hooks/
+│   └── useScrollPersistence.ts  # Debounced scroll save/restore per chapter
 ├── types/
 │   └── database.ts              # TypeScript interfaces for all database tables
 └── middleware.ts                 # Next.js middleware entry point
@@ -374,11 +394,10 @@ Warmth doesn't come from slapping earth tones on a generic layout. It comes from
 ## Known Issues
 
 ### Should fix
-1. **`any` types in server components** — `doc: any`, `chapter: any` in reading pages, `thread: any` in dashboard. Should use interfaces from `database.ts`.
-2. **ChapterReader.tsx is too large** — Consider breaking out text selection logic, annotation rendering, and footnote handling into separate hooks or sub-components.
-3. **No tests** — No test files, no testing framework configured.
-4. **Concepts page** — Route exists at `/concepts` but not in nav. Either finish and add or remove.
-5. **Run SQL seeds** — `seed-glossary.sql` and `seed-resources.sql` and `confusion-flags-schema.sql` need to be run via Supabase SQL editor.
+1. **ChapterReader.tsx is too large** — Consider breaking out text selection logic, annotation rendering, and footnote handling into separate hooks or sub-components.
+2. **No tests** — No test files, no testing framework configured.
+3. **Concepts page** — Route exists at `/concepts` but not in nav. Either finish and add or remove.
+4. **Run SQL seeds** — `seed-glossary.sql` and `seed-resources.sql` and `confusion-flags-schema.sql` need to be run via Supabase SQL editor.
 
 ### Fixed (build ticket session)
 - ~~Auth middleware disabled~~ — Re-enabled. Unauthenticated users redirect to `/login`. All `// TODO: RE-ENABLE AUTH` comments removed.
@@ -412,6 +431,22 @@ Warmth doesn't come from slapping earth tones on a generic layout. It comes from
 - ~~Edit textarea missing Cmd+Enter~~ — Added to ReplySection edit textarea
 - ~~AnnotationPanel reply textarea fixed height~~ — Added auto-resize on input
 
+### Fixed (overnight session — 16 March 2026)
+- ~~`any` types in server components~~ — Replaced ~36 `any` types across 9 files with proper TypeScript interfaces matching Supabase query shapes
+- ~~Duplicated AUTHOR_COLORS in 3 files~~ — Extracted to `src/lib/author-colors.ts` shared utility
+- ~~ReadingCheckinButton hardcoded #ffffff~~ — Changed to `var(--text-inverse)`
+- ~~DesktopSidebar hardcoded rgba colors~~ — Added `--nav-accent` / `--nav-accent-subtle` CSS tokens, replaced 6 hardcoded values
+- ~~Profile page duplicate getChapterLabel~~ — Deleted local copy, imports from `@/lib/chapter-utils`
+- ~~TimeAgo missing timeZone~~ — Added `timeZone: 'Pacific/Auckland'` to fallback and tooltip
+- ~~Auth form focus ring colors~~ — Added `--tw-ring-color: var(--accent-purple)` to login/register inputs
+- ~~Missing loading skeletons~~ — Added for glossary, schedule, resources, profile, threads/new
+- ~~Missing error boundaries~~ — Added for dashboard, glossary, schedule, resources, threads, threads/[id], profile
+- ~~No Cmd+Enter on auth forms~~ — Added `onKeyDown` handler with `requestSubmit()` to login and register forms
+- ~~No reading time estimate~~ — Chapter pages now show "~X min read" (200 wpm for academic text)
+- ~~No scroll position persistence~~ — New `useScrollPersistence` hook saves/restores position per chapter via localStorage
+- ~~No print styles~~ — Added `@media print` block: hides chrome, 12pt reading text, dotted underlines for annotations, proper margins
+- ~~Unused pg devDependency~~ — Removed from package.json
+
 ---
 
 ## Decision Log
@@ -438,6 +473,11 @@ Warmth doesn't come from slapping earth tones on a generic layout. It comes from
 | Resources grouped by type with section headers | When showing "All" resources, groups under type headers (Primary Texts, Companion Texts, etc.) with counts. When filtered, flat grid. |
 | ThreadListClient is a client component | Server component fetches all data and transforms it, then passes to ThreadListClient for interactive rendering with realtime subscription, client-side sorting/filtering. Hybrid SSR+CSR pattern. |
 | Chapter navigation via keyboard shortcuts | `←`/`→` for prev/next chapter, `f` for focus mode toggle, `Escape` to close panels. Only active when not typing in an input. |
+| Author avatar colors shared from `src/lib/author-colors.ts` | Was duplicated in 3 files. Centralized so palette changes require editing one file. |
+| 200 wpm for reading time estimates | Standard reading speed is 250 wpm for general text. Capital is dense academic prose — 200 wpm is more realistic. Rounded to nearest minute, minimum 1. |
+| Scroll persistence uses localStorage with 500ms debounce | Scroll events fire very often. 500ms debounce balances responsiveness with write frequency. Saves on unmount too for safety. `requestAnimationFrame` for restore to wait for layout. |
+| Print styles convert highlights to dotted underlines | Annotation highlights would print as colored blocks which wastes ink and obscures text. Dotted underlines preserve the annotation information in print without visual noise. |
+| Glossary terms fetched server-side, not client-side | `glossary_entries` table has RLS requiring authentication. Client-side fetch via browser Supabase client fails silently when auth session isn't synced across browsers. Server-side fetch via `unstable_cache` + `createStaticClient` is reliable. |
 
 ---
 
@@ -476,6 +516,7 @@ These are hard-won. Follow them always.
 29. **Weekly activity summary should tell a story**, not list metrics. "The group annotated 14 passages this week, with the most discussion around the value-form" — not "14 annotations, 3 threads, 2 glossary entries."
 30. **Thread previews show enough body text to decide whether to click** — 2-3 lines minimum. A title alone doesn't convey whether a reflection is worth reading.
 31. **Blockquote styling must look good because it's one of the most-seen elements.** People quote Capital constantly. Left border, subtle background, slight indent — tested in both light and dark mode.
+32. **Author avatar colors are shared from `src/lib/author-colors.ts`.** Never duplicate the AUTHOR_COLORS array or hashColor function in individual components.
 
 ---
 
