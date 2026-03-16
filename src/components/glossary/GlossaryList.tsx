@@ -313,33 +313,20 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search terms or definitions..."
-          className="flex-1 px-3 py-2 rounded-lg border text-sm"
-          style={{
-            borderColor: 'var(--border-default)',
-            color: 'var(--text-primary)',
-          }}
+          className="input-base text-sm flex-1"
         />
         <div className="flex gap-2">
           <select
             value={groupMode}
             onChange={(e) => setGroupMode(e.target.value as GroupMode)}
-            className="px-2 py-2 rounded-lg border text-xs"
-            style={{
-              borderColor: 'var(--border-default)',
-              color: 'var(--text-primary)',
-              backgroundColor: 'var(--bg-card)',
-            }}
+            className="input-base text-xs px-2 py-2"
           >
             <option value="alphabetical">A–Z</option>
             <option value="chapter">By Week</option>
           </select>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
-            style={{
-              backgroundColor: 'var(--accent-red)',
-              color: 'var(--text-inverse)',
-            }}
+            className="btn-primary text-sm whitespace-nowrap"
           >
             {showForm ? 'Cancel' : '+ Add Term'}
           </button>
@@ -350,11 +337,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          className="mb-5 p-4 rounded-xl border space-y-3"
-          style={{
-            backgroundColor: 'var(--bg-card)',
-            borderColor: 'var(--border-default)',
-          }}
+          className="card-base card-body mb-5 space-y-3"
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input
@@ -362,8 +345,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
               value={term}
               onChange={(e) => setTerm(e.target.value)}
               placeholder="Term (e.g., Commodity Fetishism)"
-              className="px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}
+              className="input-base text-sm"
               required
             />
             <input
@@ -371,8 +353,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
               value={relatedTerms}
               onChange={(e) => setRelatedTerms(e.target.value)}
               placeholder="Related terms (comma-separated)"
-              className="px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}
+              className="input-base text-sm"
             />
           </div>
           <textarea
@@ -380,16 +361,14 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
             onChange={(e) => setDefinition(e.target.value)}
             placeholder="Definition — use Marx's own language where possible..."
             rows={4}
-            className="w-full px-3 py-2 rounded-lg border text-sm resize-y"
-            style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)', lineHeight: '1.75' }}
+            className="input-base text-sm w-full"
             required
           />
           <div className="flex items-center gap-3">
             <select
               value={firstWeek}
               onChange={(e) => setFirstWeek(e.target.value)}
-              className="px-2 py-2 rounded-lg border text-xs"
-              style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-card)' }}
+              className="input-base text-xs px-2 py-2"
             >
               <option value="">First appears: (select week)</option>
               {weeks.map((w) => (
@@ -400,8 +379,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
-              style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}
+              className="btn-primary text-sm disabled:opacity-50"
             >
               {submitting ? 'Saving...' : 'Save Term'}
             </button>
@@ -513,8 +491,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
             </button>
 
             <div
-              className="p-5 rounded-xl border"
-              style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
+              className="card-base p-5"
             >
               {/* Term heading */}
               <div className="flex items-start justify-between gap-4 mb-4">
@@ -545,8 +522,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
                       setIsEditing(true)
                       setEditingDef(selectedEntry.definition)
                     }}
-                    className="text-xs px-3 py-1.5 rounded-lg transition-colors border shrink-0"
-                    style={{ borderColor: 'var(--border-default)', color: 'var(--text-secondary)' }}
+                    className="btn-ghost text-xs shrink-0"
                   >
                     Edit
                   </button>
@@ -560,8 +536,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
                     value={editingDef}
                     onChange={(e) => setEditingDef(e.target.value)}
                     rows={6}
-                    className="w-full px-3 py-2 rounded-lg border text-sm resize-y"
-                    style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)', lineHeight: '1.75' }}
+                    className="input-base text-sm w-full"
                     required
                     autoFocus
                   />
@@ -569,16 +544,14 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
-                      style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}
+                      className="btn-primary text-sm disabled:opacity-50"
                     >
                       {submitting ? 'Saving...' : 'Save Definition'}
                     </button>
                     <button
                       type="button"
                       onClick={() => { setIsEditing(false); setEditingDef('') }}
-                      className="px-4 py-2 rounded-lg text-sm font-medium border"
-                      style={{ borderColor: 'var(--border-default)', color: 'var(--text-secondary)' }}
+                      className="btn-secondary text-sm"
                     >
                       Cancel
                     </button>

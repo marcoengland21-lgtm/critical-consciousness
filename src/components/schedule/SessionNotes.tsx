@@ -150,7 +150,7 @@ export default function SessionNotes({ weekId, hasSession }: SessionNotesProps) 
   }
 
   return (
-    <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
+    <div className="card-base">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full px-5 py-3 flex items-center justify-between transition-colors"
@@ -182,10 +182,9 @@ export default function SessionNotes({ weekId, hasSession }: SessionNotesProps) 
             onChange={(e) => handleContentChange(e.target.value)}
             onBlur={handleBlur}
             placeholder="Jot down key points, insights, and discussion highlights from the session..."
-            className="w-full px-4 py-3 rounded-lg border text-sm resize-none focus:outline-none"
+            className="input-base text-sm w-full"
             style={{
-              borderColor: 'var(--border-default)',
-              color: 'var(--text-primary)',
+              resize: 'none',
               lineHeight: '1.85',
               minHeight: '150px',
             }}

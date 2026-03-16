@@ -38,6 +38,11 @@
   --accent-purple-hover: #4a3070; /* Hover state */
   --accent-green: #4a6741;        /* Success states */
 
+  /* Raw RGB values for rgba() usage in alert classes */
+  --accent-red-rgb: 163, 21, 69;
+  --accent-green-rgb: 74, 103, 65;
+  --accent-purple-rgb: 92, 61, 143;
+
   /* Legacy aliases (for existing var() references) */
   --color-deep-red: var(--accent-red);
   --color-warm-cream: var(--bg-page);
@@ -52,12 +57,12 @@
   --role-connector: #4a6a8c;
   --role-passage: #8c4a6a;
 
-  /* Thread type badge backgrounds — tinted per type */
-  --badge-bg-discussion: rgba(58, 122, 92, 0.1);
-  --badge-bg-reflection: rgba(124, 95, 166, 0.1);
-  --badge-bg-summary: rgba(74, 106, 140, 0.1);
-  --badge-bg-passage: rgba(140, 74, 106, 0.1);
-  --badge-bg-connection: rgba(92, 61, 143, 0.1);
+  /* Thread type badge backgrounds — tinted per type (15% opacity for readability) */
+  --badge-bg-discussion: rgba(58, 122, 92, 0.15);
+  --badge-bg-reflection: rgba(124, 95, 166, 0.15);
+  --badge-bg-summary: rgba(74, 106, 140, 0.15);
+  --badge-bg-passage: rgba(140, 74, 106, 0.15);
+  --badge-bg-connection: rgba(92, 61, 143, 0.15);
 
   /* Typography */
   --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
@@ -113,6 +118,10 @@ html[data-theme="dark"] {
   --accent-purple: #a88cd4;
   --accent-purple-hover: #bda3e0;
   --accent-green: #6abf69;
+
+  --accent-red-rgb: 232, 74, 122;
+  --accent-green-rgb: 106, 191, 105;
+  --accent-purple-rgb: 168, 140, 212;
 
   --role-summarizer: #a88cd4;
   --role-discussion: #5cc98a;
@@ -212,7 +221,7 @@ a {
   transition: color var(--duration-fast) var(--ease-in-out);
 }
 a:hover {
-  color: var(--text-secondary);
+  color: var(--accent-red-hover);
   text-decoration: underline;
 }
 
@@ -629,6 +638,147 @@ html[data-theme="dark"] .card-elevated {
 }
 .btn-secondary:active {
   transform: scale(0.97);
+}
+
+/* =================================================================
+   INPUT BASE — consistent form input styling
+   Replaces per-component inline border/bg/focus styles.
+   ================================================================= */
+.input-base {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-button);
+  padding: 0.5rem 1rem;
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  transition: border-color var(--duration-fast) var(--ease-in-out),
+              box-shadow var(--duration-fast) var(--ease-in-out);
+}
+.input-base::placeholder {
+  color: var(--text-secondary);
+}
+.input-base:focus {
+  outline: none;
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 0 3px rgba(var(--accent-purple-rgb), 0.12);
+}
+
+/* Textarea variant — same as input-base but with vertical resize */
+textarea.input-base {
+  resize: vertical;
+  min-height: 5rem;
+}
+
+/* =================================================================
+   CARD SYSTEM — consistent card containers
+   Replaces ad-hoc inline border/shadow/bg styles on every page.
+   ================================================================= */
+.card-base {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-card);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+html[data-theme="dark"] .card-base {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.card-header {
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid var(--border-default);
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+}
+
+.card-body {
+  padding: 1.25rem;
+}
+
+/* =================================================================
+   FILTER PILLS — consistent filter/tab buttons
+   Replaces per-page inline active/inactive button styles.
+   ================================================================= */
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 1rem;
+  border-radius: var(--radius-badge);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  background-color: var(--bg-card-alt);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-in-out),
+              color var(--duration-fast) var(--ease-in-out),
+              border-color var(--duration-fast) var(--ease-in-out);
+}
+.filter-pill:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+.filter-pill-active {
+  background-color: var(--accent-purple);
+  color: var(--text-inverse);
+  border-color: var(--accent-purple);
+}
+.filter-pill-active:hover {
+  background-color: var(--accent-purple-hover);
+  color: var(--text-inverse);
+}
+
+/* =================================================================
+   GHOST BUTTON — text-only button with subtle hover
+   ================================================================= */
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  background-color: transparent;
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-button);
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-in-out),
+              color var(--duration-fast) var(--ease-in-out);
+}
+.btn-ghost:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+.btn-ghost:active {
+  transform: scale(0.97);
+}
+
+/* =================================================================
+   ALERT BOXES — error and success messages
+   ================================================================= */
+.alert-error {
+  background-color: rgba(var(--accent-red-rgb), 0.08);
+  color: var(--accent-red);
+  border-radius: var(--radius-button);
+  padding: 0.875rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.alert-success {
+  background-color: rgba(var(--accent-green-rgb), 0.08);
+  color: var(--accent-green);
+  border-radius: var(--radius-button);
+  padding: 0.875rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
 }
 
 /* =================================================================

@@ -1,6 +1,7 @@
 'use client'
 
 import { FormEvent, useState, useRef } from 'react'
+
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -51,13 +52,7 @@ export default function LoginPage() {
       </h2>
 
       {error && (
-        <div
-          className="p-4 rounded-lg mb-4 text-sm"
-          style={{
-            backgroundColor: 'rgba(139, 38, 53, 0.1)',
-            color: 'var(--accent-red)',
-          }}
-        >
+        <div className="alert-error mb-4">
           {error}
         </div>
       )}
@@ -89,11 +84,7 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
-            style={{
-              borderColor: 'var(--text-secondary)',
-              '--tw-ring-color': 'var(--accent-purple)',
-            } as React.CSSProperties}
+            className="input-base w-full"
           />
         </div>
 
@@ -113,11 +104,7 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
-            style={{
-              borderColor: 'var(--text-secondary)',
-              '--tw-ring-color': 'var(--accent-purple)',
-            } as React.CSSProperties}
+            className="input-base w-full"
           />
         </div>
 

@@ -176,7 +176,7 @@ export default async function DashboardPage() {
           )}
 
           {/* Card 1: Reading Assignment */}
-          <div className="rounded-xl border-2 overflow-hidden card-elevated" style={{ borderColor: 'var(--accent-purple)' }}>
+          <div className="card-base" style={{ borderColor: 'var(--accent-purple)', borderWidth: '2px' }}>
             <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-header)' }}>
               <div className="flex items-center justify-between">
                 <h2 className="font-bold" style={{ color: 'var(--text-inverse)' }}>
@@ -187,7 +187,7 @@ export default async function DashboardPage() {
                 </Link>
               </div>
             </div>
-            <div className="p-5" style={{ backgroundColor: 'var(--bg-card)' }}>
+            <div className="card-body">
               {currentWeek ? (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -232,13 +232,13 @@ export default async function DashboardPage() {
 
           {/* Card 2: Next Session — only if session date exists */}
           {currentWeek?.session_date && (
-            <div className="rounded-xl border overflow-hidden card-elevated" style={{ borderColor: 'var(--border-default)' }}>
-              <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
+            <div className="card-base">
+              <div className="card-header">
                 <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
                   Next Session
                 </h2>
               </div>
-              <div className="p-5" style={{ backgroundColor: 'var(--bg-card)' }}>
+              <div className="card-body">
                 <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                   {new Date(currentWeek.session_date).toLocaleDateString('en-NZ', {
                     weekday: 'long', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit',
@@ -256,13 +256,13 @@ export default async function DashboardPage() {
 
           {/* Card 3: Discussion Prompts — only if prompts exist */}
           {discussionPrompts.length > 0 && (
-            <div className="rounded-xl border overflow-hidden card-elevated" style={{ borderColor: 'var(--border-default)' }}>
-              <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
+            <div className="card-base">
+              <div className="card-header">
                 <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
                   Discussion Prompts
                 </h2>
               </div>
-              <div className="p-5" style={{ backgroundColor: 'var(--bg-card)' }}>
+              <div className="card-body">
                 <ol className="space-y-2 list-decimal list-inside">
                   {[...discussionPrompts]
                     .sort((a, b) => a.sort_order - b.sort_order)
@@ -289,8 +289,8 @@ export default async function DashboardPage() {
           <GroupThinkingOverview annotations={annotations} threads={threads} />
 
           {/* Recent Threads */}
-          <div className="rounded-xl border overflow-hidden card-elevated" style={{ borderColor: 'var(--border-default)' }}>
-            <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
+          <div className="card-base">
+            <div className="card-header flex items-center justify-between">
               <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
                 Recent Discussions
               </h2>
@@ -298,7 +298,7 @@ export default async function DashboardPage() {
                 All Threads →
               </Link>
             </div>
-            <div style={{ backgroundColor: 'var(--bg-card)' }}>
+            <div>
               {typedRecentThreads.length > 0 ? (
                 <div className="divide-y" style={{ borderColor: 'var(--border-default)' }}>
                   {typedRecentThreads.map((thread) => {
@@ -337,8 +337,7 @@ export default async function DashboardPage() {
                   </p>
                   <Link
                     href="/threads/new"
-                    className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium"
-                    style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}
+                    className="btn-primary text-sm"
                   >
                     Share with the Group
                   </Link>
@@ -351,13 +350,13 @@ export default async function DashboardPage() {
         {/* Right column: Roles + Quick Links */}
         <div className="space-y-6">
           {/* Your Roles This Week */}
-          <div className="rounded-xl border overflow-hidden card-elevated" style={{ borderColor: 'var(--border-default)' }}>
-            <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
+          <div className="card-base">
+            <div className="card-header">
               <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
                 Your Roles
               </h2>
             </div>
-            <div className="p-5" style={{ backgroundColor: 'var(--bg-card)' }}>
+            <div className="card-body">
               {myRoles.length > 0 ? (
                 <div className="space-y-3">
                   {myRoles.map((role: WeeklyRoleRow) => (
@@ -382,13 +381,13 @@ export default async function DashboardPage() {
 
           {/* All Roles This Week */}
           {weeklyRoles.length > 0 && (
-            <div className="rounded-xl border overflow-hidden card-elevated" style={{ borderColor: 'var(--border-default)' }}>
-              <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
+            <div className="card-base">
+              <div className="card-header">
                 <h2 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
                   All Roles This Week
                 </h2>
               </div>
-              <div className="p-5 space-y-2" style={{ backgroundColor: 'var(--bg-card)' }}>
+              <div className="card-body space-y-2">
                 {weeklyRoles.map((role) => (
                   <div key={role.id} className="flex items-center justify-between text-sm">
                     <RoleBadge type={role.role_type as WeeklyRoleType} />
@@ -425,13 +424,13 @@ export default async function DashboardPage() {
           </Link>
 
           {/* Quick Links */}
-          <div className="rounded-xl border overflow-hidden card-elevated" style={{ borderColor: 'var(--border-default)' }}>
-            <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
+          <div className="card-base">
+            <div className="card-header">
               <h2 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
                 Quick Links
               </h2>
             </div>
-            <div style={{ backgroundColor: 'var(--bg-card)' }}>
+            <div>
               <Link href="/threads/new" className="flex items-start gap-3 px-5 py-3 transition-colors hover-bg-themed border-b" style={{ borderColor: 'var(--border-default)' }}>
                 <span className="text-base mt-0.5" style={{ color: 'var(--accent-purple)' }}>&#x25C7;</span>
                 <div>

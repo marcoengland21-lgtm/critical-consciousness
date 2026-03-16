@@ -247,22 +247,14 @@ export default function ReplySection({
                     }
                   }}
                   rows={2}
-                  className="w-full px-3 py-2 rounded-lg border text-sm resize-none"
-                  style={{
-                    borderColor: 'var(--border-default)',
-                    color: 'var(--text-primary)',
-                    minHeight: '44px',
-                  }}
+                  className="input-base text-sm w-full"
+                  style={{ resize: 'none', minHeight: '44px' }}
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={() => updateReply(reply.id)}
                     disabled={submitting}
-                    className="px-3 py-1 rounded text-xs font-medium"
-                    style={{
-                      backgroundColor: 'var(--accent-red)',
-                      color: 'var(--text-inverse)',
-                    }}
+                    className="btn-primary text-xs px-3 py-1"
                   >
                     Save
                   </button>
@@ -271,11 +263,7 @@ export default function ReplySection({
                       setEditingId(null)
                       setEditBody('')
                     }}
-                    className="px-3 py-1 rounded text-xs font-medium border"
-                    style={{
-                      borderColor: 'var(--border-default)',
-                      color: 'var(--text-secondary)',
-                    }}
+                    className="btn-secondary text-xs px-3 py-1"
                   >
                     Cancel
                   </button>
@@ -361,22 +349,14 @@ export default function ReplySection({
                   }}
                   placeholder={`Reply to ${replyingToAuthor}...`}
                   rows={2}
-                  className="w-full px-3 py-2 rounded-lg border text-sm resize-none"
-                  style={{
-                    borderColor: 'var(--border-default)',
-                    color: 'var(--text-primary)',
-                    minHeight: '44px',
-                  }}
+                  className="input-base text-sm w-full"
+                  style={{ resize: 'none', minHeight: '44px' }}
                 />
                 <div className="flex gap-2 mt-1.5">
                   <button
                     onClick={() => submitReply(reply.id)}
                     disabled={submitting || !nestedReplyBody.trim()}
-                    className="px-3 py-1 rounded text-xs font-medium disabled:opacity-50"
-                    style={{
-                      backgroundColor: 'var(--accent-red)',
-                      color: 'var(--text-inverse)',
-                    }}
+                    className="btn-primary text-xs px-3 py-1 disabled:opacity-50"
                   >
                     {submitting ? 'Posting...' : 'Post Reply'}
                   </button>
@@ -385,11 +365,7 @@ export default function ReplySection({
                       setReplyingTo(null)
                       setNestedReplyBody('')
                     }}
-                    className="px-3 py-1 rounded text-xs font-medium border"
-                    style={{
-                      borderColor: 'var(--border-default)',
-                      color: 'var(--text-secondary)',
-                    }}
+                    className="btn-secondary text-xs px-3 py-1"
                   >
                     Cancel
                   </button>
@@ -458,24 +434,14 @@ export default function ReplySection({
             }}
             placeholder="Join the conversation... (⌘+Enter to send)"
             rows={1}
-            className="flex-1 px-3 py-2 rounded-lg border text-sm resize-none transition-all"
-            style={{
-              borderColor: 'var(--border-default)',
-              color: 'var(--text-primary)',
-              lineHeight: '1.5',
-              minHeight: '44px',
-              maxHeight: '200px',
-            }}
+            className="input-base text-sm flex-1"
+            style={{ resize: 'none', lineHeight: '1.5', minHeight: '44px', maxHeight: '200px' }}
           />
           <button
             onClick={() => submitReply(null)}
             disabled={submitting || !replyBody.trim()}
-            className="px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 btn-transition shrink-0"
-            style={{
-              backgroundColor: 'var(--accent-red)',
-              color: 'var(--text-inverse)',
-              height: '44px',
-            }}
+            className="btn-primary text-sm px-4 disabled:opacity-50 shrink-0"
+            style={{ height: '44px' }}
           >
             {submitting ? '...' : 'Post'}
           </button>

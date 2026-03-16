@@ -255,23 +255,14 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
               }}
               placeholder={userId ? 'Reply to this annotation...' : 'Reply as Guest...'}
               rows={2}
-              className="w-full px-3 py-2 rounded-lg border text-sm resize-none"
-              style={{
-                borderColor: 'var(--border-default)',
-                color: 'var(--text-primary)',
-                lineHeight: '1.6',
-                transition: 'border-color 150ms ease, box-shadow 150ms ease',
-              }}
+              className="input-base text-sm w-full"
+              style={{ resize: 'none', lineHeight: '1.6' }}
             />
             <div className="flex justify-end mt-2">
               <button
                 type="submit"
                 disabled={submitting || !replyBody.trim()}
-                className="px-3 py-1.5 text-xs font-medium rounded-lg disabled:opacity-50 btn-transition"
-                style={{
-                  backgroundColor: 'var(--accent-red)',
-                  color: 'var(--text-inverse)',
-                }}
+                className="btn-primary text-xs px-3 py-1.5 disabled:opacity-50"
               >
                 {submitting ? 'Sending…' : 'Reply'}
               </button>

@@ -49,8 +49,7 @@ function ResourceCard({ resource }: { resource: ResourceData }) {
 
   return (
     <div
-      className="p-4 rounded-xl border transition-all card-hover flex flex-col"
-      style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
+      className="card-base p-4 transition-all card-hover flex flex-col"
     >
       {/* Type badge + week */}
       <div className="flex items-center gap-2 mb-2">
@@ -119,7 +118,7 @@ function ResourceCard({ resource }: { resource: ResourceData }) {
             className="text-xs font-medium shrink-0 transition-colors"
             style={{ color: 'var(--accent-red)' }}
           >
-            Open \u2192
+            Open →
           </a>
         )}
       </div>
@@ -182,12 +181,7 @@ export default function ResourcesList({
         <div className="flex flex-wrap gap-2 flex-1">
           <button
             onClick={() => setFilter('')}
-            className="px-3 py-1 rounded-full text-sm font-medium border transition-colors"
-            style={{
-              backgroundColor: !filter ? 'var(--text-primary)' : 'var(--bg-card)',
-              color: !filter ? 'var(--bg-page)' : 'var(--text-primary)',
-              borderColor: 'var(--text-secondary)',
-            }}
+            className={`filter-pill ${!filter ? 'filter-pill-active' : ''}`}
           >
             All
           </button>
@@ -195,12 +189,7 @@ export default function ResourcesList({
             <button
               key={key}
               onClick={() => setFilter(key)}
-              className="px-3 py-1 rounded-full text-sm font-medium border transition-colors"
-              style={{
-                backgroundColor: filter === key ? 'var(--text-primary)' : 'var(--bg-card)',
-                color: filter === key ? 'var(--bg-page)' : 'var(--text-primary)',
-                borderColor: 'var(--text-secondary)',
-              }}
+              className={`filter-pill ${filter === key ? 'filter-pill-active' : ''}`}
             >
               {config.label}
             </button>
@@ -208,8 +197,7 @@ export default function ResourcesList({
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
-          style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}
+          className="btn-primary text-sm whitespace-nowrap"
         >
           {showForm ? 'Cancel' : 'Add Resource'}
         </button>
@@ -217,29 +205,24 @@ export default function ResourcesList({
 
       {/* Add form */}
       {showForm && (
-        <form onSubmit={handleSubmit} className="mb-6 p-4 rounded-lg border space-y-3" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}>
+        <form onSubmit={handleSubmit} className="card-base card-body mb-6 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
-              placeholder="Resource title" className="px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }} required />
+              placeholder="Resource title" className="input-base text-sm" required />
             <input type="url" value={url} onChange={(e) => setUrl(e.target.value)}
-              placeholder="URL (optional)" className="px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }} />
+              placeholder="URL (optional)" className="input-base text-sm" />
           </div>
           <textarea value={description} onChange={(e) => setDescription(e.target.value)}
-            placeholder="Description (optional)" rows={2} className="w-full px-3 py-2 rounded-lg border text-sm resize-y"
-            style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }} />
+            placeholder="Description (optional)" rows={2} className="input-base text-sm w-full resize-y" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <select value={resourceType} onChange={(e) => setResourceType(e.target.value as ResourceType)}
-              className="px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}>
+              className="input-base text-sm">
               {Object.entries(typeConfig).map(([key, config]) => (
                 <option key={key} value={key}>{config.label}</option>
               ))}
             </select>
             <select value={weekId} onChange={(e) => setWeekId(e.target.value)}
-              className="px-3 py-2 rounded-lg border text-sm"
-              style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}>
+              className="input-base text-sm">
               <option value="">No specific week</option>
               {weeks.map((w) => (
                 <option key={w.id} value={w.id}>Week {w.week_number}: {w.title}</option>
@@ -247,8 +230,7 @@ export default function ResourcesList({
             </select>
           </div>
           <button type="submit" disabled={submitting}
-            className="px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
-            style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}>
+            className="btn-primary text-sm disabled:opacity-50">
             {submitting ? 'Saving...' : 'Save Resource'}
           </button>
         </form>

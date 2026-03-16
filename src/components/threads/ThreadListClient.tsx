@@ -114,17 +114,16 @@ function ThreadCard({
   return (
     <Link
       href={`/threads/${thread.id}`}
-      className={`block p-5 rounded-xl border transition-all card-hover ${
+      className={`block p-5 card-base transition-all card-hover ${
         thread.pinned ? 'lg:col-span-2' : ''
       }`}
       style={{
-        backgroundColor: 'var(--bg-card)',
         borderColor: thread.pinned
           ? 'var(--accent-purple)'
           : activity === 'active'
             ? 'var(--accent-green)'
-            : 'var(--border-default)',
-        borderWidth: thread.pinned || activity === 'active' ? '2px' : '1px',
+            : undefined,
+        borderWidth: thread.pinned || activity === 'active' ? '2px' : undefined,
         opacity: activity === 'cooling' ? 0.7 : 1,
       }}
     >
@@ -376,12 +375,7 @@ export default function ThreadListClient({
               <button
                 key={t.value}
                 onClick={() => setTypeFilter(t.value)}
-                className="px-3 py-1 rounded-full text-xs font-medium btn-transition border"
-                style={{
-                  backgroundColor: isActive ? 'var(--text-primary)' : 'var(--bg-card)',
-                  color: isActive ? 'var(--bg-page)' : t.color,
-                  borderColor: isActive ? 'var(--text-primary)' : 'var(--border-default)',
-                }}
+                className={`filter-pill ${isActive ? 'filter-pill-active' : ''}`}
               >
                 {t.label}
               </button>
@@ -397,12 +391,7 @@ export default function ThreadListClient({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortOption)}
-            className="px-2 py-1 rounded-lg text-xs border"
-            style={{
-              borderColor: 'var(--border-default)',
-              color: 'var(--text-primary)',
-              backgroundColor: 'var(--bg-card)',
-            }}
+            className="input-base text-xs px-2 py-1"
           >
             <option value="newest">Newest</option>
             <option value="active">Most Active</option>
@@ -413,12 +402,7 @@ export default function ThreadListClient({
             <select
               value={weekFilter}
               onChange={(e) => setWeekFilter(e.target.value)}
-              className="px-2 py-1 rounded-lg text-xs border"
-              style={{
-                borderColor: 'var(--border-default)',
-                color: 'var(--text-primary)',
-                backgroundColor: 'var(--bg-card)',
-              }}
+              className="input-base text-xs px-2 py-1"
             >
               <option value="">All Weeks</option>
               {weeks.map((w) => (

@@ -141,8 +141,8 @@ export default async function ProfilePage() {
         {/* Left column: Annotations + Threads */}
         <div className="lg:col-span-2 space-y-6">
           {/* Recent Annotations */}
-          <div className="rounded-xl border overflow-hidden card-elevated" style={{ borderColor: 'var(--border-default)' }}>
-            <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
+          <div className="card-base">
+            <div className="card-header flex items-center justify-between">
               <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
                 Recent Annotations
               </h2>
@@ -150,7 +150,7 @@ export default async function ProfilePage() {
                 {annotationCount || 0} total
               </span>
             </div>
-            <div style={{ backgroundColor: 'var(--bg-card)' }}>
+            <div>
               {recentAnnotations && recentAnnotations.length > 0 ? (
                 <div className="divide-y" style={{ borderColor: 'var(--border-default)' }}>
                   {(recentAnnotations as unknown as AnnotationWithChapter[]).map((ann) => (
@@ -188,8 +188,8 @@ export default async function ProfilePage() {
           </div>
 
           {/* Recent Threads */}
-          <div className="rounded-xl border overflow-hidden card-elevated" style={{ borderColor: 'var(--border-default)' }}>
-            <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
+          <div className="card-base">
+            <div className="card-header flex items-center justify-between">
               <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
                 Your Threads
               </h2>
@@ -197,7 +197,7 @@ export default async function ProfilePage() {
                 {threadCount || 0} total
               </span>
             </div>
-            <div style={{ backgroundColor: 'var(--bg-card)' }}>
+            <div>
               {recentThreads && recentThreads.length > 0 ? (
                 <div className="divide-y" style={{ borderColor: 'var(--border-default)' }}>
                   {(recentThreads as unknown as ThreadWithReplies[]).map((thread) => {
@@ -247,13 +247,13 @@ export default async function ProfilePage() {
         {/* Right column: Glossary + Reading Journey + Role History */}
         <div className="space-y-6">
           {/* Glossary Contributions */}
-          <div className="rounded-xl border overflow-hidden card-elevated" style={{ borderColor: 'var(--border-default)' }}>
-            <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
+          <div className="card-base">
+            <div className="card-header">
               <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
                 Glossary Contributions
               </h2>
             </div>
-            <div className="p-5" style={{ backgroundColor: 'var(--bg-card)' }}>
+            <div className="card-body">
               {glossaryEntries && glossaryEntries.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {(glossaryEntries as unknown as GlossaryEntryBasic[]).map((entry) => (
@@ -279,13 +279,13 @@ export default async function ProfilePage() {
           </div>
 
           {/* Reading Journey */}
-          <div className="rounded-xl border overflow-hidden card-elevated" style={{ borderColor: 'var(--border-default)' }}>
-            <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
+          <div className="card-base">
+            <div className="card-header">
               <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
                 Reading Journey
               </h2>
             </div>
-            <div className="p-5" style={{ backgroundColor: 'var(--bg-card)' }}>
+            <div className="card-body">
               {checkins && checkins.length > 0 ? (
                 <div className="space-y-2">
                   {(checkins as unknown as CheckinWithWeek[]).map((checkin) => (
@@ -300,7 +300,7 @@ export default async function ProfilePage() {
                             ? 'var(--accent-green)'
                             : checkin.status === 'partial'
                             ? 'var(--accent-purple)'
-                            : 'var(--accent-red)',
+                            : 'var(--text-secondary)',
                           color: 'var(--text-inverse)',
                         }}
                       >
@@ -318,13 +318,13 @@ export default async function ProfilePage() {
           </div>
 
           {/* Role History */}
-          <div className="rounded-xl border overflow-hidden card-elevated" style={{ borderColor: 'var(--border-default)' }}>
-            <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
+          <div className="card-base">
+            <div className="card-header">
               <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
                 Role History
               </h2>
             </div>
-            <div className="p-5" style={{ backgroundColor: 'var(--bg-card)' }}>
+            <div className="card-body">
               {roleHistory && roleHistory.length > 0 ? (
                 <div className="space-y-3">
                   {(roleHistory as unknown as RoleWithWeek[]).map((role) => (
@@ -346,7 +346,7 @@ export default async function ProfilePage() {
 
           {/* Resources shared count */}
           {(resourceCount || 0) > 0 && (
-            <div className="rounded-xl border p-5 card-elevated" style={{ borderColor: 'var(--border-default)', backgroundColor: 'var(--bg-card)' }}>
+            <div className="card-base card-body">
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{resourceCount}</span>{' '}
                 {resourceCount === 1 ? 'resource' : 'resources'} shared with the group

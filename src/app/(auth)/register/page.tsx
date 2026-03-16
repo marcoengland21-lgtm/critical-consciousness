@@ -78,25 +78,13 @@ export default function RegisterPage() {
       </h2>
 
       {error && (
-        <div
-          className="p-4 rounded-lg mb-4 text-sm"
-          style={{
-            backgroundColor: 'rgba(139, 38, 53, 0.1)',
-            color: 'var(--accent-red)',
-          }}
-        >
+        <div className="alert-error mb-4">
           {error}
         </div>
       )}
 
       {success && (
-        <div
-          className="p-4 rounded-lg mb-4 text-sm"
-          style={{
-            backgroundColor: 'rgba(138, 154, 123, 0.2)',
-            color: 'var(--accent-green)',
-          }}
-        >
+        <div className="alert-success mb-4">
           {success}
         </div>
       )}
@@ -127,8 +115,7 @@ export default function RegisterPage() {
             onChange={(e) => setInviteCode(e.target.value)}
             required
             placeholder="Enter your invite code"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
-            style={{ borderColor: 'var(--text-secondary)', '--tw-ring-color': 'var(--accent-purple)' } as React.CSSProperties}
+            className="input-base w-full"
           />
           <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
             You need an invite code from an existing member to join.
@@ -150,8 +137,7 @@ export default function RegisterPage() {
             onChange={(e) => setDisplayName(e.target.value)}
             required
             placeholder="How you want to be known in the group"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
-            style={{ borderColor: 'var(--text-secondary)', '--tw-ring-color': 'var(--accent-purple)' } as React.CSSProperties}
+            className="input-base w-full"
           />
         </div>
 
@@ -169,8 +155,7 @@ export default function RegisterPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
-            style={{ borderColor: 'var(--text-secondary)', '--tw-ring-color': 'var(--accent-purple)' } as React.CSSProperties}
+            className="input-base w-full"
           />
         </div>
 
@@ -189,8 +174,7 @@ export default function RegisterPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
-            style={{ borderColor: 'var(--text-secondary)', '--tw-ring-color': 'var(--accent-purple)' } as React.CSSProperties}
+            className="input-base w-full"
           />
         </div>
 

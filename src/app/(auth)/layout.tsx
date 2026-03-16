@@ -92,12 +92,7 @@ export default function AuthLayout({
 
         {/* Form card */}
         <div className="w-full max-w-md">
-          <div
-            className="p-8 rounded-xl card-elevated"
-            style={{
-              backgroundColor: 'var(--bg-card)',
-            }}
-          >
+          <div className="card-base p-8">
             {children}
           </div>
         </div>

@@ -222,7 +222,7 @@ export default function NewThreadForm({ weeks, currentWeek }: NewThreadFormProps
       )}
 
       {error && (
-        <div className="p-3 rounded-lg text-sm" style={{ backgroundColor: 'var(--bg-soft)', color: 'var(--accent-red)', border: '1px solid var(--accent-red)' }}>
+        <div className="alert-error">
           {error}
         </div>
       )}
@@ -270,8 +270,7 @@ export default function NewThreadForm({ weeks, currentWeek }: NewThreadFormProps
             id="week"
             value={weekId}
             onChange={(e) => setWeekId(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border text-sm"
-            style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}
+            className="input-base text-sm w-full"
           >
             <option value="">No specific week</option>
             {weeks.map((w) => (
@@ -294,8 +293,7 @@ export default function NewThreadForm({ weeks, currentWeek }: NewThreadFormProps
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. 'The double character of the commodity' or 'Question about abstract labour'"
-          className="w-full px-4 py-3 rounded-lg border text-sm transition-colors focus:outline-none"
-          style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}
+          className="input-base text-sm w-full"
           required
         />
       </div>
@@ -345,8 +343,8 @@ export default function NewThreadForm({ weeks, currentWeek }: NewThreadFormProps
           }}
           placeholder={placeholderByType[threadType] || "Share your thoughts, questions, or reflections on the reading..."}
           rows={10}
-          className="w-full px-4 py-3 rounded-lg border text-sm resize-none transition-colors focus:outline-none"
-          style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)', lineHeight: '1.85', minHeight: '200px' }}
+          className="input-base text-sm w-full"
+          style={{ resize: 'none', lineHeight: '1.85', minHeight: '200px' }}
           required
         />
       </div>
@@ -356,19 +354,14 @@ export default function NewThreadForm({ weeks, currentWeek }: NewThreadFormProps
         <button
           type="button"
           onClick={() => router.back()}
-          className="px-4 py-2 rounded-lg text-sm font-medium border btn-transition"
-          style={{ borderColor: 'var(--border-default)', color: 'var(--text-secondary)' }}
+          className="btn-secondary text-sm"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={submitting}
-          className="px-6 py-2 rounded-lg text-sm font-medium btn-transition disabled:opacity-50"
-          style={{
-            backgroundColor: 'var(--accent-red)',
-            color: 'var(--text-inverse)',
-          }}
+          className="btn-primary text-sm px-6 disabled:opacity-50"
         >
           {submitting ? 'Publishing...' : 'Share with the Group'}
         </button>

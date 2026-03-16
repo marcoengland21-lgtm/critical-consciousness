@@ -99,9 +99,10 @@ export default async function SchedulePage() {
           return (
             <div
               key={week.id}
-              className="rounded-xl border-2 overflow-hidden transition-all"
+              className="card-base transition-all"
               style={{
-                borderColor: isCurrent ? 'var(--accent-purple)' : isPast ? 'var(--border-strong)' : 'var(--border-default)',
+                borderColor: isCurrent ? 'var(--accent-purple)' : isPast ? 'var(--border-strong)' : undefined,
+                borderWidth: isCurrent ? '2px' : undefined,
                 opacity: isPast ? 0.7 : 1,
               }}
             >
@@ -253,15 +254,13 @@ export default async function SchedulePage() {
                     <div className="flex flex-wrap gap-2">
                       <Link
                         href={`/reading/capital-vol-1/${week.week_number}`}
-                        className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
-                        style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}
+                        className="btn-primary text-sm px-3 py-1.5"
                       >
                         Start Reading
                       </Link>
                       <Link
                         href="/glossary"
-                        className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors"
-                        style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}
+                        className="btn-secondary text-sm px-3 py-1.5"
                       >
                         Browse Key Terms
                       </Link>
@@ -275,15 +274,13 @@ export default async function SchedulePage() {
                     <div className="flex flex-wrap gap-2">
                       <Link
                         href={`/reading/capital-vol-1/${week.week_number}`}
-                        className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                        style={{ backgroundColor: 'var(--accent-red)', color: 'var(--text-inverse)' }}
+                        className="btn-primary text-sm"
                       >
                         Read and Annotate
                       </Link>
                       <Link
                         href={`/threads?week=${week.id}`}
-                        className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium border transition-colors"
-                        style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}
+                        className="btn-secondary text-sm"
                       >
                         View Discussions
                       </Link>
