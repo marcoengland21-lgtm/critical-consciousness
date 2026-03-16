@@ -9,6 +9,10 @@ export interface GlossaryTerm {
   definition: string
 }
 
+export interface GlossaryTermWithCount extends GlossaryTerm {
+  occurrences: number
+}
+
 export interface TermMatch {
   term: string
   definition: string
@@ -142,13 +146,14 @@ export function buildGlossarySegments(
 
 /**
  * Find all unique glossary terms that appear in a chapter's full text.
- * Returns deduplicated terms sorted alphabetically.
- * Used by the GlossaryQuickAccess panel to show which terms exist in the chapter.
+ * Returns deduplicated terms sorted alphabetically, each with an occurrence count.
+ * Used by the GlossaryQuickAccess panel to show which terms exist in the chapter
+ * and how frequently they appear.
  */
 export function findChapterGlossaryTerms(
   chapterContent: string,
   glossaryTerms: GlossaryTerm[]
-): GlossaryTerm[] {
+): GlossaryTermWithCount[] {
   if (glossaryTerms.length === 0 || !chapterContent) return []
 
   // Sort terms by length (longest first) so longer matches take priority
@@ -167,16 +172,20 @@ export function findChapterGlossaryTerms(
     if (!termLookup.has(key)) termLookup.set(key, gt)
   }
 
-  const foundTerms = new Set<string>()
-  const result: GlossaryTerm[] = []
-
+  // Count occurrences of each term
+  const occurrenceMap = new Map<string, number>()
   let match: RegExpExecArray | null
   while ((match = pattern.exec(chapterContent)) !== null) {
     const matchedText = match[1].toLowerCase()
-    if (!foundTerms.has(matchedText)) {
-      foundTerms.add(matchedText)
-      const entry = termLookup.get(matchedText)
-      if (entry) result.push(entry)
+    occurrenceMap.set(matchedText, (occurrenceMap.get(matchedText) || 0) + 1)
+  }
+
+  // Build result with occurrence counts
+  const result: GlossaryTermWithCount[] = []
+  for (const [key, count] of occurrenceMap.entries()) {
+    const entry = termLookup.get(key)
+    if (entry) {
+      result.push({ ...entry, occurrences: count })
     }
   }
 
