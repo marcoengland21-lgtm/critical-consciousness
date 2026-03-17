@@ -1137,18 +1137,8 @@ html[data-high-contrast="true"][data-theme="dark"] {
   --accent-amber: #ffbf40;
 }
 
-/* ── Reading Guide — Word Pacer Indicator ──
-   A subtle line that sits above the current word.
-   Uses text-secondary so it blends with content — guides the eye
-   without drawing attention to itself. Like a soft pencil mark. */
-.reading-guide-indicator {
-  background-color: var(--text-secondary);
-  opacity: 0.35;
-}
-
-html[data-theme="dark"] .reading-guide-indicator {
-  opacity: 0.3;
-}
+/* Reading guide indicator CSS removed — pacer now highlights
+   paragraphs directly via inline styles (no overlay needed) */
 
 /* ── Dyslexia-Friendly Font Mode ──
    Uses Lexend (Google Font) with increased letter/word spacing.
