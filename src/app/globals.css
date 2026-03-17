@@ -1138,16 +1138,16 @@ html[data-high-contrast="true"][data-theme="dark"] {
 }
 
 /* ── Reading Guide — Word Pacer Indicator ──
-   A clean, minimal line that sits above the current word and
-   advances word-by-word at a configurable WPM pace.
-   No gradient, no pulse — just a simple solid line. */
+   A subtle line that sits above the current word.
+   Uses text-secondary so it blends with content — guides the eye
+   without drawing attention to itself. Like a soft pencil mark. */
 .reading-guide-indicator {
-  background-color: var(--accent-amber);
-  opacity: 0.6;
+  background-color: var(--text-secondary);
+  opacity: 0.35;
 }
 
 html[data-theme="dark"] .reading-guide-indicator {
-  opacity: 0.75;
+  opacity: 0.3;
 }
 
 /* ── Dyslexia-Friendly Font Mode ──

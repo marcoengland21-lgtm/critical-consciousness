@@ -86,6 +86,8 @@ export default function ReadingGuide() {
   }, [readingGuide, pathname, setReadingGuidePlaying])
 
   // ── Position indicator above current word ──
+  // Uses document-absolute coords (scrollY + rect) so the indicator
+  // sits in the document flow and scrolls naturally — no jitter.
   const positionIndicator = useCallback(() => {
     if (words.length === 0 || wordIndex >= words.length) {
       setIndicatorPos(null)
@@ -101,9 +103,10 @@ export default function ReadingGuide() {
 
       if (rect.width === 0 || rect.height === 0) return
 
+      // Document-absolute position — scrolls with the page naturally
       setIndicatorPos({
-        left: rect.left,
-        top: rect.top - 4,
+        left: rect.left + window.scrollX,
+        top: rect.top + window.scrollY - 3,
         width: rect.width,
       })
     } catch {
@@ -149,15 +152,6 @@ export default function ReadingGuide() {
     positionIndicator()
     autoScroll()
   }, [positionIndicator, autoScroll])
-
-  // Reposition on scroll (word rects shift when page scrolls)
-  useEffect(() => {
-    if (!readingGuide || words.length === 0) return
-
-    const handleScroll = () => positionIndicator()
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [readingGuide, words.length, positionIndicator])
 
   // ── Adaptive word timing ──
   // Longer words get more time, short words less. Pause after punctuation.
@@ -269,19 +263,19 @@ export default function ReadingGuide() {
   return (
     <>
       {/* ── The indicator line above the current word ── */}
+      {/* Absolute positioning so it scrolls with the page — no jitter */}
       {indicatorPos && (
         <div
           className="reading-guide-indicator"
           style={{
-            position: 'fixed',
+            position: 'absolute',
             left: `${indicatorPos.left}px`,
             top: `${indicatorPos.top}px`,
             width: `${indicatorPos.width}px`,
-            height: '2px',
-            borderRadius: '1px',
+            height: '1px',
             pointerEvents: 'none',
             zIndex: 100,
-            transition: 'left 60ms ease-out, top 60ms ease-out, width 60ms ease-out',
+            transition: 'left 80ms ease-out, top 80ms ease-out, width 80ms ease-out',
           }}
           aria-hidden="true"
         />
