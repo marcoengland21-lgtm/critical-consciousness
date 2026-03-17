@@ -86,6 +86,11 @@
   --text-xl: 1.25rem;           /* 20px */
   --text-2xl: 1.5rem;           /* 24px */
   --text-3xl: 1.875rem;         /* 30px */
+
+  /* Accessibility: text-only scaling multiplier (set by AccessibilityProvider)
+     Applied to content text only — NOT layout (padding, gaps, nav, badges).
+     Default 1 = 16px base. Slider range maps 12px-30px to 0.75-1.875. */
+  --text-size-multiplier: 1;
   --text-4xl: 2.25rem;          /* 36px */
   --heading-weight: 700;
   --heading-tracking: -0.02em;
@@ -1027,19 +1032,46 @@ html[data-theme="dark"] .reading-text .blockquote {
    Controlled by data attributes on <html>, set via AccessibilityProvider.
    ================================================================= */
 
-/* ── Global font size override ──
-   --global-font-size is set by AccessibilityProvider on <html>.
-   Must be on html (not body) because rem units are relative to the root
-   element — setting body font-size has no effect on rem-based Tailwind
-   classes like text-sm, text-xs, etc. */
-html[style*="--global-font-size"] {
-  font-size: var(--global-font-size) !important;
+/* ── Text size scaling (accessibility) ──
+   --text-size-multiplier is set by AccessibilityProvider.
+   Applied ONLY to content text — headings, reading text, thread/markdown
+   body, and card body paragraphs. Layout infrastructure (padding, gaps,
+   nav, badges, buttons, form inputs) is intentionally NOT scaled —
+   scaling html font-size breaks every rem-based Tailwind utility. */
+
+/* Headings scale with the multiplier */
+h1 { font-size: calc(var(--text-3xl) * var(--text-size-multiplier)) !important; }
+h2 { font-size: calc(var(--text-2xl) * var(--text-size-multiplier)) !important; }
+h3 { font-size: calc(var(--text-xl) * var(--text-size-multiplier)) !important; }
+h4 { font-size: calc(var(--text-lg) * var(--text-size-multiplier)) !important; }
+
+/* Reading page text */
+.reading-text {
+  font-size: calc(1.125rem * var(--text-size-multiplier));
+}
+.reading-text p,
+.reading-text li {
+  font-size: calc(1.125rem * var(--text-size-multiplier));
+}
+
+/* Thread and markdown body text */
+.thread-body {
+  font-size: calc(1rem * var(--text-size-multiplier));
+}
+.markdown-body {
+  font-size: calc(1rem * var(--text-size-multiplier));
+}
+
+/* Card body paragraphs — general content text */
+.card-body p,
+.card-body li {
+  font-size: calc(0.9375rem * var(--text-size-multiplier));
 }
 
 /* ── High Contrast Mode ──
-   Dramatically stronger borders, bolder text, maximum contrast ratios.
-   Designed for low-vision users and bright environments.
-   Must be visually obvious when toggled — subtle changes feel broken. */
+   Maximum contrast ratios with bright, saturated accent colors.
+   High contrast = pure white/black + vivid accents (not darker/muddier).
+   Designed for low-vision users and bright environments. */
 html[data-high-contrast="true"] {
   --bg-page: #ffffff;
   --bg-card: #ffffff;
@@ -1049,14 +1081,16 @@ html[data-high-contrast="true"] {
   --bg-input: #ffffff;
   --bg-badge: #e0e0e0;
   --text-primary: #000000;
-  --text-secondary: #1a1a1a;
+  --text-secondary: #222222;
   --text-badge: #000000;
   --border-default: #000000;
   --border-strong: #000000;
   --shadow-warm: rgba(0, 0, 0, 0.2);
-  --accent-red: #8b0000;
-  --accent-purple: #3b0080;
-  --accent-green: #005500;
+  /* Bright, saturated accents — high contrast means vivid, not dark */
+  --accent-red: #c41040;
+  --accent-purple: #6a2bc7;
+  --accent-green: #1a7a1a;
+  --accent-amber: #c47f00;
 }
 
 html[data-high-contrast="true"] * {
@@ -1071,13 +1105,6 @@ html[data-high-contrast="true"] h5 {
   font-weight: 800 !important;
 }
 
-html[data-high-contrast="true"] p,
-html[data-high-contrast="true"] span,
-html[data-high-contrast="true"] li,
-html[data-high-contrast="true"] a {
-  font-weight: 500;
-}
-
 html[data-high-contrast="true"] .card-base,
 html[data-high-contrast="true"] .card-elevated {
   border-width: 2px !important;
@@ -1085,17 +1112,12 @@ html[data-high-contrast="true"] .card-elevated {
   box-shadow: none !important;
 }
 
-html[data-high-contrast="true"] .reading-text {
-  font-weight: 500;
-  letter-spacing: 0.01em;
-}
-
 html[data-high-contrast="true"] a:hover {
   text-decoration: underline !important;
   text-decoration-thickness: 2px !important;
 }
 
-/* High contrast + dark mode */
+/* High contrast + dark mode — vivid bright accents on pure black */
 html[data-high-contrast="true"][data-theme="dark"] {
   --bg-page: #000000;
   --bg-card: #0a0a0a;
@@ -1109,9 +1131,26 @@ html[data-high-contrast="true"][data-theme="dark"] {
   --text-badge: #ffffff;
   --border-default: #ffffff;
   --border-strong: #ffffff;
-  --accent-red: #ff4d6d;
-  --accent-purple: #b388ff;
-  --accent-green: #69f0ae;
+  --accent-red: #ff5c85;
+  --accent-purple: #c49fff;
+  --accent-green: #5cff5c;
+  --accent-amber: #ffbf40;
+}
+
+/* ── Reading Guide — Warm Glowing Companion ──
+   Additive glow (no dimming). Gentle breathing animation. */
+.reading-guide-glow {
+  background: rgba(255, 191, 71, 0.09);
+  animation: reading-guide-breathe 3s ease-in-out infinite;
+}
+
+html[data-theme="dark"] .reading-guide-glow {
+  background: rgba(255, 191, 71, 0.14);
+}
+
+@keyframes reading-guide-breathe {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
 }
 
 /* ── Dyslexia-Friendly Font Mode ──

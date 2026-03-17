@@ -54,7 +54,8 @@ export default function AccessibilityProvider({ children }: { children: React.Re
       const size = parseInt(savedSize, 10)
       if (!isNaN(size) && size >= 12 && size <= 30) {
         setFontSizeState(size)
-        document.documentElement.style.setProperty('--global-font-size', `${size}px`)
+        // Set multiplier (not raw px) — only content text scales, not layout
+        document.documentElement.style.setProperty('--text-size-multiplier', String(size / 16))
       }
     }
 
@@ -80,7 +81,8 @@ export default function AccessibilityProvider({ children }: { children: React.Re
   const setFontSize = useCallback((size: number) => {
     const clamped = Math.max(12, Math.min(30, size))
     setFontSizeState(clamped)
-    document.documentElement.style.setProperty('--global-font-size', `${clamped}px`)
+    // Set multiplier (not raw px) — only content text scales, not layout
+    document.documentElement.style.setProperty('--text-size-multiplier', String(clamped / 16))
     localStorage.setItem(KEYS.fontSize, String(clamped))
   }, [])
 
