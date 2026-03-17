@@ -6,15 +6,21 @@ interface AccessibilityContextType {
   /** Global base font size in pixels (default 16) */
   fontSize: number
   setFontSize: (size: number) => void
-  /** High contrast mode — stronger borders, darker text, higher contrast ratios */
+  /** High contrast mode — stronger borders, brighter accents, higher contrast ratios */
   highContrast: boolean
   setHighContrast: (on: boolean) => void
   /** Dyslexia-friendly font (Lexend) with increased spacing */
   dyslexiaFont: boolean
   setDyslexiaFont: (on: boolean) => void
-  /** Reading guide overlay — semi-transparent ruler that follows cursor */
+  /** Reading guide — word pacer that moves through text at configured WPM */
   readingGuide: boolean
   setReadingGuide: (on: boolean) => void
+  /** Words per minute for reading guide pacer (default 200) */
+  readingGuideWpm: number
+  setReadingGuideWpm: (wpm: number) => void
+  /** Whether the reading guide pacer is currently advancing */
+  readingGuidePlaying: boolean
+  setReadingGuidePlaying: (playing: boolean) => void
 }
 
 const AccessibilityContext = createContext<AccessibilityContextType>({
@@ -26,6 +32,10 @@ const AccessibilityContext = createContext<AccessibilityContextType>({
   setDyslexiaFont: () => {},
   readingGuide: false,
   setReadingGuide: () => {},
+  readingGuideWpm: 200,
+  setReadingGuideWpm: () => {},
+  readingGuidePlaying: false,
+  setReadingGuidePlaying: () => {},
 })
 
 export function useAccessibility() {
@@ -38,6 +48,7 @@ const KEYS = {
   highContrast: 'ccp-high-contrast',
   dyslexiaFont: 'ccp-dyslexia-font',
   readingGuide: 'ccp-reading-guide',
+  readingGuideWpm: 'ccp-reading-guide-wpm',
 } as const
 
 export default function AccessibilityProvider({ children }: { children: React.ReactNode }) {
@@ -46,6 +57,8 @@ export default function AccessibilityProvider({ children }: { children: React.Re
   const [highContrast, setHighContrastState] = useState(false)
   const [dyslexiaFont, setDyslexiaFontState] = useState(false)
   const [readingGuide, setReadingGuideState] = useState(false)
+  const [readingGuideWpm, setReadingGuideWpmState] = useState(200)
+  const [readingGuidePlaying, setReadingGuidePlayingState] = useState(false)
 
   // ── Sync from localStorage on mount ──
   useEffect(() => {
@@ -74,6 +87,14 @@ export default function AccessibilityProvider({ children }: { children: React.Re
     const savedGuide = localStorage.getItem(KEYS.readingGuide)
     if (savedGuide === 'true') {
       setReadingGuideState(true)
+    }
+
+    const savedWpm = localStorage.getItem(KEYS.readingGuideWpm)
+    if (savedWpm) {
+      const wpm = parseInt(savedWpm, 10)
+      if (!isNaN(wpm) && wpm >= 80 && wpm <= 500) {
+        setReadingGuideWpmState(wpm)
+      }
     }
   }, [])
 
@@ -108,7 +129,18 @@ export default function AccessibilityProvider({ children }: { children: React.Re
 
   const setReadingGuide = useCallback((on: boolean) => {
     setReadingGuideState(on)
+    if (!on) setReadingGuidePlayingState(false) // Stop pacing when guide disabled
     localStorage.setItem(KEYS.readingGuide, String(on))
+  }, [])
+
+  const setReadingGuideWpm = useCallback((wpm: number) => {
+    const clamped = Math.max(80, Math.min(500, wpm))
+    setReadingGuideWpmState(clamped)
+    localStorage.setItem(KEYS.readingGuideWpm, String(clamped))
+  }, [])
+
+  const setReadingGuidePlaying = useCallback((playing: boolean) => {
+    setReadingGuidePlayingState(playing)
   }, [])
 
   return (
@@ -122,6 +154,10 @@ export default function AccessibilityProvider({ children }: { children: React.Re
         setDyslexiaFont,
         readingGuide,
         setReadingGuide,
+        readingGuideWpm,
+        setReadingGuideWpm,
+        readingGuidePlaying,
+        setReadingGuidePlaying,
       }}
     >
       {children}

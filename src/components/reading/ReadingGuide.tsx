@@ -4,112 +4,201 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAccessibility } from '@/components/layout/AccessibilityProvider'
 
 /**
- * Reading Guide — Warm Glowing Companion
+ * Reading Guide — Word Pacer
  *
- * A soft, warm amber glow that follows your cursor, gently guiding
- * your eyes along the text. Nothing gets dimmed — this is an additive
- * glow, like a little glowing buddy floating along with you.
+ * A small, warm indicator line that sits above the current word and
+ * advances word-by-word at a configurable WPM pace. Like a little
+ * reading buddy pacing you through the text.
  *
- * Features:
- * - Warm amber ellipse with heavy blur (looks like soft light)
- * - Subtle breathing animation (feels alive)
- * - Faint guide lines at top/bottom edges
- * - Direct cursor tracking (no lag)
- * - Works on both mouse and touch
+ * - Finds all words in the .reading-text container
+ * - Positions a small line above the current word using Range API
+ * - Advances at the user's chosen WPM (default 200)
+ * - Play/pause with spacebar or click on the indicator
+ * - Auto-scrolls gently to keep the current word in view
+ * - Does NOT modify the DOM (no wrapping words in spans)
  *
  * Toggle via AccessibilityProvider's readingGuide state.
  */
 
+interface WordPosition {
+  node: Text
+  start: number
+  end: number
+}
+
 export default function ReadingGuide() {
-  const { readingGuide } = useAccessibility()
-  const [cursorY, setCursorY] = useState<number | null>(null)
-  const [isVisible, setIsVisible] = useState(false)
-  const glowRef = useRef<HTMLDivElement>(null)
+  const { readingGuide, readingGuideWpm, readingGuidePlaying, setReadingGuidePlaying } = useAccessibility()
+  const [words, setWords] = useState<WordPosition[]>([])
+  const [wordIndex, setWordIndex] = useState(0)
+  const [indicatorStyle, setIndicatorStyle] = useState<React.CSSProperties>({ display: 'none' })
+  const indicatorRef = useRef<HTMLDivElement>(null)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const containerRef = useRef<HTMLElement | null>(null)
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (glowRef.current) {
-      // Direct DOM update — no state batching delay, instant response
-      glowRef.current.style.top = `${e.clientY}px`
-    }
-    if (!isVisible) {
-      setCursorY(e.clientY)
-      setIsVisible(true)
-    }
-  }, [isVisible])
-
-  const handleTouchMove = useCallback((e: TouchEvent) => {
-    if (e.touches.length > 0) {
-      const y = e.touches[0].clientY
-      if (glowRef.current) {
-        glowRef.current.style.top = `${y}px`
-      }
-      if (!isVisible) {
-        setCursorY(y)
-        setIsVisible(true)
-      }
-    }
-  }, [isVisible])
-
+  // Find all words in the reading text on mount / when guide activates
   useEffect(() => {
     if (!readingGuide) {
-      setIsVisible(false)
+      setWords([])
+      setWordIndex(0)
       return
     }
 
-    window.addEventListener('mousemove', handleMouseMove, { passive: true })
-    window.addEventListener('touchmove', handleTouchMove, { passive: true })
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      const container = document.querySelector('.reading-text') as HTMLElement
+      if (!container) return
+      containerRef.current = container
+
+      const foundWords: WordPosition[] = []
+      const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT)
+
+      let textNode: Text | null
+      while ((textNode = walker.nextNode() as Text | null)) {
+        const text = textNode.textContent || ''
+        // Match words (sequences of non-whitespace)
+        const regex = /\S+/g
+        let match: RegExpExecArray | null
+        while ((match = regex.exec(text)) !== null) {
+          foundWords.push({
+            node: textNode,
+            start: match.index,
+            end: match.index + match[0].length,
+          })
+        }
+      }
+
+      setWords(foundWords)
+      setWordIndex(0)
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [readingGuide])
+
+  // Position the indicator above the current word
+  const positionIndicator = useCallback(() => {
+    if (words.length === 0 || wordIndex >= words.length) {
+      setIndicatorStyle({ display: 'none' })
+      return
+    }
+
+    const word = words[wordIndex]
+    try {
+      const range = document.createRange()
+      range.setStart(word.node, word.start)
+      range.setEnd(word.node, word.end)
+      const rect = range.getBoundingClientRect()
+
+      if (rect.width === 0 || rect.height === 0) return
+
+      setIndicatorStyle({
+        display: 'block',
+        position: 'fixed',
+        left: `${rect.left}px`,
+        top: `${rect.top - 4}px`,
+        width: `${rect.width}px`,
+        height: '2px',
+        borderRadius: '1px',
+        pointerEvents: 'none' as const,
+        zIndex: 100,
+        transition: 'left 80ms ease-out, top 80ms ease-out, width 80ms ease-out',
+      })
+
+      // Auto-scroll: if the word is near the bottom of the viewport, scroll down
+      const viewportHeight = window.innerHeight
+      if (rect.bottom > viewportHeight - 120) {
+        window.scrollBy({ top: rect.height * 3, behavior: 'smooth' })
+      }
+      // If word scrolled above viewport, scroll up
+      if (rect.top < 80) {
+        window.scrollBy({ top: -(rect.height * 3), behavior: 'smooth' })
+      }
+    } catch {
+      // Range API can throw if text node is no longer in DOM
+    }
+  }, [words, wordIndex])
+
+  // Update indicator position whenever word index changes
+  useEffect(() => {
+    positionIndicator()
+  }, [positionIndicator])
+
+  // Also reposition on scroll (words move when page scrolls)
+  useEffect(() => {
+    if (!readingGuide || words.length === 0) return
+
+    const handleScroll = () => positionIndicator()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [readingGuide, words.length, positionIndicator])
+
+  // Advance word-by-word at WPM pace
+  useEffect(() => {
+    if (!readingGuidePlaying || words.length === 0) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+      return
+    }
+
+    // WPM → ms per word
+    const msPerWord = 60000 / readingGuideWpm
+
+    intervalRef.current = setInterval(() => {
+      setWordIndex(prev => {
+        if (prev >= words.length - 1) {
+          // Reached the end — pause
+          setReadingGuidePlaying(false)
+          return prev
+        }
+        return prev + 1
+      })
+    }, msPerWord)
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
-      window.removeEventListener('touchmove', handleTouchMove)
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
     }
-  }, [readingGuide, handleMouseMove, handleTouchMove])
+  }, [readingGuidePlaying, readingGuideWpm, words.length, setReadingGuidePlaying])
 
-  if (!readingGuide || !isVisible) return null
+  // Keyboard: space to play/pause, arrow keys to step
+  useEffect(() => {
+    if (!readingGuide) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't capture when typing in an input
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      if ((e.target as HTMLElement).isContentEditable) return
+
+      if (e.code === 'Space' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault()
+        setReadingGuidePlaying(!readingGuidePlaying)
+      }
+      if (e.code === 'ArrowRight' && !readingGuidePlaying) {
+        e.preventDefault()
+        setWordIndex(prev => Math.min(prev + 1, words.length - 1))
+      }
+      if (e.code === 'ArrowLeft' && !readingGuidePlaying) {
+        e.preventDefault()
+        setWordIndex(prev => Math.max(prev - 1, 0))
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [readingGuide, readingGuidePlaying, words.length, setReadingGuidePlaying])
+
+  if (!readingGuide || words.length === 0) return null
 
   return (
     <div
-      ref={glowRef}
-      className="fixed left-0 right-0 z-[100] pointer-events-none reading-guide-companion"
+      ref={indicatorRef}
+      className="reading-guide-indicator"
+      style={indicatorStyle}
       aria-hidden="true"
-      role="presentation"
-      style={{
-        top: cursorY ?? 0,
-        transform: 'translateY(-50%)',
-        height: '70px',
-        willChange: 'top',
-        transition: 'top 60ms ease-out',
-      }}
-    >
-      {/* Main warm glow — the "companion" */}
-      <div
-        className="absolute left-1/2 top-1/2 reading-guide-glow"
-        style={{
-          transform: 'translate(-50%, -50%)',
-          width: '420px',
-          height: '55px',
-          borderRadius: '50%',
-          filter: 'blur(28px)',
-        }}
-      />
-
-      {/* Top guide line */}
-      <div
-        className="absolute left-0 right-0 top-0"
-        style={{
-          height: '1px',
-          background: 'linear-gradient(90deg, transparent 10%, rgba(var(--accent-amber-rgb), 0.18) 30%, rgba(var(--accent-amber-rgb), 0.25) 50%, rgba(var(--accent-amber-rgb), 0.18) 70%, transparent 90%)',
-        }}
-      />
-
-      {/* Bottom guide line */}
-      <div
-        className="absolute left-0 right-0 bottom-0"
-        style={{
-          height: '1px',
-          background: 'linear-gradient(90deg, transparent 10%, rgba(var(--accent-amber-rgb), 0.18) 30%, rgba(var(--accent-amber-rgb), 0.25) 50%, rgba(var(--accent-amber-rgb), 0.18) 70%, transparent 90%)',
-        }}
-      />
-    </div>
+    />
   )
 }
