@@ -41,7 +41,7 @@ export default function ReadingGuide() {
   const [indicatorPos, setIndicatorPos] = useState<{
     left: number; top: number; width: number
   } | null>(null)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastScrollTime = useRef(0)
 
   // ── Find all words when guide activates or chapter changes ──
@@ -159,35 +159,82 @@ export default function ReadingGuide() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [readingGuide, words.length, positionIndicator])
 
-  // ── Advance word-by-word at WPM pace ──
+  // ── Adaptive word timing ──
+  // Longer words get more time, short words less. Pause after punctuation.
+  // This makes the pacer feel natural instead of robotic.
+  // Uses refs so the timer chain doesn't need to restart on every state change.
+  const wordsRef = useRef(words)
+  const wpmRef = useRef(readingGuideWpm)
+  wordsRef.current = words
+  wpmRef.current = readingGuideWpm
+
+  const getWordDuration = useCallback((idx: number): number => {
+    const currentWords = wordsRef.current
+    const baseMs = 60000 / wpmRef.current
+    if (idx >= currentWords.length) return baseMs
+
+    const word = currentWords[idx]
+    const text = (word.node.textContent || '').slice(word.start, word.end)
+    const len = text.length
+
+    // Length multiplier: short words (1-3 chars) are faster, long words slower
+    // 5 chars = baseline (1.0x), scales linearly
+    const lengthFactor = Math.max(0.5, Math.min(1.8, 0.3 + len * 0.14))
+
+    // Punctuation pause: extra time after sentence-ending or clause-ending marks
+    const lastChar = text[text.length - 1]
+    let punctuationMs = 0
+    if (lastChar === '.' || lastChar === '!' || lastChar === '?') {
+      punctuationMs = baseMs * 0.6 // 60% extra pause after sentences
+    } else if (lastChar === ',' || lastChar === ';' || lastChar === ':') {
+      punctuationMs = baseMs * 0.3 // 30% extra pause after clauses
+    } else if (lastChar === '—' || lastChar === ')' || lastChar === '"') {
+      punctuationMs = baseMs * 0.2
+    }
+
+    return baseMs * lengthFactor + punctuationMs
+  }, [])
+
+  // ── Advance word-by-word at adaptive pace ──
+  // Uses recursive setTimeout so each word gets its own timing.
+  // The chain is self-contained — refs let it read current state without
+  // needing those values in the dependency array.
   useEffect(() => {
     if (!readingGuidePlaying || words.length === 0) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+        timerRef.current = null
       }
       return
     }
 
-    const msPerWord = 60000 / readingGuideWpm
-
-    intervalRef.current = setInterval(() => {
+    // Recursive setTimeout — each word schedules the next with its own duration
+    const scheduleNext = () => {
       setWordIndex(prev => {
-        if (prev >= words.length - 1) {
+        if (prev >= wordsRef.current.length - 1) {
           setReadingGuidePlaying(false)
           return prev
         }
-        return prev + 1
+        const nextIdx = prev + 1
+        // Schedule the NEXT advance based on the next word's duration
+        timerRef.current = setTimeout(scheduleNext, getWordDuration(nextIdx))
+        return nextIdx
       })
-    }, msPerWord)
+    }
+
+    // Start the chain with the current word's remaining duration
+    timerRef.current = setTimeout(scheduleNext, getWordDuration(wordIndex))
 
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+        timerRef.current = null
       }
     }
-  }, [readingGuidePlaying, readingGuideWpm, words.length, setReadingGuidePlaying])
+    // Only restart the chain when play state changes — not on every word advance.
+    // WPM changes take effect naturally via wpmRef on the next scheduled word.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readingGuidePlaying, words.length, setReadingGuidePlaying, getWordDuration])
 
   // ── Keyboard: arrow keys to step (no space — conflicts with page scroll) ──
   useEffect(() => {
