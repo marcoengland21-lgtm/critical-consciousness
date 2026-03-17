@@ -5,16 +5,19 @@ import { usePathname } from 'next/navigation'
 import { useAccessibility } from '@/components/layout/AccessibilityProvider'
 
 /**
- * Reading Pacer — Word-by-word pace guide with auto-scroll
+ * Reading Pacer — Line-level pace guide with auto-scroll
  *
- * A clean, minimal indicator line sits above the current word and
- * advances at a configurable WPM. Includes a floating control strip
- * with play/pause, WPM adjustment, and progress.
+ * Words are tracked internally for WPM timing, but the visual indicator
+ * works at the LINE level — a subtle underline beneath the current line
+ * of text, like holding a ruler under what you're reading. Only moves
+ * down when the pacer reaches a new line, so it guides without
+ * distracting from the words themselves.
  *
  * - Scans .reading-text for words via TreeWalker (handles <mark> annotations)
- * - Positions indicator using Range API (no DOM modification)
- * - Smooth auto-scroll keeps current word in the top third of viewport
- * - Floating control strip appears at bottom of viewport when active
+ * - Internal word-by-word timing with adaptive duration (length + punctuation)
+ * - Visual indicator spans the full line, only shifts on line changes
+ * - Smooth auto-scroll keeps current line in the top third of viewport
+ * - Floating control strip with play/pause, WPM adjustment, and progress
  *
  * Toggle via AccessibilityProvider's readingGuide state.
  */
@@ -23,6 +26,13 @@ interface WordPosition {
   node: Text
   start: number
   end: number
+}
+
+/** Document-absolute line position */
+interface LinePosition {
+  left: number
+  top: number
+  width: number
 }
 
 export default function ReadingGuide() {
@@ -38,18 +48,17 @@ export default function ReadingGuide() {
 
   const [words, setWords] = useState<WordPosition[]>([])
   const [wordIndex, setWordIndex] = useState(0)
-  const [indicatorPos, setIndicatorPos] = useState<{
-    left: number; top: number; width: number
-  } | null>(null)
+  const [linePos, setLinePos] = useState<LinePosition | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastScrollTime = useRef(0)
+  const lastLineTop = useRef<number | null>(null)
 
   // ── Find all words when guide activates or chapter changes ──
   useEffect(() => {
     if (!readingGuide) {
       setWords([])
       setWordIndex(0)
-      setIndicatorPos(null)
+      setLinePos(null)
       return
     }
 
@@ -80,17 +89,18 @@ export default function ReadingGuide() {
       setWords(foundWords)
       setWordIndex(0)
       setReadingGuidePlaying(false)
+      lastLineTop.current = null
     }, 200)
 
     return () => clearTimeout(timer)
   }, [readingGuide, pathname, setReadingGuidePlaying])
 
-  // ── Position indicator above current word ──
-  // Uses document-absolute coords (scrollY + rect) so the indicator
-  // sits in the document flow and scrolls naturally — no jitter.
-  const positionIndicator = useCallback(() => {
+  // ── Position line-level indicator beneath the current word's line ──
+  // Only updates when the word moves to a different line (different Y coord).
+  // This means the indicator shifts rarely — just gliding down line by line.
+  const positionLine = useCallback(() => {
     if (words.length === 0 || wordIndex >= words.length) {
-      setIndicatorPos(null)
+      setLinePos(null)
       return
     }
 
@@ -103,11 +113,25 @@ export default function ReadingGuide() {
 
       if (rect.width === 0 || rect.height === 0) return
 
-      // Document-absolute position — scrolls with the page naturally
-      setIndicatorPos({
-        left: rect.left + window.scrollX,
-        top: rect.top + window.scrollY - 3,
-        width: rect.width,
+      const docTop = rect.top + window.scrollY
+
+      // Only update the indicator if we've moved to a new line
+      // (different Y position, with 2px tolerance for sub-pixel differences)
+      if (lastLineTop.current !== null && Math.abs(docTop - lastLineTop.current) < 2) {
+        return // same line — don't update
+      }
+      lastLineTop.current = docTop
+
+      // Find the .reading-text container to get the full line width
+      const container = document.querySelector('.reading-text') as HTMLElement
+      if (!container) return
+      const containerRect = container.getBoundingClientRect()
+
+      // Line indicator spans the full reading text width, sits under the line
+      setLinePos({
+        left: containerRect.left + window.scrollX,
+        top: docTop + rect.height + 2, // just below the text line
+        width: containerRect.width,
       })
     } catch {
       // Range API can throw if text node left the DOM
@@ -125,13 +149,10 @@ export default function ReadingGuide() {
       range.setEnd(word.node, word.end)
       const rect = range.getBoundingClientRect()
       const viewportHeight = window.innerHeight
-      const targetZone = viewportHeight * 0.33 // top third
+      const targetZone = viewportHeight * 0.33
 
-      // Only scroll if word is outside the comfort zone
-      // Below middle of viewport → scroll to put it in top third
-      // Above top of viewport → scroll up
       const now = Date.now()
-      if (now - lastScrollTime.current < 300) return // debounce
+      if (now - lastScrollTime.current < 300) return
 
       if (rect.top > viewportHeight * 0.55) {
         const scrollTarget = window.scrollY + rect.top - targetZone
@@ -147,11 +168,11 @@ export default function ReadingGuide() {
     }
   }, [readingGuidePlaying, words, wordIndex])
 
-  // Update indicator + auto-scroll when word index changes
+  // Update line indicator + auto-scroll when word index changes
   useEffect(() => {
-    positionIndicator()
+    positionLine()
     autoScroll()
-  }, [positionIndicator, autoScroll])
+  }, [positionLine, autoScroll])
 
   // ── Adaptive word timing ──
   // Longer words get more time, short words less. Pause after punctuation.
@@ -262,20 +283,21 @@ export default function ReadingGuide() {
 
   return (
     <>
-      {/* ── The indicator line above the current word ── */}
+      {/* ── Line-level indicator — sits beneath the current line of text ── */}
       {/* Absolute positioning so it scrolls with the page — no jitter */}
-      {indicatorPos && (
+      {/* Only moves when the pacer reaches a new line, not every word */}
+      {linePos && (
         <div
           className="reading-guide-indicator"
           style={{
             position: 'absolute',
-            left: `${indicatorPos.left}px`,
-            top: `${indicatorPos.top}px`,
-            width: `${indicatorPos.width}px`,
+            left: `${linePos.left}px`,
+            top: `${linePos.top}px`,
+            width: `${linePos.width}px`,
             height: '1px',
             pointerEvents: 'none',
             zIndex: 100,
-            transition: 'left 80ms ease-out, top 80ms ease-out, width 80ms ease-out',
+            transition: 'top 300ms ease-out',
           }}
           aria-hidden="true"
         />
