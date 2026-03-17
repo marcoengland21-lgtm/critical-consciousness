@@ -25,6 +25,17 @@ interface WordPosition {
   node: Text
   start: number
   end: number
+  /** Index of the paragraph this word belongs to */
+  paragraphIdx: number
+}
+
+interface ParagraphInfo {
+  /** The DOM element */
+  element: HTMLElement
+  /** Number of words in this paragraph */
+  wordCount: number
+  /** Index of the first word in this paragraph */
+  firstWordIdx: number
 }
 
 export default function ReadingGuide() {
@@ -39,6 +50,7 @@ export default function ReadingGuide() {
   const pathname = usePathname()
 
   const [words, setWords] = useState<WordPosition[]>([])
+  const [paragraphs, setParagraphs] = useState<ParagraphInfo[]>([])
   const [wordIndex, setWordIndex] = useState(0)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastScrollTime = useRef(0)
@@ -70,22 +82,62 @@ export default function ReadingGuide() {
       const foundWords: WordPosition[] = []
       const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT)
 
+      // Helper: find the paragraph-level ancestor of a text node
+      const findParagraph = (node: Node): HTMLElement | null => {
+        let el: Node | null = node
+        while (el) {
+          if (el instanceof HTMLElement) {
+            const tag = el.tagName.toLowerCase()
+            if (tag === 'p' || tag === 'blockquote' || tag === 'li' || tag === 'h1' || tag === 'h2' || tag === 'h3' || tag === 'h4') {
+              return el
+            }
+            if (el.classList.contains('reading-text')) break
+          }
+          el = el.parentNode
+        }
+        return null
+      }
+
+      // Build words array with paragraph tracking
+      const paraMap = new Map<HTMLElement, number>() // element → paragraph index
+      const paraInfos: ParagraphInfo[] = []
+      let currentParaIdx = -1
+
       let textNode: Text | null
       while ((textNode = walker.nextNode() as Text | null)) {
         const text = textNode.textContent || ''
         const regex = /\S+/g
         let match: RegExpExecArray | null
+
+        // Find which paragraph this text node belongs to
+        const paraEl = findParagraph(textNode)
+        let paraIdx = -1
+        if (paraEl) {
+          if (paraMap.has(paraEl)) {
+            paraIdx = paraMap.get(paraEl)!
+          } else {
+            paraIdx = paraInfos.length
+            paraMap.set(paraEl, paraIdx)
+            paraInfos.push({ element: paraEl, wordCount: 0, firstWordIdx: foundWords.length })
+          }
+        }
+
         while ((match = regex.exec(text)) !== null) {
           if (match[0].length === 0) continue
           foundWords.push({
             node: textNode,
             start: match.index,
             end: match.index + match[0].length,
+            paragraphIdx: paraIdx,
           })
+          if (paraIdx >= 0) {
+            paraInfos[paraIdx].wordCount++
+          }
         }
       }
 
       setWords(foundWords)
+      setParagraphs(paraInfos)
       setWordIndex(0)
       setReadingGuidePlaying(false)
     }, 200)
@@ -177,13 +229,19 @@ export default function ReadingGuide() {
   }, [clearHighlight])
 
   // ── Adaptive word timing ──
+  // Considers word length, punctuation, paragraph length, and paragraph
+  // transitions. Long paragraphs (common in Capital) get slowed down
+  // so readers have time to absorb dense material.
   const wordsRef = useRef(words)
+  const paragraphsRef = useRef(paragraphs)
   const wpmRef = useRef(readingGuideWpm)
   wordsRef.current = words
+  paragraphsRef.current = paragraphs
   wpmRef.current = readingGuideWpm
 
   const getWordDuration = useCallback((idx: number): number => {
     const currentWords = wordsRef.current
+    const currentParas = paragraphsRef.current
     const baseMs = 60000 / wpmRef.current
     if (idx >= currentWords.length) return baseMs
 
@@ -191,8 +249,10 @@ export default function ReadingGuide() {
     const text = (word.node.textContent || '').slice(word.start, word.end)
     const len = text.length
 
+    // ── Word length factor ──
     const lengthFactor = Math.max(0.5, Math.min(1.8, 0.3 + len * 0.14))
 
+    // ── Punctuation pause ──
     const lastChar = text[text.length - 1]
     let punctuationMs = 0
     if (lastChar === '.' || lastChar === '!' || lastChar === '?') {
@@ -203,7 +263,33 @@ export default function ReadingGuide() {
       punctuationMs = baseMs * 0.2
     }
 
-    return baseMs * lengthFactor + punctuationMs
+    // ── Paragraph-level adjustments ──
+    let paragraphMs = 0
+    let paragraphSlowdown = 1.0
+    const paraIdx = word.paragraphIdx
+    if (paraIdx >= 0 && paraIdx < currentParas.length) {
+      const para = currentParas[paraIdx]
+
+      // New paragraph pause: settling time when entering a new paragraph.
+      // Longer paragraphs get more settling time — your eye needs to
+      // take in the new block before starting to read.
+      const isFirstWord = para.firstWordIdx === idx
+      if (isFirstWord && idx > 0) {
+        // Base pause of 400ms + 3ms per word in the paragraph
+        // A 20-word paragraph: 460ms pause. A 200-word paragraph: 1000ms.
+        paragraphMs = Math.min(1200, 400 + para.wordCount * 3)
+      }
+
+      // Long paragraph slowdown: paragraphs over 80 words get a global
+      // slowdown factor. Capital is full of 150-300 word paragraphs that
+      // need more time to absorb.
+      // 80 words = 1.0x, 150 words = 1.15x, 250 words = 1.3x, caps at 1.4x
+      if (para.wordCount > 80) {
+        paragraphSlowdown = Math.min(1.4, 1.0 + (para.wordCount - 80) * 0.002)
+      }
+    }
+
+    return (baseMs * lengthFactor * paragraphSlowdown) + punctuationMs + paragraphMs
   }, [])
 
   // ── Advance word-by-word at adaptive pace ──
