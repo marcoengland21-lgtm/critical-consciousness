@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
 import { useAccessibility } from './AccessibilityProvider'
 
 interface AccessibilityPanelProps {
@@ -18,9 +17,7 @@ export default function AccessibilityPanel({ variant }: AccessibilityPanelProps)
     setDyslexiaFont,
     readingGuide,
     setReadingGuide,
-    readingGuideWpm,
     setReadingGuideWpm,
-    readingGuidePlaying,
     setReadingGuidePlaying,
   } = useAccessibility()
 
@@ -116,62 +113,6 @@ export default function AccessibilityPanel({ variant }: AccessibilityPanelProps)
           isMobile={isMobile}
         />
       </div>
-
-      {/* Reading pacer WPM controls — only visible when reading guide is on */}
-      {readingGuide && (
-        <div className="space-y-2 px-1 pt-1" style={{ borderTop: `1px solid ${isMobile ? 'var(--border-default)' : 'rgba(255,255,255,0.1)'}` }}>
-          <div className="flex items-center justify-between">
-            <label
-              htmlFor="a11y-wpm"
-              className="text-xs font-medium"
-              style={{ color: isMobile ? 'var(--text-primary)' : 'var(--text-inverse)' }}
-            >
-              Pace
-            </label>
-            <span
-              className="text-[10px] tabular-nums font-medium"
-              style={{ color: isMobile ? 'var(--text-secondary)' : 'var(--text-inverse)', opacity: 0.7 }}
-            >
-              {readingGuideWpm} wpm
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setReadingGuidePlaying(!readingGuidePlaying)}
-              className="w-7 h-7 flex items-center justify-center rounded-md text-xs btn-transition"
-              style={{
-                color: readingGuidePlaying
-                  ? 'var(--text-inverse)'
-                  : isMobile ? 'var(--text-primary)' : 'var(--text-inverse)',
-                backgroundColor: readingGuidePlaying
-                  ? 'var(--accent-purple)'
-                  : isMobile ? 'var(--bg-soft)' : 'rgba(255,255,255,0.1)',
-              }}
-              aria-label={readingGuidePlaying ? 'Pause reading pacer' : 'Start reading pacer'}
-            >
-              {readingGuidePlaying ? '⏸' : '▶'}
-            </button>
-            <input
-              id="a11y-wpm"
-              type="range"
-              min={80}
-              max={500}
-              step={10}
-              value={readingGuideWpm}
-              onChange={(e) => setReadingGuideWpm(parseInt(e.target.value, 10))}
-              className="flex-1 h-1"
-              style={{ accentColor: 'var(--accent-amber)' }}
-              aria-label="Words per minute"
-            />
-          </div>
-          <div
-            className="text-[9px] leading-tight"
-            style={{ color: isMobile ? 'var(--text-secondary)' : 'var(--text-inverse)', opacity: 0.4 }}
-          >
-            Space to play/pause · ← → to step
-          </div>
-        </div>
-      )}
 
       {/* Reset button */}
       <div className="px-1 pt-1">

@@ -1138,21 +1138,16 @@ html[data-high-contrast="true"][data-theme="dark"] {
 }
 
 /* ── Reading Guide — Word Pacer Indicator ──
-   A small warm line that sits above the current word and
-   advances word-by-word. Subtle pulse so it feels alive. */
+   A clean, minimal line that sits above the current word and
+   advances word-by-word at a configurable WPM pace.
+   No gradient, no pulse — just a simple solid line. */
 .reading-guide-indicator {
-  background: linear-gradient(90deg, transparent, var(--accent-amber), transparent);
-  opacity: 0.7;
-  animation: reading-guide-pulse 2s ease-in-out infinite;
+  background-color: var(--accent-amber);
+  opacity: 0.6;
 }
 
 html[data-theme="dark"] .reading-guide-indicator {
-  opacity: 0.85;
-}
-
-@keyframes reading-guide-pulse {
-  0%, 100% { opacity: 0.55; }
-  50% { opacity: 0.85; }
+  opacity: 0.75;
 }
 
 /* ── Dyslexia-Friendly Font Mode ──

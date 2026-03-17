@@ -1,21 +1,20 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { usePathname } from 'next/navigation'
 import { useAccessibility } from '@/components/layout/AccessibilityProvider'
 
 /**
- * Reading Guide — Word Pacer
+ * Reading Pacer — Word-by-word pace guide with auto-scroll
  *
- * A small, warm indicator line that sits above the current word and
- * advances word-by-word at a configurable WPM pace. Like a little
- * reading buddy pacing you through the text.
+ * A clean, minimal indicator line sits above the current word and
+ * advances at a configurable WPM. Includes a floating control strip
+ * with play/pause, WPM adjustment, and progress.
  *
- * - Finds all words in the .reading-text container
- * - Positions a small line above the current word using Range API
- * - Advances at the user's chosen WPM (default 200)
- * - Play/pause with spacebar or click on the indicator
- * - Auto-scrolls gently to keep the current word in view
- * - Does NOT modify the DOM (no wrapping words in spans)
+ * - Scans .reading-text for words via TreeWalker (handles <mark> annotations)
+ * - Positions indicator using Range API (no DOM modification)
+ * - Smooth auto-scroll keeps current word in the top third of viewport
+ * - Floating control strip appears at bottom of viewport when active
  *
  * Toggle via AccessibilityProvider's readingGuide state.
  */
@@ -27,27 +26,37 @@ interface WordPosition {
 }
 
 export default function ReadingGuide() {
-  const { readingGuide, readingGuideWpm, readingGuidePlaying, setReadingGuidePlaying } = useAccessibility()
+  const {
+    readingGuide,
+    readingGuideWpm,
+    setReadingGuideWpm,
+    readingGuidePlaying,
+    setReadingGuidePlaying,
+    setReadingGuide,
+  } = useAccessibility()
+  const pathname = usePathname()
+
   const [words, setWords] = useState<WordPosition[]>([])
   const [wordIndex, setWordIndex] = useState(0)
-  const [indicatorStyle, setIndicatorStyle] = useState<React.CSSProperties>({ display: 'none' })
-  const indicatorRef = useRef<HTMLDivElement>(null)
+  const [indicatorPos, setIndicatorPos] = useState<{
+    left: number; top: number; width: number
+  } | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const containerRef = useRef<HTMLElement | null>(null)
+  const lastScrollTime = useRef(0)
 
-  // Find all words in the reading text on mount / when guide activates
+  // ── Find all words when guide activates or chapter changes ──
   useEffect(() => {
     if (!readingGuide) {
       setWords([])
       setWordIndex(0)
+      setIndicatorPos(null)
       return
     }
 
-    // Small delay to ensure DOM is ready
+    // Small delay to ensure DOM is rendered
     const timer = setTimeout(() => {
       const container = document.querySelector('.reading-text') as HTMLElement
       if (!container) return
-      containerRef.current = container
 
       const foundWords: WordPosition[] = []
       const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT)
@@ -55,10 +64,11 @@ export default function ReadingGuide() {
       let textNode: Text | null
       while ((textNode = walker.nextNode() as Text | null)) {
         const text = textNode.textContent || ''
-        // Match words (sequences of non-whitespace)
         const regex = /\S+/g
         let match: RegExpExecArray | null
         while ((match = regex.exec(text)) !== null) {
+          // Skip zero-width matches
+          if (match[0].length === 0) continue
           foundWords.push({
             node: textNode,
             start: match.index,
@@ -69,15 +79,16 @@ export default function ReadingGuide() {
 
       setWords(foundWords)
       setWordIndex(0)
-    }, 300)
+      setReadingGuidePlaying(false)
+    }, 200)
 
     return () => clearTimeout(timer)
-  }, [readingGuide])
+  }, [readingGuide, pathname, setReadingGuidePlaying])
 
-  // Position the indicator above the current word
+  // ── Position indicator above current word ──
   const positionIndicator = useCallback(() => {
     if (words.length === 0 || wordIndex >= words.length) {
-      setIndicatorStyle({ display: 'none' })
+      setIndicatorPos(null)
       return
     }
 
@@ -90,39 +101,56 @@ export default function ReadingGuide() {
 
       if (rect.width === 0 || rect.height === 0) return
 
-      setIndicatorStyle({
-        display: 'block',
-        position: 'fixed',
-        left: `${rect.left}px`,
-        top: `${rect.top - 4}px`,
-        width: `${rect.width}px`,
-        height: '2px',
-        borderRadius: '1px',
-        pointerEvents: 'none' as const,
-        zIndex: 100,
-        transition: 'left 80ms ease-out, top 80ms ease-out, width 80ms ease-out',
+      setIndicatorPos({
+        left: rect.left,
+        top: rect.top - 4,
+        width: rect.width,
       })
-
-      // Auto-scroll: if the word is near the bottom of the viewport, scroll down
-      const viewportHeight = window.innerHeight
-      if (rect.bottom > viewportHeight - 120) {
-        window.scrollBy({ top: rect.height * 3, behavior: 'smooth' })
-      }
-      // If word scrolled above viewport, scroll up
-      if (rect.top < 80) {
-        window.scrollBy({ top: -(rect.height * 3), behavior: 'smooth' })
-      }
     } catch {
-      // Range API can throw if text node is no longer in DOM
+      // Range API can throw if text node left the DOM
     }
   }, [words, wordIndex])
 
-  // Update indicator position whenever word index changes
+  // ── Auto-scroll when playing ──
+  const autoScroll = useCallback(() => {
+    if (!readingGuidePlaying || words.length === 0 || wordIndex >= words.length) return
+
+    const word = words[wordIndex]
+    try {
+      const range = document.createRange()
+      range.setStart(word.node, word.start)
+      range.setEnd(word.node, word.end)
+      const rect = range.getBoundingClientRect()
+      const viewportHeight = window.innerHeight
+      const targetZone = viewportHeight * 0.33 // top third
+
+      // Only scroll if word is outside the comfort zone
+      // Below middle of viewport → scroll to put it in top third
+      // Above top of viewport → scroll up
+      const now = Date.now()
+      if (now - lastScrollTime.current < 300) return // debounce
+
+      if (rect.top > viewportHeight * 0.55) {
+        const scrollTarget = window.scrollY + rect.top - targetZone
+        window.scrollTo({ top: scrollTarget, behavior: 'smooth' })
+        lastScrollTime.current = now
+      } else if (rect.top < 60) {
+        const scrollTarget = window.scrollY + rect.top - targetZone
+        window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' })
+        lastScrollTime.current = now
+      }
+    } catch {
+      // ignore
+    }
+  }, [readingGuidePlaying, words, wordIndex])
+
+  // Update indicator + auto-scroll when word index changes
   useEffect(() => {
     positionIndicator()
-  }, [positionIndicator])
+    autoScroll()
+  }, [positionIndicator, autoScroll])
 
-  // Also reposition on scroll (words move when page scrolls)
+  // Reposition on scroll (word rects shift when page scrolls)
   useEffect(() => {
     if (!readingGuide || words.length === 0) return
 
@@ -131,7 +159,7 @@ export default function ReadingGuide() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [readingGuide, words.length, positionIndicator])
 
-  // Advance word-by-word at WPM pace
+  // ── Advance word-by-word at WPM pace ──
   useEffect(() => {
     if (!readingGuidePlaying || words.length === 0) {
       if (intervalRef.current) {
@@ -141,13 +169,11 @@ export default function ReadingGuide() {
       return
     }
 
-    // WPM → ms per word
     const msPerWord = 60000 / readingGuideWpm
 
     intervalRef.current = setInterval(() => {
       setWordIndex(prev => {
         if (prev >= words.length - 1) {
-          // Reached the end — pause
           setReadingGuidePlaying(false)
           return prev
         }
@@ -163,20 +189,15 @@ export default function ReadingGuide() {
     }
   }, [readingGuidePlaying, readingGuideWpm, words.length, setReadingGuidePlaying])
 
-  // Keyboard: space to play/pause, arrow keys to step
+  // ── Keyboard: arrow keys to step (no space — conflicts with page scroll) ──
   useEffect(() => {
     if (!readingGuide) return
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't capture when typing in an input
       const tag = (e.target as HTMLElement).tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
       if ((e.target as HTMLElement).isContentEditable) return
 
-      if (e.code === 'Space' && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault()
-        setReadingGuidePlaying(!readingGuidePlaying)
-      }
       if (e.code === 'ArrowRight' && !readingGuidePlaying) {
         e.preventDefault()
         setWordIndex(prev => Math.min(prev + 1, words.length - 1))
@@ -184,6 +205,9 @@ export default function ReadingGuide() {
       if (e.code === 'ArrowLeft' && !readingGuidePlaying) {
         e.preventDefault()
         setWordIndex(prev => Math.max(prev - 1, 0))
+      }
+      if (e.code === 'Escape') {
+        setReadingGuidePlaying(false)
       }
     }
 
@@ -193,12 +217,115 @@ export default function ReadingGuide() {
 
   if (!readingGuide || words.length === 0) return null
 
+  const progress = words.length > 0 ? ((wordIndex + 1) / words.length) * 100 : 0
+
   return (
-    <div
-      ref={indicatorRef}
-      className="reading-guide-indicator"
-      style={indicatorStyle}
-      aria-hidden="true"
-    />
+    <>
+      {/* ── The indicator line above the current word ── */}
+      {indicatorPos && (
+        <div
+          className="reading-guide-indicator"
+          style={{
+            position: 'fixed',
+            left: `${indicatorPos.left}px`,
+            top: `${indicatorPos.top}px`,
+            width: `${indicatorPos.width}px`,
+            height: '2px',
+            borderRadius: '1px',
+            pointerEvents: 'none',
+            zIndex: 100,
+            transition: 'left 60ms ease-out, top 60ms ease-out, width 60ms ease-out',
+          }}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* ── Floating control strip ── */}
+      <div
+        className="fixed z-50 left-1/2 animate-fade-in"
+        style={{
+          bottom: '5rem',
+          transform: 'translateX(-50%)',
+        }}
+      >
+        <div
+          className="flex items-center gap-2 px-3 py-2 rounded-full shadow-lg"
+          style={{
+            backgroundColor: 'rgba(var(--bg-card-rgb), 0.9)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            border: '1px solid var(--border-default)',
+          }}
+        >
+          {/* Play/Pause */}
+          <button
+            onClick={() => setReadingGuidePlaying(!readingGuidePlaying)}
+            className="w-8 h-8 flex items-center justify-center rounded-full btn-transition"
+            style={{
+              backgroundColor: readingGuidePlaying ? 'var(--accent-amber)' : 'var(--bg-soft)',
+              color: readingGuidePlaying ? 'var(--text-inverse)' : 'var(--text-primary)',
+            }}
+            aria-label={readingGuidePlaying ? 'Pause' : 'Play'}
+          >
+            <span className="text-xs">{readingGuidePlaying ? '⏸' : '▶'}</span>
+          </button>
+
+          {/* WPM - / display / + */}
+          <button
+            onClick={() => setReadingGuideWpm(readingGuideWpm - 20)}
+            disabled={readingGuideWpm <= 80}
+            className="w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold btn-transition disabled:opacity-30"
+            style={{ color: 'var(--text-secondary)', backgroundColor: 'var(--bg-soft)' }}
+            aria-label="Decrease speed"
+          >
+            −
+          </button>
+          <span
+            className="text-xs font-semibold tabular-nums min-w-[3.5rem] text-center"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            {readingGuideWpm} <span className="text-[10px] font-normal" style={{ color: 'var(--text-secondary)' }}>wpm</span>
+          </span>
+          <button
+            onClick={() => setReadingGuideWpm(readingGuideWpm + 20)}
+            disabled={readingGuideWpm >= 500}
+            className="w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold btn-transition disabled:opacity-30"
+            style={{ color: 'var(--text-secondary)', backgroundColor: 'var(--bg-soft)' }}
+            aria-label="Increase speed"
+          >
+            +
+          </button>
+
+          {/* Progress bar */}
+          <div
+            className="w-16 h-1.5 rounded-full overflow-hidden"
+            style={{ backgroundColor: 'var(--bg-soft)' }}
+            title={`Word ${wordIndex + 1} of ${words.length}`}
+          >
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: `${progress}%`,
+                backgroundColor: 'var(--accent-amber)',
+                transition: 'width 100ms linear',
+              }}
+            />
+          </div>
+
+          {/* Close */}
+          <button
+            onClick={() => setReadingGuide(false)}
+            className="w-6 h-6 flex items-center justify-center rounded-full btn-transition"
+            style={{ color: 'var(--text-secondary)' }}
+            aria-label="Close reading pacer"
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </>
   )
 }
