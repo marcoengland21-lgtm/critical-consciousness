@@ -1137,20 +1137,22 @@ html[data-high-contrast="true"][data-theme="dark"] {
   --accent-amber: #ffbf40;
 }
 
-/* ── Reading Guide — Warm Glowing Companion ──
-   Additive glow (no dimming). Gentle breathing animation. */
-.reading-guide-glow {
-  background: rgba(255, 191, 71, 0.09);
-  animation: reading-guide-breathe 3s ease-in-out infinite;
+/* ── Reading Guide — Word Pacer Indicator ──
+   A small warm line that sits above the current word and
+   advances word-by-word. Subtle pulse so it feels alive. */
+.reading-guide-indicator {
+  background: linear-gradient(90deg, transparent, var(--accent-amber), transparent);
+  opacity: 0.7;
+  animation: reading-guide-pulse 2s ease-in-out infinite;
 }
 
-html[data-theme="dark"] .reading-guide-glow {
-  background: rgba(255, 191, 71, 0.14);
+html[data-theme="dark"] .reading-guide-indicator {
+  opacity: 0.85;
 }
 
-@keyframes reading-guide-breathe {
-  0%, 100% { opacity: 0.7; }
-  50% { opacity: 1; }
+@keyframes reading-guide-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.85; }
 }
 
 /* ── Dyslexia-Friendly Font Mode ──
