@@ -47,9 +47,12 @@ interface AudioAlignment {
 interface AudioPlayerProps {
   alignment: AudioAlignment | null
   onParagraphChange?: (paragraphIndex: number | null) => void
+  onPlayStateChange?: (playing: boolean) => void
+  footnotesExpanded?: boolean
+  onFootnotesToggle?: () => void
 }
 
-export default function AudioPlayer({ alignment, onParagraphChange }: AudioPlayerProps) {
+export default function AudioPlayer({ alignment, onParagraphChange, onPlayStateChange, footnotesExpanded, onFootnotesToggle }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
@@ -105,8 +108,10 @@ export default function AudioPlayer({ alignment, onParagraphChange }: AudioPlaye
       audioRef.current.play()
       animationRef.current = requestAnimationFrame(updateTime)
     }
-    setIsPlaying(!isPlaying)
-  }, [isPlaying, updateTime])
+    const newState = !isPlaying
+    setIsPlaying(newState)
+    onPlayStateChange?.(newState)
+  }, [isPlaying, updateTime, onPlayStateChange])
 
   // ── Skip ──
   const skip = useCallback((seconds: number) => {
@@ -192,6 +197,7 @@ export default function AudioPlayer({ alignment, onParagraphChange }: AudioPlaye
     })
     audio.addEventListener('ended', () => {
       setIsPlaying(false)
+      onPlayStateChange?.(false)
       if (animationRef.current) cancelAnimationFrame(animationRef.current)
       setCurrentParagraph(null)
       onParagraphChange?.(null)
@@ -279,23 +285,41 @@ export default function AudioPlayer({ alignment, onParagraphChange }: AudioPlaye
             </span>
           </span>
         </div>
-        <button
-          onClick={() => {
-            if (isPlaying) {
-              audioRef.current?.pause()
-              setIsPlaying(false)
-              if (animationRef.current) cancelAnimationFrame(animationRef.current)
-            }
-            setIsExpanded(false)
-          }}
-          className="p-1 rounded-md btn-transition"
-          style={{ color: 'var(--text-secondary)' }}
-          aria-label="Close audio player"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
+        <div className="flex items-center gap-1.5">
+          {/* Footnotes expand/collapse toggle */}
+          {onFootnotesToggle && (
+            <button
+              onClick={onFootnotesToggle}
+              className="px-2 py-0.5 rounded-md text-xs btn-transition"
+              style={{
+                color: footnotesExpanded ? 'var(--accent-purple)' : 'var(--text-secondary)',
+                backgroundColor: footnotesExpanded ? 'color-mix(in srgb, var(--accent-purple) 10%, transparent)' : 'transparent',
+              }}
+              aria-label={footnotesExpanded ? 'Collapse footnotes' : 'Expand footnotes'}
+              title={footnotesExpanded ? 'Collapse all footnotes' : 'Expand all footnotes (the reader reads them aloud)'}
+            >
+              {footnotesExpanded ? 'Hide notes' : 'Show notes'}
+            </button>
+          )}
+          <button
+            onClick={() => {
+              if (isPlaying) {
+                audioRef.current?.pause()
+                setIsPlaying(false)
+                onPlayStateChange?.(false)
+                if (animationRef.current) cancelAnimationFrame(animationRef.current)
+              }
+              setIsExpanded(false)
+            }}
+            className="p-1 rounded-md btn-transition"
+            style={{ color: 'var(--text-secondary)' }}
+            aria-label="Close audio player"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Progress bar — clickable */}
