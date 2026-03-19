@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { unstable_cache } from 'next/cache'
 import ChapterReader from '@/components/reading/ChapterReader'
-import { getChapterLabel, getPartNumber } from '@/lib/chapter-utils'
+import { getChapterLabel, getPartNumber, getChapterSubtitle } from '@/lib/chapter-utils'
 import { getAudioAlignment } from '@/lib/audio-alignments'
 import type { GlossaryTerm } from '@/lib/glossary-utils'
 
@@ -137,6 +137,9 @@ export default async function ChapterPage({ params }: Props) {
   const wordCount = chapterData.content.split(/\s+/).filter(Boolean).length
   const readingTimeMinutes = Math.max(1, Math.round(wordCount / 200))
 
+  // Some chapters have subtitles from Marx's original text (e.g. Ch1 S1)
+  const subtitle = getChapterSubtitle(chapterNum)
+
   // Determine if we're in Ch1 sections or a standalone chapter
   const isChapter1Section = chapterNum <= 4
   const ch1Sections = chapters.filter(c => c.chapter_number <= 4)
@@ -194,6 +197,17 @@ export default async function ChapterPage({ params }: Props) {
         >
           {chapterData.title}
         </h1>
+        {subtitle && (
+          <p
+            className="text-base sm:text-lg italic mb-3"
+            style={{
+              color: 'var(--text-secondary)',
+              fontFamily: "'Lora', Georgia, serif",
+            }}
+          >
+            {subtitle}
+          </p>
+        )}
         <div className="w-16 h-0.5 mx-auto" style={{ backgroundColor: 'var(--accent-purple)' }} />
       </div>
 

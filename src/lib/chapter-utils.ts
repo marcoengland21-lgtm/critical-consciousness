@@ -36,6 +36,20 @@ export function getPartNumber(chapterNumber: number): number {
   return 8
 }
 
+/**
+ * Chapter subtitles from Marx's original text.
+ * These are the parenthetical sub-headings that appear below the main section title.
+ * The LibriVox reader reads them aloud, so they should be visible on the page.
+ */
+const chapterSubtitles: Record<number, string> = {
+  1: 'The Substance of Value and the Magnitude of Value',
+}
+
+/** Get the subtitle for a chapter, if one exists */
+export function getChapterSubtitle(chapterNumber: number): string | null {
+  return chapterSubtitles[chapterNumber] || null
+}
+
 /** Part titles from Capital's structure */
 export const partTitles: Record<number, string> = {
   1: 'Commodities and Money',
