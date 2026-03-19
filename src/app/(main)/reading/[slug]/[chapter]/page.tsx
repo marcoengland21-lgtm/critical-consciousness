@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { unstable_cache } from 'next/cache'
 import ChapterReader from '@/components/reading/ChapterReader'
 import { getChapterLabel, getPartNumber } from '@/lib/chapter-utils'
+import { getAudioAlignment } from '@/lib/audio-alignments'
 import type { GlossaryTerm } from '@/lib/glossary-utils'
 
 // Query-specific shapes for cached Supabase responses
@@ -206,6 +207,7 @@ export default async function ChapterPage({ params }: Props) {
         documentSlug={slug}
         allChapters={chapters}
         currentIndex={currentIndex}
+        audioAlignment={getAudioAlignment(chapterNum)}
       />
 
       {/* Cross-feature prompt */}
