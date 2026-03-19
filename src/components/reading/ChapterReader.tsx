@@ -177,7 +177,8 @@ function buildMergedSegments(
 function renderTextWithFootnotes(
   text: string,
   footnoteMap: Map<number, Footnote>,
-  keyPrefix: string
+  keyPrefix: string,
+  footnotesExpanded?: boolean
 ): React.ReactNode[] {
   const parts: React.ReactNode[] = []
   const regex = /\[(\d+)\]/g
@@ -199,6 +200,7 @@ function renderTextWithFootnotes(
           number={fnNum}
           content={footnote.content}
           author={footnote.author}
+          forceOpen={footnotesExpanded}
         />
       )
     } else {
@@ -235,6 +237,7 @@ interface ParagraphProps {
   isUserFlagged: boolean
   keywordFilter: { matching: Set<string> }
   showKeywordStats: boolean
+  footnotesExpanded: boolean
   onAnnotationClick: (anns: Annotation[]) => void
   onGlossaryTermClick: (term: string, definition: string, event: React.MouseEvent) => void
 }
@@ -253,6 +256,7 @@ const MemoizedParagraph = memo(function Paragraph({
   isUserFlagged,
   keywordFilter,
   showKeywordStats,
+  footnotesExpanded,
   onAnnotationClick,
   onGlossaryTermClick,
 }: ParagraphProps) {
@@ -315,7 +319,7 @@ const MemoizedParagraph = memo(function Paragraph({
               onClick={(e) => onGlossaryTermClick(seg.termData!.term, seg.termData!.definition, e)}
               title={`Click to see definition of "${seg.termData.term}"`}
             >
-              {renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`)}
+              {renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`, footnotesExpanded)}
             </span>
           )
         }
@@ -349,7 +353,7 @@ const MemoizedParagraph = memo(function Paragraph({
                 }}
                 title={`${density} annotation${density > 1 ? 's' : ''}; Click to see glossary definition of "${seg.termData.term}"`}
               >
-                {renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`)}
+                {renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`, footnotesExpanded)}
               </mark>
             )
           }
@@ -366,13 +370,13 @@ const MemoizedParagraph = memo(function Paragraph({
                 transition: 'opacity 200ms ease',
               }}
             >
-              {renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`)}
+              {renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`, footnotesExpanded)}
             </mark>
           )
         }
 
         // Regular text
-        return <span key={sIdx}>{renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`)}</span>
+        return <span key={sIdx}>{renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`, footnotesExpanded)}</span>
       })}
     </p>
   )
@@ -420,6 +424,8 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
   const [annotationKeyword, setAnnotationKeyword] = useState('')
   const [showGlossaryPanel, setShowGlossaryPanel] = useState(false)
   const [renderedCount, setRenderedCount] = useState(INITIAL_RENDER_COUNT)
+  const [footnotesExpanded, setFootnotesExpanded] = useState(false)
+  const [audioIsPlaying, setAudioIsPlaying] = useState(false)
   const audioParagraphRef = useRef<HTMLElement | null>(null)
 
   // ── Audio paragraph highlight ──
@@ -855,6 +861,13 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
           <AudioPlayer
             alignment={audioAlignment}
             onParagraphChange={handleAudioParagraphChange}
+            onPlayStateChange={(playing) => {
+              setAudioIsPlaying(playing)
+              // Auto-expand footnotes when audio starts playing
+              if (playing) setFootnotesExpanded(true)
+            }}
+            footnotesExpanded={footnotesExpanded}
+            onFootnotesToggle={() => setFootnotesExpanded(prev => !prev)}
           />
         </div>
       )}
@@ -882,6 +895,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
             isUserFlagged={userConfusionFlags.has(pIdx)}
             keywordFilter={keywordFilter}
             showKeywordStats={showKeywordStats}
+            footnotesExpanded={footnotesExpanded}
             onAnnotationClick={handleAnnotationClick}
             onGlossaryTermClick={handleGlossaryTermClick}
           />

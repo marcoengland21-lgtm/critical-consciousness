@@ -6,11 +6,17 @@ interface FootnoteInlineProps {
   number: number
   content: string
   author: 'marx' | 'engels'
+  /** When true, footnote is forced open (e.g. during audio playback) */
+  forceOpen?: boolean
 }
 
-export default function FootnoteInline({ number, content, author }: FootnoteInlineProps) {
-  const [isOpen, setIsOpen] = useState(false)
+export default function FootnoteInline({ number, content, author, forceOpen }: FootnoteInlineProps) {
+  const [isLocalOpen, setIsLocalOpen] = useState(false)
   const contentRef = useRef<HTMLSpanElement>(null)
+
+  // If forceOpen changes from true→false, respect the user's local state.
+  // If forceOpen is true, always show open regardless of local state.
+  const isOpen = forceOpen || isLocalOpen
 
   const isEngels = author === 'engels'
 
@@ -31,7 +37,7 @@ export default function FootnoteInline({ number, content, author }: FootnoteInli
         }}
         onClick={(e) => {
           e.stopPropagation()
-          setIsOpen(!isOpen)
+          setIsLocalOpen(!isOpen)
         }}
         title={`Footnote ${number}${isEngels ? ' (Engels)' : ''} — click to ${isOpen ? 'collapse' : 'expand'}`}
         role="button"
@@ -83,7 +89,7 @@ export default function FootnoteInline({ number, content, author }: FootnoteInli
             }}
             onClick={(e) => {
               e.stopPropagation()
-              setIsOpen(false)
+              setIsLocalOpen(false)
             }}
             role="button"
             aria-label="Close footnote"
