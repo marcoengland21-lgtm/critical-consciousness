@@ -5,19 +5,20 @@ import { usePathname } from 'next/navigation'
 import { useAccessibility } from '@/components/layout/AccessibilityProvider'
 
 /**
- * Reading Pacer — Two modes: Cursor-driven or Auto (timer-driven)
+ * Reading Pacer — Paragraph-highlight pace guide with auto-scroll
  *
- * **Cursor mode** (default): The paragraph under the mouse cursor gets
- * a subtle left border highlight. The reader leads — the pacer follows.
- * No timer, no WPM. Just move your cursor through the text and the
- * highlight tracks where you are.
+ * Words are tracked internally for WPM timing, but the visual indicator
+ * is a subtle left border on the current paragraph — applied directly
+ * to the DOM element, so it can never misposition. No overlay divs,
+ * no coordinate math, no Range API positioning bugs.
  *
- * **Auto mode**: Word-by-word timing with adaptive duration. The pacer
- * advances automatically at a configurable WPM, with intelligent
- * slowdowns for long paragraphs and pauses at punctuation/transitions.
+ * - Scans .reading-text for words via TreeWalker
+ * - Internal word-by-word timing with adaptive duration
+ * - Highlights the paragraph containing the current word (left border)
+ * - Smooth auto-scroll keeps current paragraph in the top third
+ * - Floating control strip with play/pause, WPM, and progress
  *
- * Both modes use the same paragraph-level highlight (left border applied
- * directly to the DOM element — no overlay divs, no coordinate math).
+ * Toggle via AccessibilityProvider's readingGuide state.
  */
 
 interface WordPosition {
@@ -37,22 +38,6 @@ interface ParagraphInfo {
   firstWordIdx: number
 }
 
-/** Walk up from a node to find the paragraph-level ancestor */
-function findParagraphElement(node: Node): HTMLElement | null {
-  let el: Node | null = node
-  while (el) {
-    if (el instanceof HTMLElement) {
-      const tag = el.tagName.toLowerCase()
-      if (tag === 'p' || tag === 'blockquote' || tag === 'li' || tag === 'h1' || tag === 'h2' || tag === 'h3' || tag === 'h4') {
-        return el
-      }
-      if (el.classList.contains('reading-text')) break
-    }
-    el = el.parentNode
-  }
-  return null
-}
-
 export default function ReadingGuide() {
   const {
     readingGuide,
@@ -60,8 +45,6 @@ export default function ReadingGuide() {
     setReadingGuideWpm,
     readingGuidePlaying,
     setReadingGuidePlaying,
-    readingGuideMode,
-    setReadingGuideMode,
     setReadingGuide,
   } = useAccessibility()
   const pathname = usePathname()
@@ -83,21 +66,10 @@ export default function ReadingGuide() {
     }
   }, [])
 
-  // ── Apply highlight to a specific paragraph element ──
-  const applyHighlight = useCallback((paragraph: HTMLElement) => {
-    if (paragraph === activeParagraphRef.current) return
-    clearHighlight()
-    paragraph.style.transition = 'border-left-color 300ms ease-out, padding-left 300ms ease-out'
-    paragraph.style.borderLeft = '2px solid var(--accent-purple)'
-    paragraph.style.paddingLeft = '1rem'
-    activeParagraphRef.current = paragraph
-  }, [clearHighlight])
-
   // ── Find all words when guide activates or chapter changes ──
   useEffect(() => {
     if (!readingGuide) {
       setWords([])
-      setParagraphs([])
       setWordIndex(0)
       clearHighlight()
       return
@@ -110,9 +82,26 @@ export default function ReadingGuide() {
       const foundWords: WordPosition[] = []
       const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT)
 
+      // Helper: find the paragraph-level ancestor of a text node
+      const findParagraph = (node: Node): HTMLElement | null => {
+        let el: Node | null = node
+        while (el) {
+          if (el instanceof HTMLElement) {
+            const tag = el.tagName.toLowerCase()
+            if (tag === 'p' || tag === 'blockquote' || tag === 'li' || tag === 'h1' || tag === 'h2' || tag === 'h3' || tag === 'h4') {
+              return el
+            }
+            if (el.classList.contains('reading-text')) break
+          }
+          el = el.parentNode
+        }
+        return null
+      }
+
       // Build words array with paragraph tracking
-      const paraMap = new Map<HTMLElement, number>()
+      const paraMap = new Map<HTMLElement, number>() // element → paragraph index
       const paraInfos: ParagraphInfo[] = []
+      let currentParaIdx = -1
 
       let textNode: Text | null
       while ((textNode = walker.nextNode() as Text | null)) {
@@ -120,7 +109,8 @@ export default function ReadingGuide() {
         const regex = /\S+/g
         let match: RegExpExecArray | null
 
-        const paraEl = findParagraphElement(textNode)
+        // Find which paragraph this text node belongs to
+        const paraEl = findParagraph(textNode)
         let paraIdx = -1
         if (paraEl) {
           if (paraMap.has(paraEl)) {
@@ -155,78 +145,51 @@ export default function ReadingGuide() {
     return () => clearTimeout(timer)
   }, [readingGuide, pathname, setReadingGuidePlaying, clearHighlight])
 
-  // ── Cursor-driven mode: track mouse/touch over .reading-text ──
-  useEffect(() => {
-    if (!readingGuide || readingGuideMode !== 'cursor') {
-      return
-    }
-
-    const container = document.querySelector('.reading-text') as HTMLElement
-    if (!container) return
-
-    let throttleTimer: ReturnType<typeof setTimeout> | null = null
-
-    const handleCursorAt = (x: number, y: number) => {
-      const el = document.elementFromPoint(x, y)
-      if (!el) return
-
-      // Walk up from the element under the cursor to find the paragraph
-      const paragraph = findParagraphElement(el)
-      if (paragraph && container.contains(paragraph)) {
-        applyHighlight(paragraph)
-      }
-    }
-
-    const handleMouseMove = (e: MouseEvent) => {
-      // Throttle to ~50ms
-      if (throttleTimer) return
-      throttleTimer = setTimeout(() => { throttleTimer = null }, 50)
-      handleCursorAt(e.clientX, e.clientY)
-    }
-
-    const handleTouchStart = (e: TouchEvent) => {
-      const touch = e.touches[0]
-      if (touch) {
-        handleCursorAt(touch.clientX, touch.clientY)
-      }
-    }
-
-    const handleClick = (e: MouseEvent) => {
-      // Immediate highlight on click (for touch devices that may not
-      // fire mousemove, and for precise paragraph selection)
-      handleCursorAt(e.clientX, e.clientY)
-    }
-
-    container.addEventListener('mousemove', handleMouseMove)
-    container.addEventListener('touchstart', handleTouchStart, { passive: true })
-    container.addEventListener('click', handleClick)
-
-    return () => {
-      container.removeEventListener('mousemove', handleMouseMove)
-      container.removeEventListener('touchstart', handleTouchStart)
-      container.removeEventListener('click', handleClick)
-      if (throttleTimer) clearTimeout(throttleTimer)
-    }
-  }, [readingGuide, readingGuideMode, applyHighlight])
-
-  // ── Auto mode: highlight paragraph from word index ──
+  // ── Highlight the paragraph containing the current word ──
+  // Walks up from the text node to find the nearest block-level parent
+  // (p, blockquote, li, div) inside .reading-text, then applies a
+  // subtle left border. No overlays, no coordinate math.
   const highlightParagraph = useCallback(() => {
-    if (readingGuideMode !== 'auto') return
     if (words.length === 0 || wordIndex >= words.length) {
       clearHighlight()
       return
     }
 
     const word = words[wordIndex]
-    const paragraph = findParagraphElement(word.node)
-    if (paragraph) {
-      applyHighlight(paragraph)
+    // Walk up from the text node to find the paragraph-level element
+    let el: Node | null = word.node
+    let paragraph: HTMLElement | null = null
+    while (el) {
+      if (el instanceof HTMLElement) {
+        const tag = el.tagName.toLowerCase()
+        if (tag === 'p' || tag === 'blockquote' || tag === 'li' || tag === 'h1' || tag === 'h2' || tag === 'h3' || tag === 'h4') {
+          paragraph = el
+          break
+        }
+        // Stop searching if we hit the container
+        if (el.classList.contains('reading-text')) break
+      }
+      el = el.parentNode
     }
-  }, [readingGuideMode, words, wordIndex, clearHighlight, applyHighlight])
 
-  // ── Auto-scroll when playing (auto mode) ──
+    if (!paragraph) return
+
+    // Same paragraph — no change needed
+    if (paragraph === activeParagraphRef.current) return
+
+    // Remove highlight from previous paragraph
+    clearHighlight()
+
+    // Apply highlight to new paragraph
+    paragraph.style.transition = 'border-left-color 300ms ease-out, padding-left 300ms ease-out'
+    paragraph.style.borderLeft = '2px solid var(--accent-purple)'
+    paragraph.style.paddingLeft = '1rem'
+    activeParagraphRef.current = paragraph
+  }, [words, wordIndex, clearHighlight])
+
+  // ── Auto-scroll when playing ──
   const autoScroll = useCallback(() => {
-    if (readingGuideMode !== 'auto' || !readingGuidePlaying || words.length === 0 || wordIndex >= words.length) return
+    if (!readingGuidePlaying || words.length === 0 || wordIndex >= words.length) return
 
     const word = words[wordIndex]
     try {
@@ -252,9 +215,9 @@ export default function ReadingGuide() {
     } catch {
       // ignore
     }
-  }, [readingGuideMode, readingGuidePlaying, words, wordIndex])
+  }, [readingGuidePlaying, words, wordIndex])
 
-  // Update paragraph highlight + auto-scroll when word index changes (auto mode)
+  // Update paragraph highlight + auto-scroll when word index changes
   useEffect(() => {
     highlightParagraph()
     autoScroll()
@@ -265,7 +228,10 @@ export default function ReadingGuide() {
     return () => clearHighlight()
   }, [clearHighlight])
 
-  // ── Adaptive word timing (auto mode only) ──
+  // ── Adaptive word timing ──
+  // Considers word length, punctuation, paragraph length, and paragraph
+  // transitions. Long paragraphs (common in Capital) get slowed down
+  // so readers have time to absorb dense material.
   const wordsRef = useRef(words)
   const paragraphsRef = useRef(paragraphs)
   const wpmRef = useRef(readingGuideWpm)
@@ -283,8 +249,10 @@ export default function ReadingGuide() {
     const text = (word.node.textContent || '').slice(word.start, word.end)
     const len = text.length
 
+    // ── Word length factor ──
     const lengthFactor = Math.max(0.5, Math.min(1.8, 0.3 + len * 0.14))
 
+    // ── Punctuation pause ──
     const lastChar = text[text.length - 1]
     let punctuationMs = 0
     if (lastChar === '.' || lastChar === '!' || lastChar === '?') {
@@ -295,17 +263,27 @@ export default function ReadingGuide() {
       punctuationMs = baseMs * 0.2
     }
 
+    // ── Paragraph-level adjustments ──
     let paragraphMs = 0
     let paragraphSlowdown = 1.0
     const paraIdx = word.paragraphIdx
     if (paraIdx >= 0 && paraIdx < currentParas.length) {
       const para = currentParas[paraIdx]
 
+      // New paragraph pause: settling time when entering a new paragraph.
+      // Longer paragraphs get more settling time — your eye needs to
+      // take in the new block before starting to read.
       const isFirstWord = para.firstWordIdx === idx
       if (isFirstWord && idx > 0) {
+        // Base pause of 400ms + 3ms per word in the paragraph
+        // A 20-word paragraph: 460ms pause. A 200-word paragraph: 1000ms.
         paragraphMs = Math.min(1200, 400 + para.wordCount * 3)
       }
 
+      // Long paragraph slowdown: paragraphs over 80 words get a global
+      // slowdown factor. Capital is full of 150-300 word paragraphs that
+      // need more time to absorb.
+      // 80 words = 1.0x, 150 words = 1.15x, 250 words = 1.3x, caps at 1.4x
       if (para.wordCount > 80) {
         paragraphSlowdown = Math.min(1.4, 1.0 + (para.wordCount - 80) * 0.002)
       }
@@ -314,10 +292,9 @@ export default function ReadingGuide() {
     return (baseMs * lengthFactor * paragraphSlowdown) + punctuationMs + paragraphMs
   }, [])
 
-  // ── Advance word-by-word at adaptive pace (auto mode only) ──
+  // ── Advance word-by-word at adaptive pace ──
   useEffect(() => {
-    // Only run timer in auto mode when playing
-    if (readingGuideMode !== 'auto' || !readingGuidePlaying || words.length === 0) {
+    if (!readingGuidePlaying || words.length === 0) {
       if (timerRef.current) {
         clearTimeout(timerRef.current)
         timerRef.current = null
@@ -346,9 +323,9 @@ export default function ReadingGuide() {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readingGuideMode, readingGuidePlaying, words.length, setReadingGuidePlaying, getWordDuration])
+  }, [readingGuidePlaying, words.length, setReadingGuidePlaying, getWordDuration])
 
-  // ── Keyboard: arrow keys to step (auto mode), Escape to pause ──
+  // ── Keyboard: arrow keys to step, Escape to pause ──
   useEffect(() => {
     if (!readingGuide) return
 
@@ -357,15 +334,13 @@ export default function ReadingGuide() {
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
       if ((e.target as HTMLElement).isContentEditable) return
 
-      if (readingGuideMode === 'auto') {
-        if (e.code === 'ArrowRight' && !readingGuidePlaying) {
-          e.preventDefault()
-          setWordIndex(prev => Math.min(prev + 1, words.length - 1))
-        }
-        if (e.code === 'ArrowLeft' && !readingGuidePlaying) {
-          e.preventDefault()
-          setWordIndex(prev => Math.max(prev - 1, 0))
-        }
+      if (e.code === 'ArrowRight' && !readingGuidePlaying) {
+        e.preventDefault()
+        setWordIndex(prev => Math.min(prev + 1, words.length - 1))
+      }
+      if (e.code === 'ArrowLeft' && !readingGuidePlaying) {
+        e.preventDefault()
+        setWordIndex(prev => Math.max(prev - 1, 0))
       }
       if (e.code === 'Escape') {
         setReadingGuidePlaying(false)
@@ -374,15 +349,15 @@ export default function ReadingGuide() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [readingGuide, readingGuideMode, readingGuidePlaying, words.length, setReadingGuidePlaying])
+  }, [readingGuide, readingGuidePlaying, words.length, setReadingGuidePlaying])
 
-  // Don't render controls until words are scanned (auto mode) or guide is active (cursor mode)
-  if (!readingGuide) return null
-  if (readingGuideMode === 'auto' && words.length === 0) return null
+  if (!readingGuide || words.length === 0) return null
 
   const progress = words.length > 0 ? ((wordIndex + 1) / words.length) * 100 : 0
 
   return (
+    // No overlay indicator — paragraph highlight is applied directly to DOM.
+    // Only the floating control strip renders here.
     <div
       className="fixed z-50 left-1/2 animate-fade-in"
       style={{
@@ -399,94 +374,60 @@ export default function ReadingGuide() {
           border: '1px solid var(--border-default)',
         }}
       >
-        {/* Mode toggle — two-segment pill */}
-        <div
-          className="flex rounded-full overflow-hidden"
-          style={{ border: '1px solid var(--border-default)' }}
+        {/* Play/Pause */}
+        <button
+          onClick={() => setReadingGuidePlaying(!readingGuidePlaying)}
+          className="w-8 h-8 flex items-center justify-center rounded-full btn-transition"
+          style={{
+            backgroundColor: readingGuidePlaying ? 'var(--accent-amber)' : 'var(--bg-soft)',
+            color: readingGuidePlaying ? 'var(--text-inverse)' : 'var(--text-primary)',
+          }}
+          aria-label={readingGuidePlaying ? 'Pause' : 'Play'}
         >
-          <button
-            onClick={() => setReadingGuideMode('cursor')}
-            className="px-2.5 py-1 text-[11px] font-semibold btn-transition"
+          <span className="text-xs">{readingGuidePlaying ? '⏸' : '▶'}</span>
+        </button>
+
+        {/* WPM - / display / + */}
+        <button
+          onClick={() => setReadingGuideWpm(readingGuideWpm - 20)}
+          disabled={readingGuideWpm <= 80}
+          className="w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold btn-transition disabled:opacity-30"
+          style={{ color: 'var(--text-secondary)', backgroundColor: 'var(--bg-soft)' }}
+          aria-label="Decrease speed"
+        >
+          −
+        </button>
+        <span
+          className="text-xs font-semibold tabular-nums min-w-[3.5rem] text-center"
+          style={{ color: 'var(--text-primary)' }}
+        >
+          {readingGuideWpm} <span className="text-[10px] font-normal" style={{ color: 'var(--text-secondary)' }}>wpm</span>
+        </span>
+        <button
+          onClick={() => setReadingGuideWpm(readingGuideWpm + 20)}
+          disabled={readingGuideWpm >= 500}
+          className="w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold btn-transition disabled:opacity-30"
+          style={{ color: 'var(--text-secondary)', backgroundColor: 'var(--bg-soft)' }}
+          aria-label="Increase speed"
+        >
+          +
+        </button>
+
+        {/* Progress bar */}
+        <div
+          className="w-16 h-1.5 rounded-full overflow-hidden"
+          style={{ backgroundColor: 'var(--bg-soft)' }}
+          title={`Word ${wordIndex + 1} of ${words.length}`}
+        >
+          <div
+            className="h-full rounded-full"
             style={{
-              backgroundColor: readingGuideMode === 'cursor' ? 'var(--accent-purple)' : 'transparent',
-              color: readingGuideMode === 'cursor' ? 'var(--text-inverse)' : 'var(--text-secondary)',
+              width: `${progress}%`,
+              backgroundColor: 'var(--accent-amber)',
+              transition: 'width 100ms linear',
             }}
-            aria-label="Cursor mode"
-          >
-            Cursor
-          </button>
-          <button
-            onClick={() => setReadingGuideMode('auto')}
-            className="px-2.5 py-1 text-[11px] font-semibold btn-transition"
-            style={{
-              backgroundColor: readingGuideMode === 'auto' ? 'var(--accent-purple)' : 'transparent',
-              color: readingGuideMode === 'auto' ? 'var(--text-inverse)' : 'var(--text-secondary)',
-            }}
-            aria-label="Auto mode"
-          >
-            Auto
-          </button>
+          />
         </div>
-
-        {/* Auto mode controls — play/pause, WPM, progress */}
-        {readingGuideMode === 'auto' && (
-          <>
-            {/* Play/Pause */}
-            <button
-              onClick={() => setReadingGuidePlaying(!readingGuidePlaying)}
-              className="w-8 h-8 flex items-center justify-center rounded-full btn-transition"
-              style={{
-                backgroundColor: readingGuidePlaying ? 'var(--accent-amber)' : 'var(--bg-soft)',
-                color: readingGuidePlaying ? 'var(--text-inverse)' : 'var(--text-primary)',
-              }}
-              aria-label={readingGuidePlaying ? 'Pause' : 'Play'}
-            >
-              <span className="text-xs">{readingGuidePlaying ? '⏸' : '▶'}</span>
-            </button>
-
-            {/* WPM - / display / + */}
-            <button
-              onClick={() => setReadingGuideWpm(readingGuideWpm - 20)}
-              disabled={readingGuideWpm <= 80}
-              className="w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold btn-transition disabled:opacity-30"
-              style={{ color: 'var(--text-secondary)', backgroundColor: 'var(--bg-soft)' }}
-              aria-label="Decrease speed"
-            >
-              −
-            </button>
-            <span
-              className="text-xs font-semibold tabular-nums min-w-[3.5rem] text-center"
-              style={{ color: 'var(--text-primary)' }}
-            >
-              {readingGuideWpm} <span className="text-[10px] font-normal" style={{ color: 'var(--text-secondary)' }}>wpm</span>
-            </span>
-            <button
-              onClick={() => setReadingGuideWpm(readingGuideWpm + 20)}
-              disabled={readingGuideWpm >= 500}
-              className="w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold btn-transition disabled:opacity-30"
-              style={{ color: 'var(--text-secondary)', backgroundColor: 'var(--bg-soft)' }}
-              aria-label="Increase speed"
-            >
-              +
-            </button>
-
-            {/* Progress bar */}
-            <div
-              className="w-16 h-1.5 rounded-full overflow-hidden"
-              style={{ backgroundColor: 'var(--bg-soft)' }}
-              title={`Word ${wordIndex + 1} of ${words.length}`}
-            >
-              <div
-                className="h-full rounded-full"
-                style={{
-                  width: `${progress}%`,
-                  backgroundColor: 'var(--accent-amber)',
-                  transition: 'width 100ms linear',
-                }}
-              />
-            </div>
-          </>
-        )}
 
         {/* Close */}
         <button

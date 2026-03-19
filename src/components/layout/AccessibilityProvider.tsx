@@ -21,9 +21,6 @@ interface AccessibilityContextType {
   /** Whether the reading guide pacer is currently advancing */
   readingGuidePlaying: boolean
   setReadingGuidePlaying: (playing: boolean) => void
-  /** Reading guide mode — cursor-driven (follows mouse) or auto (timer-driven) */
-  readingGuideMode: 'cursor' | 'auto'
-  setReadingGuideMode: (mode: 'cursor' | 'auto') => void
 }
 
 const AccessibilityContext = createContext<AccessibilityContextType>({
@@ -39,8 +36,6 @@ const AccessibilityContext = createContext<AccessibilityContextType>({
   setReadingGuideWpm: () => {},
   readingGuidePlaying: false,
   setReadingGuidePlaying: () => {},
-  readingGuideMode: 'cursor',
-  setReadingGuideMode: () => {},
 })
 
 export function useAccessibility() {
@@ -54,7 +49,6 @@ const KEYS = {
   dyslexiaFont: 'ccp-dyslexia-font',
   readingGuide: 'ccp-reading-guide',
   readingGuideWpm: 'ccp-reading-guide-wpm',
-  readingGuideMode: 'ccp-reading-guide-mode',
 } as const
 
 export default function AccessibilityProvider({ children }: { children: React.ReactNode }) {
@@ -65,7 +59,6 @@ export default function AccessibilityProvider({ children }: { children: React.Re
   const [readingGuide, setReadingGuideState] = useState(false)
   const [readingGuideWpm, setReadingGuideWpmState] = useState(200)
   const [readingGuidePlaying, setReadingGuidePlayingState] = useState(false)
-  const [readingGuideMode, setReadingGuideModeState] = useState<'cursor' | 'auto'>('cursor')
 
   // ── Sync from localStorage on mount ──
   useEffect(() => {
@@ -102,11 +95,6 @@ export default function AccessibilityProvider({ children }: { children: React.Re
       if (!isNaN(wpm) && wpm >= 80 && wpm <= 500) {
         setReadingGuideWpmState(wpm)
       }
-    }
-
-    const savedMode = localStorage.getItem(KEYS.readingGuideMode)
-    if (savedMode === 'cursor' || savedMode === 'auto') {
-      setReadingGuideModeState(savedMode)
     }
   }, [])
 
@@ -155,12 +143,6 @@ export default function AccessibilityProvider({ children }: { children: React.Re
     setReadingGuidePlayingState(playing)
   }, [])
 
-  const setReadingGuideMode = useCallback((mode: 'cursor' | 'auto') => {
-    setReadingGuideModeState(mode)
-    if (mode === 'cursor') setReadingGuidePlayingState(false) // Stop auto-play when switching to cursor
-    localStorage.setItem(KEYS.readingGuideMode, mode)
-  }, [])
-
   return (
     <AccessibilityContext.Provider
       value={{
@@ -176,8 +158,6 @@ export default function AccessibilityProvider({ children }: { children: React.Re
         setReadingGuideWpm,
         readingGuidePlaying,
         setReadingGuidePlaying,
-        readingGuideMode,
-        setReadingGuideMode,
       }}
     >
       {children}
