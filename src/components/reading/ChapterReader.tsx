@@ -15,6 +15,8 @@ import GlossaryQuickAccess from './GlossaryQuickAccess'
 import FootnoteInline from './FootnoteInline'
 import Toast from '@/components/ui/Toast'
 import BackToTop from './BackToTop'
+import AudioPlayer from './AudioPlayer'
+import type { AudioAlignment } from '@/lib/audio-alignments'
 import { getConfusionFlagCounts, getUserConfusionFlags } from '@/lib/confusion-flags'
 import { findGlossaryTermMatches, buildGlossarySegments, findChapterGlossaryTerms, GlossaryTerm, GlossaryTermWithCount, TermMatch } from '@/lib/glossary-utils'
 import { useScrollPersistence } from '@/hooks/useScrollPersistence'
@@ -63,6 +65,7 @@ interface Props {
   documentSlug: string
   allChapters: { chapter_number: number; title: string }[]
   currentIndex: number
+  audioAlignment?: AudioAlignment | null
 }
 
 // Guest ID for unauthenticated annotation
@@ -378,7 +381,7 @@ const MemoizedParagraph = memo(function Paragraph({
 // ====================================================================
 // Main ChapterReader component
 // ====================================================================
-export default function ChapterReader({ chapter, annotations: initialAnnotations, footnotes, glossaryTerms: initialGlossaryTerms, userId, documentSlug, allChapters, currentIndex }: Props) {
+export default function ChapterReader({ chapter, annotations: initialAnnotations, footnotes, glossaryTerms: initialGlossaryTerms, userId, documentSlug, allChapters, currentIndex, audioAlignment }: Props) {
 
   const router = useRouter()
   useScrollPersistence(chapter.chapter_number)
@@ -417,6 +420,56 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
   const [annotationKeyword, setAnnotationKeyword] = useState('')
   const [showGlossaryPanel, setShowGlossaryPanel] = useState(false)
   const [renderedCount, setRenderedCount] = useState(INITIAL_RENDER_COUNT)
+  const audioParagraphRef = useRef<HTMLElement | null>(null)
+
+  // ── Audio paragraph highlight ──
+  // When the audio player reports a new paragraph, highlight it with a
+  // left border (same visual language as the reading pacer) and auto-scroll.
+  const handleAudioParagraphChange = useCallback((paragraphIndex: number | null) => {
+    // Clear previous highlight
+    if (audioParagraphRef.current) {
+      audioParagraphRef.current.style.removeProperty('border-left')
+      audioParagraphRef.current.style.removeProperty('padding-left')
+      audioParagraphRef.current.style.removeProperty('transition')
+      audioParagraphRef.current.style.removeProperty('background-color')
+      audioParagraphRef.current = null
+    }
+
+    if (paragraphIndex === null || !textRef.current) return
+
+    // Find the paragraph element by index
+    const paragraphs = textRef.current.querySelectorAll(':scope > p')
+    const paraEl = paragraphs[paragraphIndex] as HTMLElement | undefined
+    if (!paraEl) return
+
+    // Apply highlight
+    paraEl.style.transition = 'border-left var(--duration-normal) var(--ease-out-expo), padding-left var(--duration-normal) var(--ease-out-expo), background-color var(--duration-normal) var(--ease-out-expo)'
+    paraEl.style.borderLeft = '3px solid var(--accent-purple)'
+    paraEl.style.paddingLeft = '1rem'
+    paraEl.style.backgroundColor = 'color-mix(in srgb, var(--accent-purple) 5%, transparent)'
+    audioParagraphRef.current = paraEl
+
+    // Auto-scroll to keep paragraph visible
+    const rect = paraEl.getBoundingClientRect()
+    const viewportH = window.innerHeight
+    const targetZone = viewportH * 0.33 // top third
+    if (rect.top > viewportH * 0.7 || rect.top < 60) {
+      const scrollTarget = window.scrollY + rect.top - targetZone
+      window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' })
+    }
+  }, [])
+
+  // Clean up audio highlight on unmount
+  useEffect(() => {
+    return () => {
+      if (audioParagraphRef.current) {
+        audioParagraphRef.current.style.removeProperty('border-left')
+        audioParagraphRef.current.style.removeProperty('padding-left')
+        audioParagraphRef.current.style.removeProperty('transition')
+        audioParagraphRef.current.style.removeProperty('background-color')
+      }
+    }
+  }, [])
 
   // Build footnote lookup map
   const footnoteMap = useMemo(() => {
@@ -793,6 +846,16 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
             <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
           </svg>
           <span>Select any text to leave a note for the group</span>
+        </div>
+      )}
+
+      {/* Audio player — LibriVox recordings with synced paragraph highlighting */}
+      {audioAlignment && !focusedMode && (
+        <div className="mb-6">
+          <AudioPlayer
+            alignment={audioAlignment}
+            onParagraphChange={handleAudioParagraphChange}
+          />
         </div>
       )}
 

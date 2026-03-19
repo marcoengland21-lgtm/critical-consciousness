@@ -1,0 +1,113 @@
+{
+  "chapter_number": 3,
+  "title": "The Form of Value, or Exchange-Value",
+  "reader": "Carl Manchester",
+  "audio_parts": [
+    {
+      "url": "https://www.archive.org/download/capital_vol1_0810_librivox/capitalvol1_06_marx.mp3",
+      "reader": "Carl Manchester",
+      "offset": 0.0,
+      "duration": 2714.06
+    },
+    {
+      "url": "https://www.archive.org/download/capital_vol1_0810_librivox/capitalvol1_07_marx.mp3",
+      "reader": "Carl Manchester",
+      "offset": 2715.06,
+      "duration": 474.44
+    },
+    {
+      "url": "https://www.archive.org/download/capital_vol1_0810_librivox/capitalvol1_08_marx.mp3",
+      "reader": "Carl Manchester",
+      "offset": 3190.5,
+      "duration": 1022.84
+    }
+  ],
+  "total_duration": 4214.34,
+  "paragraphs": [
+    {
+      "paragraph_index": 0,
+      "start_time": 23.68,
+      "end_time": 55.14
+    },
+    {
+      "paragraph_index": 1,
+      "start_time": 55.14,
+      "end_time": 117.78
+    },
+    {
+      "paragraph_index": 2,
+      "start_time": 117.78,
+      "end_time": 157.6
+    },
+    {
+      "paragraph_index": 3,
+      "start_time": 157.6,
+      "end_time": 172.92
+    },
+    {
+      "paragraph_index": 4,
+      "start_time": 172.92,
+      "end_time": 1081.7
+    },
+    {
+      "paragraph_index": 5,
+      "start_time": 1081.7,
+      "end_time": 2754.06
+    },
+    {
+      "paragraph_index": 6,
+      "start_time": 2754.06,
+      "end_time": 3242.9
+    },
+    {
+      "paragraph_index": 7,
+      "start_time": 3242.9,
+      "end_time": 3364.66
+    },
+    {
+      "paragraph_index": 8,
+      "start_time": 3364.66,
+      "end_time": 3696.94
+    },
+    {
+      "paragraph_index": 9,
+      "start_time": 3696.94,
+      "end_time": 3756.14
+    },
+    {
+      "paragraph_index": 10,
+      "start_time": 3756.14,
+      "end_time": 4156.24
+    },
+    {
+      "paragraph_index": 11,
+      "start_time": 4156.24,
+      "end_time": 4194.48
+    },
+    {
+      "paragraph_index": 14,
+      "start_time": 4194.48,
+      "end_time": 4196.34
+    },
+    {
+      "paragraph_index": 15,
+      "start_time": 4196.34,
+      "end_time": 4204.06
+    },
+    {
+      "paragraph_index": 20,
+      "start_time": 4204.06,
+      "end_time": 4205.12
+    },
+    {
+      "paragraph_index": 26,
+      "start_time": 4205.12,
+      "end_time": 4205.26
+    },
+    {
+      "paragraph_index": 62,
+      "start_time": 4205.26,
+      "end_time": 4213.34
+    }
+  ]
+}
