@@ -1,9 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import Link from 'next/link'
-import { useTheme } from '@/components/layout/ThemeProvider'
-import { getChapterLabel, getPartNumber, partTitles } from '@/lib/chapter-utils'
+import { getChapterLabel } from '@/lib/chapter-utils'
 
 interface ReadingToolbarProps {
   // Chapter navigation
@@ -58,7 +56,6 @@ export default function ReadingToolbar({
   audioIsPlaying,
   onAudioToggle,
 }: ReadingToolbarProps) {
-  const { isDark: isDarkMode, toggle: toggleTheme } = useTheme()
   const panelRef = useRef<HTMLDivElement>(null)
   const [showShortcuts, setShowShortcuts] = useState(false)
 
@@ -77,10 +74,6 @@ export default function ReadingToolbar({
   // Prev/next chapter
   const prevChapter = currentIndex > 0 ? chapters[currentIndex - 1] : null
   const nextChapter = currentIndex < chapters.length - 1 ? chapters[currentIndex + 1] : null
-
-  // Ch1 section tabs (chapter_number 1-4)
-  const isChapter1 = currentChapter >= 1 && currentChapter <= 4
-  const ch1Sections = isChapter1 ? chapters.filter(c => c.chapter_number >= 1 && c.chapter_number <= 4) : []
 
   // Current position label
   const currentLabel = getChapterLabel(currentChapter).label
@@ -193,143 +186,17 @@ export default function ReadingToolbar({
 
         <div className="px-5 py-4 space-y-6">
 
-          {/* ── Chapter Navigation ── */}
+          {/* ── Focus Mode ── */}
           <section>
-            <h3 className="text-xs font-semibold tracking-wide mb-3" style={{ color: 'var(--accent-purple)' }}>
-              Chapter Navigation
-            </h3>
-            <div className="space-y-2">
-              {prevChapter && (
-                <Link
-                  href={`/reading/${slug}/${prevChapter.chapter_number}`}
-                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg transition-colors text-sm"
-                  style={{
-                    backgroundColor: 'var(--bg-soft)',
-                    color: 'var(--text-primary)',
-                  }}
-                >
-                  <span style={{ color: 'var(--text-secondary)' }}>←</span>
-                  <span className="truncate">{prevChapter.title}</span>
-                </Link>
-              )}
-              {nextChapter && (
-                <Link
-                  href={`/reading/${slug}/${nextChapter.chapter_number}`}
-                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg transition-colors text-sm"
-                  style={{
-                    backgroundColor: 'var(--bg-soft)',
-                    color: 'var(--text-primary)',
-                  }}
-                >
-                  <span style={{ color: 'var(--text-secondary)' }}>→</span>
-                  <span className="truncate">{nextChapter.title}</span>
-                </Link>
-              )}
-            </div>
-
-            {/* Section jump (Ch1 only) */}
-            {isChapter1 && ch1Sections.length > 1 && (
-              <div className="mt-3">
-                <p className="text-xs mb-2" style={{ color: 'var(--text-secondary)' }}>
-                  Jump to section:
-                </p>
-                <div className="flex gap-1.5">
-                  {ch1Sections.map((s) => (
-                    <Link
-                      key={s.chapter_number}
-                      href={`/reading/${slug}/${s.chapter_number}`}
-                      className="flex items-center justify-center w-8 h-8 rounded-lg text-sm font-medium transition-colors"
-                      style={{
-                        backgroundColor: s.chapter_number === currentChapter ? 'var(--accent-purple)' : 'var(--bg-soft)',
-                        color: s.chapter_number === currentChapter ? 'var(--text-inverse)' : 'var(--text-secondary)',
-                      }}
-                    >
-                      {s.chapter_number}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-          </section>
-
-          {/* Divider */}
-          <div style={{ borderTop: '1px solid var(--border-default)' }} />
-
-          {/* ── Text Size ── */}
-          <section>
-            <h3 className="text-xs font-semibold tracking-wide mb-3" style={{ color: 'var(--accent-purple)' }}>
-              Text Size
-            </h3>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => onFontSizeChange(Math.max(MIN_FONT, fontSize - 1))}
-                disabled={fontSize <= MIN_FONT}
-                className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-30"
-                style={{
-                  backgroundColor: 'var(--bg-soft)',
-                  color: 'var(--text-primary)',
-                }}
-                aria-label="Decrease font size"
-              >
-                A−
-              </button>
-              <span className="text-sm tabular-nums min-w-[2.5rem] text-center" style={{ color: 'var(--text-secondary)' }}>
-                {fontSize}px
-              </span>
-              <button
-                onClick={() => onFontSizeChange(Math.min(MAX_FONT, fontSize + 1))}
-                disabled={fontSize >= MAX_FONT}
-                className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-30"
-                style={{
-                  backgroundColor: 'var(--bg-soft)',
-                  color: 'var(--text-primary)',
-                }}
-                aria-label="Increase font size"
-              >
-                A+
-              </button>
-            </div>
-          </section>
-
-          {/* Divider */}
-          <div style={{ borderTop: '1px solid var(--border-default)' }} />
-
-          {/* ── Appearance ── */}
-          <section>
-            <h3 className="text-xs font-semibold tracking-wide mb-3" style={{ color: 'var(--accent-purple)' }}>
-              Appearance
-            </h3>
-            <div className="flex gap-2">
-              <button
-                onClick={() => { if (isDarkMode) toggleTheme() }}
-                className="flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                style={{
-                  backgroundColor: !isDarkMode ? 'var(--accent-purple)' : 'var(--bg-soft)',
-                  color: !isDarkMode ? 'var(--text-inverse)' : 'var(--text-secondary)',
-                }}
-              >
-                Light
-              </button>
-              <button
-                onClick={() => { if (!isDarkMode) toggleTheme() }}
-                className="flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                style={{
-                  backgroundColor: isDarkMode ? 'var(--accent-purple)' : 'var(--bg-soft)',
-                  color: isDarkMode ? 'var(--text-inverse)' : 'var(--text-secondary)',
-                }}
-              >
-                Dark
-              </button>
-            </div>
             <button
               onClick={() => onFocusedModeChange(!focusedMode)}
-              className="w-full mt-2 flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors"
+              className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors"
               style={{
                 backgroundColor: focusedMode ? 'var(--accent-purple)' : 'var(--bg-soft)',
                 color: focusedMode ? 'var(--text-inverse)' : 'var(--text-primary)',
               }}
             >
-              <span>Focus mode</span>
+              <span>Focus mode — hide all highlights and chrome</span>
               <span className="text-xs opacity-70">{focusedMode ? 'On' : 'Off'}</span>
             </button>
           </section>
@@ -436,22 +303,6 @@ export default function ReadingToolbar({
               </section>
             </>
           )}
-
-          {/* Divider */}
-          <div style={{ borderTop: '1px solid var(--border-default)' }} />
-
-          {/* ── Position ── */}
-          <section>
-            <h3 className="text-xs font-semibold tracking-wide mb-2" style={{ color: 'var(--accent-purple)' }}>
-              Your Position
-            </h3>
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-              {currentLabel}
-            </p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)', opacity: 0.7 }}>
-              {currentIndex + 1} of {totalChapters} sections
-            </p>
-          </section>
 
           {/* Divider */}
           <div style={{ borderTop: '1px solid var(--border-default)' }} />
