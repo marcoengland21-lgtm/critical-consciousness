@@ -21,8 +21,11 @@ export default function BackToTop() {
   return (
     <button
       onClick={scrollToTop}
-      className="fixed bottom-6 left-6 z-40 w-10 h-10 rounded-full shadow-lg flex items-center justify-center btn-transition"
+      className="fixed z-40 w-10 h-10 rounded-full shadow-lg flex items-center justify-center btn-transition"
+      data-back-to-top
       style={{
+        bottom: '24px',
+        left: 'calc(var(--sidebar-width, 0px) + 24px)',
         backgroundColor: 'var(--bg-card)',
         border: '1px solid var(--border-default)',
         color: 'var(--text-secondary)',

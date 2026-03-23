@@ -77,6 +77,31 @@ const isDev = process.env.NODE_ENV === 'development'
 // How many paragraphs to render immediately (above the fold)
 const INITIAL_RENDER_COUNT = 25
 
+/**
+ * Snap a character position so it doesn't fall inside a footnote marker [N].
+ * If pos is inside a marker, move it to the start of that marker.
+ * This prevents annotation boundaries from splitting footnote markers across segments.
+ */
+function snapOutsideFootnoteMarker(text: string, pos: number): number {
+  // Look backwards from pos for an unclosed '['
+  for (let i = pos - 1; i >= Math.max(0, pos - 5); i--) {
+    if (text[i] === '[') {
+      // Check if there's a closing ']' after pos
+      const closingIdx = text.indexOf(']', i)
+      if (closingIdx >= pos) {
+        // pos is inside [N] — check it's actually a footnote marker
+        const inner = text.slice(i + 1, closingIdx)
+        if (/^\d+$/.test(inner)) {
+          return i // snap to before the '['
+        }
+      }
+      break
+    }
+    if (text[i] === ']') break // we're past any marker
+  }
+  return pos
+}
+
 /** Split text into annotated and unannotated segments */
 function buildSegments(
   text: string,
@@ -91,8 +116,9 @@ function buildSegments(
   boundaries.add(text.length)
 
   for (const ann of annotations) {
-    boundaries.add(Math.max(0, ann.position_start))
-    boundaries.add(Math.min(text.length, ann.position_end))
+    // Snap boundaries so they don't split footnote markers like [1]
+    boundaries.add(Math.max(0, snapOutsideFootnoteMarker(text, ann.position_start)))
+    boundaries.add(Math.min(text.length, snapOutsideFootnoteMarker(text, ann.position_end)))
   }
 
   const sorted = Array.from(boundaries).sort((a, b) => a - b)
