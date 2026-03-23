@@ -237,13 +237,54 @@ export default function AudioPlayer({ alignment, onParagraphChange, onPlayStateC
   // ── Progress percentage ──
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0
 
-  // ── Seek on progress bar click ──
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!audioRef.current || !duration) return
-    const rect = e.currentTarget.getBoundingClientRect()
-    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+  // ── Seek on progress bar click + drag ──
+  const seekBarRef = useRef<HTMLDivElement>(null)
+  const isDraggingSeek = useRef(false)
+
+  const seekToPosition = useCallback((clientX: number) => {
+    if (!audioRef.current || !duration || !seekBarRef.current) return
+    const rect = seekBarRef.current.getBoundingClientRect()
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
     audioRef.current.currentTime = ratio * duration
+    setCurrentTime(ratio * duration)
+  }, [duration])
+
+  const handleSeekStart = useCallback((clientX: number) => {
+    isDraggingSeek.current = true
+    seekToPosition(clientX)
+  }, [seekToPosition])
+
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    handleSeekStart(e.clientX)
   }
+
+  // Mouse drag for seeking
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDraggingSeek.current) seekToPosition(e.clientX)
+    }
+    const handleMouseUp = () => { isDraggingSeek.current = false }
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', handleMouseUp)
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [seekToPosition])
+
+  // Touch drag for seeking
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    isDraggingSeek.current = true
+    seekToPosition(e.touches[0].clientX)
+  }, [seekToPosition])
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (isDraggingSeek.current) seekToPosition(e.touches[0].clientX)
+  }, [seekToPosition])
+
+  const handleTouchEnd = useCallback(() => {
+    isDraggingSeek.current = false
+  }, [])
 
   // ── Collapsed state: just a small "Listen" button ──
   if (!isExpanded) {
@@ -291,17 +332,17 @@ export default function AudioPlayer({ alignment, onParagraphChange, onPlayStateC
           border: '1px solid var(--border-default)',
         }}
       >
-        {/* Skip back */}
+        {/* Skip back 15s */}
         <button
           onClick={() => skip(-15)}
-          className="w-7 h-7 flex items-center justify-center rounded-full btn-transition"
+          className="flex items-center gap-0.5 px-2 py-1 rounded-full btn-transition text-[11px] font-medium"
           style={{ color: 'var(--text-secondary)', backgroundColor: 'var(--bg-soft)' }}
           aria-label="Skip back 15 seconds"
-          title="Back 15s"
         >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M11 17l-5-5 5-5" /><path d="M18 17l-5-5 5-5" />
           </svg>
+          15s
         </button>
 
         {/* Play/Pause */}
@@ -325,26 +366,30 @@ export default function AudioPlayer({ alignment, onParagraphChange, onPlayStateC
           )}
         </button>
 
-        {/* Skip forward */}
+        {/* Skip forward 15s */}
         <button
           onClick={() => skip(15)}
-          className="w-7 h-7 flex items-center justify-center rounded-full btn-transition"
+          className="flex items-center gap-0.5 px-2 py-1 rounded-full btn-transition text-[11px] font-medium"
           style={{ color: 'var(--text-secondary)', backgroundColor: 'var(--bg-soft)' }}
           aria-label="Skip forward 15 seconds"
-          title="Forward 15s"
         >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          15s
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M13 17l5-5-5-5" /><path d="M6 17l5-5-5-5" />
           </svg>
         </button>
 
-        {/* Seekable progress bar — compact inline */}
+        {/* Seekable progress bar — click or drag to scrub */}
         <div
-          className="h-1.5 rounded-full cursor-pointer relative"
+          ref={seekBarRef}
+          className="h-2 rounded-full cursor-pointer relative"
           style={{ width: 'clamp(160px, 25vw, 320px)', backgroundColor: 'var(--bg-soft)' }}
-          onClick={handleSeek}
+          onMouseDown={handleSeek}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
           role="slider"
-          aria-label="Audio progress"
+          aria-label="Audio progress — drag to scrub"
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={Math.round(progress)}
