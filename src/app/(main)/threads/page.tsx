@@ -67,14 +67,9 @@ export default async function ThreadsPage({
 
   const now = new Date().toISOString()
 
-  // Parallel fetch: threads, weeks, latest replies, prompts, user role
-  const [
-    { data: rawThreads },
-    { data: weeks },
-    { data: latestReplies },
-    { data: currentWeekData },
-    { data: userRoles },
-  ] = await Promise.all([
+  // Parallel fetch: threads, weeks, latest replies, prompts, user role.
+  // Capture errors from every query so failures are visible in logs.
+  const [threadsResult, weeksResult, repliesResult, promptWeekResult, userRolesResult] = await Promise.all([
     // All threads with author + reply count
     supabase
       .from('threads')
@@ -111,8 +106,21 @@ export default async function ThreadsPage({
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
           .limit(5)
-      : Promise.resolve({ data: null }),
+      : Promise.resolve({ data: null, error: null }),
   ])
+
+  // Log all errors — nested joins can fail silently
+  if (threadsResult.error) console.error('[CCP] Threads page — threads query error:', threadsResult.error)
+  if (weeksResult.error) console.error('[CCP] Threads page — weeks query error:', weeksResult.error)
+  if (repliesResult.error) console.error('[CCP] Threads page — replies query error:', repliesResult.error)
+  if (promptWeekResult.error) console.error('[CCP] Threads page — prompts query error:', promptWeekResult.error)
+  if (userRolesResult.error) console.error('[CCP] Threads page — user roles query error:', userRolesResult.error)
+
+  const rawThreads = threadsResult.data
+  const weeks = weeksResult.data
+  const latestReplies = repliesResult.data
+  const currentWeekData = promptWeekResult.data
+  const userRoles = userRolesResult.data
 
   // Build latest reply lookup: thread_id → { created_at, authorName }
   const lastReplyMap = new Map<string, { created_at: string; authorName: string }>()

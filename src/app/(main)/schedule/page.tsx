@@ -14,6 +14,13 @@ interface DiscussionPrompt {
   sort_order: number
 }
 
+interface RawWeeklyRole {
+  id: string
+  week_id: string
+  role_type: string
+  user_id: string
+}
+
 interface ScheduleWeek {
   id: string
   week_number: number
@@ -38,27 +45,85 @@ export default async function SchedulePage() {
   const user = await getSessionUser()
   const supabase = await createClient()
 
-  const { data: weeks, error: weeksError } = await supabase
-    .from('reading_schedule')
-    .select(`
-      *,
-      weekly_roles(
-        id, role_type,
-        user:profiles!user_id(id, display_name)
-      ),
-      discussion_prompts(
-        id, prompt_text, sort_order
-      )
-    `)
-    .order('week_number', { ascending: true })
+  // Flat parallel queries — avoids nested join RLS failures.
+  // Previous approach nested weekly_roles(user:profiles) + discussion_prompts inside
+  // reading_schedule, which fails silently if RLS blocks any joined table.
+  const [weeksResult, rolesResult, promptsResult, profilesResult] = await Promise.all([
+    // Weeks — flat, no joins
+    supabase
+      .from('reading_schedule')
+      .select('*')
+      .order('week_number', { ascending: true }),
+    // Roles — flat
+    supabase
+      .from('weekly_roles')
+      .select('id, week_id, role_type, user_id'),
+    // Prompts — flat
+    supabase
+      .from('discussion_prompts')
+      .select('id, week_id, prompt_text, sort_order'),
+    // Profiles for role user names
+    supabase
+      .from('profiles')
+      .select('id, display_name'),
+  ])
 
-  if (weeksError) {
-    console.error('[CCP] Schedule page — query error:', weeksError)
+  if (weeksResult.error) {
+    console.error('[CCP] Schedule page — reading_schedule query error:', weeksResult.error)
   }
+  if (rolesResult.error) {
+    console.error('[CCP] Schedule page — weekly_roles query error:', rolesResult.error)
+  }
+  if (promptsResult.error) {
+    console.error('[CCP] Schedule page — discussion_prompts query error:', promptsResult.error)
+  }
+  if (profilesResult.error) {
+    console.error('[CCP] Schedule page — profiles query error:', profilesResult.error)
+  }
+
+  // Build profile lookup
+  const profileMap = new Map<string, { id: string; display_name: string }>()
+  if (profilesResult.data) {
+    for (const p of profilesResult.data) {
+      profileMap.set(p.id, { id: p.id, display_name: p.display_name })
+    }
+  }
+
+  // Build roles by week_id
+  const rolesByWeek = new Map<string, WeeklyRoleRow[]>()
+  if (rolesResult.data) {
+    for (const r of rolesResult.data as RawWeeklyRole[]) {
+      const weekRoles = rolesByWeek.get(r.week_id) || []
+      weekRoles.push({
+        id: r.id,
+        role_type: r.role_type,
+        user: profileMap.get(r.user_id) || null,
+      })
+      rolesByWeek.set(r.week_id, weekRoles)
+    }
+  }
+
+  // Build prompts by week_id
+  const promptsByWeek = new Map<string, DiscussionPrompt[]>()
+  if (promptsResult.data) {
+    for (const p of promptsResult.data as (DiscussionPrompt & { week_id: string })[]) {
+      const weekPrompts = promptsByWeek.get(p.week_id) || []
+      weekPrompts.push({ id: p.id, prompt_text: p.prompt_text, sort_order: p.sort_order })
+      promptsByWeek.set(p.week_id, weekPrompts)
+    }
+  }
+
+  // Merge into ScheduleWeek shape
+  const rawWeeks = (weeksResult.data || []) as { id: string; week_number: number; title: string; due_date: string; session_date: string | null; session_location: string | null; zoom_link: string | null; chapter_ref: string | null; page_start: number | null; page_end: number | null; description: string | null }[]
+
+  const typedWeeks: ScheduleWeek[] = rawWeeks.map((w) => ({
+    ...w,
+    weekly_roles: rolesByWeek.get(w.id) || null,
+    discussion_prompts: promptsByWeek.get(w.id) || null,
+  }))
 
   // Determine current week (closest upcoming due_date)
   const now = new Date()
-  const typedWeeks = (weeks || []) as unknown as ScheduleWeek[]
   const currentWeek = typedWeeks.find((w) => new Date(w.due_date) >= now) || typedWeeks[typedWeeks.length - 1]
 
   if (typedWeeks.length === 0) {

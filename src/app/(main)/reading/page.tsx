@@ -95,24 +95,29 @@ export default async function ReadingPage() {
 
   const now = new Date().toISOString()
 
-  // All queries in parallel
-  const [currentWeekResult, documentsResult, annotationCountsResult] = await Promise.all([
+  // All queries in parallel — FLAT queries to avoid nested join RLS failures.
+  // Previous approach nested reading_schedule inside text_chapters inside text_documents,
+  // which fails silently if RLS blocks any level. Now we fetch each table independently.
+  const [currentWeekResult, documentsResult, chaptersResult, weeksResult, annotationCountsResult] = await Promise.all([
     supabase
       .from('reading_schedule')
       .select('id')
       .gte('due_date', now)
       .order('due_date', { ascending: true })
       .limit(1),
+    // Documents — flat, no joins
     supabase
       .from('text_documents')
-      .select(`
-        id, title, slug,
-        chapters:text_chapters(
-          id, chapter_number, title, sort_order, week_id,
-          week:reading_schedule!week_id(week_number, title)
-        )
-      `)
+      .select('id, title, slug')
       .order('created_at', { ascending: true }),
+    // Chapters — flat, no nested week join
+    supabase
+      .from('text_chapters')
+      .select('id, document_id, chapter_number, title, sort_order, week_id'),
+    // Weeks — flat lookup for week labels
+    supabase
+      .from('reading_schedule')
+      .select('id, week_number, title'),
     // Count annotations per chapter for badges
     supabase
       .from('annotations')
@@ -122,11 +127,25 @@ export default async function ReadingPage() {
   if (documentsResult.error) {
     console.error('[CCP] Reading page — text_documents query error:', documentsResult.error)
   }
+  if (chaptersResult.error) {
+    console.error('[CCP] Reading page — text_chapters query error:', chaptersResult.error)
+  }
+  if (weeksResult.error) {
+    console.error('[CCP] Reading page — reading_schedule query error:', weeksResult.error)
+  }
+  if (annotationCountsResult.error) {
+    console.error('[CCP] Reading page — annotations query error:', annotationCountsResult.error)
+  }
 
-  const currentWeekData = currentWeekResult.data
-  const documents = documentsResult.data
+  const currentWeekId = currentWeekResult.data?.[0]?.id || null
 
-  const currentWeekId = currentWeekData?.[0]?.id || null
+  // Build week lookup: id -> { week_number, title }
+  const weekMap = new Map<string, ChapterWeek>()
+  if (weeksResult.data) {
+    for (const w of weeksResult.data) {
+      weekMap.set(w.id, { week_number: w.week_number, title: w.title })
+    }
+  }
 
   // Build annotation count map: chapter_id -> count
   const annotationCounts = new Map<string, number>()
@@ -136,7 +155,19 @@ export default async function ReadingPage() {
     }
   }
 
-  const typedDocuments = (documents || []) as unknown as DocumentWithChapters[]
+  // Merge chapters with their week data and group by document
+  const rawDocs = (documentsResult.data || []) as { id: string; title: string; slug: string }[]
+  const rawChapters = (chaptersResult.data || []) as { id: string; document_id: string; chapter_number: number; title: string; sort_order: number; week_id: string | null }[]
+
+  const typedDocuments: DocumentWithChapters[] = rawDocs.map((doc) => ({
+    ...doc,
+    chapters: rawChapters
+      .filter((ch) => ch.document_id === doc.id)
+      .map((ch) => ({
+        ...ch,
+        week: ch.week_id ? weekMap.get(ch.week_id) || null : null,
+      })),
+  }))
 
   if (typedDocuments.length === 0) {
     return (
