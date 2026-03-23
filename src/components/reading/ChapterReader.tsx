@@ -15,6 +15,7 @@ import GlossaryQuickAccess from './GlossaryQuickAccess'
 import FootnoteInline from './FootnoteInline'
 import Toast from '@/components/ui/Toast'
 import BackToTop from './BackToTop'
+import ReadingGuide from './ReadingGuide'
 import AudioPlayer from './AudioPlayer'
 import type { AudioAlignment } from '@/lib/audio-alignments'
 import { getConfusionFlagCounts, getUserConfusionFlags } from '@/lib/confusion-flags'
@@ -427,6 +428,10 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
   const [footnotesExpanded, setFootnotesExpanded] = useState(false)
   const [audioIsPlaying, setAudioIsPlaying] = useState(false)
   const audioParagraphRef = useRef<HTMLElement | null>(null)
+  const [isToolsOpen, setIsToolsOpen] = useState(false)
+  const [showSlimBar, setShowSlimBar] = useState(false)
+  const titleObserverRef = useRef<IntersectionObserver | null>(null)
+  const slimBarTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // ── Audio paragraph highlight ──
   // When the audio player reports a new paragraph, highlight it with a
@@ -582,6 +587,36 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
   }, [chapter.id])
 
 
+
+  // ── Slim top bar: appears when title scrolls out of view ──
+  useEffect(() => {
+    const titleEl = document.querySelector('[data-chapter-title]')
+    if (!titleEl) return
+
+    titleObserverRef.current = new IntersectionObserver(
+      ([entry]) => {
+        // Title not visible → show slim bar
+        if (!entry.isIntersecting) {
+          setShowSlimBar(true)
+        } else {
+          setShowSlimBar(false)
+        }
+      },
+      { threshold: 0 }
+    )
+    titleObserverRef.current.observe(titleEl)
+
+    return () => {
+      titleObserverRef.current?.disconnect()
+    }
+  }, [])
+
+  // Clean up slim bar timer on unmount
+  useEffect(() => {
+    return () => {
+      if (slimBarTimerRef.current) clearTimeout(slimBarTimerRef.current)
+    }
+  }, [])
 
   // Listen for Supabase realtime annotation changes
   useEffect(() => {
@@ -837,26 +872,13 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
       {/* Onboarding hint */}
       <OnboardingHint />
 
-      {/* Reading presence — shows when others are reading this chapter */}
+      {/* Reading presence — subtle inline text, not a full banner */}
       {!focusedMode && (
-        <div className="mb-3">
-          <ReadingPresence chapterId={chapter.id} />
-        </div>
+        <ReadingPresence chapterId={chapter.id} />
       )}
 
-      {/* Persistent annotation hint — shown inline when no annotations exist */}
-      {annotations.length === 0 && !focusedMode && (
-        <div className="mb-3 flex items-center gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-purple)', opacity: 0.7 }}>
-            <path d="M12 20h9" />
-            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-          </svg>
-          <span>Select any text to leave a note for the group</span>
-        </div>
-      )}
-
-      {/* Audio player — LibriVox recordings with synced paragraph highlighting */}
-      {audioAlignment && !focusedMode && (
+      {/* Audio player — only shows inline when audio is playing or has been expanded */}
+      {audioAlignment && !focusedMode && audioIsPlaying && (
         <div className="mb-6">
           <AudioPlayer
             alignment={audioAlignment}
@@ -988,7 +1010,55 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         />
       )}
 
-      {/* Floating pill toolbar — chapter nav + reading controls */}
+      {/* Slim top bar — appears when title scrolls out of view */}
+      {showSlimBar && !focusedMode && (
+        <div
+          className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 sm:px-6 animate-fade-in"
+          style={{
+            height: '36px',
+            backgroundColor: 'var(--bg-card)',
+            borderBottom: '1px solid var(--border-default)',
+            marginLeft: 'var(--sidebar-width, 0px)',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+          }}
+        >
+          <span
+            className="text-xs font-medium truncate"
+            style={{ color: 'var(--text-secondary)', fontFamily: "'Lora', Georgia, serif" }}
+          >
+            {chapter.title}
+          </span>
+          <span className="text-xs" style={{ color: 'var(--text-secondary)', opacity: 0.6 }}>
+            {annotations.length > 0 && `${annotations.length} notes`}
+          </span>
+        </div>
+      )}
+
+      {/* Tools button — single entry point for all reading controls */}
+      {!focusedMode && (
+        <button
+          onClick={() => setIsToolsOpen(true)}
+          className="fixed z-30 flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all btn-transition"
+          style={{
+            bottom: '24px',
+            right: '24px',
+            backgroundColor: 'var(--bg-card)',
+            color: 'var(--text-secondary)',
+            border: '1px solid var(--border-default)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          }}
+          title="Font size, audio, chapter navigation, and more"
+          aria-label="Open reading tools"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+          </svg>
+          <span className="text-sm font-medium">Tools</span>
+        </button>
+      )}
+
+      {/* Labeled tools panel — slides in from right */}
       <ReadingToolbar
         chapters={allChapters}
         currentChapter={chapter.chapter_number}
@@ -1005,10 +1075,21 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         glossaryTermCount={chapterGlossaryTerms.length}
         showGlossaryPanel={showGlossaryPanel}
         onGlossaryPanelToggle={() => setShowGlossaryPanel((prev) => !prev)}
+        isOpen={isToolsOpen}
+        onClose={() => setIsToolsOpen(false)}
+        audioAlignment={audioAlignment}
+        audioIsPlaying={audioIsPlaying}
+        onAudioToggle={() => {
+          // Start audio — expand the inline player
+          setAudioIsPlaying(true)
+        }}
       />
 
       {/* Back to top */}
       <BackToTop />
+
+      {/* Reading guide — scoped to reading pages only */}
+      <ReadingGuide />
     </div>
   )
 }

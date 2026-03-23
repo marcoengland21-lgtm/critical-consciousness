@@ -39,7 +39,7 @@ export default function NewThreadForm({ weeks, currentWeek }: NewThreadFormProps
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [threadType, setThreadType] = useState<ThreadType>('discussion')
-  const [weekId, setWeekId] = useState('')
+  const [weekId, setWeekId] = useState(currentWeek?.id || '')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [draftSaved, setDraftSaved] = useState(false)
@@ -227,62 +227,7 @@ export default function NewThreadForm({ weeks, currentWeek }: NewThreadFormProps
         </div>
       )}
 
-      {/* Thread Type */}
-      <div>
-        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
-          Thread Type
-        </label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {threadTypes.map((t) => {
-            const isSelected = threadType === t.value
-            return (
-              <button
-                key={t.value}
-                type="button"
-                onClick={() => setThreadType(t.value)}
-                className="p-3 rounded-lg border text-left btn-transition text-sm"
-                style={{
-                  backgroundColor: isSelected ? 'var(--bg-soft)' : 'var(--bg-card)',
-                  borderColor: isSelected ? t.color : 'var(--border-default)',
-                  borderWidth: isSelected ? '2px' : '1px',
-                }}
-              >
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-base" role="img" aria-hidden="true">{t.icon}</span>
-                  <span className="font-medium" style={{ color: isSelected ? t.color : 'var(--text-primary)' }}>
-                    {t.label}
-                  </span>
-                </div>
-                <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>{t.description}</div>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Week Association (optional) */}
-      {weeks.length > 0 && (
-        <div>
-          <label htmlFor="week" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
-            Related Week (optional)
-          </label>
-          <select
-            id="week"
-            value={weekId}
-            onChange={(e) => setWeekId(e.target.value)}
-            className="input-base text-sm w-full"
-          >
-            <option value="">No specific week</option>
-            {weeks.map((w) => (
-              <option key={w.id} value={w.id}>
-                Week {w.week_number}: {w.title}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {/* Title */}
+      {/* Title — first, most important field */}
       <div>
         <label htmlFor="title" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
           Title
@@ -295,25 +240,11 @@ export default function NewThreadForm({ weeks, currentWeek }: NewThreadFormProps
           placeholder="e.g. 'The double character of the commodity' or 'Question about abstract labour'"
           className="input-base text-sm w-full"
           required
+          autoFocus
         />
       </div>
 
-      {/* Quote from reading — prominent placement */}
-      <button
-        type="button"
-        onClick={() => setShowQuoteModal(true)}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg border text-sm font-medium btn-transition"
-        style={{
-          borderColor: 'var(--accent-purple)',
-          borderStyle: 'dashed',
-          color: 'var(--accent-purple)',
-          backgroundColor: 'transparent',
-        }}
-      >
-        📖 Quote from reading — insert a passage into your thread
-      </button>
-
-      {/* Body */}
+      {/* Body — second most important */}
       <div>
         <div className="flex items-center justify-between mb-2">
           <label htmlFor="body" className="block text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
@@ -347,6 +278,99 @@ export default function NewThreadForm({ weeks, currentWeek }: NewThreadFormProps
           style={{ resize: 'none', lineHeight: '1.85', minHeight: '200px' }}
           required
         />
+      </div>
+
+      {/* Quote from reading */}
+      <button
+        type="button"
+        onClick={() => setShowQuoteModal(true)}
+        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg border text-sm font-medium btn-transition"
+        style={{
+          borderColor: 'var(--accent-purple)',
+          borderStyle: 'dashed',
+          color: 'var(--accent-purple)',
+          backgroundColor: 'transparent',
+        }}
+      >
+        📖 Quote from reading — insert a passage
+      </button>
+
+      {/* ── Optional metadata ── */}
+      <div style={{ borderTop: '1px solid var(--border-default)', paddingTop: '1.5rem' }}>
+        <p className="text-xs font-medium mb-4" style={{ color: 'var(--text-secondary)' }}>Optional</p>
+
+        {/* Thread type — collapsed by default, shows current selection */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm" style={{ color: 'var(--text-primary)' }}>
+              Thread type: <strong>{threadTypes.find(t => t.value === threadType)?.label || 'Discussion'}</strong>
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                const el = document.getElementById('thread-type-grid')
+                if (el) {
+                  const isOpen = el.getAttribute('data-open') === 'true'
+                  el.setAttribute('data-open', isOpen ? 'false' : 'true')
+                }
+              }}
+              className="text-xs font-medium"
+              style={{ color: 'var(--accent-purple)' }}
+            >
+              change
+            </button>
+          </div>
+          <div id="thread-type-grid" className="collapsible-content" data-open="false">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {threadTypes.map((t) => {
+                const isSelected = threadType === t.value
+                return (
+                  <button
+                    key={t.value}
+                    type="button"
+                    onClick={() => setThreadType(t.value)}
+                    className="p-3 rounded-lg border text-left btn-transition text-sm"
+                    style={{
+                      backgroundColor: isSelected ? 'var(--bg-soft)' : 'var(--bg-card)',
+                      borderColor: isSelected ? t.color : 'var(--border-default)',
+                      borderWidth: isSelected ? '2px' : '1px',
+                    }}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-base" role="img" aria-hidden="true">{t.icon}</span>
+                      <span className="font-medium" style={{ color: isSelected ? t.color : 'var(--text-primary)' }}>
+                        {t.label}
+                      </span>
+                    </div>
+                    <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>{t.description}</div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Week Association */}
+        {weeks.length > 0 && (
+          <div>
+            <label htmlFor="week" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+              Related Week
+            </label>
+            <select
+              id="week"
+              value={weekId}
+              onChange={(e) => setWeekId(e.target.value)}
+              className="input-base text-sm w-full"
+            >
+              <option value="">No specific week</option>
+              {weeks.map((w) => (
+                <option key={w.id} value={w.id}>
+                  Week {w.week_number}: {w.title}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Submit */}

@@ -209,11 +209,14 @@ export default async function ThreadsPage({
             }}
           >
             <h3
-              className="text-xs font-bold tracking-wide uppercase mb-3"
+              className="text-xs font-bold tracking-wide mb-2"
               style={{ color: 'var(--accent-purple)' }}
             >
-              Week {currentWeek.week_number} Prompts
+              This Week's Prompts
             </h3>
+            <p className="text-[10px] mb-2.5" style={{ color: 'var(--text-secondary)', opacity: 0.7 }}>
+              Questions for this week's session:
+            </p>
             <ul className="space-y-2.5">
               {sortedPrompts.map((p) => (
                 <li
@@ -238,7 +241,7 @@ export default async function ThreadsPage({
             }}
           >
             <h3
-              className="text-xs font-bold tracking-wide uppercase mb-2"
+              className="text-xs font-bold tracking-wide mb-2"
               style={{ color: 'var(--accent-purple)' }}
             >
               Your Role This Week
@@ -262,44 +265,7 @@ export default async function ThreadsPage({
           </div>
         )}
 
-        {/* Quick Links */}
-        <div
-          className="rounded-xl border p-4"
-          style={{
-            backgroundColor: 'var(--bg-card)',
-            borderColor: 'var(--border-default)',
-          }}
-        >
-          <h3
-            className="text-xs font-bold tracking-wide uppercase mb-3"
-            style={{ color: 'var(--accent-purple)' }}
-          >
-            Quick Links
-          </h3>
-          <div className="space-y-2">
-            <Link
-              href="/reading"
-              className="flex items-center gap-2 text-xs font-medium transition-colors"
-              style={{ color: 'var(--text-secondary)' }}
-            >
-              📖 Continue Reading
-            </Link>
-            <Link
-              href="/glossary"
-              className="flex items-center gap-2 text-xs font-medium transition-colors"
-              style={{ color: 'var(--text-secondary)' }}
-            >
-              📚 Glossary
-            </Link>
-            <Link
-              href="/schedule"
-              className="flex items-center gap-2 text-xs font-medium transition-colors"
-              style={{ color: 'var(--text-secondary)' }}
-            >
-              📅 Schedule
-            </Link>
-          </div>
-        </div>
+        {/* Quick Links removed — duplicated the main navigation */}
       </aside>
     </div>
   )
