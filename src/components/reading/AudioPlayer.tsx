@@ -207,6 +207,27 @@ export default function AudioPlayer({ alignment, onParagraphChange, onPlayStateC
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isExpanded, togglePlay, skip])
 
+  // ── Save on tab close / navigate away — belt and suspenders ──
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (audioRef.current && alignment) {
+        saveProgress(alignment.chapter_number, audioRef.current.currentTime, audioRef.current.playbackRate)
+      }
+    }
+    // visibilitychange catches mobile tab switches and app backgrounding
+    const handleVisibilityChange = () => {
+      if (document.hidden && audioRef.current && alignment) {
+        saveProgress(alignment.chapter_number, audioRef.current.currentTime, audioRef.current.playbackRate)
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [alignment])
+
   // ── Cleanup ──
   useEffect(() => {
     return () => {
