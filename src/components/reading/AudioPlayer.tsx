@@ -275,13 +275,18 @@ export default function AudioPlayer({ alignment, onParagraphChange, onPlayStateC
       className="fixed z-50 animate-fade-in"
       style={{
         bottom: '5rem',
-        left: 'calc(var(--sidebar-width, 0px) + (100vw - var(--sidebar-width, 0px)) / 2)',
-        transform: 'translateX(-50%)',
+        /* Center within the reading area (viewport minus sidebar) */
+        left: 'var(--sidebar-width, 0px)',
+        right: 0,
+        display: 'flex',
+        justifyContent: 'center',
+        pointerEvents: 'none',
       }}
     >
       <div
-        className="flex items-center gap-2 px-3 py-2 rounded-full shadow-lg"
+        className="flex items-center gap-3 px-4 py-2.5 rounded-full shadow-lg"
         style={{
+          pointerEvents: 'auto',
           backgroundColor: 'var(--bg-card)',
           border: '1px solid var(--border-default)',
         }}
@@ -336,7 +341,7 @@ export default function AudioPlayer({ alignment, onParagraphChange, onPlayStateC
         {/* Seekable progress bar — compact inline */}
         <div
           className="h-1.5 rounded-full cursor-pointer relative"
-          style={{ width: 'clamp(120px, 20vw, 240px)', backgroundColor: 'var(--bg-soft)' }}
+          style={{ width: 'clamp(160px, 25vw, 320px)', backgroundColor: 'var(--bg-soft)' }}
           onClick={handleSeek}
           role="slider"
           aria-label="Audio progress"
