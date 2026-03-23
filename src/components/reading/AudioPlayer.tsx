@@ -259,73 +259,19 @@ export default function AudioPlayer({ alignment, onParagraphChange, onPlayStateC
     )
   }
 
-  // ── Expanded player ──
+  // ── Expanded: compact fixed bottom bar (like the old WPM strip) ──
   return (
     <div
-      className="rounded-xl border overflow-hidden animate-fade-in"
+      className="fixed left-0 right-0 z-40 animate-fade-in"
       style={{
-        backgroundColor: 'var(--bg-card)',
-        borderColor: 'var(--border-default)',
+        bottom: 0,
+        marginLeft: 'var(--sidebar-width, 0px)',
       }}
     >
-      {/* Header with reader credit */}
+      {/* Seekable progress bar — full width at top of the bar */}
       <div
-        className="flex items-center justify-between px-4 py-2 text-xs"
-        style={{ borderBottom: '1px solid var(--border-default)' }}
-      >
-        <div className="flex items-center gap-2">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-purple)' }}>
-            <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
-            <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
-          </svg>
-          <span style={{ color: 'var(--text-secondary)' }}>
-            Read by <strong style={{ color: 'var(--text-primary)' }}>{reader}</strong>
-            <span className="ml-1" style={{ color: 'var(--text-tertiary, var(--text-secondary))' }}>
-              · LibriVox · Public Domain
-            </span>
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          {/* Footnotes expand/collapse toggle */}
-          {onFootnotesToggle && (
-            <button
-              onClick={onFootnotesToggle}
-              className="px-2 py-0.5 rounded-md text-xs btn-transition"
-              style={{
-                color: footnotesExpanded ? 'var(--accent-purple)' : 'var(--text-secondary)',
-                backgroundColor: footnotesExpanded ? 'color-mix(in srgb, var(--accent-purple) 10%, transparent)' : 'transparent',
-              }}
-              aria-label={footnotesExpanded ? 'Collapse footnotes' : 'Expand footnotes'}
-              title={footnotesExpanded ? 'Collapse all footnotes' : 'Expand all footnotes (the reader reads them aloud)'}
-            >
-              {footnotesExpanded ? 'Hide notes' : 'Show notes'}
-            </button>
-          )}
-          <button
-            onClick={() => {
-              if (isPlaying) {
-                audioRef.current?.pause()
-                setIsPlaying(false)
-                onPlayStateChange?.(false)
-                if (animationRef.current) cancelAnimationFrame(animationRef.current)
-              }
-              setIsExpanded(false)
-            }}
-            className="p-1 rounded-md btn-transition"
-            style={{ color: 'var(--text-secondary)' }}
-            aria-label="Close audio player"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {/* Progress bar — clickable */}
-      <div
-        className="h-1.5 cursor-pointer relative"
-        style={{ backgroundColor: 'var(--bg-page)' }}
+        className="h-1 cursor-pointer relative group/seek"
+        style={{ backgroundColor: 'color-mix(in srgb, var(--accent-purple) 20%, var(--bg-card))' }}
         onClick={handleSeek}
         role="slider"
         aria-label="Audio progress"
@@ -341,27 +287,39 @@ export default function AudioPlayer({ alignment, onParagraphChange, onPlayStateC
             transition: 'width 100ms linear',
           }}
         />
+        {/* Hover: thicken the bar for easier grabbing */}
+        <div
+          className="absolute inset-x-0 -top-1 bottom-0 opacity-0 group-hover/seek:opacity-100 transition-opacity"
+          style={{ backgroundColor: 'transparent' }}
+        />
       </div>
 
-      {/* Controls */}
-      <div className="flex items-center justify-between px-4 py-2.5">
-        <div className="flex items-center gap-1">
-          {/* Skip back 15s */}
+      {/* Controls bar */}
+      <div
+        className="flex items-center justify-between px-4 py-2"
+        style={{
+          backgroundColor: 'var(--bg-card)',
+          borderTop: '1px solid var(--border-default)',
+          boxShadow: '0 -2px 8px rgba(0,0,0,0.06)',
+        }}
+      >
+        {/* Left: skip back, play/pause, skip forward */}
+        <div className="flex items-center gap-0.5">
           <button
             onClick={() => skip(-15)}
-            className="p-2 rounded-lg btn-transition"
+            className="p-1.5 rounded-lg btn-transition"
             style={{ color: 'var(--text-secondary)' }}
             aria-label="Skip back 15 seconds"
+            title="Back 15s"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M11 17l-5-5 5-5" /><path d="M18 17l-5-5 5-5" />
             </svg>
           </button>
 
-          {/* Play/Pause */}
           <button
             onClick={togglePlay}
-            className="p-2.5 rounded-full btn-transition"
+            className="p-2 rounded-full btn-transition"
             style={{
               backgroundColor: 'var(--accent-purple)',
               color: 'var(--text-inverse)',
@@ -369,52 +327,86 @@ export default function AudioPlayer({ alignment, onParagraphChange, onPlayStateC
             aria-label={isPlaying ? 'Pause' : 'Play'}
           >
             {isLoading ? (
-              <svg width="20" height="20" viewBox="0 0 24 24" className="animate-spin">
+              <svg width="16" height="16" viewBox="0 0 24 24" className="animate-spin">
                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" strokeDasharray="30 60" />
               </svg>
             ) : isPlaying ? (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                 <rect x="6" y="4" width="4" height="16" rx="1" />
                 <rect x="14" y="4" width="4" height="16" rx="1" />
               </svg>
             ) : (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                 <polygon points="5,3 19,12 5,21" />
               </svg>
             )}
           </button>
 
-          {/* Skip forward 15s */}
           <button
             onClick={() => skip(15)}
-            className="p-2 rounded-lg btn-transition"
+            className="p-1.5 rounded-lg btn-transition"
             style={{ color: 'var(--text-secondary)' }}
             aria-label="Skip forward 15 seconds"
+            title="Forward 15s"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M13 17l5-5-5-5" /><path d="M6 17l5-5-5-5" />
             </svg>
           </button>
         </div>
 
-        {/* Time display */}
+        {/* Center: time */}
         <div className="text-xs font-mono" style={{ color: 'var(--text-secondary)' }}>
           {formatTime(currentTime)} / {formatTime(duration || totalDuration)}
         </div>
 
-        {/* Speed control */}
-        <button
-          onClick={cycleSpeed}
-          className="px-2.5 py-1 rounded-md text-xs font-bold btn-transition"
-          style={{
-            backgroundColor: 'var(--bg-page)',
-            color: 'var(--text-secondary)',
-            border: '1px solid var(--border-default)',
-          }}
-          aria-label={`Playback speed: ${playbackRate}x`}
-        >
-          {playbackRate}×
-        </button>
+        {/* Right: speed, notes toggle, close */}
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={cycleSpeed}
+            className="px-2 py-1 rounded-md text-xs font-bold btn-transition"
+            style={{
+              backgroundColor: 'var(--bg-soft)',
+              color: 'var(--text-secondary)',
+            }}
+            aria-label={`Playback speed: ${playbackRate}x`}
+          >
+            {playbackRate}×
+          </button>
+
+          {onFootnotesToggle && (
+            <button
+              onClick={onFootnotesToggle}
+              className="px-2 py-1 rounded-md text-xs btn-transition"
+              style={{
+                color: footnotesExpanded ? 'var(--accent-purple)' : 'var(--text-secondary)',
+                backgroundColor: footnotesExpanded ? 'color-mix(in srgb, var(--accent-purple) 10%, transparent)' : 'transparent',
+              }}
+              title={footnotesExpanded ? 'Hide footnotes' : 'Show footnotes'}
+            >
+              {footnotesExpanded ? 'Notes ✓' : 'Notes'}
+            </button>
+          )}
+
+          <button
+            onClick={() => {
+              if (isPlaying) {
+                audioRef.current?.pause()
+                setIsPlaying(false)
+                onPlayStateChange?.(false)
+                if (animationRef.current) cancelAnimationFrame(animationRef.current)
+              }
+              setIsExpanded(false)
+            }}
+            className="p-1.5 rounded-md btn-transition"
+            style={{ color: 'var(--text-secondary)' }}
+            aria-label="Close audio player"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   )
