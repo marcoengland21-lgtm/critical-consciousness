@@ -270,40 +270,6 @@ export default function ReadingToolbar({
             </>
           )}
 
-          {/* ── Audio ── */}
-          {audioAlignment && (
-            <>
-              <div style={{ borderTop: '1px solid var(--border-default)' }} />
-              <section>
-                <h3 className="text-xs font-semibold tracking-wide mb-3" style={{ color: 'var(--accent-purple)' }}>
-                  Audio
-                </h3>
-                <div
-                  className="px-3 py-3 rounded-lg text-sm"
-                  style={{ backgroundColor: 'var(--bg-soft)' }}
-                >
-                  <p style={{ color: 'var(--text-primary)' }}>
-                    Listen to this chapter
-                  </p>
-                  <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
-                    {audioAlignment.audio_duration ? formatDuration(audioAlignment.audio_duration) : ''} · Read by {audioAlignment.reader_name || 'LibriVox'}
-                  </p>
-                  {onAudioToggle && (
-                    <button
-                      onClick={() => {
-                        onAudioToggle()
-                        onClose()
-                      }}
-                      className="mt-2 btn-primary text-xs px-4 py-1.5"
-                    >
-                      {audioIsPlaying ? 'Pause' : 'Play'}
-                    </button>
-                  )}
-                </div>
-              </section>
-            </>
-          )}
-
           {/* Divider */}
           <div style={{ borderTop: '1px solid var(--border-default)' }} />
 

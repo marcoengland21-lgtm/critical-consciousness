@@ -903,8 +903,8 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         <ReadingPresence chapterId={chapter.id} />
       )}
 
-      {/* Audio player — only shows inline when audio is playing or has been expanded */}
-      {audioAlignment && !focusedMode && audioIsPlaying && (
+      {/* Audio player — LibriVox recordings with synced paragraph highlighting */}
+      {audioAlignment && !focusedMode && (
         <div className="mb-6">
           <AudioPlayer
             alignment={audioAlignment}
