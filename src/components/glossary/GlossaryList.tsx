@@ -443,10 +443,12 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
                             setSelectedId(entry.id)
                             setIsEditing(false)
                           }}
-                          className="w-full text-left px-3 py-2 rounded-lg transition-colors text-sm"
+                          className="w-full text-left px-3 py-2 rounded-lg transition-colors text-sm cursor-pointer"
                           style={{
                             backgroundColor: selectedId === entry.id ? 'var(--bg-soft)' : 'transparent',
                             color: 'var(--text-primary)',
+                            borderLeft: selectedId === entry.id ? '3px solid var(--accent-purple)' : '3px solid transparent',
+                            fontWeight: selectedId === entry.id ? 600 : 400,
                           }}
                         >
                           <span className="font-medium">{entry.term}</span>

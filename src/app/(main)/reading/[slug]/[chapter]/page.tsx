@@ -159,36 +159,13 @@ export default async function ChapterPage({ params }: Props) {
         <span style={{ color: 'var(--text-primary)' }}>{currentLabel}</span>
       </div>
 
-      {/* Section navigation — only show Ch1 section tabs when reading a Ch1 section */}
-      {isChapter1Section && (
-        <div className="flex gap-2 mb-10 overflow-x-auto sm:flex-wrap sm:overflow-visible pb-2 sm:pb-0 scrollbar-hide">
-          {ch1Sections.map((ch) => {
-            const isActive = ch.chapter_number === chapterNum
-            return (
-              <Link
-                key={ch.id}
-                href={`/reading/${slug}/${ch.chapter_number}`}
-                className="shrink-0 px-4 py-2 rounded-lg text-sm font-medium btn-transition"
-                style={{
-                  backgroundColor: isActive ? 'var(--text-primary)' : 'var(--bg-card)',
-                  color: isActive ? 'var(--bg-page)' : 'var(--text-primary)',
-                  border: '1px solid',
-                  borderColor: isActive ? 'var(--text-primary)' : 'var(--border-default)',
-                }}
-              >
-                {ch.chapter_number}. {ch.title.length > 35 ? ch.title.slice(0, 35) + '...' : ch.title}
-              </Link>
-            )
-          })}
-        </div>
-      )}
-
       {/* Chapter title */}
       <div className="mb-10 text-center">
         <p className="text-xs font-bold tracking-wide mb-2" style={{ color: 'var(--accent-purple)' }}>
           {currentLabel} · ~{readingTimeMinutes} min read
         </p>
         <h1
+          data-chapter-title
           className="text-2xl sm:text-3xl font-bold mb-3"
           style={{
             color: 'var(--accent-red)',
@@ -244,6 +221,35 @@ export default async function ChapterPage({ params }: Props) {
           </Link>
         </div>
       </div>
+
+      {/* Section tabs — shown at the bottom for Ch1 sections */}
+      {isChapter1Section && ch1Sections.length > 1 && (
+        <div className="mt-8 text-center">
+          <p className="text-xs font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
+            Other sections in this chapter
+          </p>
+          <div className="flex justify-center gap-2 flex-wrap">
+            {ch1Sections.map((ch) => {
+              const isActive = ch.chapter_number === chapterNum
+              return (
+                <Link
+                  key={ch.id}
+                  href={`/reading/${slug}/${ch.chapter_number}`}
+                  className="px-4 py-2 rounded-lg text-sm font-medium btn-transition"
+                  style={{
+                    backgroundColor: isActive ? 'var(--accent-purple)' : 'var(--bg-card)',
+                    color: isActive ? 'var(--text-inverse)' : 'var(--text-primary)',
+                    border: '1px solid',
+                    borderColor: isActive ? 'var(--accent-purple)' : 'var(--border-default)',
+                  }}
+                >
+                  §{ch.chapter_number}
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Chapter navigation footer — card-style */}
       <div className="mt-12 grid grid-cols-2 gap-4">

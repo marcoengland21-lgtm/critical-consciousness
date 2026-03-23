@@ -70,27 +70,20 @@ export default function ReadingPresence({ chapterId, userDisplayName }: ReadingP
   if (othersCount === 0) return null
 
   return (
-    <div
-      className="flex items-center gap-2 py-2 px-4 rounded-full animate-fade-in"
-      style={{
-        backgroundColor: 'rgba(var(--accent-amber-rgb), 0.08)',
-        color: 'var(--accent-amber)',
-        border: '1px solid rgba(var(--accent-amber-rgb), 0.15)',
-      }}
+    <span
+      className="inline-flex items-center gap-1.5 text-xs animate-fade-in"
+      style={{ color: 'var(--text-secondary)', opacity: 0.7 }}
     >
-      {/* Warm pulsing glow dot */}
       <span
-        className="w-2 h-2 rounded-full shrink-0"
+        className="w-1.5 h-1.5 rounded-full shrink-0"
         style={{
           backgroundColor: 'var(--accent-amber)',
           animation: 'pulse 2.5s ease-in-out infinite',
         }}
       />
-      <span className="text-sm font-medium">
-        {othersCount === 1
-          ? '1 other person is reading this chapter'
-          : `${othersCount} others are reading this chapter`}
-      </span>
-    </div>
+      {othersCount === 1
+        ? '1 other person reading'
+        : `${othersCount} others reading`}
+    </span>
   )
 }

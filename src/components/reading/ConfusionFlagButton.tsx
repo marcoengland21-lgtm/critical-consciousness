@@ -51,7 +51,7 @@ export default function ConfusionFlagButton({
       onClick={handleToggle}
       disabled={isLoading}
       className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold transition-all opacity-40 group-hover/para:opacity-100 hover:opacity-100 disabled:opacity-50 ${intensityClass}`}
-      title={`${count} ${count === 1 ? 'person is' : 'people are'} confused here`}
+      title={isSet ? `You flagged this as confusing (${count} total)` : count > 0 ? `I'm confused by this passage (${count} others are too)` : "I'm confused by this passage"}
       aria-label={`Toggle confusion flag for paragraph ${paragraphIndex}. ${count} ${count === 1 ? 'person is' : 'people are'} confused here.`}
     >
       ?

@@ -367,7 +367,7 @@ export default async function DashboardPage() {
                   )}
                   <Link
                     href={`/reading/capital-vol-1/${currentWeek.week_number}`}
-                    className="btn-primary text-sm inline-flex items-center gap-1.5 mb-1"
+                    className="btn-primary text-base px-6 py-2.5 inline-flex items-center gap-2 mb-2 font-semibold"
                   >
                     Read Now →
                   </Link>
@@ -562,57 +562,7 @@ export default async function DashboardPage() {
             </div>
           )}
 
-          {/* Start Reading CTA */}
-          <Link
-            href={currentWeek?.chapter_ref ? `/reading/capital-vol-1/${currentWeek.week_number}` : '/reading/capital-vol-1/1'}
-            className="block rounded-xl border-2 p-5 transition-all hover:shadow-md card-hover"
-            style={{
-              borderColor: 'var(--accent-red)',
-              backgroundColor: 'var(--bg-card)',
-            }}
-          >
-            <p className="text-xs font-bold tracking-wide mb-1" style={{ color: 'var(--accent-red)' }}>
-              Annotate Together
-            </p>
-            <p className="font-bold" style={{ color: 'var(--text-primary)', fontFamily: "'Lora', Georgia, serif" }}>
-              {currentWeek ? currentWeek.title : 'Capital, Vol. I — Chapter 1'}
-            </p>
-            <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
-              Read, highlight, and annotate Marx&apos;s text collaboratively
-            </p>
-          </Link>
-
-          {/* Quick Links */}
-          <div className="card-base">
-            <div className="card-header">
-              <h2 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
-                Quick Links
-              </h2>
-            </div>
-            <div>
-              <Link href="/threads/new" className="flex items-start gap-3 px-5 py-3 transition-colors hover-bg-themed border-b" style={{ borderColor: 'var(--border-default)' }}>
-                <span className="text-base mt-0.5" style={{ color: 'var(--accent-purple)' }}>&#x25C7;</span>
-                <div>
-                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Share with the Group</p>
-                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Start a discussion thread</p>
-                </div>
-              </Link>
-              <Link href="/glossary" className="flex items-start gap-3 px-5 py-3 transition-colors hover-bg-themed border-b" style={{ borderColor: 'var(--border-default)' }}>
-                <span className="text-base mt-0.5" style={{ color: 'var(--accent-purple)' }}>&#x25C7;</span>
-                <div>
-                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Browse Glossary</p>
-                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Look up or add terms</p>
-                </div>
-              </Link>
-              <Link href="/resources" className="flex items-start gap-3 px-5 py-3 transition-colors hover-bg-themed" style={{ borderColor: 'var(--border-default)' }}>
-                <span className="text-base mt-0.5" style={{ color: 'var(--accent-purple)' }}>&#x25C7;</span>
-                <div>
-                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Resources</p>
-                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Companion readings and tools</p>
-                </div>
-              </Link>
-            </div>
-          </div>
+          {/* Annotate Together + Quick Links removed — duplicated nav and Read Now CTA */}
 
           {/* Reflection Journal — private weekly notes */}
           {currentWeek && user && (

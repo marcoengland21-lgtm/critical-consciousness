@@ -3,7 +3,7 @@ import DesktopSidebar from '@/components/layout/DesktopSidebar'
 import MobileTabBar from '@/components/layout/MobileTabBar'
 import ThemeProvider from '@/components/layout/ThemeProvider'
 import AccessibilityProvider from '@/components/layout/AccessibilityProvider'
-import ReadingGuide from '@/components/reading/ReadingGuide'
+// ReadingGuide moved to ChapterReader — only renders on reading pages
 import NavigationProgress from '@/components/layout/NavigationProgress'
 
 export default async function MainLayout({
@@ -70,8 +70,7 @@ export default async function MainLayout({
           {/* Mobile Bottom Tab Bar */}
           <MobileTabBar displayName={displayName} hasUser={!!user} />
 
-          {/* Reading guide overlay — follows cursor for line tracking */}
-          <ReadingGuide />
+          {/* ReadingGuide now lives in ChapterReader — scoped to reading pages */}
         </div>
       </AccessibilityProvider>
     </ThemeProvider>
