@@ -272,9 +272,10 @@ export default function AudioPlayer({ alignment, onParagraphChange, onPlayStateC
   // ── Expanded: floating pill/bubble (matches the WPM pacer strip style) ──
   return (
     <div
-      className="fixed z-50 left-1/2 animate-fade-in"
+      className="fixed z-50 animate-fade-in"
       style={{
         bottom: '5rem',
+        left: 'calc(var(--sidebar-width, 0px) + (100vw - var(--sidebar-width, 0px)) / 2)',
         transform: 'translateX(-50%)',
       }}
     >
@@ -334,7 +335,7 @@ export default function AudioPlayer({ alignment, onParagraphChange, onPlayStateC
 
         {/* Seekable progress bar — compact inline */}
         <div
-          className="w-16 h-1.5 rounded-full cursor-pointer relative"
+          className="w-28 h-1.5 rounded-full cursor-pointer relative"
           style={{ backgroundColor: 'var(--bg-soft)' }}
           onClick={handleSeek}
           role="slider"
