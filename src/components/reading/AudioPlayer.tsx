@@ -52,13 +52,33 @@ interface AudioPlayerProps {
   onFootnotesToggle?: () => void
 }
 
+const PROGRESS_KEY_PREFIX = 'ccp-audio-progress-'
+
+function getSavedProgress(chapterNumber: number): { time: number; rate: number } | null {
+  try {
+    const saved = localStorage.getItem(`${PROGRESS_KEY_PREFIX}${chapterNumber}`)
+    if (saved) return JSON.parse(saved)
+  } catch { /* ignore */ }
+  return null
+}
+
+function saveProgress(chapterNumber: number, time: number, rate: number) {
+  try {
+    localStorage.setItem(`${PROGRESS_KEY_PREFIX}${chapterNumber}`, JSON.stringify({ time, rate }))
+  } catch { /* ignore */ }
+}
+
 export default function AudioPlayer({ alignment, onParagraphChange, onPlayStateChange, footnotesExpanded, onFootnotesToggle }: AudioPlayerProps) {
+  // Restore saved progress for this chapter
+  const savedProgress = alignment ? getSavedProgress(alignment.chapter_number) : null
+
   const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
+  const [currentTime, setCurrentTime] = useState(savedProgress?.time || 0)
   const [duration, setDuration] = useState(0)
-  const [playbackRate, setPlaybackRate] = useState(1)
+  const [playbackRate, setPlaybackRate] = useState(savedProgress?.rate || 1)
   const [isLoading, setIsLoading] = useState(false)
-  const [isExpanded, setIsExpanded] = useState(false)
+  // Auto-expand if there's saved progress (user was listening before)
+  const [isExpanded, setIsExpanded] = useState(!!savedProgress?.time)
   const [currentParagraph, setCurrentParagraph] = useState<number | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const animationRef = useRef<number | null>(null)
@@ -85,6 +105,10 @@ export default function AudioPlayer({ alignment, onParagraphChange, onPlayStateC
       if (now - lastUIUpdateRef.current > 250) {
         setCurrentTime(time)
         lastUIUpdateRef.current = now
+        // Save progress every ~5 seconds (every 20th UI update)
+        if (alignment && Math.floor(now / 5000) !== Math.floor((now - 250) / 5000)) {
+          saveProgress(alignment.chapter_number, time, audioRef.current?.playbackRate || 1)
+        }
       }
 
       // Find which paragraph we're in
@@ -114,6 +138,8 @@ export default function AudioPlayer({ alignment, onParagraphChange, onPlayStateC
       if (animationRef.current) cancelAnimationFrame(animationRef.current)
       // Force final time update so progress bar shows exact position
       setCurrentTime(audioRef.current.currentTime)
+      // Save position for resume on refresh / device switch
+      if (alignment) saveProgress(alignment.chapter_number, audioRef.current.currentTime, playbackRate)
     } else {
       audioRef.current.play()
       animationRef.current = requestAnimationFrame(updateTime)
@@ -186,6 +212,8 @@ export default function AudioPlayer({ alignment, onParagraphChange, onPlayStateC
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current)
       if (audioRef.current) {
+        // Save position before cleanup
+        if (alignment) saveProgress(alignment.chapter_number, audioRef.current.currentTime, audioRef.current.playbackRate)
         audioRef.current.pause()
         audioRef.current = null
       }
@@ -204,6 +232,13 @@ export default function AudioPlayer({ alignment, onParagraphChange, onPlayStateC
     audio.addEventListener('loadedmetadata', () => {
       setDuration(audio.duration)
       setIsLoading(false)
+      // Restore saved position
+      if (savedProgress?.time && savedProgress.time < audio.duration) {
+        audio.currentTime = savedProgress.time
+      }
+      if (savedProgress?.rate) {
+        audio.playbackRate = savedProgress.rate
+      }
     })
     audio.addEventListener('ended', () => {
       setIsPlaying(false)
