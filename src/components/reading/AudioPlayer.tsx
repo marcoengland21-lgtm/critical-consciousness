@@ -335,8 +335,8 @@ export default function AudioPlayer({ alignment, onParagraphChange, onPlayStateC
 
         {/* Seekable progress bar — compact inline */}
         <div
-          className="w-28 h-1.5 rounded-full cursor-pointer relative"
-          style={{ backgroundColor: 'var(--bg-soft)' }}
+          className="h-1.5 rounded-full cursor-pointer relative"
+          style={{ width: 'clamp(120px, 20vw, 240px)', backgroundColor: 'var(--bg-soft)' }}
           onClick={handleSeek}
           role="slider"
           aria-label="Audio progress"
