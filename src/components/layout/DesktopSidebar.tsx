@@ -150,23 +150,14 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
       {/* Separator */}
       <div className="mx-4 mb-2 shrink-0" style={{ borderBottom: '1px solid var(--nav-accent)' }} />
 
-      {/* Navigation Links */}
+      {/* Navigation Links — single flat block per IMPROVEMENTS_PLAN §3.1.
+          'Tools' group label removed (it meant two different things — the sidebar
+          Tools group AND the reading-page Tools button). Profile moved out of nav
+          entirely; access is via the user avatar block at the bottom of the sidebar.
+          The word 'Tools' is now reserved for one place: the reading workspace. */}
       <nav className="flex-1 px-2 space-y-1 overflow-y-auto overflow-x-hidden" aria-label="Main navigation">
-        {/* Section label — Main */}
-        <div
-          className="text-[10px] font-semibold tracking-wider px-3 pt-1 pb-0.5 whitespace-nowrap"
-          style={{
-            color: 'var(--text-inverse)',
-            opacity: collapsed ? 0 : 0.35,
-            transition: labelTransition,
-          }}
-        >
-          Main
-        </div>
-
-        {/* Primary nav: Dashboard, Reading, Threads */}
         {navItems
-          .filter((item) => item.mobileTab && item.href !== '/profile')
+          .filter((item) => item.href !== '/profile')
           .map((item) => (
             <SidebarNavLink
               key={item.href}
@@ -176,39 +167,6 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
               collapsed={collapsed}
             />
           ))}
-
-        {/* Divider */}
-        <div className="my-2 mx-2" style={{ borderBottom: '1px solid var(--nav-accent-subtle)' }} />
-
-        {/* Section label — Tools */}
-        <div
-          className="text-[10px] font-semibold tracking-wider px-3 pt-1 pb-0.5 whitespace-nowrap"
-          style={{
-            color: 'var(--text-inverse)',
-            opacity: collapsed ? 0 : 0.35,
-            transition: labelTransition,
-          }}
-        >
-          Tools
-        </div>
-
-        {/* Secondary nav: Glossary, Schedule, Resources */}
-        {navItems
-          .filter((item) => !item.mobileTab)
-          .map((item) => (
-            <SidebarNavLink
-              key={item.href}
-              href={item.href}
-              icon={item.icon}
-              label={item.label}
-              collapsed={collapsed}
-            />
-          ))}
-
-        {/* Profile */}
-        {hasUser && (
-          <SidebarNavLink href="/profile" icon="user" label="Profile" collapsed={collapsed} />
-        )}
       </nav>
 
       {/* Bottom Section — user identity + controls */}
@@ -219,27 +177,30 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
           borderTop: '1px solid var(--nav-accent-subtle)',
         }}
       >
-        {/* User avatar — always visible, adapts to collapsed/expanded */}
-        <div
-          className="flex items-center gap-2 px-1 mb-2 overflow-hidden"
-          style={{ minHeight: '32px' }}
-        >
+        {/* User avatar — always visible, adapts to collapsed/expanded.
+            Per §3.1: this is now the SOLE entry point to Profile (the nav-list
+            Profile link was removed). The whole row is the click target with a
+            chevron indicating navigability. */}
+        <div className="mb-2 overflow-hidden" style={{ minHeight: '32px' }}>
           {hasUser ? (
-            <>
-              <Link
-                href="/profile"
+            <Link
+              href="/profile"
+              className="flex items-center gap-2 px-1 py-1 rounded-md hover-bg-themed group"
+              title={collapsed ? `Profile — ${displayName}` : undefined}
+              aria-label={`Profile — ${displayName}`}
+              style={{ textDecoration: 'none' }}
+            >
+              <span
                 className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
                 style={{
                   backgroundColor: 'var(--nav-accent)',
                   color: 'var(--text-inverse)',
                 }}
-                title={collapsed ? displayName : undefined}
-                aria-label={`Profile — ${displayName}`}
               >
                 {initial}
-              </Link>
+              </span>
               <span
-                className="text-sm truncate whitespace-nowrap"
+                className="flex-1 text-sm truncate whitespace-nowrap"
                 style={{
                   color: 'var(--text-inverse)',
                   opacity: collapsed ? 0 : 0.8,
@@ -248,9 +209,29 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
               >
                 {displayName}
               </span>
-            </>
+              {/* Chevron indicates this row is navigable → /profile */}
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="shrink-0 transition-opacity group-hover:opacity-100"
+                aria-hidden="true"
+                style={{
+                  color: 'var(--text-inverse)',
+                  opacity: collapsed ? 0 : 0.4,
+                  transition: labelTransition,
+                }}
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </Link>
           ) : (
-            <>
+            <div className="flex items-center gap-2 px-1">
               <Link
                 href="/login"
                 className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
@@ -283,7 +264,7 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
                   Sign In
                 </Link>
               </span>
-            </>
+            </div>
           )}
         </div>
 
