@@ -1,15 +1,11 @@
-import { redirect } from 'next/navigation'
-import { getSessionUser } from '@/lib/supabase/server'
 import Link from 'next/link'
 
-export default async function Home() {
-  // Redirect authenticated users directly to dashboard.
-  // Uses getSessionUser() (local JWT read) instead of getUser() (network call)
-  // because the root page only needs to know whether a session exists. The
-  // network call to Supabase auth was timing out the edge function.
-  const user = await getSessionUser()
-  if (user) { redirect('/dashboard') }
-
+// Fully static — no Supabase calls, no server-side auth checks.
+// Logged-in users get redirected to /dashboard from middleware on any other
+// route, or via the "Sign In" link below (middleware on /login redirects
+// authenticated users to /dashboard). Keeping this page purely static means
+// the edge function never has to run for the homepage.
+export default function Home() {
   return (
     <main
       className="flex items-center justify-center min-h-screen p-4"

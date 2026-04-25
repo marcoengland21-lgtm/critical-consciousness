@@ -2,6 +2,15 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
+  // Short-circuit for the root path. The landing page is fully static and
+  // handles its own redirect to /dashboard for logged-in users (via a link,
+  // not a server redirect). Calling supabase.auth.getSession() here triggers
+  // a token-refresh network call from the edge runtime that can time out
+  // and crash the entire site for visitors hitting "/".
+  if (request.nextUrl.pathname === '/') {
+    return NextResponse.next({ request })
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   })
