@@ -358,15 +358,18 @@ export default function ThreadListClient({
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h1
-          className="text-2xl sm:text-3xl font-bold"
-          style={{ color: 'var(--accent-red)' }}
-        >
-          Discussion Threads
-        </h1>
-        <Link href="/threads/new" className="btn-primary text-sm">
-          New Thread
+      <div className="flex items-end justify-between gap-4 mb-6">
+        <div>
+          <p className="text-eyebrow mb-2">Group Conversation</p>
+          <h1
+            className="text-display-lg"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            Discussion Threads
+          </h1>
+        </div>
+        <Link href="/threads/new" className="btn-primary text-sm shrink-0">
+          Start a thread
         </Link>
       </div>
 

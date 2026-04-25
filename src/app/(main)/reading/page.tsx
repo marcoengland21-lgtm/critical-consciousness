@@ -172,9 +172,12 @@ export default async function ReadingPage() {
   if (typedDocuments.length === 0) {
     return (
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold mb-8" style={{ color: 'var(--accent-red)' }}>
-          Reading
-        </h1>
+        <div className="mb-8">
+          <p className="text-eyebrow mb-2">The Text</p>
+          <h1 className="text-display-lg" style={{ color: 'var(--text-primary)' }}>
+            Reading
+          </h1>
+        </div>
         <div className="text-center py-16">
           <p className="text-lg mb-2" style={{ color: 'var(--text-primary)' }}>
             The text is coming
@@ -190,13 +193,11 @@ export default async function ReadingPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-1" style={{ color: 'var(--accent-red)' }}>
+        <p className="text-eyebrow mb-2">33 Chapters · 8 Parts</p>
+        <h1 className="text-display-lg mb-2" style={{ color: 'var(--text-primary)' }}>
           Reading
         </h1>
-        <p className="text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>
-          33 chapters across 8 parts
-        </p>
-        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+        <p className="text-sm" style={{ color: 'var(--text-secondary)', maxWidth: '60ch' }}>
           Read the text and annotate together — highlight passages, leave questions, and see what the group is thinking.
         </p>
       </div>

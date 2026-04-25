@@ -129,9 +129,12 @@ export default async function SchedulePage() {
   if (typedWeeks.length === 0) {
     return (
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold mb-8" style={{ color: 'var(--accent-red)' }}>
-          Reading Schedule
-        </h1>
+        <div className="mb-8">
+          <p className="text-eyebrow mb-2">Weekly Plan</p>
+          <h1 className="text-display-lg" style={{ color: 'var(--text-primary)' }}>
+            Reading Schedule
+          </h1>
+        </div>
         <div className="text-center py-16">
           <p className="text-lg mb-2" style={{ color: 'var(--text-primary)' }}>
             The schedule is on its way
@@ -146,9 +149,12 @@ export default async function SchedulePage() {
 
   return (
     <div>
-      <h1 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: 'var(--accent-red)' }}>
-        Reading Schedule
-      </h1>
+      <div className="mb-6">
+        <p className="text-eyebrow mb-2">Weekly Plan</p>
+        <h1 className="text-display-lg" style={{ color: 'var(--text-primary)' }}>
+          Reading Schedule
+        </h1>
+      </div>
 
       <ScheduleClient
         weeks={typedWeeks}

@@ -70,8 +70,9 @@ export default async function GlossaryPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: 'var(--accent-red)' }}>
+      <div className="mb-8">
+        <p className="text-eyebrow mb-2">Shared Vocabulary</p>
+        <h1 className="text-display-lg" style={{ color: 'var(--text-primary)' }}>
           Glossary
         </h1>
       </div>
