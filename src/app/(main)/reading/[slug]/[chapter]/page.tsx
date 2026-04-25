@@ -159,10 +159,15 @@ export default async function ChapterPage({ params }: Props) {
         <span style={{ color: 'var(--text-primary)' }}>{currentLabel}</span>
       </div>
 
-      {/* Chapter title */}
+      {/* Chapter title.
+          Eyebrow per IMPROVEMENTS_PLAN §9.1: numbered part prefix +
+          chapter label + reading time. Format example: '01 / CHAPTER 1, §1 · ~11 MIN READ'.
+          Uses .text-eyebrow utility (Inter all-caps, 0.15em tracking, secondary text).
+          The pink Lora-bold chapter title below is preserved — that's the marquee
+          editorial moment per chapter and the one place pink belongs at this size. */}
       <div className="mb-10 text-center">
-        <p className="text-xs font-bold tracking-wide mb-2" style={{ color: 'var(--accent-purple)' }}>
-          {currentLabel} · ~{readingTimeMinutes} min read
+        <p className="text-eyebrow mb-3">
+          {String(getPartNumber(chapterNum)).padStart(2, '0')} / {currentLabel} · ~{readingTimeMinutes} Min Read
         </p>
         <h1
           data-chapter-title

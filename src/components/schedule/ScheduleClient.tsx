@@ -459,26 +459,42 @@ export default function ScheduleClient({ weeks, currentWeekId, userId }: Schedul
                           </div>
                         )}
 
-                        {/* Discussion Prompts */}
+                        {/* Discussion Prompts — prompts are invitations to think,
+                            not a checklist. Render as hanging-indent paragraphs
+                            with a question-mark glyph rather than 1./2./3. per
+                            IMPROVEMENTS_PLAN §8.1. */}
                         {prompts.length > 0 && (
                           <div>
                             <h3
-                              className="text-sm font-semibold mb-2"
+                              className="text-sm font-semibold mb-3"
                               style={{ color: 'var(--text-primary)' }}
                             >
                               Discussion Prompts
                             </h3>
-                            <ol className="space-y-2 list-decimal list-inside">
+                            <div className="space-y-3">
                               {prompts.map((prompt) => (
-                                <li
+                                <div
                                   key={prompt.id}
-                                  className="text-sm"
+                                  className="text-sm leading-relaxed flex gap-3"
                                   style={{ color: 'var(--text-secondary)' }}
                                 >
-                                  {prompt.prompt_text}
-                                </li>
+                                  <span
+                                    aria-hidden="true"
+                                    className="shrink-0 select-none"
+                                    style={{
+                                      color: 'var(--accent-purple)',
+                                      fontFamily: "'Lora', Georgia, serif",
+                                      fontStyle: 'italic',
+                                      fontSize: '1.1em',
+                                      lineHeight: 1.4,
+                                    }}
+                                  >
+                                    ?
+                                  </span>
+                                  <p className="flex-1">{prompt.prompt_text}</p>
+                                </div>
                               ))}
-                            </ol>
+                            </div>
                           </div>
                         )}
 
@@ -488,13 +504,19 @@ export default function ScheduleClient({ weeks, currentWeekId, userId }: Schedul
                           hasSession={!!sessionDate}
                         />
 
-                        {/* Action buttons — context dependent */}
+                        {/* Action buttons — context dependent.
+                            §8.2: primary (Read and Annotate) keeps red. Secondary
+                            (View Discussions) is btn-secondary. Outer container
+                            switched from red border to a soft amber-tinted bg so
+                            the red on the primary CTA isn't competing with a red
+                            border around it. */}
                         {isCurrent && (
                           <div
-                            className="p-4 rounded-lg border"
+                            className="p-4 rounded-lg"
                             style={{
-                              borderColor: 'var(--accent-red)',
-                              backgroundColor: 'var(--bg-card-alt)',
+                              backgroundColor: 'rgba(var(--accent-amber-rgb), 0.06)',
+                              borderTop: '1px solid var(--border-subtle)',
+                              borderBottom: '1px solid var(--border-subtle)',
                             }}
                           >
                             <div className="flex flex-wrap gap-2">

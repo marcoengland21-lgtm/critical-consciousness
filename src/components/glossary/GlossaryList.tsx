@@ -492,9 +492,11 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
               ← Back to terms
             </button>
 
-            <div
-              className="card-base p-5"
-            >
+            {/* Per IMPROVEMENTS_PLAN §10.2: drop the bordered-card box around
+                the definition view. Right-pane structure is now organised by
+                hairlines (Definition → Related Terms → History & Discussion)
+                with no surrounding card border. */}
+            <div className="px-1">
               {/* Term heading */}
               <div className="flex items-start justify-between gap-4 mb-4">
                 <div>
