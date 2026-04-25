@@ -4,11 +4,11 @@ import ThreadTypeBadge from '@/components/threads/ThreadTypeBadge'
 import TimeAgo from '@/components/ui/TimeAgo'
 import RoleBadge from '@/components/roles/RoleBadge'
 import ReadingCheckinButton from '@/components/dashboard/ReadingCheckinButton'
-import WeeklyActivitySummary from '@/components/dashboard/WeeklyActivitySummary'
 import MilestoneCard from '@/components/dashboard/MilestoneCard'
 import GroupThinkingOverview from '@/components/dashboard/GroupThinkingOverview'
 import PassageSpotlight from '@/components/dashboard/PassageSpotlight'
 import ReflectionJournal from '@/components/dashboard/ReflectionJournal'
+import BigStatTile from '@/components/dashboard/BigStatTile'
 import type { ThreadType, WeeklyRoleType } from '@/types/database'
 
 // Query-specific join shapes for Supabase responses
@@ -180,391 +180,246 @@ export default async function DashboardPage() {
     }
   }
 
+  // Pre-compute the big-stat row values (per IMPROVEMENTS_PLAN §5.1.3).
+  // Empty placeholders use '—' so the row still occupies space when the
+  // schedule isn't set up yet — degraded but not broken.
+  const sectionTile = currentWeek ? `Wk ${currentWeek.week_number}` : '—'
+  const annotationsTile = (weekAnnotationCount || 0) > 0 ? String(weekAnnotationCount) : '—'
+  const threadsTile = (weekThreadCount || 0) > 0 ? String(weekThreadCount) : '—'
+  let sessionTile = '—'
+  if (currentWeek?.session_date) {
+    const d = new Date(currentWeek.session_date)
+    const day = d.toLocaleString('en-NZ', { weekday: 'short', timeZone: 'Pacific/Auckland' })
+    const time = d.toLocaleString('en-NZ', { hour: 'numeric', hour12: true, timeZone: 'Pacific/Auckland' }).replace(/\s/g, '').toLowerCase()
+    sessionTile = `${day} ${time}`
+  }
+
   return (
-    <div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 stagger-children">
-        {/* Left column: Current Week + Activity + Group Thinking + Threads */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Welcome card — contextual hub with journey progress, role, and session info */}
-          <div className="card-base overflow-hidden">
-            {/* Top accent bar — warm gradient */}
-            <div className="h-1" style={{ background: 'linear-gradient(to right, var(--accent-amber), var(--accent-purple))' }} />
+    <div className="stagger-children">
+      {/* Greeting — single Lora italic line, no card box (§5.1.2). */}
+      <div className="mb-8">
+        <p className="text-display-md" style={{ color: 'var(--text-primary)' }}>
+          {user ? `${greeting}, ${displayName}.` : 'Welcome to Capital Study Group'}
+        </p>
+      </div>
 
-            <div className="card-body">
-              {/* Greeting row */}
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <h1 className="text-xl sm:text-2xl font-bold mb-0.5" style={{ color: 'var(--text-primary)' }}>
-                    {user ? `${greeting}, ${displayName}` : 'Welcome to Capital Study Group'}
-                  </h1>
-                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                    Christchurch Capital Reading Group
-                  </p>
-                </div>
+      {/* Big-stat row (§5.1.3) — four hairline-divided tiles across the top.
+          Editorial pull-quote rhythm rather than KPI-dashboard widgets.
+          Stacks 2x2 on mobile, 1x4 on desktop. */}
+      <div
+        className="grid grid-cols-2 md:grid-cols-4 mb-10"
+        style={{
+          borderTop: '1px solid var(--border-subtle)',
+          borderBottom: '1px solid var(--border-subtle)',
+        }}
+      >
+        <div className="md:border-r md:px-4" style={{ borderColor: 'var(--border-subtle)' }}>
+          <BigStatTile
+            value={sectionTile}
+            caption="Current Week"
+            href={currentWeek ? `/reading/capital-vol-1/${currentWeek.week_number}` : undefined}
+          />
+        </div>
+        <div className="md:border-r md:px-4" style={{ borderColor: 'var(--border-subtle)' }}>
+          <BigStatTile
+            value={annotationsTile}
+            caption="Annotations This Week"
+          />
+        </div>
+        <div className="md:border-r md:px-4" style={{ borderColor: 'var(--border-subtle)' }}>
+          <BigStatTile
+            value={threadsTile}
+            caption="Threads This Week"
+            href="/threads"
+          />
+        </div>
+        <div className="md:px-4">
+          <BigStatTile
+            value={sessionTile}
+            caption="Next Session"
+            href="/schedule"
+          />
+        </div>
+      </div>
 
-                {/* Session countdown chip — only if session_date exists */}
-                {currentWeek?.session_date && (() => {
-                  const sessionDate = new Date(currentWeek.session_date)
-                  const diffMs = sessionDate.getTime() - now.getTime()
-                  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
-                  const countdownText = diffDays < 0 ? 'Session was recently' : diffDays === 0 ? 'Session today' : diffDays === 1 ? 'Session tomorrow' : `Session in ${diffDays} days`
-                  const sessionTime = sessionDate.toLocaleString('en-NZ', { weekday: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Pacific/Auckland' })
-                  return (
-                    <div
-                      className="flex-shrink-0 text-right px-3 py-2 rounded-lg"
-                      style={{ backgroundColor: 'var(--bg-card-alt)' }}
-                    >
-                      <p className="text-xs font-semibold" style={{ color: diffDays <= 1 ? 'var(--accent-amber)' : 'var(--text-primary)' }}>
-                        {countdownText}
-                      </p>
-                      <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                        {sessionTime}
-                        {currentWeek.session_location && ` · ${currentWeek.session_location}`}
-                      </p>
-                    </div>
-                  )
-                })()}
-              </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-8 gap-y-6">
+        {/* Left column — group thinking + recent threads + this-week details */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Group attention heatmap — promoted to prominent middle position
+              per §5.1.4. This is the most pedagogically valuable widget. */}
+          <GroupThinkingOverview annotations={annotations} threads={threads} />
 
-              {/* Journey progress section */}
-              {currentWeek && totalWeeks && totalWeeks > 0 && (
-                <div className="mt-4 p-3 rounded-lg" style={{ backgroundColor: 'var(--bg-card-alt)' }}>
-                  {/* Week label + percentage */}
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold" style={{ color: 'var(--accent-purple)' }}>
-                        Week {currentWeek.week_number}
-                      </span>
-                      <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                        of {totalWeeks}
-                      </span>
-                    </div>
-                    <span className="text-xs font-semibold tabular-nums" style={{ color: 'var(--accent-purple)' }}>
-                      {Math.round((currentWeek.week_number / totalWeeks) * 100)}%
-                    </span>
-                  </div>
+          {/* Passage spotlight (the amber 'group is thinking about' callout) — §5.1.5 */}
+          <PassageSpotlight passage={spotlightPassage} />
 
-                  {/* Progress bar — segmented style */}
-                  <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--bg-soft)' }}>
-                    <div
-                      className="h-full rounded-full transition-all duration-700"
-                      style={{
-                        background: 'linear-gradient(to right, var(--accent-green), var(--accent-purple))',
-                        width: `${Math.round((currentWeek.week_number / totalWeeks) * 100)}%`,
-                      }}
-                    />
-                  </div>
-
-                  {/* Current reading title */}
-                  <p className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
-                    Currently reading: <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{currentWeek.title}</span>
-                  </p>
-                </div>
-              )}
-
-              {/* Context chips — role + reading status + group activity */}
-              <div className="flex flex-wrap gap-2 mt-3">
-                {/* Your role this week */}
-                {myRoles.length > 0 && (
-                  <div
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs"
-                    style={{ backgroundColor: 'rgba(var(--accent-purple-rgb), 0.08)', color: 'var(--accent-purple)' }}
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                      <circle cx="9" cy="7" r="4" />
-                      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                    </svg>
-                    <span className="font-medium capitalize">
-                      {myRoles.map((r) => r.role_type.replace('_', ' ')).join(' & ')}
-                    </span>
-                  </div>
-                )}
-
-                {/* Reading status */}
-                {currentReadingStatus && (
-                  <div
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium"
-                    style={{
-                      backgroundColor: currentReadingStatus === 'done'
-                        ? 'rgba(var(--accent-green-rgb), 0.1)'
-                        : currentReadingStatus === 'partial'
-                          ? 'rgba(var(--accent-purple-rgb), 0.08)'
-                          : 'var(--bg-soft)',
-                      color: currentReadingStatus === 'done'
-                        ? 'var(--accent-green)'
-                        : currentReadingStatus === 'partial'
-                          ? 'var(--accent-purple)'
-                          : 'var(--text-secondary)',
-                    }}
-                  >
-                    {currentReadingStatus === 'done' && (
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    )}
-                    {currentReadingStatus === 'done' ? 'Reading complete' : currentReadingStatus === 'partial' ? 'Partially read' : 'Not started'}
-                  </div>
-                )}
-
-                {/* Group activity pulse */}
-                {((weekAnnotationCount || 0) + (weekThreadCount || 0) + (weekGlossaryCount || 0)) > 0 && (
-                  <div
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs"
-                    style={{ backgroundColor: 'rgba(var(--accent-amber-rgb), 0.08)', color: 'var(--accent-amber)' }}
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-                    </svg>
-                    <span>
-                      {weekAnnotationCount || 0} annotations · {weekThreadCount || 0} threads this week
-                    </span>
-                  </div>
-                )}
-              </div>
+          {/* Recent threads — hairline-divided rows, no outer card (§5.1.6 + §13.1) */}
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-eyebrow">Recent Discussions</p>
+              <Link href="/threads" className="text-xs font-medium" style={{ color: 'var(--accent-red)' }}>
+                All threads →
+              </Link>
             </div>
-          </div>
-
-          {/* Milestone Card - if applicable */}
-          {milestone && (
-            <MilestoneCard milestone={milestone} />
-          )}
-
-          {/* Card 1: Reading Assignment */}
-          <div className="card-base" style={{ borderColor: 'var(--accent-purple)', borderWidth: '2px' }}>
-            <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-header)' }}>
-              <div className="flex items-center justify-between">
-                <h2 className="font-bold" style={{ color: 'var(--text-inverse)' }}>
-                  This Week&apos;s Reading
-                </h2>
-                <Link href="/schedule" className="text-xs font-medium" style={{ color: 'var(--accent-purple)' }}>
-                  Full Schedule →
+            {typedRecentThreads.length > 0 ? (
+              <div style={{ borderTop: '1px solid var(--border-subtle)' }}>
+                {typedRecentThreads.map((thread) => (
+                  <Link
+                    key={thread.id}
+                    href={`/threads/${thread.id}`}
+                    className="block px-2 py-3 transition-colors hover-bg-themed"
+                    style={{ borderBottom: '1px solid var(--border-subtle)' }}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <ThreadTypeBadge type={thread.thread_type as ThreadType} />
+                      {thread.pinned && (
+                        <span className="text-eyebrow" style={{ color: 'var(--accent-purple)' }}>Pinned</span>
+                      )}
+                    </div>
+                    <h3
+                      className="truncate"
+                      style={{
+                        color: 'var(--text-primary)',
+                        fontFamily: "'Lora', Georgia, serif",
+                        fontStyle: 'italic',
+                        fontWeight: 500,
+                        fontSize: '1.0625rem',
+                      }}
+                    >
+                      {thread.title}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                      <span>{thread.author?.display_name}</span>
+                      <span>·</span>
+                      <TimeAgo date={thread.created_at} />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 px-4" style={{ borderTop: '1px solid var(--border-subtle)', borderBottom: '1px solid var(--border-subtle)' }}>
+                <p className="text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
+                  The conversation starts here
+                </p>
+                <p className="text-xs mb-3 mx-auto" style={{ color: 'var(--text-secondary)', maxWidth: '40ch' }}>
+                  What&apos;s on your mind after this week&apos;s reading?
+                </p>
+                <Link href="/threads/new" className="btn-primary text-sm">
+                  Start a thread
                 </Link>
               </div>
-            </div>
-            <div className="card-body">
-              {currentWeek ? (
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-bold tracking-wide" style={{ color: 'var(--accent-purple)' }}>
-                      Week {currentWeek.week_number}
-                    </span>
-                    <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                      Due {new Date(currentWeek.due_date).toLocaleDateString('en-NZ', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Pacific/Auckland' })}
-                    </span>
-                  </div>
-                  <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
-                    {currentWeek.title}
-                  </h3>
-                  {currentWeek.chapter_ref && (
-                    <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
-                      {currentWeek.chapter_ref}
-                      {currentWeek.page_start && currentWeek.page_end && (
-                        <span> (pp. {currentWeek.page_start}–{currentWeek.page_end})</span>
-                      )}
-                    </p>
-                  )}
+            )}
+          </section>
+
+          {/* Milestone (only renders when applicable) */}
+          {milestone && <MilestoneCard milestone={milestone} />}
+
+          {/* This week's reading — hairline structure, no thick purple-border card */}
+          {currentWeek && (
+            <section>
+              <p className="text-eyebrow mb-3">This Week&apos;s Reading</p>
+              <div
+                className="px-2 py-4"
+                style={{
+                  borderTop: '1px solid var(--border-subtle)',
+                  borderBottom: '1px solid var(--border-subtle)',
+                }}
+              >
+                <p className="text-eyebrow mb-1">Week {currentWeek.week_number}</p>
+                <h3
+                  className="mb-2"
+                  style={{
+                    color: 'var(--text-primary)',
+                    fontFamily: "'Lora', Georgia, serif",
+                    fontStyle: 'italic',
+                    fontWeight: 500,
+                    fontSize: '1.5rem',
+                  }}
+                >
+                  {currentWeek.title}
+                </h3>
+                {currentWeek.chapter_ref && (
+                  <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
+                    {currentWeek.chapter_ref}
+                    {currentWeek.page_start && currentWeek.page_end && (
+                      <span> (pp. {currentWeek.page_start}–{currentWeek.page_end})</span>
+                    )}
+                  </p>
+                )}
+                <div className="flex items-center gap-3 flex-wrap">
                   <Link
                     href={`/reading/capital-vol-1/${currentWeek.week_number}`}
-                    className="btn-primary text-base px-6 py-2.5 inline-flex items-center gap-2 mb-2 font-semibold"
+                    className="btn-primary text-sm"
                   >
-                    Read Now →
+                    Read &amp; annotate →
                   </Link>
                   <ReadingCheckinButton weekId={currentWeek.id} currentStatus={currentReadingStatus} />
                 </div>
-              ) : (
-                <div className="text-center py-6">
-                  <p className="text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
-                    The reading journey hasn&apos;t started yet
-                  </p>
-                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                    Once the schedule is set, you&apos;ll see this week&apos;s reading and session details here.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Card 2: Next Session — only if session date exists */}
-          {currentWeek?.session_date && (
-            <div className="card-base">
-              <div className="card-header">
-                <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
-                  Next Session
-                </h2>
               </div>
-              <div className="card-body">
-                <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                  {new Date(currentWeek.session_date).toLocaleDateString('en-NZ', {
-                    weekday: 'long', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit',
-                    timeZone: 'Pacific/Auckland',
-                  })}
-                </p>
-                {currentWeek.session_location && (
-                  <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
-                    {currentWeek.session_location}
-                  </p>
-                )}
-              </div>
-            </div>
+            </section>
           )}
 
-          {/* Card 3: Discussion Prompts — only if prompts exist */}
+          {/* Discussion prompts — same hanging-indent question format as Schedule (§8.1) */}
           {discussionPrompts.length > 0 && (
-            <div className="card-base">
-              <div className="card-header">
-                <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
-                  Discussion Prompts
-                </h2>
-              </div>
-              <div className="card-body">
-                <ol className="space-y-2 list-decimal list-inside">
-                  {[...discussionPrompts]
-                    .sort((a, b) => a.sort_order - b.sort_order)
-                    .map((prompt) => (
-                      <li key={prompt.id} className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                        {prompt.prompt_text}
-                      </li>
-                    ))}
-                </ol>
-              </div>
-            </div>
-          )}
-
-          {/* Passage Spotlight — what the group is annotating most */}
-          <PassageSpotlight passage={spotlightPassage} />
-
-          {/* Weekly Activity Summary */}
-          {currentWeek && (
-            <WeeklyActivitySummary
-              annotationCount={weekAnnotationCount || 0}
-              threadCount={weekThreadCount || 0}
-              glossaryCount={weekGlossaryCount || 0}
-            />
-          )}
-
-          {/* What the Group is Thinking */}
-          <GroupThinkingOverview annotations={annotations} threads={threads} />
-
-          {/* Recent Threads */}
-          <div className="card-base">
-            <div className="card-header flex items-center justify-between">
-              <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
-                Recent Discussions
-              </h2>
-              <Link href="/threads" className="text-xs font-medium" style={{ color: 'var(--accent-red)' }}>
-                All Threads →
-              </Link>
-            </div>
-            <div>
-              {typedRecentThreads.length > 0 ? (
-                <div className="divide-y" style={{ borderColor: 'var(--border-default)' }}>
-                  {typedRecentThreads.map((thread) => {
-                    const replyCount = thread.replies?.[0]?.count ?? 0
-                    return (
-                      <Link
-                        key={thread.id}
-                        href={`/threads/${thread.id}`}
-                        className="block px-5 py-3 transition-colors hover-bg-themed"
+            <section>
+              <p className="text-eyebrow mb-3">Discussion Prompts</p>
+              <div className="space-y-3">
+                {[...discussionPrompts]
+                  .sort((a, b) => a.sort_order - b.sort_order)
+                  .map((prompt) => (
+                    <div
+                      key={prompt.id}
+                      className="text-sm leading-relaxed flex gap-3"
+                      style={{ color: 'var(--text-secondary)' }}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="shrink-0 select-none"
+                        style={{
+                          color: 'var(--accent-purple)',
+                          fontFamily: "'Lora', Georgia, serif",
+                          fontStyle: 'italic',
+                          fontSize: '1.1em',
+                          lineHeight: 1.4,
+                        }}
                       >
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <ThreadTypeBadge type={thread.thread_type as ThreadType} />
-                          {thread.pinned && (
-                            <span className="text-xs font-medium px-1.5 py-0.5 rounded" style={{ backgroundColor: 'var(--accent-purple)', color: 'var(--text-inverse)' }}>Pinned</span>
-                          )}
-                        </div>
-                        <h3 className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
-                          {thread.title}
-                        </h3>
-                        <div className="flex items-center gap-2 mt-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                          <span>{thread.author?.display_name}</span>
-                          <span>·</span>
-                          <TimeAgo date={thread.created_at} />
-                        </div>
-                      </Link>
-                    )
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
-                    The conversation starts here
-                  </p>
-                  <p className="text-xs mb-3" style={{ color: 'var(--text-secondary)' }}>
-                    What&apos;s on your mind after this week&apos;s reading?
-                  </p>
-                  <Link
-                    href="/threads/new"
-                    className="btn-primary text-sm"
-                  >
-                    Share with the Group
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Right column: Roles + Quick Links */}
-        <div className="space-y-6">
-          {/* Your Roles This Week */}
-          <div className="card-base">
-            <div className="card-header">
-              <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
-                Your Roles
-              </h2>
-            </div>
-            <div className="card-body">
-              {myRoles.length > 0 ? (
-                <div className="space-y-3">
-                  {myRoles.map((role: WeeklyRoleRow) => (
-                    <div key={role.id} className="p-3 rounded-lg" style={{ backgroundColor: 'var(--bg-card-alt)' }}>
-                      <RoleBadge type={role.role_type as WeeklyRoleType} />
-                      <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
-                        {role.role_type === 'summarizer' && 'Prepare a brief summary of the key arguments.'}
-                        {role.role_type === 'discussion_starter' && 'Come prepared with 2-3 questions to spark discussion.'}
-                        {role.role_type === 'connector' && 'Find connections to current events or other readings.'}
-                        {role.role_type === 'passage_picker' && 'Select 1-2 key passages for close reading.'}
-                      </p>
+                        ?
+                      </span>
+                      <p className="flex-1">{prompt.prompt_text}</p>
                     </div>
                   ))}
-                </div>
-              ) : (
-                <p className="text-sm text-center py-4" style={{ color: 'var(--text-secondary)' }}>
-                  {currentWeek ? 'No roles assigned to you this week — but you can still join the discussion.' : 'Roles rotate weekly once the schedule is set up.'}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* All Roles This Week */}
-          {weeklyRoles.length > 0 && (
-            <div className="card-base">
-              <div className="card-header">
-                <h2 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
-                  All Roles This Week
-                </h2>
               </div>
-              <div className="card-body space-y-2">
-                {weeklyRoles.map((role) => (
-                  <div key={role.id} className="flex items-center justify-between text-sm">
+            </section>
+          )}
+        </div>
+
+        {/* Right column — your roles (when assigned) + reflection journal (§5.1.7).
+            'Your Roles' hides entirely when myRoles is empty — no empty-state
+            message. 'All Roles This Week' widget removed (information lives
+            on the Schedule page already). */}
+        <div className="space-y-8">
+          {myRoles.length > 0 && (
+            <section>
+              <p className="text-eyebrow mb-3">Your Role This Week</p>
+              <div className="space-y-3">
+                {myRoles.map((role: WeeklyRoleRow) => (
+                  <div
+                    key={role.id}
+                    className="p-3 rounded-lg"
+                    style={{ backgroundColor: 'var(--bg-card-alt)' }}
+                  >
                     <RoleBadge type={role.role_type as WeeklyRoleType} />
-                    <span style={{ color: 'var(--text-primary)' }}>
-                      {role.user?.display_name}
-                      {role.user?.id === user?.id && (
-                        <span className="text-xs ml-1" style={{ color: 'var(--accent-red)' }}>(You)</span>
-                      )}
-                    </span>
+                    <p className="text-xs mt-1.5" style={{ color: 'var(--text-secondary)' }}>
+                      {role.role_type === 'summarizer' && 'Prepare a brief summary of the key arguments.'}
+                      {role.role_type === 'discussion_starter' && 'Come prepared with 2-3 questions to spark discussion.'}
+                      {role.role_type === 'connector' && 'Find connections to current events or other readings.'}
+                      {role.role_type === 'passage_picker' && 'Select 1-2 key passages for close reading.'}
+                    </p>
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
           )}
 
-          {/* Annotate Together + Quick Links removed — duplicated nav and Read Now CTA */}
-
-          {/* Reflection Journal — private weekly notes */}
           {currentWeek && user && (
             <ReflectionJournal
               weekTitle={currentWeek.title}
