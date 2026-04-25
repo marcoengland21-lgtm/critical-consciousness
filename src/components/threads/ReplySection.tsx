@@ -383,10 +383,10 @@ export default function ReplySection({
 
   return (
     <div>
-      {/* Reply count */}
-      <h2 className="text-lg font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
-        {replies.length} {replies.length === 1 ? 'Reply' : 'Replies'}
-      </h2>
+      {/* "5 Replies" header removed per IMPROVEMENTS_PLAN §4.7.
+          The count is already on the threads list view; in the detail view
+          it's redundant and creates a hard separator that breaks the
+          conversational flow. Replies just continue under the OP. */}
 
       {/* Reply tree — compact, Discord-style */}
       <div className="space-y-0.5">

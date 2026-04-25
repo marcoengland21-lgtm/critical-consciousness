@@ -98,6 +98,13 @@ function getActivityStatus(thread: ThreadData): 'active' | 'recent' | 'cooling' 
 
 // ── Thread Card ─────────────────────────────────────────────────────────────
 
+/**
+ * ThreadCard — single thread row in the threads list.
+ *
+ * Per IMPROVEMENTS_PLAN §4.6 + §13.1, threads now render as hairline-divided
+ * rows rather than bordered card boxes. Pinned/active state is communicated
+ * via a left accent stripe and a small inline tag, not a full border.
+ */
 function ThreadCard({
   thread,
   weekMap,
@@ -111,69 +118,58 @@ function ThreadCard({
     thread.thread_type === 'passage_pick' ? getPassageQuote(thread.body || '') : null
   const week = thread.week_id ? weekMap.get(thread.week_id) : null
 
+  // Left accent stripe — communicates pinned/active state without a full border
+  const stripeColor = thread.pinned
+    ? 'var(--accent-purple)'
+    : activity === 'active'
+      ? 'var(--accent-green)'
+      : 'transparent'
+
   return (
     <Link
       href={`/threads/${thread.id}`}
-      className={`block p-5 card-base transition-all card-hover ${
-        thread.pinned ? 'lg:col-span-2' : ''
-      }`}
+      className="block px-5 py-4 transition-colors hover-bg-themed"
       style={{
-        borderColor: thread.pinned
-          ? 'var(--accent-purple)'
-          : activity === 'active'
-            ? 'var(--accent-green)'
-            : undefined,
-        borderWidth: thread.pinned || activity === 'active' ? '2px' : undefined,
+        borderLeft: `3px solid ${stripeColor}`,
         opacity: activity === 'cooling' ? 0.7 : 1,
       }}
     >
-      {/* Top: badges */}
-      <div className="flex items-center gap-2 mb-2.5 flex-wrap">
-        {thread.pinned && (
-          <span
-            className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full leading-none"
-            style={{
-              backgroundColor: 'var(--accent-purple)',
-              color: 'var(--text-inverse)',
-            }}
-          >
-            <span className="text-[10px]">📌</span> Pinned
-          </span>
-        )}
+      {/* Top row: type badge + small inline tags (pinned, active, week) */}
+      <div className="flex items-center gap-2 mb-2 flex-wrap">
         <ThreadTypeBadge type={thread.thread_type} />
-        {week && (
-          <span
-            className="text-xs font-medium px-2.5 py-1 rounded-full leading-none"
-            style={{
-              backgroundColor: 'var(--bg-badge)',
-              color: 'var(--text-secondary)',
-            }}
-          >
-            Week {week.week_number}
+        {thread.pinned && (
+          <span className="text-eyebrow" style={{ color: 'var(--accent-purple)' }}>
+            Pinned
           </span>
         )}
         {activity === 'active' && (
-          <span
-            className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full leading-none"
-            style={{
-              backgroundColor: 'rgba(var(--accent-green-rgb), 0.15)',
-              color: 'var(--accent-green)',
-            }}
-          >
-            Active now
+          <span className="text-eyebrow" style={{ color: 'var(--accent-green)' }}>
+            Active
+          </span>
+        )}
+        {week && (
+          <span className="text-eyebrow">
+            Week {week.week_number}
           </span>
         )}
       </div>
 
-      {/* Title */}
+      {/* Title — Lora italic per §4.6 */}
       <h3
-        className="text-base font-semibold mb-1.5 leading-snug"
-        style={{ color: 'var(--text-primary)' }}
+        className="mb-1.5 leading-snug"
+        style={{
+          color: 'var(--text-primary)',
+          fontFamily: "'Lora', Georgia, serif",
+          fontStyle: 'italic',
+          fontWeight: 500,
+          fontSize: '1.25rem',
+          lineHeight: 1.3,
+        }}
       >
         {thread.title}
       </h3>
 
-      {/* Body preview */}
+      {/* Body preview — 2-3 lines */}
       {preview && (
         <p
           className="text-sm mb-3 leading-relaxed"
@@ -203,7 +199,7 @@ function ThreadCard({
         </div>
       )}
 
-      {/* Footer: author + metadata */}
+      {/* Footer: author + metadata + reply count */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           <AuthorAvatar name={thread.author?.display_name || 'Guest'} size={22} />
@@ -213,36 +209,28 @@ function ThreadCard({
           >
             {thread.author?.display_name || 'Guest'}
           </span>
-          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-            ·
-          </span>
+          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>·</span>
           <span className="text-xs shrink-0" style={{ color: 'var(--text-secondary)' }}>
             <TimeAgo date={thread.created_at} />
           </span>
+          {thread.lastReply && activity === 'recent' && (
+            <>
+              <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>·</span>
+              <span className="text-xs shrink-0" style={{ color: 'var(--text-secondary)' }}>
+                last reply <TimeAgo date={thread.lastReply.created_at} />
+              </span>
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          {/* Reply count */}
-          <span className="inline-flex items-center gap-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
-            {thread.replyCount > 0 ? (
-              <>
-                <span className="text-[10px]">💬</span>
-                {thread.replyCount} {thread.replyCount === 1 ? 'reply' : 'replies'}
-              </>
-            ) : (
-              'No replies yet'
-            )}
-          </span>
+          {thread.replyCount > 0 && (
+            <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+              {thread.replyCount} {thread.replyCount === 1 ? 'reply' : 'replies'}
+            </span>
+          )}
         </div>
       </div>
-
-      {/* Last reply info for recent threads */}
-      {thread.lastReply && activity === 'recent' && (
-        <div className="mt-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
-          Last reply by {thread.lastReply.authorName},{' '}
-          <TimeAgo date={thread.lastReply.created_at} />
-        </div>
-      )}
     </Link>
   )
 }
@@ -373,17 +361,25 @@ export default function ThreadListClient({
         </Link>
       </div>
 
-      {/* Filter bar */}
-      <div className="flex flex-wrap items-center gap-2 mb-6">
-        {/* Type filters */}
-        <div className="flex flex-wrap gap-1.5">
+      {/* Filter bar — compressed per §4.6.
+          Filter pills become smaller ghost-style buttons. Sort + week selectors
+          drop into a tighter right-aligned group. The whole row is a single
+          right-aligned line above the thread list, not a header that eats
+          vertical space. */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-4 text-xs">
+        {/* Type filters — small text-button style, not pills */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           {threadTypes.map((t) => {
             const isActive = typeFilter === t.value
             return (
               <button
                 key={t.value}
                 onClick={() => setTypeFilter(t.value)}
-                className={`filter-pill ${isActive ? 'filter-pill-active' : ''}`}
+                className="transition-colors"
+                style={{
+                  color: isActive ? 'var(--accent-red)' : 'var(--text-secondary)',
+                  fontWeight: isActive ? 600 : 400,
+                }}
               >
                 {t.label}
               </button>
@@ -391,7 +387,6 @@ export default function ThreadListClient({
           })}
         </div>
 
-        {/* Spacer */}
         <div className="flex-1" />
 
         {/* Sort + Week filter */}
@@ -423,23 +418,34 @@ export default function ThreadListClient({
         </div>
       </div>
 
-      {/* Thread grid */}
+      {/* Thread list — single column, hairline-divided rows per §4.6 + §13.1.
+          Replaces the 2-column card grid. Per Rule 25, the empty state is an
+          invitation, not an error message. */}
       {displayThreads.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-lg mb-2" style={{ color: 'var(--text-primary)' }}>
-            The conversation starts here
+          <p className="text-display-sm mb-2" style={{ color: 'var(--text-primary)' }}>
+            No threads yet
           </p>
-          <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
-            What&apos;s on your mind after this week&apos;s reading?
+          <p className="text-sm mb-6 mx-auto" style={{ color: 'var(--text-secondary)', maxWidth: '46ch' }}>
+            Threads grow out of what people notice while reading — annotate a passage,
+            then turn the most interesting questions into a thread.
           </p>
           <Link href="/threads/new" className="btn-primary text-sm">
-            Start a Discussion
+            Start a thread
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 stagger-children">
+        <div
+          className="stagger-children"
+          style={{ borderTop: '1px solid var(--border-subtle)' }}
+        >
           {displayThreads.map((thread) => (
-            <ThreadCard key={thread.id} thread={thread} weekMap={weekMap} />
+            <div
+              key={thread.id}
+              style={{ borderBottom: '1px solid var(--border-subtle)' }}
+            >
+              <ThreadCard thread={thread} weekMap={weekMap} />
+            </div>
           ))}
         </div>
       )}
