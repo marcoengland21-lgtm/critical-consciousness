@@ -31,6 +31,7 @@
   /* Borders — slightly warmer */
   --border-default: #dfdce4;      /* Warm border */
   --border-strong: #d1ced6;       /* Stronger warm border */
+  --border-subtle: rgba(28, 25, 23, 0.06); /* Hairline rules between sections (replaces card boxes per IMPROVEMENTS_PLAN §13) */
 
   /* Accents — purple stays core identity, amber is new warm accent */
   --accent-red: #a31545;          /* Primary CTA, links */
@@ -77,6 +78,14 @@
 
   /* Typography — modular scale (1.2 ratio, minor third) */
   --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  /* Typography family aliases (per IMPROVEMENTS_PLAN §12)
+     --font-ui      : Inter, used for UI chrome, labels, buttons, body sans
+     --font-display : Lora italic, used for page titles, ledes, week titles, dashboard headlines
+     --font-reading : Lora, used for chapter body / long-form reading text
+     Existing --font-family-sans kept for backward compatibility — points to Inter. */
+  --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Lora', Georgia, 'Times New Roman', serif;
+  --font-reading: 'Lora', Georgia, 'Times New Roman', serif;
   --line-height-relaxed: 1.75;
   --line-height-loose: 2;
   --text-xs: 0.75rem;           /* 12px */
@@ -94,6 +103,22 @@
   --text-4xl: 2.25rem;          /* 36px */
   --heading-weight: 700;
   --heading-tracking: -0.02em;
+
+  /* Display scale (Lora italic) — for page titles, ledes, week titles, dashboard headlines.
+     Per IMPROVEMENTS_PLAN §2.2 + §12. Apply via .text-display-* utility classes.
+     Distinct from --text-* (which is the modular UI scale used by h1-h4). */
+  --type-display-xl: 3.5rem;    /* 56px — hero / dashboard headline */
+  --type-display-lg: 2.5rem;    /* 40px — page titles (replaces pink h1) */
+  --type-display-md: 1.5rem;    /* 24px — week titles, part titles */
+  --type-display-sm: 1.25rem;   /* 20px — subtitles, ledes */
+
+  /* Editorial eyebrow — small numbered/structural labels above titles.
+     Per IMPROVEMENTS_PLAN §2.3. Inter, all-caps, tight tracking, secondary text color.
+     Examples: "01 / PART ONE", "§3 / SECTION THREE", "WEEK 4 OF 32".
+     Note: this revises CLAUDE.md Rule 5 — uppercase IS allowed for structured editorial
+     eyebrows because their tightness + small size prevents the noise the original rule warned about. */
+  --type-eyebrow: 0.625rem;     /* 10px */
+  --tracking-eyebrow: 0.15em;
 
   /* Border Radius — friendlier, more tactile */
   --radius-card: 1rem;          /* 16px — rounder cards feel warmer */
@@ -146,6 +171,7 @@ html[data-theme="dark"] {
 
   --border-default: #2d2740;
   --border-strong: #3d3555;
+  --border-subtle: rgba(235, 232, 240, 0.08); /* Hairline rules — slightly higher opacity in dark for visibility */
 
   --accent-red: #e84a7a;
   --accent-red-hover: #f06090;
@@ -620,6 +646,62 @@ html[data-theme="dark"] .confusion-high { background-color: #7a6850; color: #e8d
 .bg-soft { background-color: var(--bg-soft); }
 .bg-page { background-color: var(--bg-page); }
 .border-themed { border-color: var(--border-default); }
+.border-subtle { border-color: var(--border-subtle); }
+
+/* =================================================================
+   DISPLAY TYPOGRAPHY — Lora italic for editorial moments
+   Per IMPROVEMENTS_PLAN §2.2 + §12. Pulls Lora into display roles
+   (page titles, week titles, dashboard headlines, ledes). Reading
+   body keeps using Lora via .reading-text — these are different uses.
+   Apply alongside a color utility: .text-display-lg.text-primary etc.
+   ================================================================= */
+.text-display-xl {
+  font-family: var(--font-display);
+  font-size: var(--type-display-xl);
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+.text-display-lg {
+  font-family: var(--font-display);
+  font-size: var(--type-display-lg);
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+.text-display-md {
+  font-family: var(--font-display);
+  font-size: var(--type-display-md);
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.25;
+}
+.text-display-sm {
+  font-family: var(--font-display);
+  font-size: var(--type-display-sm);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+/* =================================================================
+   EDITORIAL EYEBROW — structural numbered labels above titles
+   Per IMPROVEMENTS_PLAN §2.3. Inter, all-caps, tight tracking.
+   Used for: "01 / PART ONE", "§3 / SECTION THREE", "WEEK 4 OF 32",
+   system status strip ("CAPITAL STUDY GROUP · WEEK 4 · NEXT TUE 7PM").
+   Pairs with .text-display-* below it — never used standalone as a heading.
+   ================================================================= */
+.text-eyebrow {
+  font-family: var(--font-ui);
+  font-size: var(--type-eyebrow);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-eyebrow);
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
 
 /* =================================================================
    THEME TRANSITION SMOOTHING
