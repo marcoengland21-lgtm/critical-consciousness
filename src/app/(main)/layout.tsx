@@ -5,6 +5,7 @@ import ThemeProvider from '@/components/layout/ThemeProvider'
 import AccessibilityProvider from '@/components/layout/AccessibilityProvider'
 // ReadingGuide moved to ChapterReader — only renders on reading pages
 import NavigationProgress from '@/components/layout/NavigationProgress'
+import SystemStatusStrip from '@/components/layout/SystemStatusStrip'
 
 export default async function MainLayout({
   children,
@@ -63,6 +64,9 @@ export default async function MainLayout({
               className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8"
               role="main"
             >
+              {/* Ambient context line — top of every authenticated page (§2.6).
+                  Only render when there's a logged-in user. */}
+              {user && <SystemStatusStrip />}
               {children}
             </main>
           </div>
