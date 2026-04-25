@@ -1,64 +1,53 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+/**
+ * Edge middleware: gatekeeping only. NO Supabase SDK calls.
+ *
+ * The previous implementation called supabase.auth.getSession() in the edge
+ * runtime, which can trigger a token-refresh network round-trip to the
+ * Supabase auth server. Under flaky edge → Supabase connectivity that call
+ * hangs and the whole edge function times out, taking the site down.
+ *
+ * We don't need verified auth here — RLS at the database layer is the actual
+ * security boundary. The middleware's job is just gatekeeping: "does this
+ * request look authenticated enough to let through, or should we send them
+ * to /login?". Checking for the presence of a Supabase auth cookie is a
+ * good-enough proxy. If someone forges a cookie they'll just bounce off RLS
+ * when actual data fetches run.
+ *
+ * Pages that need verified auth (the user's actual ID for queries) call
+ * getSessionUser() server-side, which runs in the Node Lambda — not the edge
+ * runtime — so the same hang doesn't apply there.
+ */
 export async function updateSession(request: NextRequest) {
-  // Short-circuit for the root path. The landing page is fully static and
-  // handles its own redirect to /dashboard for logged-in users (via a link,
-  // not a server redirect). Calling supabase.auth.getSession() here triggers
-  // a token-refresh network call from the edge runtime that can time out
-  // and crash the entire site for visitors hitting "/".
+  // Skip middleware entirely for the root path — it's a fully static landing
+  // page that doesn't need any auth gating.
   if (request.nextUrl.pathname === '/') {
     return NextResponse.next({ request })
   }
 
-  let supabaseResponse = NextResponse.next({
-    request,
-  })
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
-
-  // Use getSession() instead of getUser() — reads JWT from cookie locally,
-  // no network round-trip to Supabase auth server. This makes every page
-  // navigation instant instead of waiting for a remote auth check.
-  // getUser() is still used in write operations (posting threads, annotations)
-  // where we need verified auth.
-  const { data: { session } } = await supabase.auth.getSession()
+  // Look for any Supabase auth cookie (they're named sb-<project>-auth-token,
+  // sometimes split into .0/.1 chunks for long tokens).
+  const hasAuthCookie = request.cookies
+    .getAll()
+    .some(c => c.name.startsWith('sb-') && c.name.includes('-auth-token'))
 
   const isAuthPage = request.nextUrl.pathname.startsWith('/login') ||
                      request.nextUrl.pathname.startsWith('/register')
 
-  // Redirect unauthenticated users to login (except auth pages and root)
-  if (!session && !isAuthPage && request.nextUrl.pathname !== '/') {
+  // Unauthenticated users on protected routes → /login
+  if (!hasAuthCookie && !isAuthPage) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  // Redirect authenticated users away from auth pages
-  if (session && isAuthPage) {
+  // Authenticated users hitting auth pages → /dashboard
+  if (hasAuthCookie && isAuthPage) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
   }
 
-  return supabaseResponse
+  return NextResponse.next({ request })
 }
