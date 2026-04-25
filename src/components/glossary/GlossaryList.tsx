@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { findGlossaryTermMatches } from '@/lib/glossary-utils'
 import MarkdownBody from '@/components/ui/MarkdownBody'
 import TimeAgo from '@/components/ui/TimeAgo'
+import ConceptConnections, { type ConceptEdgeWithCreator } from './ConceptConnections'
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -58,13 +59,16 @@ interface GlossaryListProps {
   weeks: Week[]
   versions: GlossaryVersionRow[]
   comments: GlossaryCommentRow[]
+  /** Concept edges across all terms (per IMPROVEMENTS_PLAN §11.6).
+      ConceptConnections filters client-side to those touching the selected term. */
+  conceptEdges?: ConceptEdgeWithCreator[]
 }
 
 type GroupMode = 'alphabetical' | 'chapter'
 
 // ── Component ───────────────────────────────────────────────────────────────
 
-export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, versions, comments }: GlossaryListProps) {
+export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, versions, comments, conceptEdges = [] }: GlossaryListProps) {
   const weekNumberMap = useMemo(() => {
     const map = new Map<string, number>()
     for (const w of weeks) map.set(w.id, w.week_number)
@@ -603,6 +607,18 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
                   </div>
                 </div>
               )}
+
+              {/* ── Concept connections (§11.6) ──
+                  Builds-on / built-on-by lists derived from concept_edges.
+                  Lets the group start building the concept-map data here,
+                  before the visualisation ships. */}
+              <ConceptConnections
+                termId={selectedEntry.id}
+                entries={entries.map((e) => ({ id: e.id, term: e.term }))}
+                allEdges={conceptEdges}
+                currentUserId={currentUserId}
+                onSelectTerm={setSelectedId}
+              />
 
               {/* ── History & Discussion timeline ── */}
               <div
