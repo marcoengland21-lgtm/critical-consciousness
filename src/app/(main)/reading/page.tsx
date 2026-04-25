@@ -22,6 +22,9 @@ interface MarxChapter {
   parentLabel?: string
 }
 
+/** Numerals 1-8 spelled out for editorial eyebrows (per IMPROVEMENTS_PLAN §2.3). */
+const PART_NUMERAL = ['', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT']
+
 /** Marx's Chapter -> Part mapping */
 const PART_MAP: Record<number, { part: number; title: string }> = {}
 function setPart(chapters: number[], part: number, title: string) {
@@ -114,10 +117,10 @@ export default async function ReadingPage() {
     supabase
       .from('text_chapters')
       .select('id, document_id, chapter_number, title, sort_order, week_id'),
-    // Weeks — flat lookup for week labels
+    // Weeks — flat lookup for week labels + due_date (used to identify completed chapters)
     supabase
       .from('reading_schedule')
-      .select('id, week_number, title'),
+      .select('id, week_number, title, due_date'),
     // Count annotations per chapter for badges
     supabase
       .from('annotations')
@@ -140,10 +143,16 @@ export default async function ReadingPage() {
   const currentWeekId = currentWeekResult.data?.[0]?.id || null
 
   // Build week lookup: id -> { week_number, title }
+  // Also build a Set of past-week ids — used to mark chapters as completed (per §6.1).
   const weekMap = new Map<string, ChapterWeek>()
+  const pastWeekIds = new Set<string>()
   if (weeksResult.data) {
-    for (const w of weeksResult.data) {
+    const nowDate = new Date(now)
+    for (const w of weeksResult.data as { id: string; week_number: number; title: string; due_date: string }[]) {
       weekMap.set(w.id, { week_number: w.week_number, title: w.title })
+      if (w.id !== currentWeekId && new Date(w.due_date) < nowDate) {
+        pastWeekIds.add(w.id)
+      }
     }
   }
 
@@ -292,7 +301,11 @@ export default async function ReadingPage() {
 
                           {/* Individual sections of Ch1 */}
                           {ch1Sections.map((chapter: ChapterWithMapping, i: number) => {
-                            const isCurrentWeek = chapter.week_id === currentWeekId
+                            // §6.1 fix: only mark as current week if there IS a current week.
+                            // Previously `chapter.week_id === currentWeekId` matched on null===null,
+                            // making every unassigned chapter show "This Week".
+                            const isCurrentWeek = currentWeekId !== null && chapter.week_id === currentWeekId
+                            const isCompleted = chapter.week_id !== null && pastWeekIds.has(chapter.week_id)
                             const isLast = i === ch1Sections.length - 1 && standaloneChapters.length === 0
                             const sectionLabel = `Read Chapter 1, Section ${chapter.chapter_number}: ${chapter.title}`
                             return (
@@ -317,6 +330,10 @@ export default async function ReadingPage() {
                                     {chapter.chapter_number}
                                   </span>
                                   <div>
+                                    {/* §6.2: editorial eyebrow making sections peer with chapters */}
+                                    <p className="text-eyebrow mb-0.5">
+                                      §{chapter.chapter_number} / Section {PART_NUMERAL[chapter.chapter_number] || chapter.chapter_number}
+                                    </p>
                                     <h3
                                       className="font-medium text-sm group-hover:underline"
                                       style={{
@@ -354,6 +371,18 @@ export default async function ReadingPage() {
                                       This Week
                                     </span>
                                   )}
+                                  {!isCurrentWeek && isCompleted && (
+                                    <span
+                                      title="Completed"
+                                      aria-label="Completed"
+                                      className="inline-flex items-center justify-center w-5 h-5"
+                                      style={{ color: 'var(--text-secondary)' }}
+                                    >
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                        <polyline points="20 6 9 17 4 12" />
+                                      </svg>
+                                    </span>
+                                  )}
                                   <span
                                     className="text-sm opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                                     style={{ color: 'var(--accent-red)' }}
@@ -369,7 +398,8 @@ export default async function ReadingPage() {
 
                       {/* Standalone chapters (Ch 2+) */}
                       {standaloneChapters.map((chapter: ChapterWithMapping, i: number) => {
-                        const isCurrentWeek = chapter.week_id === currentWeekId
+                        const isCurrentWeek = currentWeekId !== null && chapter.week_id === currentWeekId
+                        const isCompleted = chapter.week_id !== null && pastWeekIds.has(chapter.week_id)
                         const isLast = i === standaloneChapters.length - 1
                         const chapterLabel = `Read Chapter ${chapter.mapping.marxChapter}: ${chapter.title}`
                         return (
@@ -429,6 +459,18 @@ export default async function ReadingPage() {
                                   style={{ backgroundColor: 'var(--accent-purple)', color: 'var(--text-inverse)' }}
                                 >
                                   This Week
+                                </span>
+                              )}
+                              {!isCurrentWeek && isCompleted && (
+                                <span
+                                  title="Completed"
+                                  aria-label="Completed"
+                                  className="inline-flex items-center justify-center w-5 h-5"
+                                  style={{ color: 'var(--text-secondary)' }}
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                    <polyline points="20 6 9 17 4 12" />
+                                  </svg>
                                 </span>
                               )}
                               <span

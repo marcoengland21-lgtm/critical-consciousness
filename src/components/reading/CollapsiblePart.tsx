@@ -9,15 +9,20 @@ interface Props {
   children: React.ReactNode
 }
 
+/** Numerals 1-8 spelled out for editorial eyebrows (per IMPROVEMENTS_PLAN §2.3 — "01 / PART ONE"). */
+const PART_NUMERAL = ['', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT']
+
 export default function CollapsiblePart({ partNumber, partTitle, defaultOpen, children }: Props) {
   const [isOpen, setIsOpen] = useState(defaultOpen)
+  const padded = String(partNumber).padStart(2, '0')
+  const numeral = PART_NUMERAL[partNumber] || String(partNumber)
 
   return (
     <div>
       {/* Part header — clickable toggle */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-6 py-3 flex items-center justify-between text-left btn-transition"
+        className="w-full px-6 py-4 flex items-center justify-between text-left btn-transition"
         style={{
           backgroundColor: isOpen ? 'var(--bg-soft)' : 'var(--bg-card-alt)',
           borderBottom: '1px solid',
@@ -27,10 +32,14 @@ export default function CollapsiblePart({ partNumber, partTitle, defaultOpen, ch
         aria-controls={`part-${partNumber}-content`}
       >
         <div>
-          <p className="text-xs font-bold tracking-wide" style={{ color: 'var(--accent-purple)' }}>
-            Part {partNumber}
+          {/* Editorial eyebrow per §2.3: "01 / PART ONE" */}
+          <p className="text-eyebrow mb-1">
+            {padded} / Part {numeral}
           </p>
-          <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+          <p
+            className="text-display-md"
+            style={{ color: 'var(--text-primary)' }}
+          >
             {partTitle}
           </p>
         </div>
