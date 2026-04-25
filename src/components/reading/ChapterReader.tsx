@@ -1073,14 +1073,14 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
             border: '1px solid var(--border-default)',
             boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
           }}
-          title="Font size, audio, chapter navigation, and more"
-          aria-label="Open reading tools"
+          title="View settings, annotations, glossary lookup, chapter navigation"
+          aria-label="Open reading workspace"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="3" />
             <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
           </svg>
-          <span className="text-sm font-medium">Tools</span>
+          <span className="text-sm font-medium">Workspace</span>
         </button>
       )}
 

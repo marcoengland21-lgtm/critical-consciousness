@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { navItems } from '@/lib/nav-config'
 import SidebarNavLink from './SidebarNavLink'
 import ThemeToggle from './ThemeToggle'
 import LogoutButton from './LogoutButton'
-import AccessibilityPanel from './AccessibilityPanel'
 
 interface DesktopSidebarProps {
   displayName: string
@@ -21,9 +20,9 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
   // Server always renders expanded; useEffect syncs from localStorage on mount.
   const [collapsed, setCollapsed] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [a11yOpen, setA11yOpen] = useState(false)
-  const a11yRef = useRef<HTMLDivElement>(null)
-  const a11yBtnRef = useRef<HTMLButtonElement>(null)
+  // Accessibility panel state removed per IMPROVEMENTS_PLAN §3.2 —
+  // text size / contrast / dyslexia / pacer settings are now configured
+  // from the Reading Workspace panel on chapter pages instead.
 
   // Read saved preference on mount (after hydration)
   useEffect(() => {
@@ -55,24 +54,6 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
     window.addEventListener('resize', syncWidth)
     return () => window.removeEventListener('resize', syncWidth)
   }, [collapsed, mounted])
-
-  // Close accessibility panel when clicking outside
-  useEffect(() => {
-    if (!a11yOpen) return
-    function handleClickOutside(e: MouseEvent) {
-      if (
-        a11yRef.current && !a11yRef.current.contains(e.target as Node) &&
-        a11yBtnRef.current && !a11yBtnRef.current.contains(e.target as Node)
-      ) {
-        setA11yOpen(false)
-      }
-    }
-    const timer = setTimeout(() => document.addEventListener('mousedown', handleClickOutside), 50)
-    return () => {
-      clearTimeout(timer)
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [a11yOpen])
 
   const initial = displayName.charAt(0).toUpperCase()
   const labelTransition = 'opacity var(--duration-normal) var(--ease-out-expo)'
@@ -268,7 +249,9 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
           )}
         </div>
 
-        {/* Theme toggle + accessibility + logout — fade with sidebar */}
+        {/* Theme toggle + logout — fade with sidebar.
+            Accessibility settings (text size, contrast, dyslexia, pacer)
+            moved to the Reading Workspace panel per IMPROVEMENTS_PLAN §3.2. */}
         <div
           className="flex items-center justify-between px-1 overflow-hidden relative"
           style={{
@@ -277,58 +260,12 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
             transition: `opacity var(--duration-normal) var(--ease-out-expo), height var(--duration-slow) var(--ease-out-expo)`,
           }}
         >
-          <div className="flex items-center gap-1">
-            <ThemeToggle />
-            {/* Accessibility settings gear */}
-            <button
-              ref={a11yBtnRef}
-              onClick={() => setA11yOpen(!a11yOpen)}
-              className="p-2.5 rounded-md transition-colors text-sm btn-transition"
-              style={{
-                color: 'var(--text-inverse)',
-                opacity: a11yOpen ? 1 : 0.8,
-                backgroundColor: a11yOpen ? 'rgba(255,255,255,0.12)' : 'transparent',
-              }}
-              title="Accessibility settings"
-              aria-label="Accessibility settings"
-              aria-expanded={a11yOpen}
-            >
-              {/* Accessibility icon — person with arms out */}
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="4" r="1.5" />
-                <path d="M7 8h10" />
-                <path d="M12 8v4" />
-                <path d="M9 20l3-8 3 8" />
-              </svg>
-            </button>
-          </div>
+          <ThemeToggle />
           {hasUser && <LogoutButton />}
         </div>
 
       </div>
     </aside>
-
-    {/* Accessibility panel — fixed position to escape sidebar overflow:hidden */}
-    {a11yOpen && (
-      <div
-        ref={a11yRef}
-        className="fixed z-50 rounded-xl"
-        style={{
-          left: '8px',
-          bottom: '60px',
-          width: collapsed ? '220px' : '224px',
-          backgroundColor: 'var(--bg-nav)',
-          border: '1px solid var(--nav-accent)',
-          padding: '0.75rem',
-          transformOrigin: 'bottom left',
-          animation: 'scaleIn 200ms var(--ease-out-expo)',
-        }}
-        role="dialog"
-        aria-label="Accessibility settings"
-      >
-        <AccessibilityPanel variant="sidebar" />
-      </div>
-    )}
     </>
   )
 }

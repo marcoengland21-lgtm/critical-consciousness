@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { getChapterLabel } from '@/lib/chapter-utils'
+import AccessibilityPanel from '@/components/layout/AccessibilityPanel'
+import ThemeToggle from '@/components/layout/ThemeToggle'
 
 interface ReadingToolbarProps {
   // Chapter navigation
@@ -165,17 +167,20 @@ export default function ReadingToolbar({
             borderBottom: '1px solid var(--border-default)',
           }}
         >
-          <h2
-            className="text-base font-semibold"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            Reading Tools
-          </h2>
+          <div>
+            <p className="text-eyebrow mb-0.5">Reading</p>
+            <h2
+              className="text-display-sm"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              Workspace
+            </h2>
+          </div>
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg transition-colors"
             style={{ color: 'var(--text-secondary)' }}
-            aria-label="Close tools panel"
+            aria-label="Close workspace panel"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18" />
@@ -185,6 +190,25 @@ export default function ReadingToolbar({
         </div>
 
         <div className="px-5 py-4 space-y-6">
+
+          {/* ── View settings ──
+              Per IMPROVEMENTS_PLAN §3.2 — these settings (text size, theme,
+              high contrast, dyslexia, pacer) used to live in a separate panel
+              pinned to the bottom of the desktop sidebar. They've moved here
+              because (a) reading is where these settings have the most effect,
+              and (b) the sidebar's accessibility button forced the user to
+              figure out 'which Tools' they wanted. They still apply globally
+              via AccessibilityProvider — just configurable from one place. */}
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-eyebrow">View settings</h3>
+              <ThemeToggle />
+            </div>
+            <AccessibilityPanel variant="mobile" />
+          </section>
+
+          {/* Divider */}
+          <div style={{ borderTop: '1px solid var(--border-default)' }} />
 
           {/* ── Focus Mode ── */}
           <section>
