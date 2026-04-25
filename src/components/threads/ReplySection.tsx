@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import TimeAgo from '@/components/ui/TimeAgo'
 import MarkdownBody from '@/components/ui/MarkdownBody'
+import BranchThreadForm from './BranchThreadForm'
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -67,6 +68,9 @@ export default function ReplySection({
   const [submitting, setSubmitting] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editBody, setEditBody] = useState('')
+  // Branch form state — null when no branch form is open, else the reply id
+  // we're branching from. Per IMPROVEMENTS_PLAN §4.3.
+  const [branchingFromId, setBranchingFromId] = useState<string | null>(null)
   const mainReplyRef = useRef<HTMLTextAreaElement>(null)
   const nestedReplyRefs = useRef<Record<string, HTMLTextAreaElement>>({})
   const editReplyRefs = useRef<Record<string, HTMLTextAreaElement>>({})
@@ -289,6 +293,18 @@ export default function ReplySection({
                     Reply
                   </button>
                 )}
+                {/* Branch — spawn a new thread from this reply (§4.3) */}
+                <button
+                  onClick={() => {
+                    setBranchingFromId(branchingFromId === reply.id ? null : reply.id)
+                    setReplyingTo(null) // close reply form if open
+                  }}
+                  className="text-xs font-medium transition-colors"
+                  style={{ color: 'var(--text-secondary)' }}
+                  title="Spawn a new thread from this reply, with a recorded link back to here"
+                >
+                  🌱 Branch
+                </button>
                 {canEdit && (
                   <button
                     onClick={() => {
@@ -311,6 +327,17 @@ export default function ReplySection({
                   </button>
                 )}
               </div>
+            )}
+
+            {/* Branch form — opens inline below the actions row when active */}
+            {branchingFromId === reply.id && (
+              <BranchThreadForm
+                parentThreadId={threadId}
+                parentThreadTitle={threadTitle}
+                parentReplyId={reply.id}
+                parentExcerpt={{ author: authorName, body: reply.body }}
+                onCancel={() => setBranchingFromId(null)}
+              />
             )}
 
             {/* Nested reply form */}
