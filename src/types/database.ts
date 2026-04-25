@@ -7,6 +7,29 @@ export type ThreadType = 'discussion' | 'reflection' | 'summary' | 'passage_pick
 
 export type ResourceType = 'primary_text' | 'companion' | 'lecture' | 'article' | 'tool' | 'other';
 
+/**
+ * Resource grouping by purpose, not file type. Per IMPROVEMENTS_PLAN §7.1.
+ * Nullable — when null, the UI falls back to type-based grouping.
+ */
+export type ResourceUseCategory =
+  | 'start_here'
+  | 'for_going_deeper'
+  | 'when_stuck'
+  | 'for_today'
+  | 'tools_references';
+
+/**
+ * Concept edge type — directional relationship between glossary terms.
+ * Per IMPROVEMENTS_PLAN §11.2. v1 only uses 'builds_on'; the other types are
+ * forward-looking (the schema accommodates them so the data model isn't
+ * churned later).
+ */
+export type ConceptEdgeType =
+  | 'builds_on'
+  | 'leads_to'
+  | 'contrasts'
+  | 'appears_with';
+
 // Database Row Types (matching Supabase conventions with snake_case)
 
 export interface Profile {
@@ -100,9 +123,40 @@ export interface Resource {
   url: string | null;
   description: string | null;
   resource_type: ResourceType;
+  /** Optional purpose-driven grouping per §7.1. Falls back to resource_type when null. */
+  use_category: ResourceUseCategory | null;
   week_id: string | null;
   created_by: string;
   created_at: string;
+}
+
+/**
+ * Thread branch — links a child thread back to the parent thread (and
+ * optionally a specific parent reply). Per IMPROVEMENTS_PLAN §4.2.
+ * A thread is branched from at most one parent (UNIQUE on child_thread_id).
+ */
+export interface ThreadBranch {
+  id: string;
+  parent_thread_id: string;
+  parent_reply_id: string | null;
+  child_thread_id: string;
+  branched_by: string;
+  branched_at: string;
+}
+
+/**
+ * Concept edge — directed connection between two glossary terms.
+ * Per IMPROVEMENTS_PLAN §11.2.
+ */
+export interface ConceptEdge {
+  id: string;
+  from_term_id: string;
+  to_term_id: string;
+  edge_type: ConceptEdgeType;
+  note: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface TextDocument {
