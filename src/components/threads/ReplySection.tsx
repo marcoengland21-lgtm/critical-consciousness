@@ -23,12 +23,23 @@ interface ReplyData {
   }
 }
 
+interface ReplyBranchIndicator {
+  /** thread_branches.id — for React keys */
+  id: string
+  /** the reply this branch was spawned from */
+  parentReplyId: string
+  childThreadId: string
+  childThreadTitle: string
+}
+
 interface ReplySectionProps {
   threadId: string
   threadTitle: string
   replies: ReplyData[]
   currentUserId: string
   isAdmin: boolean
+  /** Branches that originated from a specific reply on this thread. (§4.4) */
+  replyBranches?: ReplyBranchIndicator[]
 }
 
 // ── Author Avatar ───────────────────────────────────────────────────────────
@@ -59,7 +70,15 @@ export default function ReplySection({
   replies: initialReplies,
   currentUserId,
   isAdmin,
+  replyBranches = [],
 }: ReplySectionProps) {
+  // Index branches by parent reply id for cheap lookup during render.
+  const branchesByReplyId = new Map<string, ReplyBranchIndicator[]>()
+  for (const b of replyBranches) {
+    const arr = branchesByReplyId.get(b.parentReplyId) || []
+    arr.push(b)
+    branchesByReplyId.set(b.parentReplyId, arr)
+  }
   const [replies, setReplies] = useState<ReplyData[]>(initialReplies)
   const [replyBody, setReplyBody] = useState('')
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
@@ -195,7 +214,8 @@ export default function ReplySection({
     return (
       <div
         key={reply.id}
-        className="animate-fade-in"
+        id={`reply-${reply.id}`}
+        className="animate-fade-in scroll-mt-20"
         style={{
           marginLeft: depth > 0 ? '20px' : 0,
           paddingLeft: depth > 0 ? '12px' : 0,
@@ -276,6 +296,23 @@ export default function ReplySection({
             ) : (
               <MarkdownBody content={reply.body} className="text-sm" />
             )}
+
+            {/* Branched-into indicators (§4.4) — always visible (not hover-only),
+                because they carry information about the conversation graph. */}
+            {(branchesByReplyId.get(reply.id) || []).map((b) => (
+              <a
+                key={b.id}
+                href={`/threads/${b.childThreadId}`}
+                className="text-xs flex items-center gap-1.5 mt-1 transition-colors"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                <span aria-hidden>🌱</span>
+                <span>
+                  branched into{' '}
+                  <span style={{ color: 'var(--accent-purple)' }}>{b.childThreadTitle}</span>
+                </span>
+              </a>
+            ))}
 
             {/* Actions — show on hover or always on mobile */}
             {editingId !== reply.id && (

@@ -5,6 +5,7 @@ import ThreadTypeBadge from '@/components/threads/ThreadTypeBadge'
 import TimeAgo from '@/components/ui/TimeAgo'
 import ReplySection from '@/components/threads/ReplySection'
 import ThreadActions from '@/components/threads/ThreadActions'
+import OpBranchButton from '@/components/threads/OpBranchButton'
 import MarkdownBody from '@/components/ui/MarkdownBody'
 import type { ThreadType } from '@/types/database'
 
@@ -46,6 +47,11 @@ export default async function ThreadPage({
     { data: replies },
     { data: profile },
     { data: weekThreads },
+    // §4.4 / §4.5: branch metadata.
+    // 'parentBranch'  — does THIS thread descend from another? (one row max)
+    // 'childBranches' — what threads have spawned FROM this one? (any number)
+    { data: parentBranch },
+    { data: childBranches },
   ] = await Promise.all([
     supabase
       .from('threads')
@@ -69,6 +75,25 @@ export default async function ThreadPage({
       .neq('id', id)
       .order('created_at', { ascending: false })
       .limit(20),
+    // Parent branch — only one (UNIQUE on child_thread_id). Joins parent thread + reply.
+    supabase
+      .from('thread_branches')
+      .select(`
+        id, parent_reply_id,
+        parent_thread:threads!parent_thread_id(id, title, author:profiles!author_id(display_name)),
+        parent_reply:replies!parent_reply_id(id, body, author:profiles!author_id(display_name))
+      `)
+      .eq('child_thread_id', id)
+      .maybeSingle(),
+    // Child branches — many. Just need title + parent_reply_id for indicators.
+    supabase
+      .from('thread_branches')
+      .select(`
+        id, parent_reply_id,
+        child_thread:threads!child_thread_id(id, title, thread_type)
+      `)
+      .eq('parent_thread_id', id)
+      .order('branched_at', { ascending: true }),
   ])
 
   if (error || !thread) {
@@ -102,6 +127,62 @@ export default async function ThreadPage({
   const authorColor = hashColor(authorName)
   const authorInitial = authorName.charAt(0).toUpperCase()
 
+  // Normalise branch metadata. Supabase hint joins can return arrays —
+  // these joins are 1:1 so flatten to a single object or null.
+  type ParentBranchShape = {
+    id: string
+    parent_reply_id: string | null
+    parent_thread: { id: string; title: string; author: { display_name: string } | null } | null
+    parent_reply: { id: string; body: string; author: { display_name: string } | null } | null
+  }
+  type ChildBranchShape = {
+    id: string
+    parent_reply_id: string | null
+    child_thread: { id: string; title: string; thread_type: string } | null
+  }
+  function flatten<T>(value: T | T[] | null | undefined): T | null {
+    if (!value) return null
+    if (Array.isArray(value)) return value[0] ?? null
+    return value
+  }
+  const parent = parentBranch
+    ? (() => {
+        const p = parentBranch as unknown as ParentBranchShape
+        const pt = flatten(p.parent_thread) as ParentBranchShape['parent_thread']
+        const pr = flatten(p.parent_reply) as ParentBranchShape['parent_reply']
+        if (!pt) return null
+        return {
+          parentReplyId: p.parent_reply_id,
+          parentThreadId: pt.id,
+          parentThreadTitle: pt.title,
+          parentAuthorName: flatten(pt.author)?.display_name || 'Someone',
+          parentReplyExcerpt: pr
+            ? {
+                body: pr.body,
+                authorName: flatten(pr.author)?.display_name || 'Someone',
+              }
+            : null,
+        }
+      })()
+    : null
+
+  const branches = ((childBranches || []) as unknown as ChildBranchShape[]).flatMap((b) => {
+    const ct = flatten(b.child_thread)
+    if (!ct) return []
+    return [{
+      id: b.id,
+      parentReplyId: b.parent_reply_id,
+      childThreadId: ct.id,
+      childThreadTitle: ct.title,
+      childThreadType: ct.thread_type,
+    }]
+  })
+
+  // Branches grouped by their source — those that branched from the OP (parent_reply_id IS NULL)
+  // and those that branched from a specific reply.
+  const opBranches = branches.filter((b) => b.parentReplyId === null)
+  const replyBranches = branches.filter((b) => b.parentReplyId !== null)
+
   // Week info
   const threadWeek = (thread as { week?: ThreadWeek }).week || null
 
@@ -122,6 +203,43 @@ export default async function ThreadPage({
         >
           ← Back to Threads
         </Link>
+
+        {/* Branched-from breadcrumb (§4.5) — appears at the top of any thread
+            that descends from another. Shows the parent thread + a short
+            excerpt of the originating reply (if any). */}
+        {parent && (
+          <div
+            className="mb-6 px-4 py-3 rounded-lg"
+            style={{
+              backgroundColor: 'rgba(var(--accent-purple-rgb), 0.06)',
+              borderLeft: '3px solid var(--accent-purple)',
+            }}
+          >
+            <p className="text-eyebrow mb-1" style={{ color: 'var(--accent-purple)' }}>
+              Branched from
+            </p>
+            <Link
+              href={`/threads/${parent.parentThreadId}${
+                parent.parentReplyId ? `#reply-${parent.parentReplyId}` : ''
+              }`}
+              className="text-sm font-medium"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              {parent.parentThreadTitle}
+            </Link>
+            {parent.parentReplyExcerpt && (
+              <p className="text-xs mt-1.5" style={{ color: 'var(--text-secondary)' }}>
+                <em>{parent.parentReplyExcerpt.authorName}</em>
+                {' — '}
+                &ldquo;
+                {parent.parentReplyExcerpt.body.length > 100
+                  ? parent.parentReplyExcerpt.body.slice(0, 100) + '…'
+                  : parent.parentReplyExcerpt.body}
+                &rdquo;
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Thread Header */}
         <article className="mb-8">
@@ -185,6 +303,28 @@ export default async function ThreadPage({
           {/* Thread Body */}
           <MarkdownBody content={thread.body} className="thread-body" />
 
+          {/* Branched-into indicators (§4.4) — show child threads that
+              spawned from this OP. Replies have their own indicators
+              rendered inside ReplySection. */}
+          {opBranches.length > 0 && (
+            <div className="mt-4 flex flex-col gap-1.5">
+              {opBranches.map((b) => (
+                <Link
+                  key={b.id}
+                  href={`/threads/${b.childThreadId}`}
+                  className="text-xs flex items-center gap-1.5 transition-colors"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  <span aria-hidden>🌱</span>
+                  <span>
+                    branched into{' '}
+                    <span style={{ color: 'var(--accent-purple)' }}>{b.childThreadTitle}</span>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+
           {/* View in context link (if thread was created from a passage) */}
           {contextChapter && contextDocSlug && (
             <div
@@ -201,14 +341,27 @@ export default async function ThreadPage({
             </div>
           )}
 
-          {/* Thread Actions (edit/delete for author/admin) */}
-          {(isAuthor || isAdmin) && (
-            <ThreadActions
-              threadId={thread.id}
-              isAuthor={isAuthor}
-              isAdmin={isAdmin}
-            />
-          )}
+          {/* Action row — Branch (any user) + Edit/Delete (author/admin) */}
+          <div
+            className="mt-6 pt-4 flex items-center gap-3 flex-wrap"
+            style={{ borderTop: '1px solid var(--border-default)' }}
+          >
+            {user && (
+              <OpBranchButton
+                parentThreadId={thread.id}
+                parentThreadTitle={thread.title}
+                parentAuthor={authorName}
+                parentBody={thread.body}
+              />
+            )}
+            {(isAuthor || isAdmin) && (
+              <ThreadActions
+                threadId={thread.id}
+                isAuthor={isAuthor}
+                isAdmin={isAdmin}
+              />
+            )}
+          </div>
         </article>
 
         {/* Divider */}
@@ -221,6 +374,12 @@ export default async function ThreadPage({
           replies={replies || []}
           currentUserId={user?.id || ''}
           isAdmin={isAdmin}
+          replyBranches={replyBranches.map((b) => ({
+            id: b.id,
+            parentReplyId: b.parentReplyId as string,
+            childThreadId: b.childThreadId,
+            childThreadTitle: b.childThreadTitle,
+          }))}
         />
       </div>
 
@@ -282,6 +441,55 @@ export default async function ThreadPage({
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {/* Branches sidebar block (§4.7) — show parent + children when relevant. */}
+        {(parent || branches.length > 0) && (
+          <div
+            className="rounded-xl border p-4"
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              borderColor: 'var(--border-default)',
+            }}
+          >
+            <h3 className="text-eyebrow mb-3" style={{ color: 'var(--accent-purple)' }}>
+              Conversation graph
+            </h3>
+            {parent && (
+              <div className="mb-3">
+                <p className="text-[11px] mb-1" style={{ color: 'var(--text-secondary)' }}>
+                  Parent thread
+                </p>
+                <Link
+                  href={`/threads/${parent.parentThreadId}`}
+                  className="text-xs leading-snug hover:underline"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  ← {parent.parentThreadTitle}
+                </Link>
+              </div>
+            )}
+            {branches.length > 0 && (
+              <div>
+                <p className="text-[11px] mb-1" style={{ color: 'var(--text-secondary)' }}>
+                  {branches.length} {branches.length === 1 ? 'branch' : 'branches'} from this thread
+                </p>
+                <ul className="space-y-1">
+                  {branches.map((b) => (
+                    <li key={b.id}>
+                      <Link
+                        href={`/threads/${b.childThreadId}`}
+                        className="text-xs leading-snug hover:underline"
+                        style={{ color: 'var(--text-primary)' }}
+                      >
+                        🌱 {b.childThreadTitle}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
 

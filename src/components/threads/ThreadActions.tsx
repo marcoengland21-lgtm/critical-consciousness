@@ -32,8 +32,10 @@ export default function ThreadActions({ threadId, isAuthor, isAdmin }: ThreadAct
     }
   }
 
+  // No surrounding border / margin — the parent renders the wrapper row
+  // (so the Branch button and these actions share the same border-t).
   return (
-    <div className="flex items-center gap-3 mt-6 pt-4 border-t" style={{ borderColor: 'var(--border-default)' }}>
+    <>
       {isAuthor && (
         <a
           href={`/threads/${threadId}/edit`}
@@ -53,6 +55,6 @@ export default function ThreadActions({ threadId, isAuthor, isAdmin }: ThreadAct
           {deleting ? 'Deleting...' : 'Delete'}
         </button>
       )}
-    </div>
+    </>
   )
 }
