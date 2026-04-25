@@ -1,11 +1,13 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getSessionUser } from '@/lib/supabase/server'
 import Link from 'next/link'
 
 export default async function Home() {
-  // Redirect authenticated users directly to dashboard
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  // Redirect authenticated users directly to dashboard.
+  // Uses getSessionUser() (local JWT read) instead of getUser() (network call)
+  // because the root page only needs to know whether a session exists. The
+  // network call to Supabase auth was timing out the edge function.
+  const user = await getSessionUser()
   if (user) { redirect('/dashboard') }
 
   return (
