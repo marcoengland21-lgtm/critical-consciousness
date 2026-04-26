@@ -278,6 +278,8 @@ Always use `getChapterLabel()` or `getChapterMapping()` to display the correct l
 | `confusion_counts` | Anonymous confusion flags (counts only) | `chapter_id`, `paragraph_index`, `count` — **no user_id** |
 | `reading_checkins` | Weekly reading progress | `user_id`, `week_id`, `group_id`, `status` |
 | `reading_milestones` | Group milestones | `week_number`, `title`, `description`, `reflection_prompt` |
+| `thread_branches` | Thread branching (parent → child) | `parent_thread_id`, `parent_reply_id?`, `child_thread_id`, `branched_by`, `branched_at` — UNIQUE on child_thread_id, immutable history |
+| `concept_edges` | Directed connections between glossary terms | `from_term_id`, `to_term_id`, `edge_type`, `note?`, `created_by` — wiki-style updates, creator-only deletes; production launches EMPTY |
 
 ### Enums
 
@@ -285,6 +287,8 @@ Always use `getChapterLabel()` or `getChapterMapping()` to display the correct l
 - `weekly_role_type`: summarizer | discussion_starter | connector | passage_picker
 - `thread_type`: discussion | reflection | summary | passage_pick | connection | general
 - `resource_type`: primary_text | companion | lecture | article | tool | other
+- `resources.use_category`: start_here | for_going_deeper | when_stuck | for_today | tools_references | NULL (text column with CHECK constraint, optional purpose-driven grouping)
+- `concept_edges.edge_type`: builds_on | leads_to | contrasts | appears_with (text, default 'builds_on'; only builds_on is exposed in v1 UI)
 
 ### RLS Policies
 
@@ -394,10 +398,15 @@ Warmth doesn't come from slapping earth tones on a generic layout. It comes from
 ## Known Issues
 
 ### Should fix
-1. **ChapterReader.tsx is too large** — Consider breaking out text selection logic, annotation rendering, and footnote handling into separate hooks or sub-components.
+1. **ChapterReader.tsx is still ~800 lines** — Pure text helpers and the per-paragraph render component were extracted to `chapter-text-utils.tsx` and `MemoizedParagraph.tsx` (commit 17 of pre-launch pass). What remains: state, effects, selection handlers, layout — all entangled. Plan §14 wanted further extraction (`useTextSelection` hook, `AnnotationLayer` / `FootnoteHandler` sub-components). Deferred — risky to split selection logic before tests exist, and the file works.
 2. **No tests** — No test files, no testing framework configured.
-3. **Concepts page** — Route exists at `/concepts` but not in nav. Either finish and add or remove.
-4. **Run SQL seeds** — `seed-glossary.sql` and `seed-resources.sql` and `confusion-flags-schema.sql` need to be run via Supabase SQL editor.
+3. **Concept map not in main nav** — The `/concepts` page is fully built (force-directed canvas, selection panel, mobile fallback) and reachable via the 'View concept map →' link in the glossary header. Per plan §3.4 it's intentionally accessed from Glossary rather than as a peer sidebar item, since the map is a view of the glossary's relational data. Reconsider after launch if discoverability is low.
+4. **Run SQL seeds & migrations** — Required to be run via Supabase SQL editor:
+   - `confusion-flags-schema.sql` (one-time, may already be done)
+   - `thread-branches-schema.sql` (per §4.2 — required for branching feature)
+   - `concept-edges-schema.sql` (per §11.2 — required for concept map)
+   - `resources-use-category-schema.sql` (per §7.1 — required for purpose-driven resource grouping)
+   Optional / dev only: `seed-glossary.sql`, `seed-resources.sql`, `seed-concept-edges.sql` (commented out, dev only).
 
 ### Fixed (build ticket session)
 - ~~Auth middleware disabled~~ — Re-enabled. Unauthenticated users redirect to `/login`. All `// TODO: RE-ENABLE AUTH` comments removed.
@@ -430,6 +439,28 @@ Warmth doesn't come from slapping earth tones on a generic layout. It comes from
 - ~~Mobile brand name single line~~ — Two-line layout ("Capital" / "Study Group") matching desktop
 - ~~Edit textarea missing Cmd+Enter~~ — Added to ReplySection edit textarea
 - ~~AnnotationPanel reply textarea fixed height~~ — Added auto-resize on input
+
+### Fixed (pre-launch consolidation pass — 26 April 2026)
+- ~~Pink/red doing too much work~~ — Page titles (Reading, Threads, Glossary, Schedule, Resources) migrated from pink Inter-bold to Lora-italic primary text + small caps eyebrow. Pink is now reserved for primary CTAs, chapter titles, current-week badge, destructive actions (§2.1).
+- ~~Lora used only for reading body~~ — Pulled into display: page titles (.text-display-lg), week titles (.text-display-md), dashboard headlines, threads-list titles. New display scale tokens + utilities in globals.css (§2.2 + §12).
+- ~~Editorial eyebrow style not standardised~~ — Existed ad-hoc in 3 places ('QUICK LINKS', chapter subhead, 'Part N'). Unified onto `.text-eyebrow` utility (Inter, 10px, 0.15em tracking, secondary text). Numbered structural eyebrows like '01 / Part ONE' / '§3 / Section THREE' / 'Week 4 of 32' now everywhere they belong (§2.3).
+- ~~Card-on-card-on-card~~ — Card-base containers replaced with hairline structure on Dashboard, Threads list, Glossary right pane, Resources sections. New `--border-subtle` token (§13).
+- ~~'Tools' meant two things~~ — Sidebar 'Tools' group label removed; reading-page Tools button renamed 'Workspace'. Sidebar accessibility panel migrated into the Reading Workspace as the 'View settings' section (§3.1, §3.2).
+- ~~Profile in nav alongside other destinations~~ — Profile removed from sidebar nav; accessed via the user avatar block at the sidebar bottom (full-row click target with chevron). Mobile tab bar still has Profile (§3.1).
+- ~~Reading TOC 'This Week' badge fired on every chapter~~ — Bug from a null-vs-null match (`chapter.week_id === currentWeekId` matched when both were null). Fixed by guarding on `currentWeekId !== null`. Past chapters now get a muted ✓ checkmark instead. Sections within Ch 1 gained §N eyebrows; Part headings gained '01 / Part ONE'-style numbered eyebrows (§6).
+- ~~Discussion prompts rendered as numbered <ol>~~ — Prompts are invitations to think, not a checklist. Now hanging-indent paragraphs with a Lora italic '?' glyph (§8.1).
+- ~~Action-button container had red border around primary red CTA~~ — Replaced with soft amber-tinted background + hairline borders so the primary CTA's red doesn't compete with a red border around it (§8.2).
+- ~~Threads list was 2-col card grid with 2px green/purple borders~~ — Now single-column hairline-divided rows with Lora italic titles. Pinned/active state shown via 3px left accent stripe + small inline eyebrow tag instead of full border. Filter pills compressed to small text-button row (§4.6).
+- ~~Thread detail had 'N Replies' header creating a hard separator~~ — Removed (§4.7).
+- ~~Threads couldn't branch~~ — Full branching feature shipped: `thread_branches` table with RLS, inline 🌱 Branch button on every reply + the OP, BranchThreadForm with parent quote pre-population, '← Branched from [parent]' breadcrumb on child threads, '🌱 branched into [child]' indicators on parents (replies + OP), 'Conversation graph' sidebar block with parent + branches list, branch counts on the threads list cards (§4.2 — §4.7).
+- ~~Dashboard had 8 stacked card-base containers, group-attention heatmap buried~~ — Restructured per §5: simple Lora italic greeting line (no card), big-stat row of 4 hairline-divided tiles at the top (Current Week / Annotations / Threads / Next Session), GroupThinkingOverview promoted to top of main column, Your Roles hides when empty, removed Next Session card (system status strip covers it), removed Weekly Activity Summary (folded into big-stat row), removed All Roles This Week widget.
+- ~~No ambient context line~~ — New SystemStatusStrip on every authenticated page: 'CAPITAL STUDY GROUP · WEEK 4 OF 32 · CHAPTER 1, §4 · NEXT SESSION TUE 7PM'. Degrades gracefully when schedule isn't set up (§2.6).
+- ~~Concept map was driven by `related_terms[]`, used non-existent schema columns, no animation~~ — Complete rewrite. New `concept_edges` table (directed, with edge_type / note / audit). New ConceptConnections UI on the glossary term detail (per §11.6). Full force-directed map at /concepts with editorial visual treatment per §11.8 (dotted directed edges, glowing halos, hairline corner brackets, eyebrow corner labels, animated rAF simulation). Selection panel slides in from right. Empty state when fewer than 3 terms or zero edges. Mobile fallback list view at <768px per §11.11. Per-chapter slice in the Reading Workspace per §11.5.
+- ~~Resources grouped by file type~~ — Now grouped by purpose ('Start here' / 'For going deeper' / 'When you're stuck' / 'For thinking about today' / 'Tools & references') per §7.1. Type filter still works as refinement. Lighter card design — hairline + type label + Lora italic title + footer (§7.2).
+- ~~Chapter title had no part-number eyebrow~~ — Added '01 / CHAPTER 1, §1 · ~11 MIN READ' eyebrow above the pink Lora-bold title (§9.1).
+- ~~Glossary right pane wrapped in card-base box~~ — Dropped, structure now organised by hairlines: Definition → Concept Connections → Related Terms → History & Discussion (§10.2).
+- ~~Passage-pick threads buried the source quote in the body markdown~~ — Lifted out into a structured element above the body: eyebrow + Lora italic quote + attribution + 'Open in chapter →' link (§4.7).
+- ~~ChapterReader.tsx 1125 lines~~ — Pure text helpers (snapOutsideFootnoteMarker, buildSegments, buildMergedSegments, renderTextWithFootnotes) extracted to `chapter-text-utils.tsx`. MemoizedParagraph extracted to its own file. ChapterReader now ~800 lines, role clearer (§14, partial — see Should-fix #1).
 
 ### Fixed (overnight session — 16 March 2026)
 - ~~`any` types in server components~~ — Replaced ~36 `any` types across 9 files with proper TypeScript interfaces matching Supabase query shapes
@@ -477,6 +508,15 @@ Warmth doesn't come from slapping earth tones on a generic layout. It comes from
 | 200 wpm for reading time estimates | Standard reading speed is 250 wpm for general text. Capital is dense academic prose — 200 wpm is more realistic. Rounded to nearest minute, minimum 1. |
 | Scroll persistence uses localStorage with 500ms debounce | Scroll events fire very often. 500ms debounce balances responsiveness with write frequency. Saves on unmount too for safety. `requestAnimationFrame` for restore to wait for layout. |
 | Print styles convert highlights to dotted underlines | Annotation highlights would print as colored blocks which wastes ink and obscures text. Dotted underlines preserve the annotation information in print without visual noise. |
+| Threads branching is client-side, two-step (insert thread, insert branch) | Supabase doesn't support client-side transactions. If step 2 fails after step 1 the orphan thread still exists — user can delete or leave it. Better than trying to write a Supabase RPC just for atomicity given the rare failure case. |
+| `thread_branches` is immutable history (no UPDATE / DELETE policies) | Branches record what happened. If a parent thread is deleted, the cascade removes the row — branched children become reachable only via direct URL. We don't surface 'branched from a deleted thread' yet — open question if it ever matters. |
+| `concept_edges` separates directed edges from `glossary_entries.related_terms[]` | The legacy related_terms[] is undirected and lossy. concept_edges is directed (from → to), supports an edge_type, a note, and audit. related_terms[] is kept for backward-compat (drives the 'Related Terms' pill row) but is not the source of truth for the concept map. |
+| Concept map production database launches EMPTY | The map is GROUP-BUILT (per plan §11.7). The empty state of the map is itself a teaching artifact: 'this is where we are, this is what we've connected so far'. Pre-seeding production with curated edges defeats that. A `seed-concept-edges.sql` exists for dev only, fully commented out, with a 'TEST DATA ONLY — do not run in production' header. |
+| Concept map renders force-directed canvas only on >=768px | A force-directed graph at 375px is a UX dead end (too small to see, hard to pan, impossible to read labels). Mobile gets a list view sorted by connectedness, with each term's 'builds on' edges shown as text. Same data, different surface (per plan §11.11). |
+| `accessibility-panel` migrated from sidebar to Reading Workspace | Settings still apply globally via AccessibilityProvider at the app root — what changes is WHERE you configure them. Trade-off: someone wanting high contrast on the dashboard has to go to a chapter page first. Worth it to consolidate the two-Tools confusion. |
+| Big-stat tiles use Lora italic, not bold sans | Editorial pull-quote rhythm rather than KPI dashboard widget. Per plan §2.5 — big number in Lora italic at ~2.5rem, eyebrow caption below. Reads as 'thoughtful editorial space' not 'branded SaaS metrics'. |
+| Page titles are Lora italic in primary text color, NOT pink | Pink reserved for active states / primary CTAs / chapter titles / current-week badge / destructive actions. When pink shows up in roughly the same position on every page, it's wallpaper. Pulling it back to a few specific roles makes it carry meaning where it appears. |
+| ChapterReader extracted helpers to `chapter-text-utils.tsx` + MemoizedParagraph to its own file | Pure file-split refactor, no behavior change. Plan §14 wanted further extraction (useTextSelection hook, AnnotationLayer / FootnoteHandler / ChapterContent sub-components). Deferred — selection logic is too tangled to safely split pre-launch without tests. Documented in Should-fix #1. |
 | Glossary terms fetched server-side, not client-side | `glossary_entries` table has RLS requiring authentication. Client-side fetch via browser Supabase client fails silently when auth session isn't synced across browsers. Server-side fetch via `unstable_cache` + `createStaticClient` is reliable. |
 
 ---
