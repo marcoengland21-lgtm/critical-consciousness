@@ -18,24 +18,23 @@ import { getChapterLabel } from '@/lib/chapter-utils'
 export default async function SystemStatusStrip() {
   const supabase = await createClient()
   const now = new Date()
-  const nowISO = now.toISOString()
 
-  // Two cheap parallel queries — total weeks + the next upcoming week.
-  // Both go through the same reading_schedule table, which is small and
-  // already cached by other pages (Next.js will dedupe within a request).
-  const [{ count: totalWeeks }, { data: nextWeekRows }] = await Promise.all([
-    supabase
-      .from('reading_schedule')
-      .select('*', { count: 'exact', head: true }),
-    supabase
-      .from('reading_schedule')
-      .select('week_number, session_date, session_location, title')
-      .gte('due_date', nowISO)
-      .order('due_date', { ascending: true })
-      .limit(1),
-  ])
+  // Fetch ALL weeks and pick the current one client-side using the same
+  // fallback logic the schedule page uses: first upcoming OR last past.
+  // Previous query used `.gte('due_date', nowISO).limit(1)` which returned
+  // nothing when all weeks were past, leaving the strip stuck on
+  // "READING JOURNEY NOT YET STARTED" even when a schedule existed.
+  const { data: allWeeksData } = await supabase
+    .from('reading_schedule')
+    .select('week_number, session_date, session_location, title, due_date')
+    .order('week_number', { ascending: true })
 
-  const nextWeek = nextWeekRows?.[0] || null
+  const allWeeks = (allWeeksData || []) as { week_number: number; session_date: string | null; session_location: string | null; title: string; due_date: string }[]
+  const totalWeeks = allWeeks.length
+  const nextWeek =
+    allWeeks.find((w) => new Date(w.due_date) >= now) ||
+    allWeeks[allWeeks.length - 1] ||
+    null
 
   // Look up the chapter label for this week's reading. Reading schedule
   // doesn't directly join to text_chapters — we approximate by mapping

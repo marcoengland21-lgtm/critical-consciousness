@@ -87,11 +87,20 @@ export default function PassageSpotlight({ passage }: PassageSpotlightProps) {
           </span>
         </div>
 
-        {/* CTA link */}
+        {/* CTA — chunk 1 §5.5: visually distinct from body text. Was just
+            inline amber text reading like another body line; now an inline
+            button-style link with a soft amber-tinted background, light
+            border, and an underline-on-hover treatment. Doesn't need to
+            be a heavy button; just shouldn't read as another line of text. */}
         <Link
           href={`/reading/${passage.documentSlug}/${passage.chapterNumber}`}
-          className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium btn-transition"
-          style={{ color: 'var(--accent-amber)' }}
+          className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-md btn-transition hover:underline"
+          style={{
+            color: 'var(--accent-amber)',
+            backgroundColor: 'rgba(var(--accent-amber-rgb), 0.1)',
+            border: '1px solid rgba(var(--accent-amber-rgb), 0.25)',
+            textUnderlineOffset: '3px',
+          }}
         >
           Join the conversation
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
 
 interface AnnotationData {
@@ -19,9 +19,42 @@ interface Props {
   annotations: AnnotationData[]
   threads: ThreadData[]
   documentSlug?: string
+  /** Render the 'By Section' attention heatmap. Default true. */
+  showSections?: boolean
+  /** Render the 'Themes Being Explored' quotes list. Default true. */
+  showThemes?: boolean
 }
 
-export default function GroupThinkingOverview({ annotations, threads, documentSlug = 'capital-vol-1' }: Props) {
+const THEMES_DEFAULT_VISIBLE = 2
+
+/**
+ * GroupThinkingOverview — the dashboard's per-section attention heatmap +
+ * 'Themes Being Explored' (recent annotation quotes).
+ *
+ * Per chunk 1 §4 the dashboard now renders this twice on the same page —
+ * once with showThemes={false} for the heatmap (above Recent Discussions)
+ * and again with showSections={false} for the themes (below Recent
+ * Discussions). The split keeps the visual rhythm right without forking
+ * this component.
+ *
+ * Heatmap rows (per chunk 1 §5.2):
+ * - Compact ~44-48px tall (down from ~60-70px)
+ * - Hairline magnitude bar below the title showing relative note count
+ *
+ * Themes (per chunk 1 §5.3):
+ * - Capped at 2 visible by default
+ * - '+ N more' expands inline
+ * - Tighter padding
+ */
+export default function GroupThinkingOverview({
+  annotations,
+  threads,
+  documentSlug = 'capital-vol-1',
+  showSections = true,
+  showThemes = true,
+}: Props) {
+  const [themesExpanded, setThemesExpanded] = useState(false)
+
   const analysis = useMemo(() => {
     // Group annotations by chapter
     const byChapter = new Map<number, AnnotationData>()
@@ -34,7 +67,6 @@ export default function GroupThinkingOverview({ annotations, threads, documentSl
           body: '',
         })
       }
-
       const chapter = byChapter.get(ann.chapter_number)!
       chapter.annotation_count += 1
       chapter.body += ' ' + ann.body
@@ -57,98 +89,134 @@ export default function GroupThinkingOverview({ annotations, threads, documentSl
     }
   }, [annotations, threads])
 
-  if (analysis.totalAnnotations === 0 && analysis.totalThreads === 0) {
-    return (
-      <div className="rounded-xl border overflow-hidden card-elevated" style={{ borderColor: 'var(--border-default)' }}>
-        <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
-          <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
-            What the Group is Thinking
-          </h2>
-        </div>
-        <div className="p-5 text-center" style={{ backgroundColor: 'var(--bg-card)' }}>
-          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            The group&apos;s thinking will appear here as people begin annotating the text.
-          </p>
-        </div>
-      </div>
-    )
+  // Empty state: only render when at least one of the requested subsections
+  // would have content. Otherwise return null so we don't leave an empty
+  // "What the Group is Thinking" header floating on the page.
+  const hasSections = analysis.byChapter.length > 0
+  const hasThemes = analysis.recentSnippets.length > 0
+  const renderingSections = showSections && hasSections
+  const renderingThemes = showThemes && hasThemes
+  if (!renderingSections && !renderingThemes) {
+    return null
   }
 
+  // For the magnitude bars (§5.2): scale relative to the highest count.
+  const maxCount = analysis.byChapter.reduce((m, c) => Math.max(m, c.annotation_count), 0) || 1
+
+  const visibleThemes = themesExpanded
+    ? analysis.recentSnippets
+    : analysis.recentSnippets.slice(0, THEMES_DEFAULT_VISIBLE)
+  const moreCount = analysis.recentSnippets.length - THEMES_DEFAULT_VISIBLE
+
   return (
-    <div className="rounded-xl border overflow-hidden card-elevated" style={{ borderColor: 'var(--border-default)' }}>
-      <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
-        <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>
-          What the Group is Thinking
-        </h2>
-        <Link href={`/reading/${documentSlug}/1`} className="text-xs font-medium" style={{ color: 'var(--accent-red)' }}>
-          Read &amp; Annotate →
-        </Link>
-      </div>
-      <div className="p-5 space-y-6" style={{ backgroundColor: 'var(--bg-card)' }}>
-        {/* By section summary — clickable links to each section */}
-        {analysis.byChapter.length > 0 && (
-          <div>
-            <h3 className="text-xs font-bold tracking-wide mb-3" style={{ color: 'var(--accent-purple)' }}>
-              By Section
-            </h3>
-            <div className="space-y-2">
-              {analysis.byChapter.slice(0, 4).map((chapter) => (
+    <section>
+      {/* Header — only renders if at least one inner subsection is visible.
+          When this component is rendered twice on the dashboard the header
+          appears only on the first instance (the one with showSections), so
+          the themes-only second pass below uses its own eyebrow. */}
+      {renderingSections && (
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-eyebrow">What the Group is Thinking</p>
+          <Link
+            href={`/reading/${documentSlug}/1`}
+            className="text-xs font-medium"
+            style={{ color: 'var(--accent-red)' }}
+          >
+            Read &amp; annotate →
+          </Link>
+        </div>
+      )}
+
+      {renderingSections && (
+        <div>
+          <p className="text-eyebrow mb-2" style={{ color: 'var(--accent-purple)' }}>
+            By Section
+          </p>
+          <div style={{ borderTop: '1px solid var(--border-subtle)' }}>
+            {analysis.byChapter.slice(0, 4).map((chapter) => {
+              const ratio = chapter.annotation_count / maxCount
+              return (
                 <Link
                   key={chapter.chapter_number}
                   href={`/reading/${documentSlug}/${chapter.chapter_number}`}
-                  className="flex items-center justify-between p-2 rounded-lg transition-colors hover-bg-themed"
-                  style={{ backgroundColor: 'var(--bg-page)' }}
+                  className="block px-2 py-2 transition-colors hover-bg-themed"
+                  style={{ borderBottom: '1px solid var(--border-subtle)' }}
                 >
-                  <div>
-                    <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                      Section {chapter.chapter_number}
-                    </p>
-                    <p className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>
-                      {chapter.chapter_title}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-bold px-2 py-1 rounded" style={{ backgroundColor: 'var(--accent-purple)', color: 'var(--bg-card)' }}>
-                      {chapter.annotation_count}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className="text-sm font-medium truncate"
+                        style={{ color: 'var(--text-primary)' }}
+                      >
+                        Section {chapter.chapter_number}{' '}
+                        <span className="font-normal" style={{ color: 'var(--text-secondary)' }}>
+                          — {chapter.chapter_title}
+                        </span>
+                      </p>
+                    </div>
+                    <span
+                      className="text-xs shrink-0 tabular-nums"
+                      style={{ color: 'var(--text-secondary)' }}
+                    >
+                      {chapter.annotation_count} {chapter.annotation_count === 1 ? 'note' : 'notes'}
                     </span>
-                    <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                      {chapter.annotation_count === 1 ? 'note' : 'notes'}
-                    </span>
                   </div>
+                  {/* Magnitude bar — hairline-thin, scaled to the max count.
+                      Makes the heatmap an actual heatmap (per §5.2). */}
+                  <div
+                    className="mt-1.5 h-[3px] rounded-sm"
+                    style={{
+                      backgroundColor: 'rgba(var(--accent-purple-rgb), 0.4)',
+                      width: `${Math.max(ratio * 100, 6)}%`,
+                    }}
+                    aria-hidden="true"
+                  />
                 </Link>
-              ))}
-            </div>
+              )
+            })}
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Themes being explored — clickable to the relevant section */}
-        {analysis.recentSnippets.length > 0 && (
-          <div>
-            <h3 className="text-xs font-bold tracking-wide mb-3" style={{ color: 'var(--accent-purple)' }}>
-              Themes Being Explored
-            </h3>
-            <div className="space-y-2">
-              {analysis.recentSnippets.map((item, index) => (
-                <Link
-                  key={index}
-                  href={`/reading/${documentSlug}/${item.chapter_number}`}
-                  className="block p-3 rounded-lg text-sm italic transition-colors hover-bg-themed"
-                  style={{
-                    backgroundColor: 'var(--bg-page)',
-                    color: 'var(--text-primary)',
-                  }}
+      {renderingThemes && (
+        <div className={renderingSections ? 'mt-6' : ''}>
+          <p className="text-eyebrow mb-2" style={{ color: 'var(--accent-purple)' }}>
+            Themes Being Explored
+          </p>
+          <div className="space-y-1.5">
+            {visibleThemes.map((item, index) => (
+              <Link
+                key={index}
+                href={`/reading/${documentSlug}/${item.chapter_number}`}
+                className="block px-3 py-2.5 rounded-md text-sm italic transition-colors hover-bg-themed"
+                style={{
+                  backgroundColor: 'var(--bg-card-alt)',
+                  color: 'var(--text-primary)',
+                  borderLeft: '2px solid var(--accent-purple)',
+                  lineHeight: 1.5,
+                }}
+              >
+                <span>&ldquo;{item.snippet}&rdquo;</span>
+                <span
+                  className="block text-xs not-italic mt-1"
+                  style={{ color: 'var(--text-secondary)' }}
                 >
-                  <p>&ldquo;{item.snippet}&rdquo;</p>
-                  <p className="text-xs not-italic mt-1" style={{ color: 'var(--text-secondary)' }}>
-                    Section {item.chapter_number} →
-                  </p>
-                </Link>
-              ))}
-            </div>
+                  Section {item.chapter_number} →
+                </span>
+              </Link>
+            ))}
           </div>
-        )}
-
-      </div>
-    </div>
+          {!themesExpanded && moreCount > 0 && (
+            <button
+              onClick={() => setThemesExpanded(true)}
+              className="text-eyebrow mt-2"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              + {moreCount} more
+            </button>
+          )}
+        </div>
+      )}
+    </section>
   )
 }

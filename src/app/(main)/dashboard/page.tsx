@@ -70,10 +70,16 @@ export default async function DashboardPage() {
   const weekStartISO = weekStart.toISOString()
   const weekEndISO = weekEnd.toISOString()
 
-  // All 9 queries in a single parallel batch
+  // All 9 queries in a single parallel batch.
+  // currentWeekData fetches ALL weeks (with their roles + prompts) and the
+  // current week is selected client-side to MATCH the schedule page's logic:
+  // first upcoming week, OR fall back to the last past week. Previous query
+  // used `.gte('due_date', nowISO).limit(1)` which returned nothing when all
+  // weeks were past, leaving the dashboard stuck in "JOURNEY NOT YET STARTED"
+  // even when the schedule page correctly showed the last week as Current.
   const [
     { data: profile },
-    { data: currentWeekData },
+    { data: allWeeksData },
     { data: recentThreads },
     { data: recentAnnotations },
     { data: milestoneData },
@@ -87,7 +93,7 @@ export default async function DashboardPage() {
       *,
       weekly_roles(id, role_type, user:profiles!user_id(id, display_name)),
       discussion_prompts(id, prompt_text, sort_order)
-    `).gte('due_date', nowISO).order('due_date', { ascending: true }).limit(1),
+    `).order('week_number', { ascending: true }),
     supabase.from('threads').select(`
       id, title, thread_type, created_at, pinned,
       author:profiles!author_id(display_name),
@@ -105,7 +111,18 @@ export default async function DashboardPage() {
   ])
 
   const displayName = profile?.display_name || 'there'
-  const currentWeek = currentWeekData?.[0] || null
+
+  // Pick currentWeek with the schedule-page fallback logic: first upcoming
+  // week (due_date >= now), OR fall back to the last past week if none
+  // upcoming. journeyStarted = there's a schedule at all AND we have a
+  // current week. Pre-journey state is when the schedule is empty.
+  type WeekRowFull = { id: string; week_number: number; title: string; due_date: string; session_date: string | null; session_location: string | null; chapter_ref: string | null; page_start: number | null; page_end: number | null }
+  const allWeeks = (allWeeksData || []) as unknown as (WeekRowFull & { weekly_roles?: WeeklyRoleRow[]; discussion_prompts?: DiscussionPrompt[] })[]
+  const currentWeek =
+    allWeeks.find((w) => new Date(w.due_date) >= now) ||
+    allWeeks[allWeeks.length - 1] ||
+    null
+  const journeyStarted = currentWeek !== null
 
   // Time-of-day greeting (NZ timezone for Christchurch group)
   const nzHourStr = now.toLocaleString('en-NZ', { hour: 'numeric', hour12: false, timeZone: 'Pacific/Auckland' })
@@ -180,12 +197,15 @@ export default async function DashboardPage() {
     }
   }
 
-  // Pre-compute the big-stat row values (per IMPROVEMENTS_PLAN §5.1.3).
-  // Empty placeholders use '—' so the row still occupies space when the
-  // schedule isn't set up yet — degraded but not broken.
+  // Pre-compute the big-stat row values (per IMPROVEMENTS_PLAN §5.1.3,
+  // refined per pre-launch chunk 1 §3).
+  // When the journey IS started, real zeros render as '0' (zero is information:
+  // 'the group hasn't annotated yet this week'). Em-dash means 'we don't know'
+  // and is wrong when we do. When the journey ISN'T started we condense the
+  // whole row into a single eyebrow line in the JSX below.
   const sectionTile = currentWeek ? `Wk ${currentWeek.week_number}` : '—'
-  const annotationsTile = (weekAnnotationCount || 0) > 0 ? String(weekAnnotationCount) : '—'
-  const threadsTile = (weekThreadCount || 0) > 0 ? String(weekThreadCount) : '—'
+  const annotationsTile = String(weekAnnotationCount ?? 0)
+  const threadsTile = String(weekThreadCount ?? 0)
   let sessionTile = '—'
   if (currentWeek?.session_date) {
     const d = new Date(currentWeek.session_date)
@@ -196,63 +216,91 @@ export default async function DashboardPage() {
 
   return (
     <div className="stagger-children">
-      {/* Greeting — single Lora italic line, no card box (§5.1.2). */}
+      {/* Greeting — single Lora italic line, no card box (§5.1.2).
+          Trailing period dropped per chunk 1 §5.1: a period reads as
+          terminal, like the platform finished talking. The dashboard is
+          a place the user is entering, not a notice they're reading. */}
       <div className="mb-8">
         <p className="text-display-md" style={{ color: 'var(--text-primary)' }}>
-          {user ? `${greeting}, ${displayName}.` : 'Welcome to Capital Study Group'}
+          {user ? `${greeting}, ${displayName}` : 'Welcome to Capital Study Group'}
         </p>
       </div>
 
-      {/* Big-stat row (§5.1.3) — four hairline-divided tiles across the top.
-          Editorial pull-quote rhythm rather than KPI-dashboard widgets.
-          Stacks 2x2 on mobile, 1x4 on desktop. */}
-      <div
-        className="grid grid-cols-2 md:grid-cols-4 mb-10"
-        style={{
-          borderTop: '1px solid var(--border-subtle)',
-          borderBottom: '1px solid var(--border-subtle)',
-        }}
-      >
-        <div className="md:border-r md:px-4" style={{ borderColor: 'var(--border-subtle)' }}>
-          <BigStatTile
-            value={sectionTile}
-            caption="Current Week"
-            href={currentWeek ? `/reading/capital-vol-1/${currentWeek.week_number}` : undefined}
-          />
+      {/* Big-stat row (§5.1.3 + chunk 1 §3) — when the journey IS started,
+          four hairline-divided tiles across the top. When the journey is NOT
+          started, condensed to a single quiet eyebrow line so we don't show
+          four broken-looking em-dash tiles. */}
+      {journeyStarted ? (
+        <div
+          className="grid grid-cols-2 md:grid-cols-4 mb-10"
+          style={{
+            borderTop: '1px solid var(--border-subtle)',
+            borderBottom: '1px solid var(--border-subtle)',
+          }}
+        >
+          <div className="md:border-r md:px-4" style={{ borderColor: 'var(--border-subtle)' }}>
+            <BigStatTile
+              value={sectionTile}
+              caption="Current Week"
+              href={currentWeek ? `/reading/capital-vol-1/${currentWeek.week_number}` : undefined}
+            />
+          </div>
+          <div className="md:border-r md:px-4" style={{ borderColor: 'var(--border-subtle)' }}>
+            <BigStatTile
+              value={annotationsTile}
+              caption="Annotations This Week"
+            />
+          </div>
+          <div className="md:border-r md:px-4" style={{ borderColor: 'var(--border-subtle)' }}>
+            <BigStatTile
+              value={threadsTile}
+              caption="Threads This Week"
+              href="/threads"
+            />
+          </div>
+          <div className="md:px-4">
+            <BigStatTile
+              value={sessionTile}
+              caption="Next Session"
+              href="/schedule"
+            />
+          </div>
         </div>
-        <div className="md:border-r md:px-4" style={{ borderColor: 'var(--border-subtle)' }}>
-          <BigStatTile
-            value={annotationsTile}
-            caption="Annotations This Week"
-          />
-        </div>
-        <div className="md:border-r md:px-4" style={{ borderColor: 'var(--border-subtle)' }}>
-          <BigStatTile
-            value={threadsTile}
-            caption="Threads This Week"
-            href="/threads"
-          />
-        </div>
-        <div className="md:px-4">
-          <BigStatTile
-            value={sessionTile}
-            caption="Next Session"
-            href="/schedule"
-          />
-        </div>
-      </div>
+      ) : (
+        <p className="text-eyebrow mb-10">
+          Reading journey not yet started · once the schedule is set up, key stats will appear here
+        </p>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-8 gap-y-6">
-        {/* Left column — group thinking + recent threads + this-week details */}
+        {/* Left column — chunk 1 §4 reorder:
+            1. Callout (most alive — single curated quote with clear next step)
+            2. Heatmap (attention by section)
+            3. Recent Discussions (active threads)
+            4. Themes (kept, but moved down — these are static observations,
+               and Themes Being Explored lives inside GroupThinkingOverview
+               so 'reorder themes below recent' is achieved by ordering the
+               whole heatmap component below the callout while keeping
+               recent threads after the heatmap... NO: the brief explicitly
+               wants Recent above Themes, but Themes is bundled with the
+               heatmap. The pragmatic split: split the heatmap component
+               into 'sections only' here, then render Themes separately
+               at the bottom. Done via two passes of GroupThinkingOverview
+               with the showThemes / showSections flags below.) */}
         <div className="lg:col-span-2 space-y-8">
-          {/* Group attention heatmap — promoted to prominent middle position
-              per §5.1.4. This is the most pedagogically valuable widget. */}
-          <GroupThinkingOverview annotations={annotations} threads={threads} />
-
-          {/* Passage spotlight (the amber 'group is thinking about' callout) — §5.1.5 */}
+          {/* 1. Group-thinking callout (the amber 'group is thinking about')
+              — moved up per chunk 1 §4. This is the most alive element on
+              the dashboard: a real quote from a real annotation with a
+              direct 'Join the conversation' next step. */}
           <PassageSpotlight passage={spotlightPassage} />
 
-          {/* Recent threads — hairline-divided rows, no outer card (§5.1.6 + §13.1) */}
+          {/* 2. Group attention heatmap — sections only. Themes are split
+              out and rendered below Recent Discussions. */}
+          <GroupThinkingOverview annotations={annotations} threads={threads} showThemes={false} />
+
+          {/* 3. Recent Discussions — moved up per chunk 1 §4. Active threads
+              are more alive than static themes. Cap at 3, render as
+              compact single-line hairline rows per §5.4. */}
           <section>
             <div className="flex items-center justify-between mb-3">
               <p className="text-eyebrow">Recent Discussions</p>
@@ -262,36 +310,32 @@ export default async function DashboardPage() {
             </div>
             {typedRecentThreads.length > 0 ? (
               <div style={{ borderTop: '1px solid var(--border-subtle)' }}>
-                {typedRecentThreads.map((thread) => (
+                {typedRecentThreads.slice(0, 3).map((thread) => (
                   <Link
                     key={thread.id}
                     href={`/threads/${thread.id}`}
-                    className="block px-2 py-3 transition-colors hover-bg-themed"
+                    className="flex items-center gap-3 px-2 py-2.5 transition-colors hover-bg-themed"
                     style={{ borderBottom: '1px solid var(--border-subtle)' }}
                   >
-                    <div className="flex items-center gap-2 mb-1">
-                      <ThreadTypeBadge type={thread.thread_type as ThreadType} />
-                      {thread.pinned && (
-                        <span className="text-eyebrow" style={{ color: 'var(--accent-purple)' }}>Pinned</span>
-                      )}
-                    </div>
+                    <ThreadTypeBadge type={thread.thread_type as ThreadType} />
                     <h3
-                      className="truncate"
+                      className="flex-1 min-w-0 truncate"
                       style={{
                         color: 'var(--text-primary)',
                         fontFamily: "'Lora', Georgia, serif",
                         fontStyle: 'italic',
                         fontWeight: 500,
-                        fontSize: '1.0625rem',
+                        fontSize: '0.9375rem',
                       }}
                     >
                       {thread.title}
                     </h3>
-                    <div className="flex items-center gap-2 mt-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                      <span>{thread.author?.display_name}</span>
-                      <span>·</span>
+                    <span className="text-xs shrink-0 hidden sm:inline" style={{ color: 'var(--text-secondary)' }}>
+                      {thread.author?.display_name}
+                    </span>
+                    <span className="text-xs shrink-0" style={{ color: 'var(--text-secondary)' }}>
                       <TimeAgo date={thread.created_at} />
-                    </div>
+                    </span>
                   </Link>
                 ))}
               </div>
@@ -309,6 +353,12 @@ export default async function DashboardPage() {
               </div>
             )}
           </section>
+
+          {/* 4. Themes Being Explored — moved down per chunk 1 §4. These are
+              good (quoted annotations from across the group) but less alive
+              than active threads, so they sit below. Rendered via a second
+              GroupThinkingOverview pass with showSections={false}. */}
+          <GroupThinkingOverview annotations={annotations} threads={threads} showSections={false} showThemes />
 
           {/* Milestone (only renders when applicable) */}
           {milestone && <MilestoneCard milestone={milestone} />}
