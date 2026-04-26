@@ -15,9 +15,8 @@ interface ReadingToolbarProps {
   /** reading_schedule.id this chapter is assigned to. Drives the
       per-chapter concept slice (§11.5). May be null if unassigned. */
   weekId?: string | null
-  // Reading controls
-  fontSize: number
-  onFontSizeChange: (size: number) => void
+  // Reading controls (font-size/onFontSizeChange removed in chunk 3a —
+  // text scaling lives entirely in AccessibilityProvider now).
   focusedMode: boolean
   onFocusedModeChange: (focused: boolean) => void
   annotationCount: number
@@ -37,17 +36,12 @@ interface ReadingToolbarProps {
   onAudioToggle?: () => void
 }
 
-const MIN_FONT = 14
-const MAX_FONT = 30
-
 export default function ReadingToolbar({
   chapters,
   currentChapter,
   currentIndex,
   slug,
   weekId,
-  fontSize,
-  onFontSizeChange,
   focusedMode,
   onFocusedModeChange,
   annotationCount,
@@ -157,7 +151,7 @@ export default function ReadingToolbar({
       {/* Slide-in panel from right */}
       <div
         ref={panelRef}
-        className="fixed right-0 top-0 h-full w-full sm:w-80 z-50 overflow-y-auto animate-slide-in-right"
+        className="chrome-scoped fixed right-0 top-0 h-full w-full sm:w-80 z-50 overflow-y-auto animate-slide-in-right"
         style={{
           backgroundColor: 'var(--bg-card)',
           borderLeft: '1px solid var(--border-default)',

@@ -1,16 +1,25 @@
 'use client'
 
-import { useAccessibility } from './AccessibilityProvider'
+import { useAccessibility, type ChromeSize } from './AccessibilityProvider'
 
 interface AccessibilityPanelProps {
   /** Where to render: sidebar popover or mobile inline */
   variant: 'sidebar' | 'mobile'
 }
 
+const CHROME_SIZE_OPTIONS: { value: ChromeSize; label: string; aria: string }[] = [
+  { value: 'small', label: 'S', aria: 'Small menu text' },
+  { value: 'regular', label: 'M', aria: 'Regular menu text' },
+  { value: 'large', label: 'L', aria: 'Large menu text' },
+  { value: 'extra-large', label: 'XL', aria: 'Extra-large menu text' },
+]
+
 export default function AccessibilityPanel({ variant }: AccessibilityPanelProps) {
   const {
     fontSize,
     setFontSize,
+    chromeSize,
+    setChromeSize,
     highContrast,
     setHighContrast,
     dyslexiaFont,
@@ -114,11 +123,67 @@ export default function AccessibilityPanel({ variant }: AccessibilityPanelProps)
         />
       </div>
 
+      {/* Menu Size — chunk 3a. Independent from the body-text slider above:
+          this scales chrome (panel headers, sidebar, status strip, dashboard
+          chrome, modal headers, toolbar text). Body text stays where the
+          slider put it. */}
+      <div className="space-y-1 px-1">
+        <div className="text-left">
+          <div
+            className="text-xs font-medium"
+            style={{ color: isMobile ? 'var(--text-primary)' : 'var(--text-inverse)' }}
+          >
+            Menu Size
+          </div>
+          <div
+            className="text-[10px]"
+            style={{ color: isMobile ? 'var(--text-secondary)' : 'var(--text-inverse)', opacity: 0.5 }}
+          >
+            Adjust menu and interface text size separately from book text
+          </div>
+        </div>
+        <div
+          role="radiogroup"
+          aria-label="Menu text size"
+          className="grid grid-cols-4 gap-px rounded-md overflow-hidden mt-1.5"
+          style={{
+            backgroundColor: isMobile ? 'var(--border-default)' : 'rgba(255,255,255,0.1)',
+            border: `1px solid ${isMobile ? 'var(--border-default)' : 'rgba(255,255,255,0.15)'}`,
+          }}
+        >
+          {CHROME_SIZE_OPTIONS.map((opt) => {
+            const selected = chromeSize === opt.value
+            const selectedBg = isMobile ? 'var(--accent-purple)' : 'rgba(255,255,255,0.2)'
+            const selectedColor = isMobile ? 'var(--text-inverse)' : 'var(--text-inverse)'
+            const idleBg = isMobile ? 'var(--bg-soft)' : 'transparent'
+            const idleColor = isMobile ? 'var(--text-primary)' : 'var(--text-inverse)'
+            return (
+              <button
+                key={opt.value}
+                role="radio"
+                aria-checked={selected}
+                aria-label={opt.aria}
+                onClick={() => setChromeSize(opt.value)}
+                className="py-1.5 text-[11px] font-semibold tabular-nums btn-transition"
+                style={{
+                  backgroundColor: selected ? selectedBg : idleBg,
+                  color: selected ? selectedColor : idleColor,
+                  opacity: selected ? 1 : 0.7,
+                }}
+              >
+                {opt.label}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
       {/* Reset button */}
       <div className="px-1 pt-1">
         <button
           onClick={() => {
             setFontSize(16)
+            setChromeSize('regular')
             setHighContrast(false)
             setDyslexiaFont(false)
             setReadingGuide(false)

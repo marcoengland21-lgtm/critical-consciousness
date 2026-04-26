@@ -921,7 +921,7 @@ const JournalToolbar = memo(function JournalToolbar({
   if (compact) {
     return (
       <header
-        className="flex items-center gap-1 px-2 py-1 sticky top-0 z-10"
+        className="chrome-scoped flex items-center gap-1 px-2 py-1 sticky top-0 z-10"
         style={{
           backgroundColor: 'var(--bg-card)',
           borderBottom: '1px solid var(--border-subtle)',

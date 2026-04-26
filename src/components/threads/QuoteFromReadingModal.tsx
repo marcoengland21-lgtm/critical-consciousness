@@ -134,7 +134,7 @@ export default function QuoteFromReadingModal({ onQuoteSelected, onClose }: Quot
       {/* Modal */}
       <div
         ref={modalRef}
-        className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-2xl max-h-[80vh] z-50 rounded-lg shadow-xl overflow-hidden flex flex-col"
+        className="chrome-scoped fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-2xl max-h-[80vh] z-50 rounded-lg shadow-xl overflow-hidden flex flex-col"
         style={{ backgroundColor: 'var(--bg-card)' }}
       >
         {/* Header */}

@@ -97,9 +97,20 @@
   --text-3xl: 1.875rem;         /* 30px */
 
   /* Accessibility: text-only scaling multiplier (set by AccessibilityProvider)
-     Applied to content text only — NOT layout (padding, gaps, nav, badges).
-     Default 1 = 16px base. Slider range maps 12px-30px to 0.75-1.875. */
+     Applied to BODY CONTENT only — chapter, threads, annotations, journal,
+     glossary defs, card-body paragraphs. Layout / chrome are not scaled
+     by this value. Default 1 = 16px base. Slider range maps 12px-30px to
+     0.75-1.875. */
   --text-size-multiplier: 1;
+
+  /* Chrome text scale (chunk 3a). Set by AccessibilityProvider via the
+     Menu Size preset (S=0.875, M=1, L=1.15, XL=1.35). Applied to opt-in
+     chrome utilities only — page titles (.text-display-*), eyebrows
+     (.text-eyebrow), sidebar nav text, status strip text, modal headers,
+     toolbar text in editors. Body content is governed by
+     --text-size-multiplier instead. Two independent scales, two
+     independent scopes. */
+  --chrome-text-scale: 1;
   --text-4xl: 2.25rem;          /* 36px */
   --heading-weight: 700;
   --heading-tracking: -0.02em;
@@ -657,7 +668,7 @@ html[data-theme="dark"] .confusion-high { background-color: #7a6850; color: #e8d
    ================================================================= */
 .text-display-xl {
   font-family: var(--font-display);
-  font-size: var(--type-display-xl);
+  font-size: calc(var(--type-display-xl) * var(--chrome-text-scale));
   font-style: italic;
   font-weight: 500;
   line-height: 1.1;
@@ -665,7 +676,7 @@ html[data-theme="dark"] .confusion-high { background-color: #7a6850; color: #e8d
 }
 .text-display-lg {
   font-family: var(--font-display);
-  font-size: var(--type-display-lg);
+  font-size: calc(var(--type-display-lg) * var(--chrome-text-scale));
   font-style: italic;
   font-weight: 500;
   line-height: 1.15;
@@ -673,14 +684,14 @@ html[data-theme="dark"] .confusion-high { background-color: #7a6850; color: #e8d
 }
 .text-display-md {
   font-family: var(--font-display);
-  font-size: var(--type-display-md);
+  font-size: calc(var(--type-display-md) * var(--chrome-text-scale));
   font-style: italic;
   font-weight: 500;
   line-height: 1.25;
 }
 .text-display-sm {
   font-family: var(--font-display);
-  font-size: var(--type-display-sm);
+  font-size: calc(var(--type-display-sm) * var(--chrome-text-scale));
   font-style: italic;
   font-weight: 400;
   line-height: 1.4;
@@ -695,7 +706,7 @@ html[data-theme="dark"] .confusion-high { background-color: #7a6850; color: #e8d
    ================================================================= */
 .text-eyebrow {
   font-family: var(--font-ui);
-  font-size: var(--type-eyebrow);
+  font-size: calc(var(--type-eyebrow) * var(--chrome-text-scale));
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: var(--tracking-eyebrow);
@@ -1115,17 +1126,21 @@ html[data-theme="dark"] .reading-text .blockquote {
    ================================================================= */
 
 /* ── Text size scaling (accessibility) ──
-   --text-size-multiplier is set by AccessibilityProvider.
-   Applied ONLY to content text — headings, reading text, thread/markdown
-   body, and card body paragraphs. Layout infrastructure (padding, gaps,
-   nav, badges, buttons, form inputs) is intentionally NOT scaled —
-   scaling html font-size breaks every rem-based Tailwind utility. */
+   --text-size-multiplier is set by AccessibilityProvider via the View
+   settings slider in the Reading Workspace.
 
-/* Headings scale with the multiplier */
-h1 { font-size: calc(var(--text-3xl) * var(--text-size-multiplier)) !important; }
-h2 { font-size: calc(var(--text-2xl) * var(--text-size-multiplier)) !important; }
-h3 { font-size: calc(var(--text-xl) * var(--text-size-multiplier)) !important; }
-h4 { font-size: calc(var(--text-lg) * var(--text-size-multiplier)) !important; }
+   Scope (chunk 3a): BODY CONTENT ONLY. Chrome (page titles, panel
+   headers, sidebar nav, status strip, dashboard chrome) is governed
+   separately by --chrome-text-scale via the Menu Size preset.
+
+   Previously this block included an unscoped `h1, h2, h3, h4` rule with
+   !important that scaled every heading on every page — page titles,
+   panel section headers, modal headers — together with the chapter body.
+   That global rule is gone; headings only scale when they sit inside a
+   body-content scope (.reading-text, .markdown-body, .ProseMirror, etc.).
+   Layout infrastructure (padding, gaps, nav, badges, buttons, form
+   inputs) intentionally stays at base size — scaling html font-size
+   breaks every rem-based Tailwind utility. */
 
 /* Reading page text */
 .reading-text {
@@ -1144,11 +1159,52 @@ h4 { font-size: calc(var(--text-lg) * var(--text-size-multiplier)) !important; }
   font-size: calc(1rem * var(--text-size-multiplier));
 }
 
+/* Annotation body text — chunk 3a, brought into body-content scope so
+   the View settings slider scales annotation prose alongside the
+   chapter and threads. Applied to the annotation body container in
+   AnnotationPanel.tsx. */
+.annotation-body {
+  font-size: calc(0.9375rem * var(--text-size-multiplier));
+}
+
 /* Card body paragraphs — general content text */
 .card-body p,
 .card-body li {
   font-size: calc(0.9375rem * var(--text-size-multiplier));
 }
+
+/* ── Chrome text scaling (chunk 3a) ──
+   .chrome-scoped is an opt-in ancestor class. Anything inside it that
+   uses Tailwind's text-xs/sm/base/lg/xl utility gets re-sized through
+   --chrome-text-scale (controlled by the Menu Size preset).
+
+   Specificity: the rules below are 0,2,0 (`.chrome-scoped .text-xs`),
+   higher than Tailwind's plain `.text-xs` at 0,1,0 — so they win
+   without `!important`. Important would re-introduce the cascade
+   problem the chunk 3a bug fix was about.
+
+   Use opt-in (.chrome-scoped on the surface root) rather than opt-out
+   (global selectors) — opt-out is exactly what caused the original
+   regression. Body-content surfaces (.reading-text, .thread-body,
+   .markdown-body, .annotation-body, .ProseMirror, .card-body) MUST NOT
+   live inside a .chrome-scoped ancestor, or they'd double-scale via
+   chrome on top of body. */
+.chrome-scoped .text-xs   { font-size: calc(0.75rem  * var(--chrome-text-scale)); }
+.chrome-scoped .text-sm   { font-size: calc(0.875rem * var(--chrome-text-scale)); }
+.chrome-scoped .text-base { font-size: calc(1rem     * var(--chrome-text-scale)); }
+.chrome-scoped .text-lg   { font-size: calc(1.125rem * var(--chrome-text-scale)); }
+.chrome-scoped .text-xl   { font-size: calc(1.25rem  * var(--chrome-text-scale)); }
+.chrome-scoped .text-2xl  { font-size: calc(1.5rem   * var(--chrome-text-scale)); }
+.chrome-scoped .text-3xl  { font-size: calc(1.875rem * var(--chrome-text-scale)); }
+
+/* Arbitrary-value text utilities used in chrome (e.g. text-[10px], text-[11px]).
+   These are common in compact toolbars / sidebar / status strip; without
+   explicit rules they wouldn't scale. */
+.chrome-scoped .text-\[10px\] { font-size: calc(10px * var(--chrome-text-scale)); }
+.chrome-scoped .text-\[11px\] { font-size: calc(11px * var(--chrome-text-scale)); }
+.chrome-scoped .text-\[12px\] { font-size: calc(12px * var(--chrome-text-scale)); }
+.chrome-scoped .text-\[13px\] { font-size: calc(13px * var(--chrome-text-scale)); }
+.chrome-scoped .text-\[14px\] { font-size: calc(14px * var(--chrome-text-scale)); }
 
 /* ── High Contrast Mode ──
    Maximum contrast ratios with bright, saturated accent colors.

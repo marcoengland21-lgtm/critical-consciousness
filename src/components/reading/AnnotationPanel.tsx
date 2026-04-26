@@ -109,7 +109,7 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
         role="dialog"
         aria-label="Annotation detail"
         aria-modal="true"
-        className="fixed right-0 top-0 h-full w-full sm:w-96 z-50 shadow-2xl overflow-y-auto animate-slide-in-right"
+        className="chrome-scoped fixed right-0 top-0 h-full w-full sm:w-96 z-50 shadow-2xl overflow-y-auto animate-slide-in-right"
         style={{
           backgroundColor: 'var(--bg-card)',
           borderLeft: '1px solid var(--border-default)',
@@ -159,7 +159,7 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
               </span>
             </div>
             <p
-              className="text-sm"
+              className="annotation-body"
               style={{
                 color: 'var(--text-primary)',
                 lineHeight: '1.7',
@@ -176,14 +176,17 @@ export default function AnnotationPanel({ annotation, userId, chapterId, onClose
                 {replies.length} {replies.length === 1 ? 'Reply' : 'Replies'}
               </h4>
               {replies.map((reply) => (
-                <div key={reply.id} className="text-sm">
+                <div key={reply.id}>
                   <div className="flex items-center gap-2 mb-1">
                     <AuthorBadge name={reply.author?.display_name || 'Guest'} size="sm" />
                     <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
                       <TimeAgo date={reply.created_at} />
                     </span>
                   </div>
-                  <p style={{ color: 'var(--text-primary)', lineHeight: '1.6' }}>
+                  <p
+                    className="annotation-body"
+                    style={{ color: 'var(--text-primary)', lineHeight: '1.6' }}
+                  >
                     {reply.body}
                   </p>
                 </div>

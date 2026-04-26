@@ -9,11 +9,14 @@
  */
 
 export const journalEditorStyles = `
+  /* Journal content scales with the View settings text-size slider
+     (chunk 3a body-content scope). The toolbar / chrome around the
+     editor explicitly does NOT use this — it uses --chrome-text-scale. */
   .ProseMirror {
     outline: none;
     min-height: 200px;
     font-family: 'Lora', Georgia, 'Times New Roman', serif;
-    font-size: 1rem;
+    font-size: calc(1rem * var(--text-size-multiplier));
     line-height: 1.7;
     color: var(--text-primary);
     caret-color: var(--accent-purple);
@@ -51,13 +54,15 @@ export const journalEditorStyles = `
   .ProseMirror h3:first-child {
     margin-top: 0;
   }
-  .ProseMirror h1 { font-size: 1.875rem; }
-  .ProseMirror h2 { font-size: 1.5rem; }
-  .ProseMirror h3 { font-size: 1.25rem; }
-  .ProseMirror h4 { font-size: 1.125rem; }
-  .ProseMirror h5 { font-size: 1rem; font-weight: 600; }
+  /* Heading sizes scale with the body multiplier so the whole journal
+     entry — body + headings — moves together when the slider changes. */
+  .ProseMirror h1 { font-size: calc(1.875rem * var(--text-size-multiplier)); }
+  .ProseMirror h2 { font-size: calc(1.5rem * var(--text-size-multiplier)); }
+  .ProseMirror h3 { font-size: calc(1.25rem * var(--text-size-multiplier)); }
+  .ProseMirror h4 { font-size: calc(1.125rem * var(--text-size-multiplier)); }
+  .ProseMirror h5 { font-size: calc(1rem * var(--text-size-multiplier)); font-weight: 600; }
   .ProseMirror h6 {
-    font-size: 0.875rem;
+    font-size: calc(0.875rem * var(--text-size-multiplier));
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-secondary);

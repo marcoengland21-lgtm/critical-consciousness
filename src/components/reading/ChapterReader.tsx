@@ -106,12 +106,11 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
   const [activeAnnotation, setActiveAnnotation] = useState<Annotation | null>(null)
   const [showAnnotatePopover, setShowAnnotatePopover] = useState(false)
   const [showToolbar, setShowToolbar] = useState(false)
-  const [fontSize, setFontSize] = useState<number>(() => {
-    if (typeof window !== 'undefined') {
-      return parseInt(localStorage.getItem('ccp-font-size') || '18', 10)
-    }
-    return 18
-  })
+  // Note (chunk 3a): the chapter-local font-size state was removed —
+  // text-size scaling is now driven entirely by AccessibilityProvider's
+  // --text-size-multiplier, which the .reading-text rule in globals.css
+  // already applies. The old `ccp-font-size` localStorage key is dead;
+  // ReadingToolbar's onFontSizeChange prop is gone too.
   const [focusedMode, setFocusedMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('ccp-focused-mode') === 'true'
@@ -264,11 +263,6 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
       if (rafId) cancelAnimationFrame(rafId)
     }
   }, [chapter.id])
-
-  // Save font size preference
-  useEffect(() => {
-    localStorage.setItem('ccp-font-size', String(fontSize))
-  }, [fontSize])
 
   // Save focused mode preference + close glossary panel
   useEffect(() => {
@@ -604,7 +598,6 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         ref={textRef}
         className="reading-text"
         onMouseUp={handleMouseUp}
-        style={{ fontSize: `${fontSize / 16}rem` }}
       >
         {visibleParagraphs.map((pData, pIdx) => (
           <MemoizedParagraph
@@ -770,8 +763,6 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         currentIndex={currentIndex}
         slug={documentSlug}
         weekId={chapter.week_id ?? null}
-        fontSize={fontSize}
-        onFontSizeChange={setFontSize}
         focusedMode={focusedMode}
         onFocusedModeChange={setFocusedMode}
         annotationCount={annotations.length}

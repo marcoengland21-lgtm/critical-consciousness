@@ -251,7 +251,7 @@ export function Modal({ title, children, onClose }: { title: string; children: R
       onClick={onClose}
     >
       <div
-        className="w-full max-w-xl rounded-lg shadow-2xl animate-scale-in"
+        className="chrome-scoped w-full max-w-xl rounded-lg shadow-2xl animate-scale-in"
         style={{
           backgroundColor: 'var(--bg-card)',
           border: '1px solid var(--border-default)',

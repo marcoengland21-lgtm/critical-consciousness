@@ -26,7 +26,7 @@ export default function MobileTabBar({ displayName, hasUser }: MobileTabBarProps
 
   return (
     <>
-      <div className="mobile-tab-bar md:hidden">
+      <div className="chrome-scoped mobile-tab-bar md:hidden">
         <div className="flex items-center justify-around px-2" style={{ height: '60px' }}>
           {tabItems.map((item) => {
             // Hide Profile tab when no user

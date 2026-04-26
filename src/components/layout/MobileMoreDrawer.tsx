@@ -40,7 +40,7 @@ export default function MobileMoreDrawer({
 
       {/* Drawer */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-[70] animate-slide-up"
+        className="chrome-scoped fixed bottom-0 left-0 right-0 z-[70] animate-slide-up"
         style={{
           backgroundColor: 'var(--bg-card)',
           borderTopLeftRadius: '0.75rem',

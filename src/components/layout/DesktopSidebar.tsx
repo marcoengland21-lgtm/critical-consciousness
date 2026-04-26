@@ -61,7 +61,7 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
   return (
     <>
     <aside
-      className="hidden md:flex flex-col fixed top-0 left-0 h-screen z-40"
+      className="chrome-scoped hidden md:flex flex-col fixed top-0 left-0 h-screen z-40"
       style={{
         width: collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH,
         backgroundColor: 'var(--bg-nav)',

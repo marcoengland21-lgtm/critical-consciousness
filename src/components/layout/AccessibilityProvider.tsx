@@ -2,10 +2,27 @@
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 
+/** Menu Size preset (chunk 3a). Maps 1:1 to a --chrome-text-scale value. */
+export type ChromeSize = 'small' | 'regular' | 'large' | 'extra-large'
+
+export const CHROME_SIZE_VALUES: Record<ChromeSize, number> = {
+  small: 0.875,
+  regular: 1,
+  large: 1.15,
+  'extra-large': 1.35,
+}
+
 interface AccessibilityContextType {
-  /** Global base font size in pixels (default 16) */
+  /** Global base font size in pixels (default 16). Drives --text-size-multiplier
+      which scales BODY CONTENT only (chapter, threads, annotations, journal,
+      glossary defs, card-body paragraphs). */
   fontSize: number
   setFontSize: (size: number) => void
+  /** Menu Size preset — drives --chrome-text-scale, scoped to chrome
+      utilities (page titles, eyebrows, sidebar nav, status strip, modal
+      headers, toolbar text). Independent from fontSize. */
+  chromeSize: ChromeSize
+  setChromeSize: (size: ChromeSize) => void
   /** High contrast mode — stronger borders, brighter accents, higher contrast ratios */
   highContrast: boolean
   setHighContrast: (on: boolean) => void
@@ -26,6 +43,8 @@ interface AccessibilityContextType {
 const AccessibilityContext = createContext<AccessibilityContextType>({
   fontSize: 16,
   setFontSize: () => {},
+  chromeSize: 'regular',
+  setChromeSize: () => {},
   highContrast: false,
   setHighContrast: () => {},
   dyslexiaFont: false,
@@ -45,15 +64,19 @@ export function useAccessibility() {
 // localStorage keys
 const KEYS = {
   fontSize: 'ccp-global-font-size',
+  chromeSize: 'ccp-chrome-text-scale',
   highContrast: 'ccp-high-contrast',
   dyslexiaFont: 'ccp-dyslexia-font',
   readingGuide: 'ccp-reading-guide',
   readingGuideWpm: 'ccp-reading-guide-wpm',
 } as const
 
+const VALID_CHROME_SIZES: ChromeSize[] = ['small', 'regular', 'large', 'extra-large']
+
 export default function AccessibilityProvider({ children }: { children: React.ReactNode }) {
   // Initialize with defaults — useEffect syncs from localStorage on mount
   const [fontSize, setFontSizeState] = useState(16)
+  const [chromeSize, setChromeSizeState] = useState<ChromeSize>('regular')
   const [highContrast, setHighContrastState] = useState(false)
   const [dyslexiaFont, setDyslexiaFontState] = useState(false)
   const [readingGuide, setReadingGuideState] = useState(false)
@@ -70,6 +93,13 @@ export default function AccessibilityProvider({ children }: { children: React.Re
         // Set multiplier (not raw px) — only content text scales, not layout
         document.documentElement.style.setProperty('--text-size-multiplier', String(size / 16))
       }
+    }
+
+    const savedChrome = localStorage.getItem(KEYS.chromeSize)
+    if (savedChrome && VALID_CHROME_SIZES.includes(savedChrome as ChromeSize)) {
+      const cs = savedChrome as ChromeSize
+      setChromeSizeState(cs)
+      document.documentElement.style.setProperty('--chrome-text-scale', String(CHROME_SIZE_VALUES[cs]))
     }
 
     const savedContrast = localStorage.getItem(KEYS.highContrast)
@@ -105,6 +135,12 @@ export default function AccessibilityProvider({ children }: { children: React.Re
     // Set multiplier (not raw px) — only content text scales, not layout
     document.documentElement.style.setProperty('--text-size-multiplier', String(clamped / 16))
     localStorage.setItem(KEYS.fontSize, String(clamped))
+  }, [])
+
+  const setChromeSize = useCallback((size: ChromeSize) => {
+    setChromeSizeState(size)
+    document.documentElement.style.setProperty('--chrome-text-scale', String(CHROME_SIZE_VALUES[size]))
+    localStorage.setItem(KEYS.chromeSize, size)
   }, [])
 
   const setHighContrast = useCallback((on: boolean) => {
@@ -148,6 +184,8 @@ export default function AccessibilityProvider({ children }: { children: React.Re
       value={{
         fontSize,
         setFontSize,
+        chromeSize,
+        setChromeSize,
         highContrast,
         setHighContrast,
         dyslexiaFont,
