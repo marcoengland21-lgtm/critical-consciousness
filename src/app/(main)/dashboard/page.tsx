@@ -7,8 +7,9 @@ import ReadingCheckinButton from '@/components/dashboard/ReadingCheckinButton'
 import MilestoneCard from '@/components/dashboard/MilestoneCard'
 import GroupThinkingOverview from '@/components/dashboard/GroupThinkingOverview'
 import PassageSpotlight from '@/components/dashboard/PassageSpotlight'
-import ReflectionJournal from '@/components/dashboard/ReflectionJournal'
+import QuickCaptureCard from '@/components/journal/QuickCaptureCard'
 import BigStatTile from '@/components/dashboard/BigStatTile'
+import { getTestingOverride } from '@/lib/testing-override'
 import type { ThreadType, WeeklyRoleType } from '@/types/database'
 
 // Query-specific join shapes for Supabase responses
@@ -51,9 +52,15 @@ interface DiscussionPrompt {
 
 const DEFAULT_GROUP_ID = '00000000-0000-0000-0000-000000000001'
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  // Next.js 15+ App Router types searchParams as a Promise.
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}) {
   const user = await getSessionUser()
   const supabase = await createClient()
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
 
   const now = new Date()
   const nowISO = now.toISOString()
@@ -118,11 +125,29 @@ export default async function DashboardPage() {
   // current week. Pre-journey state is when the schedule is empty.
   type WeekRowFull = { id: string; week_number: number; title: string; due_date: string; session_date: string | null; session_location: string | null; chapter_ref: string | null; page_start: number | null; page_end: number | null }
   const allWeeks = (allWeeksData || []) as unknown as (WeekRowFull & { weekly_roles?: WeeklyRoleRow[]; discussion_prompts?: DiscussionPrompt[] })[]
-  const currentWeek =
+  const detectedCurrentWeek =
     allWeeks.find((w) => new Date(w.due_date) >= now) ||
     allWeeks[allWeeks.length - 1] ||
     null
-  const journeyStarted = currentWeek !== null
+
+  // Apply admin testing-mode override (chunk 2 part 1) to journey state.
+  // The override only takes effect for admin users; for everyone else the
+  // detected state is used. ?journey=not_started forces the empty-state
+  // condensation; ?journey=started reveals the big-stat row even if no
+  // schedule has been set up yet (uses detectedCurrentWeek if available,
+  // otherwise the row tiles fall back to '—' / 0).
+  const isAdmin = profile?.role === 'admin'
+  const override = getTestingOverride(resolvedSearchParams, isAdmin)
+  let currentWeek: typeof detectedCurrentWeek | null = detectedCurrentWeek
+  let journeyStarted = currentWeek !== null
+  if (override?.journey === 'not_started') {
+    journeyStarted = false
+    currentWeek = null
+  } else if (override?.journey === 'started') {
+    journeyStarted = true
+    // currentWeek stays as detectedCurrentWeek; if there's no schedule at
+    // all, the tiles will render with '—' / 0 fallbacks gracefully.
+  }
 
   // Time-of-day greeting (NZ timezone for Christchurch group)
   const nzHourStr = now.toLocaleString('en-NZ', { hour: 'numeric', hour12: false, timeZone: 'Pacific/Auckland' })
@@ -470,12 +495,11 @@ export default async function DashboardPage() {
             </section>
           )}
 
-          {currentWeek && user && (
-            <ReflectionJournal
-              weekTitle={currentWeek.title}
-              weekNumber={currentWeek.week_number}
-            />
-          )}
+          {/* Journal quick-capture (chunk 2 part 2) — replaces the previous
+              'Your Reflection' stub. Sized substantially larger than the
+              stub (roughly two big-stat tiles tall), full width of right rail.
+              Renders for any logged-in user, regardless of journey state. */}
+          {user && <QuickCaptureCard userId={user.id} />}
         </div>
       </div>
     </div>

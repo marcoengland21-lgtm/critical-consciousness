@@ -233,6 +233,21 @@ export interface ConfusionCount {
   count: number;
 }
 
+/**
+ * Private journal entry. Per-user RLS guarantees only the author sees these.
+ * chapter_id is reserved for chunk 3 (per-chapter notes); UI doesn't expose it yet.
+ */
+export interface PrivateNote {
+  id: string;
+  user_id: string;
+  chapter_id: string | null;
+  title: string | null;
+  body: string;
+  word_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
 // Extended Types with Joined Data
 
 export interface ThreadWithAuthor extends Thread {

@@ -10,6 +10,7 @@ export const navItems: NavItem[] = [
   { href: '/reading',   label: 'Reading',   icon: 'book', mobileTab: true },
   { href: '/threads',   label: 'Threads',   icon: 'chat', mobileTab: true },
   { href: '/glossary',  label: 'Glossary',  icon: 'glossary' },
+  { href: '/journal',   label: 'Journal',   icon: 'journal' },
   { href: '/schedule',  label: 'Schedule',  icon: 'calendar' },
   { href: '/resources', label: 'Resources', icon: 'link' },
   { href: '/profile',   label: 'Profile',   icon: 'user', mobileTab: true },
