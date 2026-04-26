@@ -67,9 +67,10 @@ export default async function ThreadsPage({
 
   const now = new Date().toISOString()
 
-  // Parallel fetch: threads, weeks, latest replies, prompts, user role.
+  // Parallel fetch: threads, weeks, latest replies, prompts, user role,
+  // branch counts (per §4.6 — show branch count alongside reply count).
   // Capture errors from every query so failures are visible in logs.
-  const [threadsResult, weeksResult, repliesResult, promptWeekResult, userRolesResult] = await Promise.all([
+  const [threadsResult, weeksResult, repliesResult, promptWeekResult, userRolesResult, branchesResult] = await Promise.all([
     // All threads with author + reply count
     supabase
       .from('threads')
@@ -107,6 +108,12 @@ export default async function ThreadsPage({
           .order('created_at', { ascending: false })
           .limit(5)
       : Promise.resolve({ data: null, error: null }),
+
+    // Branch counts per parent thread — selecting only the parent_thread_id
+    // and tallying client-side. Tiny payload even at scale.
+    supabase
+      .from('thread_branches')
+      .select('parent_thread_id'),
   ])
 
   // Log all errors — nested joins can fail silently
@@ -137,6 +144,15 @@ export default async function ThreadsPage({
     }
   }
 
+  // Tally branch counts per parent thread for the §4.6 thread-card footer.
+  const branchCountMap = new Map<string, number>()
+  if (branchesResult.data) {
+    for (const b of branchesResult.data as { parent_thread_id: string }[]) {
+      branchCountMap.set(b.parent_thread_id, (branchCountMap.get(b.parent_thread_id) || 0) + 1)
+    }
+  }
+  if (branchesResult.error) console.error('[CCP] Threads page — branches query error:', branchesResult.error)
+
   // Transform threads to client-ready shape
   const threads = ((rawThreads || []) as unknown as RawThread[]).map((t) => ({
     id: t.id,
@@ -148,6 +164,7 @@ export default async function ThreadsPage({
     week_id: t.week_id,
     author: t.author || { id: '', display_name: 'Guest' },
     replyCount: t.replies?.[0]?.count ?? 0,
+    branchCount: branchCountMap.get(t.id) || 0,
     lastReply: lastReplyMap.get(t.id) || null,
   }))
 

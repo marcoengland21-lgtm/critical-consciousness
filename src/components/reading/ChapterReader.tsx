@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback, useEffect, useMemo, memo } from 'react'
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import AnnotationPopover from './AnnotationPopover'
@@ -8,19 +8,19 @@ import AnnotationPanel from './AnnotationPanel'
 import SelectionToolbar from './SelectionToolbar'
 import OnboardingHint from './OnboardingHint'
 import ReadingToolbar from './ReadingToolbar'
-import ConfusionHeatmap from './ConfusionHeatmap'
 import ReadingPresence from './ReadingPresence'
 import GlossaryTooltip from './GlossaryTooltip'
 import GlossaryQuickAccess from './GlossaryQuickAccess'
-import FootnoteInline from './FootnoteInline'
 import Toast from '@/components/ui/Toast'
 import BackToTop from './BackToTop'
 import ReadingGuide from './ReadingGuide'
 import AudioPlayer from './AudioPlayer'
+import MemoizedParagraph from './MemoizedParagraph'
 import type { AudioAlignment } from '@/lib/audio-alignments'
 import { getConfusionFlagCounts, getUserConfusionFlags } from '@/lib/confusion-flags'
-import { findGlossaryTermMatches, buildGlossarySegments, findChapterGlossaryTerms, GlossaryTerm, GlossaryTermWithCount, TermMatch } from '@/lib/glossary-utils'
+import { findChapterGlossaryTerms, GlossaryTerm, GlossaryTermWithCount, TermMatch } from '@/lib/glossary-utils'
 import { useScrollPersistence } from '@/hooks/useScrollPersistence'
+import { snapOutsideFootnoteMarker } from './chapter-text-utils'
 
 interface Annotation {
   id: string
@@ -48,6 +48,9 @@ interface Chapter {
   title: string
   content: string
   sort_order: number
+  /** reading_schedule.id this chapter is assigned to, if any.
+      Used by the per-chapter concept slice in the Reading Workspace (§11.5). */
+  week_id?: string | null
 }
 
 interface Footnote {
@@ -77,337 +80,13 @@ const isDev = process.env.NODE_ENV === 'development'
 // How many paragraphs to render immediately (above the fold)
 const INITIAL_RENDER_COUNT = 25
 
-/**
- * Snap a character position so it doesn't fall inside a footnote marker [N].
- * If pos is inside a marker, move it to the start of that marker.
- * This prevents annotation boundaries from splitting footnote markers across segments.
- */
-function snapOutsideFootnoteMarker(text: string, pos: number): number {
-  // Look backwards from pos for an unclosed '['
-  for (let i = pos - 1; i >= Math.max(0, pos - 5); i--) {
-    if (text[i] === '[') {
-      // Check if there's a closing ']' after pos
-      const closingIdx = text.indexOf(']', i)
-      if (closingIdx >= pos) {
-        // pos is inside [N] — check it's actually a footnote marker
-        const inner = text.slice(i + 1, closingIdx)
-        if (/^\d+$/.test(inner)) {
-          return i // snap to before the '['
-        }
-      }
-      break
-    }
-    if (text[i] === ']') break // we're past any marker
-  }
-  return pos
-}
+/* ── Pure text helpers (snapOutsideFootnoteMarker, buildSegments,
+   buildMergedSegments, renderTextWithFootnotes) extracted to
+   ./chapter-text-utils.tsx per IMPROVEMENTS_PLAN §14. snapOutsideFootnoteMarker
+   is re-imported above for use in the selection-snap logic below.
+   The MemoizedParagraph component is similarly extracted to
+   ./MemoizedParagraph.tsx. ── */
 
-/** Split text into annotated and unannotated segments */
-function buildSegments(
-  text: string,
-  annotations: Annotation[]
-): { start: number; end: number; text: string; annotations: Annotation[] }[] {
-  if (annotations.length === 0) {
-    return [{ start: 0, end: text.length, text, annotations: [] }]
-  }
-
-  const boundaries = new Set<number>()
-  boundaries.add(0)
-  boundaries.add(text.length)
-
-  for (const ann of annotations) {
-    // Snap boundaries so they don't split footnote markers like [1]
-    boundaries.add(Math.max(0, snapOutsideFootnoteMarker(text, ann.position_start)))
-    boundaries.add(Math.min(text.length, snapOutsideFootnoteMarker(text, ann.position_end)))
-  }
-
-  const sorted = Array.from(boundaries).sort((a, b) => a - b)
-  const segments: { start: number; end: number; text: string; annotations: Annotation[] }[] = []
-
-  for (let i = 0; i < sorted.length - 1; i++) {
-    const start = sorted[i]
-    const end = sorted[i + 1]
-    const segText = text.slice(start, end)
-
-    const covering = annotations.filter(
-      (a) => a.position_start <= start && a.position_end >= end
-    )
-
-    segments.push({ start, end, text: segText, annotations: covering })
-  }
-
-  return segments
-}
-
-/** Merge annotation and glossary segments */
-function buildMergedSegments(
-  annotationSegments: { start: number; end: number; text: string; annotations: Annotation[] }[],
-  glossarySegments: {
-    start: number
-    end: number
-    text: string
-    isGlossaryTerm: boolean
-    termData?: { term: string; definition: string }
-  }[]
-): {
-  start: number
-  end: number
-  text: string
-  annotations: Annotation[]
-  isGlossaryTerm: boolean
-  termData?: { term: string; definition: string }
-}[] {
-  const merged: {
-    start: number
-    end: number
-    text: string
-    annotations: Annotation[]
-    isGlossaryTerm: boolean
-    termData?: { term: string; definition: string }
-  }[] = []
-
-  const boundaries = new Set<number>()
-  for (const seg of annotationSegments) {
-    boundaries.add(seg.start)
-    boundaries.add(seg.end)
-  }
-  for (const seg of glossarySegments) {
-    boundaries.add(seg.start)
-    boundaries.add(seg.end)
-  }
-
-  const sorted = Array.from(boundaries).sort((a, b) => a - b)
-
-  for (let i = 0; i < sorted.length - 1; i++) {
-    const start = sorted[i]
-    const end = sorted[i + 1]
-
-    const overlapAnnotation = annotationSegments.find((s) => s.start <= start && s.end >= end)
-    const overlapGlossary = glossarySegments.find((s) => s.start <= start && s.end >= end)
-
-    const text = annotationSegments[0].text.slice(start, end) || glossarySegments[0].text.slice(start, end)
-
-    merged.push({
-      start,
-      end,
-      text,
-      annotations: overlapAnnotation?.annotations || [],
-      isGlossaryTerm: overlapGlossary?.isGlossaryTerm || false,
-      termData: overlapGlossary?.termData,
-    })
-  }
-
-  return merged
-}
-
-/** Split text on footnote markers [N] and return React nodes */
-function renderTextWithFootnotes(
-  text: string,
-  footnoteMap: Map<number, Footnote>,
-  keyPrefix: string,
-  footnotesExpanded?: boolean
-): React.ReactNode[] {
-  const parts: React.ReactNode[] = []
-  const regex = /\[(\d+)\]/g
-  let lastIndex = 0
-  let match: RegExpExecArray | null
-
-  while ((match = regex.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      parts.push(text.slice(lastIndex, match.index))
-    }
-
-    const fnNum = parseInt(match[1], 10)
-    const footnote = footnoteMap.get(fnNum)
-
-    if (footnote) {
-      parts.push(
-        <FootnoteInline
-          key={`${keyPrefix}-fn-${fnNum}`}
-          number={fnNum}
-          content={footnote.content}
-          author={footnote.author}
-          forceOpen={footnotesExpanded}
-        />
-      )
-    } else {
-      parts.push(match[0])
-    }
-
-    lastIndex = match.index + match[0].length
-  }
-
-  if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex))
-  }
-
-  return parts.length > 0 ? parts : [text]
-}
-
-// ====================================================================
-// Memoized paragraph component — only re-renders when its own props change
-// This is the key performance optimization: when you open a tooltip,
-// change font size, or type a keyword, paragraphs that didn't change
-// won't re-render their expensive segment/glossary/footnote logic.
-// ====================================================================
-interface ParagraphProps {
-  pIdx: number
-  paragraph: string
-  pStart: number
-  pEnd: number
-  annotations: Annotation[]
-  glossaryTerms: GlossaryTerm[]
-  footnoteMap: Map<number, Footnote>
-  focusedMode: boolean
-  chapterId: string
-  confusionCount: number
-  isUserFlagged: boolean
-  keywordFilter: { matching: Set<string> }
-  showKeywordStats: boolean
-  footnotesExpanded: boolean
-  onAnnotationClick: (anns: Annotation[]) => void
-  onGlossaryTermClick: (term: string, definition: string, event: React.MouseEvent) => void
-}
-
-const MemoizedParagraph = memo(function Paragraph({
-  pIdx,
-  paragraph,
-  pStart,
-  pEnd,
-  annotations: displayAnnotations,
-  glossaryTerms,
-  footnoteMap,
-  focusedMode,
-  chapterId,
-  confusionCount,
-  isUserFlagged,
-  keywordFilter,
-  showKeywordStats,
-  footnotesExpanded,
-  onAnnotationClick,
-  onGlossaryTermClick,
-}: ParagraphProps) {
-  // Get annotations that overlap this paragraph
-  const pAnnotations = displayAnnotations.filter(
-    (a) => a.position_start < pEnd && a.position_end > pStart
-  )
-
-  // Find glossary terms in this paragraph
-  const glossaryMatches = focusedMode ? [] : findGlossaryTermMatches(paragraph, glossaryTerms)
-
-  // Build segments
-  const annotationSegments = buildSegments(
-    paragraph,
-    pAnnotations.map((a) => ({
-      ...a,
-      position_start: Math.max(a.position_start - pStart, 0),
-      position_end: Math.min(a.position_end - pStart, paragraph.length),
-    }))
-  )
-
-  const glossarySegments = buildGlossarySegments(paragraph, glossaryMatches)
-  const mergedSegments = buildMergedSegments(annotationSegments, glossarySegments)
-
-  const annotationCount = pAnnotations.length
-
-  return (
-    <p data-offset={pStart} className="relative group/para">
-      {/* Confusion heatmap margin — warm strip showing collective struggle */}
-      <ConfusionHeatmap
-        chapterId={chapterId}
-        paragraphIndex={pIdx}
-        initialCount={confusionCount}
-        isUserFlagged={isUserFlagged}
-        hidden={focusedMode}
-      />
-
-      {/* Annotation count badge — shown in left margin on desktop */}
-      {annotationCount > 0 && !focusedMode && (
-        <span
-          className="absolute -left-14 top-1 hidden lg:flex w-6 h-6 rounded-full items-center justify-center text-xs font-medium opacity-40 group-hover/para:opacity-100 transition-opacity"
-          style={{
-            backgroundColor: annotationCount > 2 ? 'var(--accent-purple)' : 'var(--bg-soft)',
-            color: annotationCount > 2 ? 'var(--text-inverse)' : 'var(--text-primary)',
-          }}
-          title={`${annotationCount} annotation${annotationCount > 1 ? 's' : ''}`}
-        >
-          {annotationCount}
-        </span>
-      )}
-
-      {mergedSegments.map((seg, sIdx) => {
-        // Glossary term only
-        if (seg.isGlossaryTerm && seg.annotations.length === 0 && seg.termData) {
-          return (
-            <span
-              key={sIdx}
-              className="cursor-help rounded-sm transition-colors duration-150 hover:bg-[rgba(var(--accent-purple-rgb),0.08)]"
-              style={{ color: 'inherit' }}
-              onClick={(e) => onGlossaryTermClick(seg.termData!.term, seg.termData!.definition, e)}
-              title={`Click to see definition of "${seg.termData.term}"`}
-            >
-              {renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`, footnotesExpanded)}
-            </span>
-          )
-        }
-
-        // Annotation highlight
-        if (seg.annotations.length > 0) {
-          const globalAnns = seg.annotations.map((localAnn) => {
-            return pAnnotations.find(
-              (a) =>
-                a.position_start <= pStart + localAnn.position_start &&
-                a.position_end >= pStart + localAnn.position_end
-            )!
-          }).filter(Boolean)
-
-          const density = globalAnns.length
-
-          if (seg.isGlossaryTerm && seg.termData) {
-            const isMatchingAnnotation = globalAnns.some((ann) => keywordFilter.matching.has(ann.id))
-            return (
-              <mark
-                key={sIdx}
-                className={`${density > 1 ? 'annotation-highlight-dense' : 'annotation-highlight'} cursor-pointer`}
-                style={{
-                  opacity: showKeywordStats && !isMatchingAnnotation ? 0.2 : undefined,
-                  transition: 'opacity 200ms ease',
-                }}
-                onClick={(e) => {
-                  if (e.detail === 1) {
-                    onGlossaryTermClick(seg.termData!.term, seg.termData!.definition, e)
-                  }
-                }}
-                title={`${density} annotation${density > 1 ? 's' : ''}; Click to see glossary definition of "${seg.termData.term}"`}
-              >
-                {renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`, footnotesExpanded)}
-              </mark>
-            )
-          }
-
-          const isMatchingAnnotation = globalAnns.some((ann) => keywordFilter.matching.has(ann.id))
-          return (
-            <mark
-              key={sIdx}
-              className={density > 1 ? 'annotation-highlight-dense' : 'annotation-highlight'}
-              onClick={() => onAnnotationClick(globalAnns)}
-              title={`${density} annotation${density > 1 ? 's' : ''}`}
-              style={{
-                opacity: showKeywordStats && !isMatchingAnnotation ? 0.2 : undefined,
-                transition: 'opacity 200ms ease',
-              }}
-            >
-              {renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`, footnotesExpanded)}
-            </mark>
-          )
-        }
-
-        // Regular text
-        return <span key={sIdx}>{renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`, footnotesExpanded)}</span>
-      })}
-    </p>
-  )
-})
 
 // ====================================================================
 // Main ChapterReader component
@@ -1090,6 +769,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         currentChapter={chapter.chapter_number}
         currentIndex={currentIndex}
         slug={documentSlug}
+        weekId={chapter.week_id ?? null}
         fontSize={fontSize}
         onFontSizeChange={setFontSize}
         focusedMode={focusedMode}

@@ -1,0 +1,63 @@
+-- ============================================================================
+-- TEST DATA ONLY — DO NOT RUN IN PRODUCTION.
+--
+-- Per IMPROVEMENTS_PLAN §11.7, the concept map is intended to be GROUP-BUILT.
+-- The empty state of the map (a sparse early-weeks /concepts page) is itself
+-- a teaching artifact: "this is where we are, this is what we've connected
+-- so far". Seeding the production database with curated edges defeats that.
+--
+-- This file is for LOCAL/DEV use only — running it gives you enough edges
+-- to verify the force-directed visualisation lays out correctly.
+--
+-- To apply locally, uncomment the INSERTs below and run via the Supabase
+-- SQL editor against your local/dev project. To wipe afterwards, use
+-- src/lib/clear-concept-edges.sql.
+-- ============================================================================
+
+-- The edges below assume the 15 Chapter 1 glossary terms seeded by
+-- src/lib/seed-glossary.sql. They encode a reasonable Marx-as-Marx-wrote-it
+-- dependency graph through Chapter 1: the commodity contains use-value and
+-- exchange-value; exchange-value emerges from the dual character of labour;
+-- the value-form develops from simple to general to money-form; commodity
+-- fetishism is what the whole chapter makes possible. They are NOT a
+-- definitive reading — just enough connections to render meaningfully.
+--
+-- created_by uses the FIRST profile in the database (any admin in dev).
+-- If you want a specific creator, replace the SELECT subquery with a
+-- specific user UUID.
+
+-- BEGIN;
+--
+-- WITH author AS (
+--   SELECT id FROM profiles ORDER BY created_at LIMIT 1
+-- ), terms AS (
+--   SELECT id, lower(term) AS term FROM glossary_entries
+-- )
+-- INSERT INTO concept_edges (from_term_id, to_term_id, edge_type, note, created_by)
+-- SELECT
+--   src.id, dst.id, 'builds_on', e.note, (SELECT id FROM author)
+-- FROM (VALUES
+--   -- (FROM, TO, NOTE)
+--   ('use-value',           'commodity',                   'Use-value is one of the two factors of the commodity (Ch 1, §1).'),
+--   ('exchange-value',      'commodity',                   'Exchange-value is the second factor of the commodity (Ch 1, §1).'),
+--   ('value',               'exchange-value',              'Exchange-value is the form value takes when commodities are exchanged (Ch 1, §1).'),
+--   ('value',               'commodity',                   'Value is the substance commodities share that makes them comparable.'),
+--   ('abstract labour',     'value',                       'Value is congealed abstract human labour (Ch 1, §2).'),
+--   ('concrete labour',     'use-value',                   'Concrete labour produces use-values (Ch 1, §2).'),
+--   ('abstract labour',     'concrete labour',             'The dual character of labour — the pivot of Ch 1, §2.'),
+--   ('socially necessary labour time', 'value',            'Magnitude of value is set by socially necessary labour time (Ch 1, §1).'),
+--   ('magnitude of value',  'value',                       'Magnitude is one of the aspects of value Marx identifies.'),
+--   ('relative form of value', 'value',                    'Relative form is the first pole of the simple value-form (Ch 1, §3).'),
+--   ('equivalent form',     'value',                       'Equivalent form is the second pole of the simple value-form (Ch 1, §3).'),
+--   ('relative form of value', 'equivalent form',          'The two poles develop together, not separately (Ch 1, §3).'),
+--   ('universal equivalent','equivalent form',             'Universal equivalent is the developed form of the equivalent (Ch 1, §3).'),
+--   ('money-form',          'universal equivalent',        'Money-form is the universal equivalent socially fixed on one commodity (Ch 1, §3).'),
+--   ('commodity fetishism', 'commodity',                   'Fetishism is what the commodity-form does to social relations (Ch 1, §4).'),
+--   ('commodity fetishism', 'value',                       'Fetishism arises because value-relations between products appear as relations between things.'),
+--   ('labour-power',        'value',                       'Labour-power is itself a commodity with a value (foreshadows Ch 6).')
+-- ) AS e(from_term, to_term, note)
+-- JOIN terms src ON src.term = lower(e.from_term)
+-- JOIN terms dst ON dst.term = lower(e.to_term)
+-- ON CONFLICT (from_term_id, to_term_id, edge_type) DO NOTHING;
+--
+-- COMMIT;

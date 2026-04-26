@@ -2,7 +2,7 @@
 
 Read this file at the start of every session. It is your memory of this project.
 
-Last updated: 16 March 2026 (overnight session)
+Last updated: 26 April 2026 (post pre-launch consolidation pass — commits cebf1b3 → resources restructure)
 
 ---
 
@@ -327,7 +327,7 @@ All colors are CSS custom properties. **Never use raw hex values.** Always use `
 - **UI text:** 'Inter', system-ui, -apple-system, sans-serif (Google Fonts)
 - **Reading text:** 'Lora', Georgia, 'Times New Roman', serif (Google Fonts)
 - `.reading-text`: font-size 1.125rem, line-height 1.8, max-width 68ch, padding 1.5rem
-- Labels use `text-xs font-bold tracking-wide` — no `uppercase` (removed to reduce visual noise)
+- Labels use `text-xs font-bold tracking-wide` — no `uppercase` for arbitrary labels (removed to reduce visual noise). EXCEPTION: structured editorial eyebrows (the new `.text-eyebrow` utility, 10px Inter at 0.15em tracking, used for `01 / PART ONE`, `§3 / SECTION THREE`, `WEEK 4 OF 32`-style numbered/structural labels) DO use uppercase. The distinction: arbitrary uppercase = noise; structured editorial eyebrows are a design pattern, not random caps.
 
 ### Animation System
 
@@ -485,7 +485,7 @@ Warmth doesn't come from slapping earth tones on a generic layout. It comes from
 
 These are hard-won. Follow them always.
 
-1. **Nav order is ALWAYS:** Dashboard, Reading, Threads, Glossary, Schedule, Resources. On every page. No exceptions.
+1. **Nav order is ALWAYS:** Dashboard, Reading, Threads, Glossary, Schedule, Resources. Profile is NOT in the sidebar nav — it's accessed via the user avatar block at the sidebar bottom (the row with the user's initial + name + chevron). Mobile tab bar still has Profile (mobile users need a tap target). On every page. No exceptions.
 2. **No likes, reactions, upvotes, engagement metrics, or gamification.** Ever.
 3. **Confusion flags are ANONYMOUS.** No names attached, ever.
 4. **Animations on everything** that opens/closes/appears/disappears. Nothing should snap. 150-250ms, ease-out.

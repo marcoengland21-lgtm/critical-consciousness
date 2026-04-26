@@ -183,6 +183,30 @@ export default async function ThreadPage({
   const opBranches = branches.filter((b) => b.parentReplyId === null)
   const replyBranches = branches.filter((b) => b.parentReplyId !== null)
 
+  // Passage reference (§4.7) — when a passage_pick thread leads with a markdown
+  // blockquote, lift it out and render it as a structured element above the
+  // body. Strip it from the rendered body so it doesn't appear twice.
+  // Pattern: '> "..." — *§N, ...*' OR a generic leading '> ...' line.
+  let passageReference: { quote: string; attribution: string | null } | null = null
+  let displayBody = thread.body
+  if (thread.thread_type === 'passage_pick') {
+    const fancy = thread.body.match(/^>\s*"(.+?)"\s*(?:—\s*\*(.+?)\*)?\s*\n+/m)
+    if (fancy) {
+      passageReference = { quote: fancy[1], attribution: fancy[2] || null }
+      displayBody = thread.body.slice(fancy[0].length)
+    } else {
+      // Fallback: any leading blockquote line(s)
+      const generic = thread.body.match(/^((?:>\s+.*(?:\n|$))+)/)
+      if (generic) {
+        const quote = generic[1].replace(/^>\s+/gm, '').trim()
+        if (quote) {
+          passageReference = { quote, attribution: null }
+          displayBody = thread.body.slice(generic[0].length).trimStart()
+        }
+      }
+    }
+  }
+
   // Week info
   const threadWeek = (thread as { week?: ThreadWeek }).week || null
 
@@ -300,8 +324,49 @@ export default async function ThreadPage({
             </div>
           </div>
 
+          {/* Source passage (§4.7) — when a passage_pick thread leads with a
+              markdown blockquote, render it as a structured element above the
+              body. Was previously buried in the body as raw markdown. */}
+          {passageReference && (
+            <div
+              className="mb-6 px-5 py-4 rounded-lg"
+              style={{
+                borderLeft: '3px solid var(--accent-purple)',
+                backgroundColor: 'rgba(var(--accent-purple-rgb), 0.06)',
+              }}
+            >
+              <p className="text-eyebrow mb-2" style={{ color: 'var(--accent-purple)' }}>
+                Passage from the reading
+              </p>
+              <p
+                className="text-base italic mb-2"
+                style={{
+                  color: 'var(--text-primary)',
+                  fontFamily: "'Lora', Georgia, serif",
+                  lineHeight: 1.6,
+                }}
+              >
+                &ldquo;{passageReference.quote}&rdquo;
+              </p>
+              {passageReference.attribution && (
+                <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                  — {passageReference.attribution}
+                </p>
+              )}
+              {contextDocSlug && contextChapterNum && (
+                <Link
+                  href={`/reading/${contextDocSlug}/${contextChapterNum}`}
+                  className="inline-block mt-2 text-xs font-medium"
+                  style={{ color: 'var(--accent-red)' }}
+                >
+                  Open in chapter →
+                </Link>
+              )}
+            </div>
+          )}
+
           {/* Thread Body */}
-          <MarkdownBody content={thread.body} className="thread-body" />
+          <MarkdownBody content={displayBody} className="thread-body" />
 
           {/* Branched-into indicators (§4.4) — show child threads that
               spawned from this OP. Replies have their own indicators

@@ -19,6 +19,9 @@ interface ThreadData {
   week_id: string | null
   author: { id: string; display_name: string }
   replyCount: number
+  /** Number of threads branched FROM this thread (per IMPROVEMENTS_PLAN §4.6).
+      Surfaced alongside replyCount in the card footer. */
+  branchCount: number
   lastReply: { created_at: string; authorName: string } | null
 }
 
@@ -223,10 +226,15 @@ function ThreadCard({
           )}
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-3 shrink-0 text-xs" style={{ color: 'var(--text-secondary)' }}>
           {thread.replyCount > 0 && (
-            <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+            <span>
               {thread.replyCount} {thread.replyCount === 1 ? 'reply' : 'replies'}
+            </span>
+          )}
+          {thread.branchCount > 0 && (
+            <span>
+              🌱 {thread.branchCount} {thread.branchCount === 1 ? 'branch' : 'branches'}
             </span>
           )}
         </div>
@@ -281,6 +289,7 @@ export default function ThreadListClient({
               week_id: data.week_id,
               author: data.author || { id: '', display_name: 'Guest' },
               replyCount: data.replies?.[0]?.count ?? 0,
+              branchCount: 0, // freshly inserted thread can't have branches yet
               lastReply: null,
             }
             setThreads((prev) => [newThread, ...prev])
