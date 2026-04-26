@@ -37,3 +37,4 @@ next-env.d.ts
 capital_ch1_*.txt
 capital_ch1_*.json
 capital_ch1_*.html
+.claude/worktrees/
