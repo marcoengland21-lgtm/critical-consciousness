@@ -22,7 +22,7 @@ export default async function JournalEntryPage({ params }: JournalEntryPageProps
   // user's entry by id, this returns null and we 404.
   const { data: entry, error } = await supabase
     .from('private_notes')
-    .select('id, title, body, created_at, updated_at, user_id')
+    .select('id, title, body_json, created_at, updated_at, user_id')
     .eq('id', id)
     .single()
 
@@ -59,11 +59,11 @@ export default async function JournalEntryPage({ params }: JournalEntryPageProps
       <JournalEditor
         initialId={entry.id}
         initialTitle={entry.title || ''}
-        initialBody={entry.body || ''}
+        initialBodyJson={(entry.body_json as object) || { type: 'doc', content: [] }}
         userId={user.id}
         showTitle
         bodyPlaceholder="…"
-        minRows={16}
+        minHeight={500}
       />
     </div>
   )

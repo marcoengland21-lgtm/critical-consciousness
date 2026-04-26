@@ -235,6 +235,11 @@ export interface ConfusionCount {
 
 /**
  * Private journal entry. Per-user RLS guarantees only the author sees these.
+ *
+ * body_json is the canonical Tiptap document (per chunk 2.5 schema migration).
+ * body_text is the plain-text extraction used for full-text search and
+ * list-view previews.
+ *
  * chapter_id is reserved for chunk 3 (per-chapter notes); UI doesn't expose it yet.
  */
 export interface PrivateNote {
@@ -242,7 +247,8 @@ export interface PrivateNote {
   user_id: string;
   chapter_id: string | null;
   title: string | null;
-  body: string;
+  body_json: object;
+  body_text: string;
   word_count: number;
   created_at: string;
   updated_at: string;

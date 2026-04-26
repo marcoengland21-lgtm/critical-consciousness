@@ -6,7 +6,7 @@ import Link from 'next/link'
 import type { PrivateNote } from '@/types/database'
 
 interface JournalSearchableListProps {
-  initialEntries: Pick<PrivateNote, 'id' | 'title' | 'body' | 'word_count' | 'created_at' | 'updated_at'>[]
+  initialEntries: Pick<PrivateNote, 'id' | 'title' | 'body_text' | 'word_count' | 'created_at' | 'updated_at'>[]
   initialQuery: string
 }
 
@@ -119,11 +119,10 @@ export default function JournalSearchableList({
               year: 'numeric',
               timeZone: 'Pacific/Auckland',
             })
-            const preview = entry.body
-              .replace(/^>\s+/gm, '')
-              .replace(/^#+\s+/gm, '')
-              .replace(/\*\*(.+?)\*\*/g, '$1')
-              .replace(/\*(.+?)\*/g, '$1')
+            // body_text is the plain-text extraction stored alongside body_json
+            // at save time (Tiptap's editor.getText()). No markdown stripping
+            // needed — it's already plain text.
+            const preview = entry.body_text
               .replace(/\n+/g, ' ')
               .trim()
               .slice(0, 140)
@@ -168,7 +167,7 @@ export default function JournalSearchableList({
                     }}
                   >
                     {preview}
-                    {entry.body.length > 140 ? '…' : ''}
+                    {entry.body_text.length > 140 ? '…' : ''}
                   </p>
                 )}
               </Link>

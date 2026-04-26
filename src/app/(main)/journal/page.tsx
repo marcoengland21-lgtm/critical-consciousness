@@ -25,7 +25,7 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
   // .eq('user_id', user.id) is a defence-in-depth duplicate.
   let q = supabase
     .from('private_notes')
-    .select('id, title, body, word_count, created_at, updated_at')
+    .select('id, title, body_text, word_count, created_at, updated_at')
     .eq('user_id', user.id)
     .order('updated_at', { ascending: false })
 

@@ -50,15 +50,13 @@ export default function NewJournalEntryPage() {
       <JournalEditor
         initialId={null}
         initialTitle=""
-        initialBody=""
+        initialBodyJson={{ type: 'doc', content: [] }}
         userId={userId}
         showTitle
         bodyPlaceholder="Start writing…"
-        minRows={16}
+        minHeight={500}
         onCreatedRedirect={(id) => {
           // Replace URL with the entry id so a refresh doesn't make a new row.
-          // history.replaceState avoids the soft-navigation flash that
-          // router.replace can cause and keeps editor state intact.
           window.history.replaceState(null, '', `/journal/${id}`)
         }}
       />

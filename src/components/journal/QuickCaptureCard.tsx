@@ -52,19 +52,19 @@ export default async function QuickCaptureCard({ userId }: QuickCaptureCardProps
         <p className="text-eyebrow">Private — only you can see this</p>
       </div>
 
-      {/* Compact editor — body only, no title field, minimal toolbar.
-          Each save creates a brand-new entry (initialId = null) so the
-          dashboard quick-capture is always 'jot a fresh thought'. To
-          continue an existing entry, the user opens it from /journal. */}
+      {/* Compact Tiptap editor — basic toolbar only (bold/italic/link), no
+          modals (per chunk 2.5 §6). Each save creates a brand-new entry
+          (initialId = null) so the dashboard quick-capture is always
+          'jot a fresh thought'. */}
       <JournalEditor
         initialId={null}
         initialTitle=""
-        initialBody=""
+        initialBodyJson={{ type: 'doc', content: [] }}
         userId={userId}
         showTitle={false}
         compactToolbar
         bodyPlaceholder="Write a quick thought, leave a question for yourself, or jot something you noticed…"
-        minRows={6}
+        minHeight={200}
       />
 
       {/* Footer — entry count + open journal link */}
