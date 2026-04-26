@@ -53,7 +53,7 @@ const getStaticChapterData = unstable_cache(
         .eq('slug', slug)
         .single(),
       supabase.from('text_chapters')
-        .select('id, chapter_number, title, content, sort_order')
+        .select('id, chapter_number, title, content, sort_order, week_id')
         .eq('chapter_number', chapterNum)
         .single(),
       supabase.from('text_chapters')

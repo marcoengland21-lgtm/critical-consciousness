@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { getChapterLabel } from '@/lib/chapter-utils'
 import AccessibilityPanel from '@/components/layout/AccessibilityPanel'
 import ThemeToggle from '@/components/layout/ThemeToggle'
+import ChapterConceptSlice from './ChapterConceptSlice'
 
 interface ReadingToolbarProps {
   // Chapter navigation
@@ -11,6 +12,9 @@ interface ReadingToolbarProps {
   currentChapter: number
   currentIndex: number
   slug: string
+  /** reading_schedule.id this chapter is assigned to. Drives the
+      per-chapter concept slice (§11.5). May be null if unassigned. */
+  weekId?: string | null
   // Reading controls
   fontSize: number
   onFontSizeChange: (size: number) => void
@@ -41,6 +45,7 @@ export default function ReadingToolbar({
   currentChapter,
   currentIndex,
   slug,
+  weekId,
   fontSize,
   onFontSizeChange,
   focusedMode,
@@ -296,6 +301,23 @@ export default function ReadingToolbar({
 
           {/* Divider */}
           <div style={{ borderTop: '1px solid var(--border-default)' }} />
+
+          {/* ── Concepts in this chapter (§11.5) ──
+              Per-chapter slice of the concept map. Shows terms whose
+              first_appearance_week matches this chapter, plus their direct
+              one-hop neighbours. List view, not a force-directed canvas —
+              the panel is too narrow for a meaningful graph rendering. */}
+          {!focusedMode && (
+            <>
+              <section>
+                <h3 className="text-eyebrow mb-3">Concepts in this chapter</h3>
+                <ChapterConceptSlice weekId={weekId ?? null} />
+              </section>
+
+              {/* Divider */}
+              <div style={{ borderTop: '1px solid var(--border-default)' }} />
+            </>
+          )}
 
           {/* ── Keyboard Shortcuts ── */}
           <section>

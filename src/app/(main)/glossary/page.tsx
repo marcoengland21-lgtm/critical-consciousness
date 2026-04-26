@@ -90,11 +90,23 @@ export default async function GlossaryPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <p className="text-eyebrow mb-2">Shared Vocabulary</p>
-        <h1 className="text-display-lg" style={{ color: 'var(--text-primary)' }}>
-          Glossary
-        </h1>
+      <div className="mb-8 flex items-end justify-between gap-4">
+        <div>
+          <p className="text-eyebrow mb-2">Shared Vocabulary</p>
+          <h1 className="text-display-lg" style={{ color: 'var(--text-primary)' }}>
+            Glossary
+          </h1>
+        </div>
+        {/* Concept map link (§3.4) — surfaced from the Glossary destination
+            rather than as a peer sidebar item, since the map is a view of
+            the glossary's relational data, not a separate destination. */}
+        <a
+          href="/concepts"
+          className="text-xs font-medium shrink-0"
+          style={{ color: 'var(--accent-red)' }}
+        >
+          View concept map →
+        </a>
       </div>
       <GlossaryList
         entries={entries || []}
