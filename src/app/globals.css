@@ -1197,6 +1197,20 @@ html[data-theme="dark"] .reading-text .blockquote {
 .chrome-scoped .text-2xl  { font-size: calc(1.5rem   * var(--chrome-text-scale)); }
 .chrome-scoped .text-3xl  { font-size: calc(1.875rem * var(--chrome-text-scale)); }
 
+/* Responsive variants — sm:text-* needs to be wrapped in the same
+   media query Tailwind uses (640px breakpoint) so it only kicks in on
+   wider viewports. Chapter title uses `text-2xl sm:text-3xl`; the
+   chrome-scoped wrapper needs both base and sm rules for it to scale
+   on both mobile and desktop. */
+@media (min-width: 640px) {
+  .chrome-scoped .sm\:text-base { font-size: calc(1rem     * var(--chrome-text-scale)); }
+  .chrome-scoped .sm\:text-lg   { font-size: calc(1.125rem * var(--chrome-text-scale)); }
+  .chrome-scoped .sm\:text-xl   { font-size: calc(1.25rem  * var(--chrome-text-scale)); }
+  .chrome-scoped .sm\:text-2xl  { font-size: calc(1.5rem   * var(--chrome-text-scale)); }
+  .chrome-scoped .sm\:text-3xl  { font-size: calc(1.875rem * var(--chrome-text-scale)); }
+  .chrome-scoped .sm\:text-4xl  { font-size: calc(2.25rem  * var(--chrome-text-scale)); }
+}
+
 /* Arbitrary-value text utilities used in chrome (e.g. text-[10px], text-[11px]).
    These are common in compact toolbars / sidebar / status strip; without
    explicit rules they wouldn't scale. */

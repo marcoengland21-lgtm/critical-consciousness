@@ -164,8 +164,15 @@ export default async function ChapterPage({ params }: Props) {
           chapter label + reading time. Format example: '01 / CHAPTER 1, §1 · ~11 MIN READ'.
           Uses .text-eyebrow utility (Inter all-caps, 0.15em tracking, secondary text).
           The pink Lora-bold chapter title below is preserved — that's the marquee
-          editorial moment per chapter and the one place pink belongs at this size. */}
-      <div className="mb-10 text-center">
+          editorial moment per chapter and the one place pink belongs at this size.
+
+          chrome-scoped (chunk 3a follow-up): chapter title + subtitle are
+          page-level chrome (they identify which chapter you're on, like
+          a page title) so they track Menu Size. The eyebrow already
+          scales via .text-eyebrow; the wrapper picks up the h1 and the
+          subtitle p too. .reading-text body lives outside this div, so
+          chapter content keeps tracking the body slider. */}
+      <div className="chrome-scoped mb-10 text-center">
         <p className="text-eyebrow mb-3">
           {String(getPartNumber(chapterNum)).padStart(2, '0')} / {currentLabel} · ~{readingTimeMinutes} Min Read
         </p>
