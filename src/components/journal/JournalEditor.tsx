@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import TiptapEditor, { type DocumentStats } from './tiptap/TiptapEditor'
+import JournalToolbar, { type SaveStatus } from './tiptap/JournalToolbar'
 import ReferenceModal from './tiptap/ReferenceModal'
 import GlossaryModal from './tiptap/GlossaryModal'
 import { uploadJournalImage } from './tiptap/uploadImage'
@@ -15,7 +16,8 @@ interface JournalEditorProps {
   /** Tiptap JSON document; pass `{ type: 'doc', content: [] }` for blank. */
   initialBodyJson: object
   userId: string
-  /** Show the optional title input. False for the dashboard quick-capture. */
+  /** Show the title input. Currently aliases `!compactToolbar` — kept for
+      explicit-call-site readability and to match the original API. */
   showTitle?: boolean
   /** Compact toolbar (bold/italic/link only). True for dashboard quick-capture.
       In compact mode the Reference + Glossary modals are NOT available
@@ -27,10 +29,8 @@ interface JournalEditorProps {
   onCreatedRedirect?: (newId: string) => void
 }
 
-const AUTOSAVE_DEBOUNCE_MS = 500
-const SAVED_TIME_REFRESH_MS = 30_000
-
-type SaveStatus = 'idle' | 'saving' | 'saved' | 'error' | 'retrying'
+/** Autosave delay matches test-news (5s after typing stops). */
+const AUTOSAVE_DELAY_MS = 5000
 
 // ── localStorage backup ─────────────────────────────────────────────────────
 
@@ -66,12 +66,18 @@ function clearBackup(key: string): void {
 // ── Component ────────────────────────────────────────────────────────────────
 
 /**
- * JournalEditor — wraps the Tiptap editor with autosave, status indicator,
- * word count, optional title field, Reference + Glossary modals, image upload
- * to private_note_images storage, and localStorage backup.
+ * JournalEditor — wraps the Tiptap editor with the JournalToolbar (which owns
+ * inline title editing + save status), autosave, word count, Reference +
+ * Glossary modals, image upload to private_note_images storage, and
+ * localStorage backup defence-in-depth.
  *
- * Per chunk 2.5: replaces the chunk 2 textarea-with-toolbar implementation
- * with a proper Tiptap-based editor lifted from the test-news writer-studio.
+ * Per chunk 2.6: faithful lift of test-news pattern. Toolbar is rendered at
+ * this level (not inside TiptapEditor) so it can show title and save status —
+ * matches WriterStudioLayout rendering CompactToolbar next to WriterEditor.
+ *
+ * Save status follows test-news 4-state model (saved | saving | unsaved |
+ * error). Content change → 'unsaved' → 5s timer → handleSave → 'saving' →
+ * 'saved' or 'error'.
  */
 export default function JournalEditor({
   initialId,
@@ -98,34 +104,51 @@ export default function JournalEditor({
   )
 
   const [stats, setStats] = useState<DocumentStats>({ wordCount: 0, characterCount: 0, readingTimeMinutes: 0 })
-  const [status, setStatus] = useState<SaveStatus>(initialId ? 'saved' : 'idle')
-  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(initialId ? new Date() : null)
-  const [, setRelTimeTick] = useState(0)
+
+  // 4-state save status matching test-news WriterStudio.
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>(initialId ? 'saved' : 'saved')
+  const [lastSaved, setLastSaved] = useState<Date | null>(initialId ? new Date() : null)
 
   // Track last-saved content so we don't re-save no-op changes.
-  const lastSavedRef = useRef<{ title: string; bodyJson: string; bodyText: string }>({
+  const lastSavedRef = useRef<{ title: string; bodyJson: string }>({
     title: initialTitle,
     bodyJson: JSON.stringify(initialBodyJson),
-    bodyText: '',
   })
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const editorRef = useRef<Editor | null>(null)
+
+  // Editor handle from TiptapEditor — the toolbar uses this directly.
+  const [editor, setEditor] = useState<Editor | null>(null)
 
   // Reference + Glossary modal state
   const [refOpen, setRefOpen] = useState(false)
   const [glossOpen, setGlossOpen] = useState(false)
 
+  // Hidden file-input for image upload (toolbar triggers this).
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   // ── Save ────────────────────────────────────────────────────────────────
+  // useCallback with no `title`/`bodyJson` dependencies — uses closures over
+  // the latest state refs/values via state set inside. Trade-off matches
+  // test-news handleSave: simple to reason about, autosave timer reads
+  // current state at fire time.
   const save = useCallback(async () => {
     const trimmedTitle = title.trim()
     const jsonStr = JSON.stringify(bodyJson)
+
+    // No-op save guard — same content as last save? Skip.
     if (
       lastSavedRef.current.title === title &&
       lastSavedRef.current.bodyJson === jsonStr
-    ) return
-    if (!entryId && !trimmedTitle && !bodyText.trim()) return
+    ) {
+      setSaveStatus('saved')
+      return
+    }
+    // First-time empty entry — don't create a row for blank input.
+    if (!entryId && !trimmedTitle && !bodyText.trim()) {
+      setSaveStatus('saved')
+      return
+    }
 
-    setStatus('saving')
+    setSaveStatus('saving')
     const supabase = createClient()
     const wordCount = stats.wordCount
     const payload = {
@@ -139,7 +162,7 @@ export default function JournalEditor({
       const { error } = await supabase.from('private_notes').update(payload).eq('id', entryId)
       if (error) {
         console.error('[CCP] Journal save failed (update):', error)
-        setStatus('error')
+        setSaveStatus('error')
         return
       }
     } else {
@@ -150,23 +173,36 @@ export default function JournalEditor({
         .single()
       if (error || !data) {
         console.error('[CCP] Journal save failed (insert):', error)
-        setStatus('error')
+        setSaveStatus('error')
         return
       }
       setEntryId(data.id)
       onCreatedRedirect?.(data.id)
     }
 
-    lastSavedRef.current = { title, bodyJson: jsonStr, bodyText }
-    setLastSavedAt(new Date())
-    setStatus('saved')
+    lastSavedRef.current = { title, bodyJson: jsonStr }
+    setLastSaved(new Date())
+    setSaveStatus('saved')
     clearBackup(backupKey(entryId, userId))
     router.refresh()
   }, [title, bodyJson, bodyText, entryId, userId, stats.wordCount, onCreatedRedirect, router])
 
-  // ── Autosave triggers ────────────────────────────────────────────────────
-  // (1) Debounced after typing stops.
+  // ── Autosave ────────────────────────────────────────────────────────────
+  // Test-news pattern: setSaveStatus('unsaved') happens on every content
+  // change → effect watching saveStatus === 'unsaved' fires a 5s timer →
+  // timer calls save() which does its own status updates.
+
+  // (1) Mark unsaved + write localStorage backup whenever the user edits.
   useEffect(() => {
+    // Skip the initial mount — only mark unsaved on actual changes.
+    const jsonStr = JSON.stringify(bodyJson)
+    if (
+      lastSavedRef.current.title === title &&
+      lastSavedRef.current.bodyJson === jsonStr
+    ) return
+
+    setSaveStatus('unsaved')
+
     // localStorage backup immediately (no debounce) so we never lose work
     // to a network failure mid-typing.
     if (typeof window !== 'undefined' && (bodyText || title)) {
@@ -177,52 +213,73 @@ export default function JournalEditor({
         savedAt: Date.now(),
       })
     }
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => { save() }, AUTOSAVE_DEBOUNCE_MS)
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, bodyJson, bodyText])
+  }, [title, bodyJson, bodyText, entryId, userId])
 
-  // (2) On window blur — flush.
+  // (2) When status flips to 'unsaved', schedule a save 5s later. Watching
+  // bodyJson / title in deps means each keystroke clears the previous timer
+  // and starts a new 5s window — i.e. 'autosave 5s after typing stops'
+  // (test-news WriterStudio pattern).
   useEffect(() => {
-    const onBlur = () => { save() }
+    if (saveStatus !== 'unsaved') return
+    const t = setTimeout(() => { save() }, AUTOSAVE_DELAY_MS)
+    return () => clearTimeout(t)
+  }, [saveStatus, bodyJson, title, save])
+
+  // (3) On window blur — flush.
+  useEffect(() => {
+    const onBlur = () => { if (saveStatus === 'unsaved') save() }
     window.addEventListener('blur', onBlur)
     return () => window.removeEventListener('blur', onBlur)
-  }, [save])
+  }, [save, saveStatus])
 
-  // (3) On page unload / unmount — flush.
+  // (4) On page unload / unmount — flush (best-effort).
   useEffect(() => {
-    const onBeforeUnload = () => { save() }
+    const onBeforeUnload = () => { if (saveStatus === 'unsaved') save() }
     window.addEventListener('beforeunload', onBeforeUnload)
     return () => window.removeEventListener('beforeunload', onBeforeUnload)
-  }, [save])
+  }, [save, saveStatus])
 
-  // (4) Save on unmount (navigating away inside Next.js) — best-effort.
+  // (5) Save on unmount (navigating away inside Next.js) — best-effort.
   useEffect(() => {
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-      save()
-    }
+    return () => { save() }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Periodic re-render so 'Saved Xs ago' updates without user action.
+  // (6) Cmd/Ctrl + S — manual save (matches test-news shortcut).
   useEffect(() => {
-    const t = setInterval(() => setRelTimeTick((n) => n + 1), SAVED_TIME_REFRESH_MS)
-    return () => clearInterval(t)
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault()
+        save()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [save])
+
+  // ── Image upload ────────────────────────────────────────────────────────
+  const handlePickImage = useCallback(() => {
+    fileInputRef.current?.click()
   }, [])
 
-  // ── Image upload bound to current user + entry ──────────────────────────
-  const handleUpload = useCallback(
-    (file: File) => uploadJournalImage({ file, userId, noteId: entryId }),
-    [userId, entryId]
-  )
+  const handleFileSelected = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !editor) return
+    try {
+      const url = await uploadJournalImage({ file, userId, noteId: entryId })
+      editor.chain().focus().setImage({ src: url }).run()
+    } catch (err) {
+      console.error('[CCP] Image upload failed:', err)
+      alert('Image upload failed: ' + (err instanceof Error ? err.message : 'unknown'))
+    } finally {
+      // Reset so the same file can be picked twice in a row.
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }, [editor, userId, entryId])
 
-  // ── Editor ready handler — wires Cmd+K shortcut for link via Tiptap ─────
+  // ── Editor ready ────────────────────────────────────────────────────────
   const handleEditorReady = useCallback((ed: Editor) => {
-    editorRef.current = ed
+    setEditor(ed)
   }, [])
 
   return (
@@ -241,30 +298,35 @@ export default function JournalEditor({
         </div>
       )}
 
-      {/* Optional title — full-page editor only */}
-      {showTitle && (
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Untitled (optional)"
-          className="w-full bg-transparent border-0 outline-none px-0 py-1"
-          style={{
-            color: 'var(--text-primary)',
-            fontFamily: "'Lora', Georgia, serif",
-            fontStyle: 'italic',
-            fontWeight: 500,
-            fontSize: '1.75rem',
-            lineHeight: 1.2,
-          }}
-        />
-      )}
+      {/* Toolbar — title + formatting + save status, all in one row.
+          Compact mode (dashboard) hides the title and most formatting;
+          showTitle=false on the wrapper-prop side maps to compactToolbar=true
+          so the title is suppressed there too. */}
+      <JournalToolbar
+        editor={editor}
+        title={title}
+        onTitleChange={setTitle}
+        saveStatus={saveStatus}
+        lastSaved={lastSaved}
+        compact={compactToolbar || !showTitle}
+        onPickImage={compactToolbar ? undefined : handlePickImage}
+        onOpenReference={compactToolbar ? undefined : () => setRefOpen(true)}
+        onOpenGlossary={compactToolbar ? undefined : () => setGlossOpen(true)}
+      />
 
-      {/* Tiptap editor */}
+      {/* Hidden file input for image upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/gif,image/webp"
+        onChange={handleFileSelected}
+        style={{ display: 'none' }}
+      />
+
+      {/* Tiptap editor — toolbar-less, just the writing surface. */}
       <TiptapEditor
         initialContent={bodyJson}
         placeholder={bodyPlaceholder}
-        compact={compactToolbar}
         minHeight={minHeight}
         onContentChange={({ json, text }) => {
           setBodyJson(json)
@@ -272,41 +334,30 @@ export default function JournalEditor({
         }}
         onStatsChange={setStats}
         onEditorReady={handleEditorReady}
-        uploadImage={compactToolbar ? undefined : handleUpload}
-        onOpenReference={compactToolbar ? undefined : () => setRefOpen(true)}
-        onOpenGlossary={compactToolbar ? undefined : () => setGlossOpen(true)}
       />
 
       {/* Reference + Glossary modals — full editor only */}
-      {!compactToolbar && editorRef.current && (
+      {!compactToolbar && editor && (
         <>
           <ReferenceModal
-            editor={editorRef.current}
+            editor={editor}
             isOpen={refOpen}
             onClose={() => setRefOpen(false)}
           />
           <GlossaryModal
-            editor={editorRef.current}
+            editor={editor}
             isOpen={glossOpen}
             onClose={() => setGlossOpen(false)}
           />
         </>
       )}
 
-      {/* Status row */}
+      {/* Word-count footer — save status now lives in the toolbar so this
+          row only carries the word count. */}
       <div
-        className="flex items-center justify-between text-eyebrow pt-2"
+        className="flex items-center justify-end text-eyebrow pt-2"
         style={{ borderTop: '1px solid var(--border-subtle)' }}
       >
-        <span>
-          {status === 'saving' && 'Saving…'}
-          {status === 'retrying' && 'Save failed — retrying…'}
-          {(status === 'saved' || status === 'idle') && lastSavedAt && `Saved ${formatSavedAt(lastSavedAt)}`}
-          {(status === 'idle' && !lastSavedAt) && 'Not saved yet'}
-          {status === 'error' && (
-            <span style={{ color: 'var(--accent-red)' }}>Couldn&apos;t save — your draft is preserved locally</span>
-          )}
-        </span>
         <span>
           {stats.wordCount} {stats.wordCount === 1 ? 'word' : 'words'}
           {stats.wordCount > 50 && (
@@ -319,12 +370,4 @@ export default function JournalEditor({
       </div>
     </div>
   )
-}
-
-function formatSavedAt(date: Date): string {
-  const diffSec = Math.floor((Date.now() - date.getTime()) / 1000)
-  if (diffSec < 5) return 'just now'
-  if (diffSec < 60) return `${diffSec}s ago`
-  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`
-  return date.toLocaleString('en-NZ', { hour: 'numeric', minute: '2-digit', timeZone: 'Pacific/Auckland' })
 }
