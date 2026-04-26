@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import type { ResourceType } from '@/types/database'
+import type { ResourceType, ResourceUseCategory } from '@/types/database'
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface ResourceData {
   id: string
@@ -11,6 +13,9 @@ interface ResourceData {
   url: string | null
   description: string | null
   resource_type: ResourceType
+  /** Optional purpose-driven grouping per IMPROVEMENTS_PLAN §7.1.
+      When null, falls back to the resource_type group. */
+  use_category: ResourceUseCategory | null
   week_id: string | null
   created_by: string
   creator?: { display_name: string }
@@ -24,16 +29,55 @@ interface Week {
   title: string
 }
 
-const typeConfig: Record<ResourceType, { label: string; icon: string; sectionTitle: string }> = {
-  primary_text: { label: 'Primary Text', icon: '📕', sectionTitle: 'Primary Texts' },
-  companion: { label: 'Companion', icon: '📗', sectionTitle: 'Companion Texts' },
-  lecture: { label: 'Lecture', icon: '🎓', sectionTitle: 'Lectures' },
-  article: { label: 'Article', icon: '📰', sectionTitle: 'Articles' },
-  tool: { label: 'Tool', icon: '🔧', sectionTitle: 'Tools' },
-  other: { label: 'Other', icon: '📎', sectionTitle: 'Other' },
+const typeConfig: Record<ResourceType, { label: string; sectionTitle: string }> = {
+  primary_text: { label: 'Primary Text', sectionTitle: 'Primary Texts' },
+  companion: { label: 'Companion', sectionTitle: 'Companion Texts' },
+  lecture: { label: 'Lecture', sectionTitle: 'Lectures' },
+  article: { label: 'Article', sectionTitle: 'Articles' },
+  tool: { label: 'Tool', sectionTitle: 'Tools' },
+  other: { label: 'Other', sectionTitle: 'Other' },
 }
 
-// Extract domain from URL for display
+/**
+ * Use-category groupings — IMPROVEMENTS_PLAN §7.1.
+ * Ordered intentionally — newcomer-first.
+ */
+const useCategoryConfig: Record<
+  ResourceUseCategory,
+  { label: string; description: string }
+> = {
+  start_here: {
+    label: 'Start here',
+    description: 'Best entry-point resources for someone new to the text.',
+  },
+  for_going_deeper: {
+    label: 'For going deeper',
+    description: 'More rigorous companions for after the basics.',
+  },
+  when_stuck: {
+    label: "When you're stuck on a passage",
+    description: 'Chapter-keyed companion guides.',
+  },
+  for_today: {
+    label: 'For thinking about today',
+    description: 'Contemporary applications, current-events lenses.',
+  },
+  tools_references: {
+    label: 'Tools & references',
+    description: 'Search engines, archives, the primary text itself.',
+  },
+}
+
+const USE_CATEGORY_ORDER: ResourceUseCategory[] = [
+  'start_here',
+  'for_going_deeper',
+  'when_stuck',
+  'for_today',
+  'tools_references',
+]
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
 function getDomain(url: string): string {
   try {
     return new URL(url).hostname.replace('www.', '')
@@ -42,36 +86,37 @@ function getDomain(url: string): string {
   }
 }
 
-// Reusable resource card component
+// ── Resource card ────────────────────────────────────────────────────────────
+
+/**
+ * Lighter card per §7.2 — no card-base box, just a hairline above + type
+ * label as small text element + Lora italic title + footer row with domain
+ * and 'Open →'.
+ */
 function ResourceCard({ resource }: { resource: ResourceData }) {
   const typeInfo = typeConfig[resource.resource_type] || typeConfig.other
   const domain = resource.url ? getDomain(resource.url) : null
 
   return (
     <div
-      className="card-base p-4 transition-all card-hover flex flex-col"
+      className="flex flex-col py-4 px-2 transition-colors hover-bg-themed"
+      style={{ borderTop: '1px solid var(--border-subtle)' }}
     >
-      {/* Type badge + week */}
-      <div className="flex items-center gap-2 mb-2">
-        <span
-          className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full leading-none"
-          style={{ backgroundColor: 'var(--bg-badge)', color: 'var(--text-secondary)' }}
-        >
-          <span className="text-[10px]">{typeInfo.icon}</span>
-          {typeInfo.label}
-        </span>
-        {resource.week && (
-          <span
-            className="text-xs px-2 py-1 rounded-full leading-none"
-            style={{ backgroundColor: 'var(--bg-badge)', color: 'var(--text-secondary)' }}
-          >
-            Week {resource.week.week_number}
-          </span>
-        )}
-      </div>
+      {/* Type eyebrow */}
+      <p className="text-eyebrow mb-1.5">{typeInfo.label}</p>
 
       {/* Title */}
-      <h3 className="font-semibold text-sm mb-1.5" style={{ color: 'var(--text-primary)' }}>
+      <h3
+        className="mb-1.5"
+        style={{
+          color: 'var(--text-primary)',
+          fontFamily: "'Lora', Georgia, serif",
+          fontStyle: 'italic',
+          fontWeight: 500,
+          fontSize: '1.0625rem',
+          lineHeight: 1.3,
+        }}
+      >
         {resource.url ? (
           <a
             href={resource.url}
@@ -93,7 +138,7 @@ function ResourceCard({ resource }: { resource: ResourceData }) {
           className="text-xs mb-3 flex-1"
           style={{
             color: 'var(--text-secondary)',
-            lineHeight: '1.6',
+            lineHeight: 1.6,
             display: '-webkit-box',
             WebkitLineClamp: 3,
             WebkitBoxOrient: 'vertical',
@@ -104,10 +149,10 @@ function ResourceCard({ resource }: { resource: ResourceData }) {
         </p>
       )}
 
-      {/* Footer: domain + open link */}
-      <div className="flex items-center justify-between mt-auto pt-2">
+      {/* Footer */}
+      <div className="flex items-center justify-between mt-auto pt-1 text-xs">
         {domain && (
-          <span className="text-xs truncate" style={{ color: 'var(--text-secondary)', opacity: 0.6 }}>
+          <span className="truncate" style={{ color: 'var(--text-secondary)', opacity: 0.7 }}>
             {domain}
           </span>
         )}
@@ -116,7 +161,7 @@ function ResourceCard({ resource }: { resource: ResourceData }) {
             href={resource.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs font-medium shrink-0 transition-colors"
+            className="font-medium shrink-0 transition-colors"
             style={{ color: 'var(--accent-red)' }}
           >
             Open →
@@ -127,11 +172,12 @@ function ResourceCard({ resource }: { resource: ResourceData }) {
   )
 }
 
+// ── Main ─────────────────────────────────────────────────────────────────────
+
 export default function ResourcesList({
   resources,
   weeks,
   currentUserId,
-  isAdmin,
 }: {
   resources: ResourceData[]
   weeks: Week[]
@@ -145,12 +191,32 @@ export default function ResourcesList({
   const [url, setUrl] = useState('')
   const [description, setDescription] = useState('')
   const [resourceType, setResourceType] = useState<ResourceType>('article')
+  const [useCategory, setUseCategory] = useState<ResourceUseCategory | ''>('')
   const [weekId, setWeekId] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  const filtered = filter
-    ? resources.filter((r) => r.resource_type === filter)
-    : resources
+  const filtered = useMemo(
+    () => (filter ? resources.filter((r) => r.resource_type === filter) : resources),
+    [resources, filter]
+  )
+
+  // Group by use_category (default view). Resources whose use_category is
+  // null fall into a "More resources" bucket grouped by type — backward-compat
+  // for existing rows that haven't been categorised yet.
+  const groupedByUseCategory = useMemo(() => {
+    const byCat = new Map<ResourceUseCategory, ResourceData[]>()
+    const uncategorised: ResourceData[] = []
+    for (const r of resources) {
+      if (r.use_category) {
+        const arr = byCat.get(r.use_category) || []
+        arr.push(r)
+        byCat.set(r.use_category, arr)
+      } else {
+        uncategorised.push(r)
+      }
+    }
+    return { byCat, uncategorised }
+  }, [resources])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -163,12 +229,13 @@ export default function ResourcesList({
       url: url.trim() || null,
       description: description.trim() || null,
       resource_type: resourceType,
+      use_category: useCategory || null,
       week_id: weekId || null,
       created_by: currentUserId,
     })
 
     if (!error) {
-      setTitle(''); setUrl(''); setDescription(''); setWeekId('')
+      setTitle(''); setUrl(''); setDescription(''); setWeekId(''); setUseCategory('')
       setShowForm(false)
       router.refresh()
     }
@@ -215,11 +282,22 @@ export default function ResourcesList({
           </div>
           <textarea value={description} onChange={(e) => setDescription(e.target.value)}
             placeholder="Description (optional)" rows={2} className="input-base text-sm w-full resize-y" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <select value={resourceType} onChange={(e) => setResourceType(e.target.value as ResourceType)}
               className="input-base text-sm">
               {Object.entries(typeConfig).map(([key, config]) => (
                 <option key={key} value={key}>{config.label}</option>
+              ))}
+            </select>
+            <select
+              value={useCategory}
+              onChange={(e) => setUseCategory(e.target.value as ResourceUseCategory | '')}
+              className="input-base text-sm"
+              title="When would someone want this resource?"
+            >
+              <option value="">— Use category (optional) —</option>
+              {USE_CATEGORY_ORDER.map((k) => (
+                <option key={k} value={k}>{useCategoryConfig[k].label}</option>
               ))}
             </select>
             <select value={weekId} onChange={(e) => setWeekId(e.target.value)}
@@ -243,43 +321,71 @@ export default function ResourcesList({
           Companion texts, lecture videos, and tools to help with the reading will be collected here.
         </p>
       ) : filter ? (
-        /* Flat grid when a specific type is filtered */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        /* Flat grid when a specific TYPE is selected — refinement view.
+           Uses the lighter hairline cards in a 1/2/3 column grid. */
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6">
           {filtered.map((resource) => (
             <ResourceCard key={resource.id} resource={resource} />
           ))}
         </div>
       ) : (
-        /* Grouped by type when showing "All" */
-        <div className="space-y-10">
-          {(Object.entries(typeConfig) as [ResourceType, typeof typeConfig[ResourceType]][]).map(([type, config]) => {
-            const typeResources = resources.filter((r) => r.resource_type === type)
-            if (typeResources.length === 0) return null
+        /* Default view: grouped by USE_CATEGORY with a fallback bucket
+           for resources that haven't been tagged yet (per §7.1). */
+        <div className="space-y-12">
+          {USE_CATEGORY_ORDER.map((cat) => {
+            const list = groupedByUseCategory.byCat.get(cat) || []
+            if (list.length === 0) return null
+            const cfg = useCategoryConfig[cat]
             return (
-              <section key={type}>
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-lg">{config.icon}</span>
-                  <h2
-                    className="text-base font-bold"
-                    style={{ color: 'var(--text-primary)' }}
-                  >
-                    {config.sectionTitle}
-                  </h2>
-                  <span
-                    className="text-xs px-2 py-1 rounded-full leading-none"
-                    style={{ backgroundColor: 'var(--bg-badge)', color: 'var(--text-secondary)' }}
-                  >
-                    {typeResources.length}
-                  </span>
+              <section key={cat}>
+                <div className="mb-4">
+                  <p className="text-eyebrow mb-2">
+                    {cfg.label} — {list.length}
+                  </p>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)', maxWidth: '60ch' }}>
+                    {cfg.description}
+                  </p>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {typeResources.map((resource) => (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6">
+                  {list.map((resource) => (
                     <ResourceCard key={resource.id} resource={resource} />
                   ))}
                 </div>
               </section>
             )
           })}
+
+          {/* Uncategorised — fallback to type-based grouping for back-compat */}
+          {groupedByUseCategory.uncategorised.length > 0 && (
+            <section>
+              <div className="mb-4">
+                <p className="text-eyebrow mb-2">
+                  More resources — {groupedByUseCategory.uncategorised.length}
+                </p>
+                <p className="text-sm" style={{ color: 'var(--text-secondary)', maxWidth: '60ch' }}>
+                  Resources that haven&apos;t been tagged with a use category yet.
+                </p>
+              </div>
+              <div className="space-y-8">
+                {(Object.entries(typeConfig) as [ResourceType, typeof typeConfig[ResourceType]][]).map(([type, config]) => {
+                  const typeResources = groupedByUseCategory.uncategorised.filter((r) => r.resource_type === type)
+                  if (typeResources.length === 0) return null
+                  return (
+                    <div key={type}>
+                      <p className="text-eyebrow mb-2">
+                        {config.sectionTitle}
+                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6">
+                        {typeResources.map((resource) => (
+                          <ResourceCard key={resource.id} resource={resource} />
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
+          )}
         </div>
       )}
     </div>
