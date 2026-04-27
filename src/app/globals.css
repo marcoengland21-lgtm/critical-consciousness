@@ -22,6 +22,14 @@
   --bg-button-secondary: #efedf2; /* Purple-ish secondary button bg */
   --bg-hover: #f5f3f0;            /* Warm hover states */
 
+  /* Modal backdrop — chunk 3b. FULLY OPAQUE (round-4-locked).
+     Translucent backdrops broke foreground/background distinction for
+     non-technical users; modal overlays now use a solid color so page
+     content does NOT read through. Light-mode default is a deep warm
+     plum that contrasts strongly with the cream page; dark mode flips
+     to a near-black. */
+  --overlay-backdrop: #1a1625;
+
   /* Text — warm near-blacks, keep purple undertone */
   --text-primary: #1c1917;        /* Warm near-black body text */
   --text-secondary: #585260;      /* Warm purple-gray (WCAG AA on warm white) */
@@ -174,6 +182,11 @@ html[data-theme="dark"] {
   --bg-badge: #2d2740;
   --bg-button-secondary: #231e30;
   --bg-hover: #2d2740;
+
+  /* Modal backdrop in dark mode — solid near-black with a purple
+     undertone so it reads as a continuation of the dark theme rather
+     than a foreign black sheet. Still fully opaque. */
+  --overlay-backdrop: #060410;
 
   --text-primary: #ebe8f0;       /* Very slightly warmer */
   --text-secondary: #aea7bc;

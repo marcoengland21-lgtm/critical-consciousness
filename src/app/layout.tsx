@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import ThemeInitializer from '@/components/layout/ThemeInitializer'
+import { OverlayStackProvider } from '@/components/overlay'
 
 export const metadata: Metadata = {
   title: 'Capital Study Group',
@@ -32,7 +33,9 @@ export default function RootLayout({
         <ThemeInitializer />
       </head>
       <body className="min-h-screen antialiased">
-        {children}
+        <OverlayStackProvider>
+          {children}
+        </OverlayStackProvider>
       </body>
     </html>
   )
