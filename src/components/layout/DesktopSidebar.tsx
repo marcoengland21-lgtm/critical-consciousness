@@ -1,6 +1,42 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+/**
+ * DesktopSidebar — chunk 3b piece 3.
+ *
+ * Rail + hover-reveal pattern per frame 12B.
+ *
+ *   Default: 60px icon rail, always visible. No user toggle, no
+ *            localStorage persistence, no auto-hide.
+ *   Hover anywhere on the rail → expand to 240px with labels alongside
+ *            the icons. Brand monogram "C" stays put; "Capital / Study
+ *            Group" two-line title fades in. Avatar at the bottom gains
+ *            the user's display name.
+ *   Focus on any descendant → same expansion (mirrors hover so keyboard
+ *            users / motor-difficulty users / power users get the same
+ *            discovery affordance).
+ *   Mouse leaves rail / focus leaves rail → collapse back to icons.
+ *   Click an icon at any width → navigate (expansion never gates
+ *            clickability).
+ *
+ * Content overlay model (Mars's confirmed answer #1): the expanded
+ * rail OVERLAYS the leftmost ~180px of content; main content's
+ * `marginLeft` stays at 60px regardless of hover. No layout shift
+ * on hover — that would be a hover-tax for the most hesitant
+ * members.
+ *
+ * Piece 6 obsolescence: this swap removes the
+ * `ccp-sidebar-collapsed` localStorage persistence entirely. Server
+ * renders rail at 60px; client hydrates to the same 60px; nothing
+ * to flicker. Piece 6 is solved by construction.
+ *
+ * Naming: "Capital / Study Group" is the PLATFORM brand (per Mars's
+ * naming addendum) and stays at the top of the sidebar across all
+ * groups / instances. Group-name eyebrows ("Watermelon" for the seed
+ * instance) live on dashboard / status-strip surfaces and are
+ * handled in Piece 4.
+ */
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { navItems } from '@/lib/nav-config'
 import SidebarNavLink from './SidebarNavLink'
@@ -12,131 +48,109 @@ interface DesktopSidebarProps {
   hasUser: boolean
 }
 
-const COLLAPSED_WIDTH = '60px'
+const RAIL_WIDTH = '60px'
 const EXPANDED_WIDTH = '240px'
 
 export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarProps) {
-  // Initialize as false unconditionally to avoid hydration mismatch.
-  // Server always renders expanded; useEffect syncs from localStorage on mount.
-  const [collapsed, setCollapsed] = useState(false)
-  const [mounted, setMounted] = useState(false)
-  // Accessibility panel state removed per IMPROVEMENTS_PLAN §3.2 —
-  // text size / contrast / dyslexia / pacer settings are now configured
-  // from the Reading Workspace panel on chapter pages instead.
+  // Transient hover/focus state. NOT persisted. Default false on every
+  // mount so server + client renders match (no hydration mismatch).
+  const [expanded, setExpanded] = useState(false)
 
-  // Read saved preference on mount (after hydration)
+  // Sync --sidebar-width with the viewport. The rail width is fixed
+  // at 60px on desktop; main content always offsets by that amount.
+  // The expanded sidebar OVERLAYS content — `--sidebar-width` does NOT
+  // change on hover.
   useEffect(() => {
-    const saved = localStorage.getItem('ccp-sidebar-collapsed')
-    if (saved === 'true') {
-      setCollapsed(true)
-    }
-    setMounted(true)
-  }, [])
-
-  // Sync --sidebar-width with collapsed state + viewport
-  // Combined into one effect to avoid race condition where collapsed sync
-  // sets 240px on mobile before the resize handler can correct it.
-  useEffect(() => {
-    if (!mounted) return
-
     const syncWidth = () => {
       if (window.innerWidth < 768) {
         document.documentElement.style.setProperty('--sidebar-width', '0px')
       } else {
-        const width = collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH
-        document.documentElement.style.setProperty('--sidebar-width', width)
+        document.documentElement.style.setProperty('--sidebar-width', RAIL_WIDTH)
       }
     }
-
     syncWidth()
-    localStorage.setItem('ccp-sidebar-collapsed', String(collapsed))
-
     window.addEventListener('resize', syncWidth)
     return () => window.removeEventListener('resize', syncWidth)
-  }, [collapsed, mounted])
+  }, [])
 
   const initial = displayName.charAt(0).toUpperCase()
   const labelTransition = 'opacity var(--duration-normal) var(--ease-out-expo)'
 
   return (
-    <>
     <aside
+      onMouseEnter={() => setExpanded(true)}
+      onMouseLeave={() => setExpanded(false)}
+      // React onFocus/onBlur bubble (synthetic focusin/focusout under
+      // the hood). When any descendant gains focus the rail expands;
+      // when focus leaves the rail it collapses. Mirrors hover so
+      // keyboard navigation gets the same discovery affordance.
+      onFocus={() => setExpanded(true)}
+      onBlur={(e) => {
+        // Only collapse if focus is leaving the entire aside, not
+        // moving between two descendants (e.relatedTarget is the
+        // element receiving focus next).
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+          setExpanded(false)
+        }
+      }}
       className="chrome-scoped hidden md:flex flex-col fixed top-0 left-0 h-screen z-40"
       style={{
-        width: collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH,
+        width: expanded ? EXPANDED_WIDTH : RAIL_WIDTH,
         backgroundColor: 'var(--bg-nav)',
         overflow: 'hidden',
-        transition: mounted ? 'width var(--duration-slow) var(--ease-out-expo)' : 'none',
+        transition: 'width var(--duration-slow) var(--ease-out-expo)',
+        boxShadow: expanded ? '4px 0 24px rgba(0,0,0,0.18)' : 'none',
       }}
+      aria-label="Main navigation"
     >
-      {/* Brand area */}
+      {/* Brand area — "C" monogram always visible (Link to /dashboard);
+          "Capital / Study Group" two-line title fades in on expand.
+          The old click-to-toggle and panel-icon-collapse buttons are
+          gone — the rail handles discovery via hover. */}
       <div
-        className="flex items-center justify-between py-5 shrink-0"
+        className="flex items-center py-5 shrink-0"
         style={{
           paddingLeft: '14px',
-          paddingRight: collapsed ? '14px' : '10px',
+          paddingRight: '10px',
           minHeight: '68px',
         }}
       >
-        <div className="flex items-center gap-2.5 min-w-0">
-          {/* "C" monogram — click to expand when collapsed, click to collapse when expanded */}
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm btn-transition"
+        <Link
+          href="/dashboard"
+          aria-label="Capital Study Group — go to dashboard"
+          className="flex items-center gap-2.5 min-w-0 group"
+          style={{ textDecoration: 'none' }}
+        >
+          <span
+            className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm"
             style={{
               backgroundColor: 'var(--nav-accent)',
               color: 'var(--text-inverse)',
             }}
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             C
-          </button>
-
-          {/* Full name — fades with sidebar, links to dashboard */}
-          <Link
-            href="/dashboard"
+          </span>
+          <span
             className="whitespace-nowrap overflow-hidden"
             style={{
               color: 'var(--text-inverse)',
-              textDecoration: 'none',
-              opacity: collapsed ? 0 : 1,
+              opacity: expanded ? 1 : 0,
               transition: labelTransition,
             }}
           >
             <span className="font-bold text-sm block">Capital</span>
             <span className="text-xs block" style={{ opacity: 0.7 }}>Study Group</span>
-          </Link>
-        </div>
-
-        {/* Sidebar panel icon — toggle collapse, fades when collapsed */}
-        <button
-          onClick={() => setCollapsed(true)}
-          className="shrink-0 w-7 h-7 flex items-center justify-center rounded-md btn-transition"
-          style={{
-            color: 'var(--text-inverse)',
-            opacity: collapsed ? 0 : 0.4,
-            pointerEvents: collapsed ? 'none' : 'auto',
-            transition: labelTransition,
-          }}
-          aria-label="Collapse sidebar"
-        >
-          {/* Sidebar panel icon — two vertical panels, left one highlighted */}
-          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="3" />
-            <line x1="9" y1="3" x2="9" y2="21" />
-          </svg>
-        </button>
+          </span>
+        </Link>
       </div>
 
       {/* Separator */}
       <div className="mx-4 mb-2 shrink-0" style={{ borderBottom: '1px solid var(--nav-accent)' }} />
 
-      {/* Navigation Links — single flat block per IMPROVEMENTS_PLAN §3.1.
-          'Tools' group label removed (it meant two different things — the sidebar
-          Tools group AND the reading-page Tools button). Profile moved out of nav
-          entirely; access is via the user avatar block at the bottom of the sidebar.
-          The word 'Tools' is now reserved for one place: the reading workspace. */}
-      <nav className="flex-1 px-2 space-y-1 overflow-y-auto overflow-x-hidden" aria-label="Main navigation">
+      {/* Navigation Links — single flat block. Profile is NOT in this
+          list (per existing Rule 1); profile is reached via the user
+          avatar block at the bottom. */}
+      <nav className="flex-1 px-2 space-y-1 overflow-y-auto overflow-x-hidden" aria-label="Pages">
         {navItems
           .filter((item) => item.href !== '/profile')
           .map((item) => (
@@ -145,12 +159,12 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
               href={item.href}
               icon={item.icon}
               label={item.label}
-              collapsed={collapsed}
+              expanded={expanded}
             />
           ))}
       </nav>
 
-      {/* Bottom Section — user identity + controls */}
+      {/* Bottom Section — user identity + theme/logout controls. */}
       <div
         className="shrink-0 mx-2 mb-2 px-1 py-3 rounded-lg"
         style={{
@@ -158,16 +172,12 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
           borderTop: '1px solid var(--nav-accent-subtle)',
         }}
       >
-        {/* User avatar — always visible, adapts to collapsed/expanded.
-            Per §3.1: this is now the SOLE entry point to Profile (the nav-list
-            Profile link was removed). The whole row is the click target with a
-            chevron indicating navigability. */}
+        {/* User avatar — always visible, name + chevron fade in on expand. */}
         <div className="mb-2 overflow-hidden" style={{ minHeight: '32px' }}>
           {hasUser ? (
             <Link
               href="/profile"
               className="flex items-center gap-2 px-1 py-1 rounded-md hover-bg-themed group"
-              title={collapsed ? `Profile — ${displayName}` : undefined}
               aria-label={`Profile — ${displayName}`}
               style={{ textDecoration: 'none' }}
             >
@@ -184,13 +194,12 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
                 className="flex-1 text-sm truncate whitespace-nowrap"
                 style={{
                   color: 'var(--text-inverse)',
-                  opacity: collapsed ? 0 : 0.8,
+                  opacity: expanded ? 0.8 : 0,
                   transition: labelTransition,
                 }}
               >
                 {displayName}
               </span>
-              {/* Chevron indicates this row is navigable → /profile */}
               <svg
                 width="14"
                 height="14"
@@ -200,11 +209,11 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="shrink-0 transition-opacity group-hover:opacity-100"
+                className="shrink-0 transition-opacity"
                 aria-hidden="true"
                 style={{
                   color: 'var(--text-inverse)',
-                  opacity: collapsed ? 0 : 0.4,
+                  opacity: expanded ? 0.4 : 0,
                   transition: labelTransition,
                 }}
               >
@@ -221,7 +230,6 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
                   color: 'var(--text-inverse)',
                   opacity: 0.7,
                 }}
-                title="Sign In"
                 aria-label="Sign In"
               >
                 <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -233,7 +241,7 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
               <span
                 className="whitespace-nowrap"
                 style={{
-                  opacity: collapsed ? 0 : 1,
+                  opacity: expanded ? 1 : 0,
                   transition: labelTransition,
                 }}
               >
@@ -249,23 +257,20 @@ export default function DesktopSidebar({ displayName, hasUser }: DesktopSidebarP
           )}
         </div>
 
-        {/* Theme toggle + logout — fade with sidebar.
-            Accessibility settings (text size, contrast, dyslexia, pacer)
-            moved to the Reading Workspace panel per IMPROVEMENTS_PLAN §3.2. */}
+        {/* Theme toggle + logout — fade with the rail. */}
         <div
           className="flex items-center justify-between px-1 overflow-hidden relative"
           style={{
-            opacity: collapsed ? 0 : 1,
-            height: collapsed ? 0 : 'auto',
+            opacity: expanded ? 1 : 0,
+            height: expanded ? 'auto' : 0,
             transition: `opacity var(--duration-normal) var(--ease-out-expo), height var(--duration-slow) var(--ease-out-expo)`,
+            pointerEvents: expanded ? 'auto' : 'none',
           }}
         >
           <ThemeToggle />
           {hasUser && <LogoutButton />}
         </div>
-
       </div>
     </aside>
-    </>
   )
 }
