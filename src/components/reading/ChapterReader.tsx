@@ -8,6 +8,7 @@ import AnnotationPanel from './AnnotationPanel'
 import SelectionToolbar from './SelectionToolbar'
 import OnboardingHint from './OnboardingHint'
 import ReadingToolbar from './ReadingToolbar'
+import ChapterTopToolbar from './ChapterTopToolbar'
 import ReadingPresence from './ReadingPresence'
 import GlossaryTooltip from './GlossaryTooltip'
 import GlossaryQuickAccess from './GlossaryQuickAccess'
@@ -571,6 +572,18 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
       {/* Onboarding hint */}
       <OnboardingHint />
 
+      {/* Chapter top toolbar — gear / notebook / theme icons (chunk 3b
+          piece 2a). Replaces the floating "Workspace" button at the
+          bottom right. The notebook icon temporarily opens the
+          existing ReadingToolbar slide-over until 2c builds the
+          ConceptsNotesModal. */}
+      <ChapterTopToolbar
+        focusedMode={focusedMode}
+        onFocusedModeChange={setFocusedMode}
+        onNotebookClick={() => setIsToolsOpen(true)}
+        notebookActive={isToolsOpen}
+      />
+
       {/* Reading presence — subtle inline text, not a full banner */}
       {!focusedMode && (
         <ReadingPresence chapterId={chapter.id} />
@@ -732,31 +745,12 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         </div>
       )}
 
-      {/* Tools button — single entry point for all reading controls */}
-      {!focusedMode && (
-        <button
-          onClick={() => setIsToolsOpen(true)}
-          className="fixed z-30 flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all btn-transition"
-          style={{
-            bottom: '24px',
-            right: '24px',
-            backgroundColor: 'var(--bg-card)',
-            color: 'var(--text-secondary)',
-            border: '1px solid var(--border-default)',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-          }}
-          title="View settings, annotations, glossary lookup, chapter navigation"
-          aria-label="Open reading workspace"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-          </svg>
-          <span className="text-sm font-medium">Workspace</span>
-        </button>
-      )}
+      {/* Floating Workspace button removed in chunk 3b piece 2a — gear /
+          notebook icons in ChapterTopToolbar replace it. The slide-over
+          panel below is still rendered (and triggered by the notebook
+          icon) until 2c replaces it with ConceptsNotesModal. */}
 
-      {/* Labeled tools panel — slides in from right */}
+      {/* Labeled tools panel — slides in from right (TEMPORARY until 2c). */}
       <ReadingToolbar
         chapters={allChapters}
         currentChapter={chapter.chapter_number}
