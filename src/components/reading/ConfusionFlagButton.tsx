@@ -1,44 +1,36 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import { toggleConfusionFlag } from '@/lib/confusion-flags'
+/**
+ * ConfusionFlagButton — chunk 3b piece 2b update.
+ *
+ * Click behaviour changed from "toggle the user's flag directly" to
+ * "open the ConfusionPopover for this paragraph". The popover handles
+ * set/unset via its anonymous "I'm also stuck here" affordance.
+ *
+ * Visual treatment unchanged — same intensity coloring per count.
+ */
+
+import type { MouseEvent } from 'react'
 
 interface Props {
-  chapterId: string
   paragraphIndex: number
   initialCount: number
   isUserFlagged: boolean
   hidden?: boolean
+  /** Open the confusion popover anchored to this paragraph. */
+  onOpenPopover: (paragraphIndex: number, e: MouseEvent<HTMLButtonElement>) => void
 }
 
 export default function ConfusionFlagButton({
-  chapterId,
   paragraphIndex,
   initialCount,
   isUserFlagged,
   hidden,
+  onOpenPopover,
 }: Props) {
-  const [count, setCount] = useState(initialCount)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isSet, setIsSet] = useState(isUserFlagged)
-
-  const handleToggle = useCallback(async (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-
-    setIsLoading(true)
-    try {
-      const result = await toggleConfusionFlag(chapterId, paragraphIndex)
-      setCount(result.count)
-      setIsSet(result.isSet)
-    } catch (error) {
-      console.error('Failed to toggle confusion flag:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [chapterId, paragraphIndex])
-
   if (hidden) return null
+
+  const count = initialCount
 
   // Intensity class — colors defined in CSS for dark mode support
   let intensityClass = 'confusion-none'
@@ -48,11 +40,21 @@ export default function ConfusionFlagButton({
 
   return (
     <button
-      onClick={handleToggle}
-      disabled={isLoading}
-      className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold transition-all opacity-40 group-hover/para:opacity-100 hover:opacity-100 disabled:opacity-50 ${intensityClass}`}
-      title={isSet ? `You flagged this as confusing (${count} total)` : count > 0 ? `I'm confused by this passage (${count} others are too)` : "I'm confused by this passage"}
-      aria-label={`Toggle confusion flag for paragraph ${paragraphIndex}. ${count} ${count === 1 ? 'person is' : 'people are'} confused here.`}
+      onClick={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        onOpenPopover(paragraphIndex, e)
+      }}
+      className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold transition-all opacity-40 group-hover/para:opacity-100 hover:opacity-100 ${intensityClass}`}
+      title={
+        count === 0
+          ? 'Open passage feedback'
+          : isUserFlagged
+            ? `You flagged this as confusing (${count} total)`
+            : `${count} ${count === 1 ? 'person is' : 'people are'} confused here — open to add yours`
+      }
+      aria-label={`Open confusion details for paragraph ${paragraphIndex}. ${count} ${count === 1 ? 'person is' : 'people are'} confused here${isUserFlagged ? ' (including you)' : ''}.`}
+      aria-haspopup="dialog"
     >
       ?
     </button>

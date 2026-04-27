@@ -168,8 +168,8 @@ export default function Tooltip({
     return <>{children}</>
   }
 
-  const childProps = (children as ReactElement<TriggerElementProps>).props
-  const cloned = cloneElement(children as ReactElement<TriggerElementProps>, {
+  const childProps = (children as ReactElement<TriggerElementProps & { onClick?: (e: React.MouseEvent) => void }>).props
+  const cloned = cloneElement(children as ReactElement<TriggerElementProps & { onClick?: (e: React.MouseEvent) => void }>, {
     ref: (el: HTMLElement | null) => {
       triggerRef.current = el
       // Forward to existing ref if any.
@@ -194,6 +194,18 @@ export default function Tooltip({
     onBlur: (e: React.FocusEvent) => {
       childProps.onBlur?.(e)
       handleLeave()
+    },
+    /**
+     * Auto-dismiss the tooltip when the trigger is clicked. Per chunk
+     * 3b: a click on a glossary term (etc.) opens its popover; the
+     * tooltip would otherwise linger because mouseLeave doesn't fire
+     * if the cursor stays put. Explicit dismiss-on-click is the locked
+     * behaviour. The trigger's existing onClick is preserved.
+     */
+    onClick: (e: React.MouseEvent) => {
+      cancelShow()
+      setOpen(false)
+      childProps.onClick?.(e)
     },
   })
 

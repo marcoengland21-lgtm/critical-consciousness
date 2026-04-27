@@ -10,7 +10,8 @@ import OnboardingHint from './OnboardingHint'
 import ReadingToolbar from './ReadingToolbar'
 import ChapterTopToolbar from './ChapterTopToolbar'
 import ReadingPresence from './ReadingPresence'
-import GlossaryTooltip from './GlossaryTooltip'
+import GlossaryPopover from './GlossaryPopover'
+import ConfusionPopover from './ConfusionPopover'
 import GlossaryQuickAccess from './GlossaryQuickAccess'
 import Toast from '@/components/ui/Toast'
 import BackToTop from './BackToTop'
@@ -122,11 +123,17 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
   const [confusionFlagCounts, setConfusionFlagCounts] = useState<Map<number, number>>(new Map())
   const [userConfusionFlags, setUserConfusionFlags] = useState<Set<number>>(new Set())
   const [glossaryTerms, setGlossaryTerms] = useState<GlossaryTerm[]>(initialGlossaryTerms)
-  const [glossaryTooltip, setGlossaryTooltip] = useState<{
-    term: string
-    definition: string
-    position: { top: number; left: number }
-  } | null>(null)
+  // Chunk 3b piece 2b: GlossaryPopover replaces the old GlossaryTooltip
+  // click-popover. State shape mirrors what the new popover needs —
+  // initial term + DOM ref of the inline trigger so the <Popover>
+  // primitive can anchor to it.
+  const glossaryAnchorRef = useRef<HTMLElement | null>(null)
+  const [glossaryPopover, setGlossaryPopover] = useState<{ term: string } | null>(null)
+  // Chunk 3b piece 2b: ConfusionPopover state — paragraph index of the
+  // currently-open popover, anchored via a paragraph ref captured at
+  // open time (see handleOpenConfusion below).
+  const confusionAnchorRef = useRef<HTMLElement | null>(null)
+  const [confusionParagraphIdx, setConfusionParagraphIdx] = useState<number | null>(null)
   const [annotationKeyword, setAnnotationKeyword] = useState('')
   const [showGlossaryPanel, setShowGlossaryPanel] = useState(false)
   const [renderedCount, setRenderedCount] = useState(INITIAL_RENDER_COUNT)
@@ -501,24 +508,51 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     }
   }, [])
 
-  /** Handle glossary term click */
+  /** Handle glossary term click — opens GlossaryPopover anchored to
+      the inline term span (chunk 3b piece 2b). Also dismisses any
+      hover tooltip (handled by Tooltip's onClick auto-dismiss). */
   const handleGlossaryTermClick = useCallback(
-    (term: string, definition: string, event: React.MouseEvent) => {
+    (term: string, _definition: string, event: React.MouseEvent) => {
       event.stopPropagation()
-      const rect = (event.target as HTMLElement).getBoundingClientRect()
-      // getBoundingClientRect() returns viewport-relative coords, which is what
-      // position:fixed needs — no scrollY/scrollX offset
-      setGlossaryTooltip({
-        term,
-        definition,
-        position: {
-          top: rect.bottom + 8,
-          left: rect.left,
-        },
-      })
+      // Anchor the popover to the clicked term's DOM element. The
+      // <Popover> primitive measures its rect at layout time so we
+      // just need .current to point to the right element.
+      glossaryAnchorRef.current = event.currentTarget as HTMLElement
+      setGlossaryPopover({ term })
     },
     []
   )
+
+  /** Handle confusion-flag click — opens ConfusionPopover anchored
+      to the paragraph (chunk 3b piece 2b). The paragraph ref is
+      resolved by walking up from the clicked button to the parent
+      <p data-paragraph-index>. */
+  const handleOpenConfusion = useCallback(
+    (paragraphIndex: number, event: React.MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation()
+      // Walk up to the paragraph element that owns this confusion
+      // strip — that's the anchor for the popover gutter+connector.
+      const paragraphEl = (event.currentTarget as HTMLElement).closest(
+        `[data-paragraph-index="${paragraphIndex}"]`
+      ) as HTMLElement | null
+      if (!paragraphEl) return
+      confusionAnchorRef.current = paragraphEl
+      setConfusionParagraphIdx(paragraphIndex)
+    },
+    []
+  )
+
+  /** "Start thinking together" placeholder — chunk 5 builds the real
+      think-together threads. For 2b: clean toast, no params capture
+      (different visibility model from regular threads — silently
+      routing would create the wrong type of thread). */
+  const handleStartThinkingTogether = useCallback(() => {
+    setToast({
+      message: 'Coming soon — think-together threads land in chunk 5',
+      type: 'success',
+    })
+    setConfusionParagraphIdx(null)
+  }, [])
 
   /** Open the annotation popover from toolbar */
   const handleAnnotateFromToolbar = useCallback(() => {
@@ -631,6 +665,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
             footnotesExpanded={footnotesExpanded}
             onAnnotationClick={handleAnnotationClick}
             onGlossaryTermClick={handleGlossaryTermClick}
+            onOpenConfusion={handleOpenConfusion}
           />
         ))}
 
@@ -682,35 +717,63 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         />
       )}
 
-      {/* Glossary quick-access panel — slides in from left */}
+      {/* Glossary quick-access panel — slides in from left.
+          (TEMPORARY in 2b — deleted at end of 2c. Inline tooltip+popover
+          replace this for in-chapter lookup; /glossary route is the
+          browse entry point.) */}
       {showGlossaryPanel && !focusedMode && (
         <GlossaryQuickAccess
           terms={chapterGlossaryTerms}
-          onTermClick={(term, definition) => {
+          onTermClick={(term) => {
             setShowGlossaryPanel(false)
-            // Show the tooltip centered in the viewport
-            setGlossaryTooltip({
-              term,
-              definition,
-              position: {
-                top: Math.min(window.innerHeight / 3, window.innerHeight - 300),
-                left: Math.max(16, window.innerWidth / 2 - 150),
-              },
-            })
+            // From the panel, anchor the popover to the body center —
+            // there's no inline term to anchor to. The popover handles
+            // a null anchor by centering itself.
+            glossaryAnchorRef.current = null
+            setGlossaryPopover({ term })
           }}
           onClose={() => setShowGlossaryPanel(false)}
         />
       )}
 
-      {/* Glossary tooltip */}
-      {glossaryTooltip && (
-        <GlossaryTooltip
-          term={glossaryTooltip.term}
-          definition={glossaryTooltip.definition}
-          position={glossaryTooltip.position}
-          onClose={() => setGlossaryTooltip(null)}
-        />
-      )}
+      {/* Glossary popover — chunk 3b piece 2b. Opens on inline term
+          click (or panel-pick); supports related-term internal
+          navigation history with back arrow. */}
+      <GlossaryPopover
+        open={!!glossaryPopover}
+        onClose={() => setGlossaryPopover(null)}
+        anchor={glossaryAnchorRef}
+        initialTerm={glossaryPopover?.term ?? ''}
+      />
+
+      {/* Confusion popover — chunk 3b piece 2b. Anchored to the
+          paragraph captured at click time (paragraph DOM ref). */}
+      <ConfusionPopover
+        open={confusionParagraphIdx !== null}
+        onClose={() => setConfusionParagraphIdx(null)}
+        paragraphRef={confusionAnchorRef}
+        chapterId={chapter.id}
+        paragraphIndex={confusionParagraphIdx ?? 0}
+        count={confusionParagraphIdx !== null ? confusionFlagCounts.get(confusionParagraphIdx) ?? 0 : 0}
+        isUserFlagged={confusionParagraphIdx !== null && userConfusionFlags.has(confusionParagraphIdx)}
+        onCountChange={(newCount, newIsSet) => {
+          if (confusionParagraphIdx === null) return
+          // Update the chapter-level state so the heatmap re-renders.
+          setConfusionFlagCounts((prev) => {
+            const next = new Map(prev)
+            if (newCount === 0) next.delete(confusionParagraphIdx)
+            else next.set(confusionParagraphIdx, newCount)
+            return next
+          })
+          setUserConfusionFlags((prev) => {
+            const next = new Set(prev)
+            if (newIsSet) next.add(confusionParagraphIdx)
+            else next.delete(confusionParagraphIdx)
+            return next
+          })
+        }}
+        onStartThinkingTogether={handleStartThinkingTogether}
+      />
 
       {/* Toast */}
       {toast && (

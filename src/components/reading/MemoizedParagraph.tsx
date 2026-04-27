@@ -10,6 +10,7 @@
 
 import React, { memo } from 'react'
 import ConfusionHeatmap from './ConfusionHeatmap'
+import GlossaryInlineTerm from './GlossaryInlineTerm'
 import {
   buildSegments,
   buildMergedSegments,
@@ -36,6 +37,8 @@ interface ParagraphProps {
   footnotesExpanded: boolean
   onAnnotationClick: (anns: ChapterAnnotation[]) => void
   onGlossaryTermClick: (term: string, definition: string, event: React.MouseEvent) => void
+  /** Open the confusion popover for this paragraph (chunk 3b piece 2b). */
+  onOpenConfusion: (paragraphIndex: number, e: React.MouseEvent<HTMLButtonElement>) => void
 }
 
 const MemoizedParagraph = memo(function Paragraph({
@@ -55,6 +58,7 @@ const MemoizedParagraph = memo(function Paragraph({
   footnotesExpanded,
   onAnnotationClick,
   onGlossaryTermClick,
+  onOpenConfusion,
 }: ParagraphProps) {
   // Get annotations that overlap this paragraph
   const pAnnotations = displayAnnotations.filter(
@@ -80,14 +84,20 @@ const MemoizedParagraph = memo(function Paragraph({
   const annotationCount = pAnnotations.length
 
   return (
-    <p data-offset={pStart} className="relative group/para">
-      {/* Confusion heatmap margin — warm strip showing collective struggle */}
+    <p
+      data-offset={pStart}
+      data-paragraph-index={pIdx}
+      className="relative group/para"
+    >
+      {/* Confusion heatmap margin — warm strip showing collective struggle.
+          Click opens the ConfusionPopover (chunk 3b piece 2b) instead of
+          toggling the flag silently. */}
       <ConfusionHeatmap
-        chapterId={chapterId}
         paragraphIndex={pIdx}
-        initialCount={confusionCount}
+        count={confusionCount}
         isUserFlagged={isUserFlagged}
         hidden={focusedMode}
+        onOpenPopover={onOpenConfusion}
       />
 
       {/* Annotation count badge — shown in left margin on desktop */}
@@ -105,18 +115,20 @@ const MemoizedParagraph = memo(function Paragraph({
       )}
 
       {mergedSegments.map((seg, sIdx) => {
-        // Glossary term only
+        // Glossary term only — chunk 3b piece 2b: hover for tooltip,
+        // click for the richer GlossaryPopover (the click-trigger
+        // explicitly dismisses the tooltip via the primitive's
+        // onClick handler).
         if (seg.isGlossaryTerm && seg.annotations.length === 0 && seg.termData) {
           return (
-            <span
+            <GlossaryInlineTerm
               key={sIdx}
-              className="cursor-help rounded-sm transition-colors duration-150 hover:bg-[rgba(var(--accent-purple-rgb),0.08)]"
-              style={{ color: 'inherit' }}
+              term={seg.termData.term}
+              shortDefinition={seg.termData.definition}
               onClick={(e) => onGlossaryTermClick(seg.termData!.term, seg.termData!.definition, e)}
-              title={`Click to see definition of "${seg.termData.term}"`}
             >
               {renderTextWithFootnotes(seg.text, footnoteMap, `p${pIdx}-s${sIdx}`, footnotesExpanded)}
-            </span>
+            </GlossaryInlineTerm>
           )
         }
 
