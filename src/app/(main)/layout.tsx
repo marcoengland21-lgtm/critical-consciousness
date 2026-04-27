@@ -1,3 +1,4 @@
+import { headers } from 'next/headers'
 import { createClient, getSessionUser } from '@/lib/supabase/server'
 import DesktopSidebar from '@/components/layout/DesktopSidebar'
 import MobileTabBar from '@/components/layout/MobileTabBar'
@@ -15,6 +16,21 @@ export default async function MainLayout({
   // Use session (local JWT read) instead of getUser (network call)
   // This runs on every page navigation — must be instant
   const user = await getSessionUser()
+
+  // Chunk 3b piece 4: SystemStatusStrip is suppressed on /dashboard
+  // because the dashboard renders its own integrated header (group-
+  // name eyebrow + greeting + orientation line). Other routes still
+  // get the strip. The pathname is read from the request headers
+  // (Next.js 15+ pattern: app router doesn't expose pathname directly
+  // on a server component layout, but the middleware-set
+  // x-pathname header is reliable when present).
+  const headerStore = await headers()
+  const pathname =
+    headerStore.get('x-pathname') ||
+    headerStore.get('next-url') ||
+    headerStore.get('referer') ||
+    ''
+  const isDashboard = pathname.endsWith('/dashboard') || pathname.includes('/dashboard?')
 
   // Display name: prefer JWT metadata (instant, no network call)
   // Only query Supabase profile if JWT doesn't have the name
@@ -65,8 +81,10 @@ export default async function MainLayout({
               role="main"
             >
               {/* Ambient context line — top of every authenticated page (§2.6).
-                  Only render when there's a logged-in user. */}
-              {user && <SystemStatusStrip />}
+                  Suppressed on /dashboard (chunk 3b piece 4) — the dashboard
+                  carries the same info in its own integrated header. Only
+                  renders when there's a logged-in user. */}
+              {user && !isDashboard && <SystemStatusStrip />}
               {children}
             </main>
           </div>

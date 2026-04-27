@@ -26,6 +26,12 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next({ request })
   }
 
+  // Set x-pathname header so server components in `(main)/layout.tsx`
+  // can identify the current route (used by chunk 3b piece 4 to
+  // suppress SystemStatusStrip on /dashboard).
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-pathname', request.nextUrl.pathname)
+
   // Look for any Supabase auth cookie (they're named sb-<project>-auth-token,
   // sometimes split into .0/.1 chunks for long tokens).
   const hasAuthCookie = request.cookies
@@ -49,5 +55,5 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  return NextResponse.next({ request })
+  return NextResponse.next({ request: { headers: requestHeaders } })
 }

@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { getChapterLabel } from '@/lib/chapter-utils'
 
+const DEFAULT_GROUP_ID = '00000000-0000-0000-0000-000000000001'
+
 /**
  * SystemStatusStrip — ambient context line at the top of every authenticated page.
  *
@@ -9,8 +11,19 @@ import { getChapterLabel } from '@/lib/chapter-utils'
  * anxiety, urgency signals, or unread counters.
  *
  * Format examples:
- *   CAPITAL STUDY GROUP · WEEK 4 OF 32 · CHAPTER 1, §4 · NEXT SESSION TUE 7PM
- *   CAPITAL STUDY GROUP · READING JOURNEY NOT YET STARTED
+ *   WATERMELON · WEEK 4 OF 32 · CHAPTER 1, §4 · NEXT SESSION TUE 7PM
+ *   WATERMELON · READING JOURNEY NOT YET STARTED
+ *
+ * Chunk 3b piece 4 (naming addendum): the FIRST PART of the strip is
+ * the GROUP name, fetched from `groups.name` — not the platform brand
+ * "Capital Study Group". Mars's note: "Where the design pack PDF
+ * shows 'CAPITAL STUDY GROUP' in eyebrow text on dashboard frames,
+ * that's implementation-time copy that should be the actual group
+ * name from the database. For the launch group: 'Watermelon.'"
+ *
+ * The strip is suppressed on `/dashboard` because the dashboard's own
+ * header carries the same information (group-name eyebrow + greeting
+ * + orientation line) — rendering both would be redundant.
  *
  * Renders as a single right-aligned eyebrow line at the top of the main
  * content area. Degrades gracefully when the schedule isn't set up yet.
@@ -19,15 +32,28 @@ export default async function SystemStatusStrip() {
   const supabase = await createClient()
   const now = new Date()
 
-  // Fetch ALL weeks and pick the current one client-side using the same
-  // fallback logic the schedule page uses: first upcoming OR last past.
-  // Previous query used `.gte('due_date', nowISO).limit(1)` which returned
-  // nothing when all weeks were past, leaving the strip stuck on
-  // "READING JOURNEY NOT YET STARTED" even when a schedule existed.
-  const { data: allWeeksData } = await supabase
-    .from('reading_schedule')
-    .select('week_number, session_date, session_location, title, due_date')
-    .order('week_number', { ascending: true })
+  // Fetch group name + ALL weeks in parallel.
+  const [
+    { data: groupRow },
+    { data: allWeeksData },
+  ] = await Promise.all([
+    supabase
+      .from('groups')
+      .select('name')
+      .eq('id', DEFAULT_GROUP_ID)
+      .maybeSingle(),
+    supabase
+      .from('reading_schedule')
+      .select('week_number, session_date, session_location, title, due_date')
+      .order('week_number', { ascending: true }),
+  ])
+
+  // Group name fallback chain: groups.name → "Capital Study Group" as
+  // a last resort if the row hasn't been seeded. The platform brand
+  // string is acceptable as a fallback (the worst case is a less-
+  // identifying eyebrow, not broken UI).
+  const groupName: string =
+    (groupRow as { name?: string } | null)?.name || 'Capital Study Group'
 
   const allWeeks = (allWeeksData || []) as { week_number: number; session_date: string | null; session_location: string | null; title: string; due_date: string }[]
   const totalWeeks = allWeeks.length
@@ -36,17 +62,11 @@ export default async function SystemStatusStrip() {
     allWeeks[allWeeks.length - 1] ||
     null
 
-  // Look up the chapter label for this week's reading. Reading schedule
-  // doesn't directly join to text_chapters — we approximate by mapping
-  // week_number to the chapter_number that lives that week. (For Capital,
-  // the first 4 weeks map to Ch 1 §1-§4, etc — see chapter-utils.)
   let chapterLabel: string | null = null
   if (nextWeek?.week_number) {
     chapterLabel = getChapterLabel(nextWeek.week_number).label
   }
 
-  // Format next-session as "TUE 7PM" style — per the plan example.
-  // Always Pacific/Auckland (Christchurch group) per Rule 14.
   let sessionLabel: string | null = null
   if (nextWeek?.session_date) {
     const d = new Date(nextWeek.session_date)
@@ -62,8 +82,8 @@ export default async function SystemStatusStrip() {
     sessionLabel = `${day} ${time}`
   }
 
-  // Compose the strip parts.
-  const parts: string[] = ['Capital Study Group']
+  // Compose the strip parts. First part is GROUP name (per addendum).
+  const parts: string[] = [groupName]
 
   if (!totalWeeks || totalWeeks === 0 || !nextWeek) {
     parts.push('Reading journey not yet started')

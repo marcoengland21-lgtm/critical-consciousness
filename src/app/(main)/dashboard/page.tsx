@@ -1,40 +1,65 @@
-import Link from 'next/link'
 import { createClient, getSessionUser } from '@/lib/supabase/server'
-import ThreadTypeBadge from '@/components/threads/ThreadTypeBadge'
-import TimeAgo from '@/components/ui/TimeAgo'
-import RoleBadge from '@/components/roles/RoleBadge'
-import ReadingCheckinButton from '@/components/dashboard/ReadingCheckinButton'
-import MilestoneCard from '@/components/dashboard/MilestoneCard'
-import GroupThinkingOverview from '@/components/dashboard/GroupThinkingOverview'
-import PassageSpotlight from '@/components/dashboard/PassageSpotlight'
-import QuickCaptureCard from '@/components/journal/QuickCaptureCard'
+import DashboardHeader from '@/components/dashboard/DashboardHeader'
+import HeroQuoteCallout, {
+  type HeroQuotePassage,
+} from '@/components/dashboard/HeroQuoteCallout'
+import AttentionMagnitudeBars, {
+  type SectionAttention,
+} from '@/components/dashboard/AttentionMagnitudeBars'
+import ThreadsList, {
+  type ThreadRow,
+} from '@/components/dashboard/ThreadsList'
+import RhythmWidget from '@/components/dashboard/RhythmWidget'
+import WhereStuckWidget, {
+  type StuckParagraph,
+} from '@/components/dashboard/WhereStuckWidget'
+import ConceptsThisWeekWidget, {
+  type ConceptItem,
+} from '@/components/dashboard/ConceptsThisWeekWidget'
+import CaptureThoughtAffordance from '@/components/dashboard/CaptureThoughtAffordance'
 import BigStatTile from '@/components/dashboard/BigStatTile'
-import { getTestingOverride } from '@/lib/testing-override'
+import { getChapterLabel } from '@/lib/chapter-utils'
 import type { ThreadType, WeeklyRoleType } from '@/types/database'
 
-// Query-specific join shapes for Supabase responses
-interface MilestoneRow {
+const DEFAULT_GROUP_ID = '00000000-0000-0000-0000-000000000001'
+const DOC_SLUG = 'capital-vol-1'
+
+interface WeekRow {
   id: string
   week_number: number
   title: string
-  description: string
-  reflection_prompt: string
+  due_date: string
+  session_date: string | null
+  weekly_roles?: { id: string; role_type: string; user: { id: string; display_name: string } | null }[]
 }
 
-interface WeeklyRoleRow {
-  id: string
-  role_type: string
-  user: { id: string; display_name: string } | null
-}
-
-interface AnnotationWithChapter {
+interface AnnotationRow {
   id: string
   body: string
+  quote_exact: string
+  position_start: number
+  position_end: number
+  created_at: string
+  author_id: string
   chapter_id: string
-  chapter: { chapter_number: number; title: string } | null
 }
 
-interface ThreadWithAuthor {
+interface ChapterRow {
+  id: string
+  chapter_number: number
+  title: string
+  week_id: string | null
+  content: string
+}
+
+interface RecentReply {
+  id: string
+  created_at: string
+  annotation_id: string
+  author: { display_name: string } | null
+}
+
+interface ThreadJoin {
   id: string
   title: string
   thread_type: string
@@ -44,464 +69,512 @@ interface ThreadWithAuthor {
   replies: { count: number }[]
 }
 
-interface DiscussionPrompt {
-  id: string
-  prompt_text: string
-  sort_order: number
-}
-
-const DEFAULT_GROUP_ID = '00000000-0000-0000-0000-000000000001'
-
-export default async function DashboardPage({
-  searchParams,
-}: {
-  // Next.js 15+ App Router types searchParams as a Promise.
-  searchParams?: Promise<Record<string, string | string[] | undefined>>
-}) {
+/**
+ * Dashboard — chunk 3b piece 4. The 13D rebuild.
+ *
+ * Server-side fetch + assemble. Layout per frame 13D:
+ *   - DashboardHeader: greeting + orientation + group-name eyebrow
+ *   - Two-column layout (lg+): main column + pedagogical right rail
+ *   - Mobile (<lg): single column with 2x2 stat grid + collapsed
+ *     right-rail content inline below threads
+ *   - Capture-a-thought modal triggered from the right rail / inline
+ *     mobile section.
+ *
+ * SystemStatusStrip is suppressed on /dashboard via the `(main)`
+ * layout's pathname check — the integrated header here carries the
+ * same info.
+ *
+ * Group-name eyebrow reads from `groups.name` (Mars's naming
+ * addendum: "for the launch group: 'Watermelon'"). Falls back to
+ * "Capital Study Group" platform brand if the row hasn't been
+ * seeded.
+ */
+export default async function DashboardPage() {
   const user = await getSessionUser()
   const supabase = await createClient()
-  const resolvedSearchParams = searchParams ? await searchParams : undefined
 
   const now = new Date()
-  const nowISO = now.toISOString()
+  const today = new Date(now.toISOString().slice(0, 10) + 'T00:00:00Z')
+  const todayISO = today.toISOString()
 
-  // Calculate this week's date range for activity counts
-  const currentDay = now.getDay()
-  const diff = now.getDate() - currentDay + (currentDay === 0 ? -6 : 1)
-  const weekStart = new Date(now)
-  weekStart.setDate(diff)
-  weekStart.setHours(0, 0, 0, 0)
-  const weekEnd = new Date(weekStart)
-  weekEnd.setDate(weekEnd.getDate() + 6)
-  weekEnd.setHours(23, 59, 59, 999)
-  const weekStartISO = weekStart.toISOString()
-  const weekEndISO = weekEnd.toISOString()
-
-  // All 9 queries in a single parallel batch.
-  // currentWeekData fetches ALL weeks (with their roles + prompts) and the
-  // current week is selected client-side to MATCH the schedule page's logic:
-  // first upcoming week, OR fall back to the last past week. Previous query
-  // used `.gte('due_date', nowISO).limit(1)` which returned nothing when all
-  // weeks were past, leaving the dashboard stuck in "JOURNEY NOT YET STARTED"
-  // even when the schedule page correctly showed the last week as Current.
+  // ── Parallel batch ──────────────────────────────────────────────
   const [
     { data: profile },
+    { data: groupRow },
     { data: allWeeksData },
+    { data: allChaptersData },
     { data: recentThreads },
-    { data: recentAnnotations },
-    { data: milestoneData },
-    { count: weekAnnotationCount },
-    { count: weekThreadCount },
-    { count: weekGlossaryCount },
-    { count: totalWeeks },
+    { data: chapterAnnotations },
+    { data: recentReplies },
+    { data: confusionRows },
+    { data: introducedTerms },
+    recentJournalRes,
   ] = await Promise.all([
-    supabase.from('profiles').select('display_name, role').eq('id', user?.id || '').single(),
-    supabase.from('reading_schedule').select(`
-      *,
-      weekly_roles(id, role_type, user:profiles!user_id(id, display_name)),
-      discussion_prompts(id, prompt_text, sort_order)
-    `).order('week_number', { ascending: true }),
-    supabase.from('threads').select(`
-      id, title, thread_type, created_at, pinned,
-      author:profiles!author_id(display_name),
-      replies:replies(count)
-    `).order('created_at', { ascending: false }).limit(5),
-    supabase.from('annotations').select(`
-      id, body, chapter_id,
-      chapter:text_chapters!chapter_id(chapter_number, title)
-    `).order('created_at', { ascending: false }).limit(20),
-    supabase.from('reading_milestones').select('id, week_number, title, description, reflection_prompt').order('week_number', { ascending: false }).limit(10),
-    supabase.from('annotations').select('*', { count: 'exact', head: true }).gte('created_at', weekStartISO).lte('created_at', weekEndISO),
-    supabase.from('threads').select('*', { count: 'exact', head: true }).gte('created_at', weekStartISO).lte('created_at', weekEndISO),
-    supabase.from('glossary_entries').select('*', { count: 'exact', head: true }).gte('created_at', weekStartISO).lte('created_at', weekEndISO),
-    supabase.from('reading_schedule').select('*', { count: 'exact', head: true }),
+    supabase
+      .from('profiles')
+      .select('display_name, role')
+      .eq('id', user?.id || '')
+      .single(),
+
+    supabase
+      .from('groups')
+      .select('name')
+      .eq('id', DEFAULT_GROUP_ID)
+      .maybeSingle(),
+
+    supabase
+      .from('reading_schedule')
+      .select(`
+        id, week_number, title, due_date, session_date,
+        weekly_roles(id, role_type, user:profiles!user_id(id, display_name))
+      `)
+      .order('week_number', { ascending: true }),
+
+    supabase
+      .from('text_chapters')
+      .select('id, chapter_number, title, week_id, content')
+      .order('chapter_number', { ascending: true }),
+
+    supabase
+      .from('threads')
+      .select(`
+        id, title, thread_type, created_at, pinned,
+        author:profiles!author_id(display_name),
+        replies:replies(count)
+      `)
+      .order('created_at', { ascending: false })
+      .limit(5),
+
+    // Annotations across all chapters. RLS only returns is_public = true
+    // OR author_id = auth.uid() per chunk 3b piece 2c-i.
+    supabase
+      .from('annotations')
+      .select('id, body, quote_exact, position_start, position_end, created_at, author_id, chapter_id')
+      .order('created_at', { ascending: false })
+      .limit(200),
+
+    // Latest reply per recent annotation — for the hero's
+    // "last reply 2h ago by Liz" gloss.
+    supabase
+      .from('annotation_replies')
+      .select(`
+        id, created_at, annotation_id,
+        author:profiles!author_id(display_name)
+      `)
+      .order('created_at', { ascending: false })
+      .limit(50),
+
+    // Confusion counts — paragraph-level. Filtered to current week's
+    // chapters in code below (Mars's #1 refinement: "X paragraphs
+    // flagged in this week's reading", scoped to chapters not flag
+    // timestamps — confusion_counts has none by design).
+    supabase
+      .from('confusion_counts')
+      .select('chapter_id, paragraph_index, count')
+      .gt('count', 0)
+      .order('count', { ascending: false }),
+
+    // All glossary entries — filtered to current week below.
+    supabase
+      .from('glossary_entries')
+      .select('id, term, definition, first_appearance_week'),
+
+    // Most-recent journal entry for the user — used by the capture
+    // affordance's preview row.
+    user
+      ? supabase
+          .from('private_notes')
+          .select('id, title, body_text, updated_at')
+          .eq('user_id', user.id)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+      : Promise.resolve({ data: null as { id: string; title: string | null; body_text: string; updated_at: string }[] | null }),
   ])
 
+  // ── Group + greeting ────────────────────────────────────────────
+  const groupName: string =
+    (groupRow as { name?: string } | null)?.name || 'Capital Study Group'
   const displayName = profile?.display_name || 'there'
+  const nzHourStr = now.toLocaleString('en-NZ', {
+    hour: 'numeric',
+    hour12: false,
+    timeZone: 'Pacific/Auckland',
+  })
+  const nzHour = parseInt(nzHourStr, 10)
+  const greeting = nzHour < 12 ? 'Good morning' : nzHour < 17 ? 'Good afternoon' : 'Good evening'
+  const greetingText = user
+    ? `${greeting}, ${displayName}`
+    : 'Welcome to Capital Study Group'
 
-  // Pick currentWeek with the schedule-page fallback logic: first upcoming
-  // week (due_date >= now), OR fall back to the last past week if none
-  // upcoming. journeyStarted = there's a schedule at all AND we have a
-  // current week. Pre-journey state is when the schedule is empty.
-  type WeekRowFull = { id: string; week_number: number; title: string; due_date: string; session_date: string | null; session_location: string | null; chapter_ref: string | null; page_start: number | null; page_end: number | null }
-  const allWeeks = (allWeeksData || []) as unknown as (WeekRowFull & { weekly_roles?: WeeklyRoleRow[]; discussion_prompts?: DiscussionPrompt[] })[]
-  const detectedCurrentWeek =
+  // ── Current week — first upcoming OR last past, matching schedule logic ──
+  const allWeeks = (allWeeksData || []) as unknown as WeekRow[]
+  const totalWeeks = allWeeks.length
+  const currentWeek =
     allWeeks.find((w) => new Date(w.due_date) >= now) ||
     allWeeks[allWeeks.length - 1] ||
     null
 
-  // Apply admin testing-mode override (chunk 2 part 1) to journey state.
-  // The override only takes effect for admin users; for everyone else the
-  // detected state is used. ?journey=not_started forces the empty-state
-  // condensation; ?journey=started reveals the big-stat row even if no
-  // schedule has been set up yet (uses detectedCurrentWeek if available,
-  // otherwise the row tiles fall back to '—' / 0).
-  const isAdmin = profile?.role === 'admin'
-  const override = getTestingOverride(resolvedSearchParams, isAdmin)
-  let currentWeek: typeof detectedCurrentWeek | null = detectedCurrentWeek
-  let journeyStarted = currentWeek !== null
-  if (override?.journey === 'not_started') {
-    journeyStarted = false
-    currentWeek = null
-  } else if (override?.journey === 'started') {
-    journeyStarted = true
-    // currentWeek stays as detectedCurrentWeek; if there's no schedule at
-    // all, the tiles will render with '—' / 0 fallbacks gracefully.
-  }
+  const allChapters = (allChaptersData || []) as unknown as ChapterRow[]
+  const annotationsList = (chapterAnnotations || []) as unknown as AnnotationRow[]
 
-  // Time-of-day greeting (NZ timezone for Christchurch group)
-  const nzHourStr = now.toLocaleString('en-NZ', { hour: 'numeric', hour12: false, timeZone: 'Pacific/Auckland' })
-  const nzHour = parseInt(nzHourStr, 10)
-  const greeting = nzHour < 12 ? 'Good morning' : nzHour < 17 ? 'Good afternoon' : 'Good evening'
+  // Pre-compute chapter lookup by id.
+  const chapterById = new Map<string, ChapterRow>()
+  for (const c of allChapters) chapterById.set(c.id, c)
 
-  // Find milestone for current week (if any)
-  const milestone = currentWeek
-    ? (milestoneData as MilestoneRow[] | null)?.find((m) => m.week_number === currentWeek.week_number) || null
-    : null
+  // ── Orientation line ────────────────────────────────────────────
+  let orientation: string | null = null
+  if (currentWeek) {
+    const parts: string[] = [`Week ${currentWeek.week_number} of ${totalWeeks}`]
+    if (currentWeek.title) parts.push(`Reading ${currentWeek.title}`)
 
-  // Checkin depends on currentWeek, so runs after the parallel batch
-  let currentReadingStatus: 'done' | 'partial' | 'behind' | null = null
-  if (currentWeek && user) {
-    const { data: checkinData } = await supabase
-      .from('reading_checkins')
-      .select('status')
-      .eq('user_id', user.id)
-      .eq('week_id', currentWeek.id)
-      .eq('group_id', DEFAULT_GROUP_ID)
-      .single()
-
-    if (checkinData) {
-      currentReadingStatus = checkinData.status as 'done' | 'partial' | 'behind'
+    const weekChapters = allChapters.filter((c) => c.week_id === currentWeek.id)
+    const weekChapterIds = new Set(weekChapters.map((c) => c.id))
+    const weekAnnotations = annotationsList.filter((a) =>
+      weekChapterIds.has(a.chapter_id)
+    )
+    const sectionsTouched = new Set(weekAnnotations.map((a) => a.chapter_id)).size
+    if (weekAnnotations.length > 0) {
+      parts.push(
+        `${weekAnnotations.length} ${weekAnnotations.length === 1 ? 'annotation' : 'annotations'} across ${sectionsTouched} ${sectionsTouched === 1 ? 'section' : 'sections'}`
+      )
     }
+    const activeThreadCount = (recentThreads || []).length
+    if (activeThreadCount > 0) {
+      parts.push(`${activeThreadCount} active threads`)
+    }
+    if (currentWeek.session_date) {
+      const d = new Date(currentWeek.session_date)
+      const day = d.toLocaleString('en-NZ', {
+        weekday: 'long',
+        timeZone: 'Pacific/Auckland',
+      })
+      const time = d
+        .toLocaleString('en-NZ', { hour: 'numeric', hour12: true, timeZone: 'Pacific/Auckland' })
+        .replace(/\s/g, '')
+        .toLowerCase()
+      const daysUntil = Math.max(
+        0,
+        Math.ceil((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+      )
+      const countdown =
+        daysUntil === 0 ? 'today' : daysUntil === 1 ? 'tomorrow' : `in ${daysUntil} days`
+      parts.push(`Next session ${day} ${time}, ${countdown}`)
+    }
+    orientation = parts.join(' · ')
   }
 
-  const weeklyRoles = (currentWeek?.weekly_roles || []) as unknown as WeeklyRoleRow[]
-  const myRoles = weeklyRoles.filter((r) => r.user?.id === user?.id)
-  const discussionPrompts = (currentWeek?.discussion_prompts || []) as unknown as DiscussionPrompt[]
-  const typedRecentThreads = (recentThreads || []) as unknown as ThreadWithAuthor[]
+  // ── Days until session (Rhythm) ─────────────────────────────────
+  let daysUntilSession: number | null = null
+  if (currentWeek?.session_date) {
+    const d = new Date(currentWeek.session_date)
+    daysUntilSession = Math.max(
+      0,
+      Math.ceil((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+    )
+  }
 
-  const annotations = (recentAnnotations as unknown as AnnotationWithChapter[] | null)?.map((ann) => ({
-    chapter_number: ann.chapter?.chapter_number || 0,
-    chapter_title: ann.chapter?.title || 'Unknown',
-    annotation_count: 1,
-    body: ann.body,
-  })) || []
+  // ── Roles (mine + others) ───────────────────────────────────────
+  const weeklyRoles = (currentWeek?.weekly_roles || []) as unknown as {
+    id: string
+    role_type: string
+    user: { id: string; display_name: string } | null
+  }[]
+  const myRoleEntry = weeklyRoles.find((r) => r.user?.id === user?.id)
+  const myRole: WeeklyRoleType | null = myRoleEntry
+    ? (myRoleEntry.role_type as WeeklyRoleType)
+    : null
+  const otherRoles = weeklyRoles
+    .filter((r) => r.user?.id !== user?.id && r.user)
+    .map((r) => ({
+      authorName: r.user!.display_name,
+      roleType: r.role_type as WeeklyRoleType,
+    }))
 
-  const threads = weekThreadCount ? [{ week_number: 1, thread_count: weekThreadCount }] : []
-
-  // Find the most-annotated passage for the Passage Spotlight
-  // Group recent annotations by their quote to find the most-discussed passage
-  const passageGroups = new Map<string, { quote: string; count: number; chapterNumber: number; chapterTitle: string }>()
-  for (const ann of annotations) {
-    // Use first 100 chars of body as a rough passage grouping
-    const key = `${ann.chapter_number}`
-    const existing = passageGroups.get(key)
-    if (existing) {
-      existing.count++
-    } else {
-      passageGroups.set(key, {
-        quote: ann.body || '',
-        count: 1,
-        chapterNumber: ann.chapter_number,
-        chapterTitle: ann.chapter_title,
+  // ── Hero quote: most-discussed passage, recency tie-break ────────
+  const repliesList = (recentReplies || []) as unknown as RecentReply[]
+  const latestReplyByAnnotationId = new Map<string, { ts: string; author: string | null }>()
+  for (const r of repliesList) {
+    const cur = latestReplyByAnnotationId.get(r.annotation_id)
+    if (!cur || r.created_at > cur.ts) {
+      latestReplyByAnnotationId.set(r.annotation_id, {
+        ts: r.created_at,
+        author: r.author?.display_name ?? null,
       })
     }
   }
-  // Find chapter with most annotations
-  let spotlightPassage: { quote: string; chapterTitle: string; chapterNumber: number; documentSlug: string; annotationCount: number } | null = null
-  if (passageGroups.size > 0) {
-    const topPassage = Array.from(passageGroups.values()).sort((a, b) => b.count - a.count)[0]
-    if (topPassage && topPassage.count >= 2) {
-      spotlightPassage = {
-        quote: topPassage.quote,
-        chapterTitle: topPassage.chapterTitle,
-        chapterNumber: topPassage.chapterNumber,
-        documentSlug: 'capital-vol-1',
-        annotationCount: topPassage.count,
+  const passageGroups = new Map<
+    string,
+    {
+      quote: string
+      count: number
+      chapterNumber: number
+      chapterId: string
+      lastActivity: string
+      lastReplyAuthor: string | null
+    }
+  >()
+  for (const ann of annotationsList) {
+    const key = ann.quote_exact
+    const annLatestReply = latestReplyByAnnotationId.get(ann.id)
+    const lastActivity = annLatestReply?.ts ?? ann.created_at
+    const lastReplyAuthor = annLatestReply?.author ?? null
+    const existing = passageGroups.get(key)
+    if (existing) {
+      existing.count++
+      if (lastActivity > existing.lastActivity) {
+        existing.lastActivity = lastActivity
+        existing.lastReplyAuthor = lastReplyAuthor
       }
+    } else {
+      passageGroups.set(key, {
+        quote: key,
+        count: 1,
+        chapterNumber: chapterById.get(ann.chapter_id)?.chapter_number || 0,
+        chapterId: ann.chapter_id,
+        lastActivity,
+        lastReplyAuthor,
+      })
+    }
+  }
+  const heroSorted = Array.from(passageGroups.values()).sort((a, b) => {
+    if (b.count !== a.count) return b.count - a.count
+    return b.lastActivity.localeCompare(a.lastActivity)
+  })
+  let heroPassage: HeroQuotePassage | null = null
+  if (heroSorted[0] && heroSorted[0].count >= 2) {
+    const top = heroSorted[0]
+    const lbl = getChapterLabel(top.chapterNumber).label
+    const dt = new Date(top.lastActivity).getTime()
+    const diffMs = Math.max(0, now.getTime() - dt)
+    const diffH = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffD = Math.floor(diffH / 24)
+    const relTime =
+      diffH < 1 ? 'just now' : diffD < 1 ? `${diffH}h ago` : `${diffD}d ago`
+    heroPassage = {
+      quote: top.quote,
+      annotationCount: top.count,
+      chapterRef: lbl,
+      documentSlug: DOC_SLUG,
+      chapterNumber: top.chapterNumber,
+      lastActivityGloss: top.lastReplyAuthor
+        ? `${relTime} by ${top.lastReplyAuthor}`
+        : relTime,
     }
   }
 
-  // Pre-compute the big-stat row values (per IMPROVEMENTS_PLAN §5.1.3,
-  // refined per pre-launch chunk 1 §3).
-  // When the journey IS started, real zeros render as '0' (zero is information:
-  // 'the group hasn't annotated yet this week'). Em-dash means 'we don't know'
-  // and is wrong when we do. When the journey ISN'T started we condense the
-  // whole row into a single eyebrow line in the JSX below.
+  // ── Magnitude bars: per-section in current week's chapters ──────
+  const sectionsForBars = currentWeek
+    ? allChapters.filter((c) => c.week_id === currentWeek.id)
+    : allChapters.slice(0, 6)
+  const sections: SectionAttention[] = sectionsForBars.map((c) => {
+    const inSection = annotationsList.filter((a) => a.chapter_id === c.id)
+    const todayCount = inSection.filter((a) => a.created_at >= todayISO).length
+    const yoursCount = user
+      ? inSection.filter((a) => a.author_id === user.id).length
+      : 0
+    return {
+      chapterId: c.id,
+      chapterNumber: c.chapter_number,
+      sectionLabel: `§${c.chapter_number}`,
+      title: c.title,
+      totalCount: inSection.length,
+      todayCount,
+      yoursCount,
+      documentSlug: DOC_SLUG,
+    }
+  })
+  sections.sort((a, b) => b.totalCount - a.totalCount)
+  const sectionsTotalAnnotations = sections.reduce((s, x) => s + x.totalCount, 0)
+
+  const scopeLabel = currentWeek
+    ? `Capital Vol 1, ${getChapterLabel(sectionsForBars[0]?.chapter_number ?? 1).label.split(',')[0]}`
+    : 'Capital Vol 1'
+  const primaryReadingHref = currentWeek && sectionsForBars[0]
+    ? `/reading/${DOC_SLUG}/${sectionsForBars[0].chapter_number}`
+    : `/reading`
+
+  // ── Threads list ────────────────────────────────────────────────
+  const threadsForList: ThreadRow[] = ((recentThreads || []) as unknown as ThreadJoin[]).map((t) => ({
+    id: t.id,
+    title: t.title,
+    thread_type: t.thread_type as ThreadType,
+    created_at: t.created_at,
+    pinned: t.pinned,
+    author: t.author,
+    reply_count: t.replies?.[0]?.count ?? 0,
+  }))
+
+  // ── Where we're stuck — confusion_counts in current week's chapters ──
+  const weekChapterIdSet = currentWeek
+    ? new Set(sectionsForBars.map((c) => c.id))
+    : new Set<string>()
+  const stuck: StuckParagraph[] = ((confusionRows || []) as { chapter_id: string; paragraph_index: number; count: number }[])
+    .filter((row) => weekChapterIdSet.size === 0 || weekChapterIdSet.has(row.chapter_id))
+    .slice(0, 3)
+    .map((row) => {
+      const chapter = chapterById.get(row.chapter_id)
+      let excerpt = ''
+      if (chapter?.content) {
+        const paragraphs = chapter.content.split('\n\n')
+        const para = paragraphs[row.paragraph_index] ?? ''
+        excerpt = para.slice(0, 80).replace(/\s+\S*$/, '')
+      }
+      return {
+        chapterId: row.chapter_id,
+        chapterNumber: chapter?.chapter_number ?? 0,
+        paragraphIndex: row.paragraph_index,
+        flagCount: row.count,
+        excerpt: excerpt || '…',
+        documentSlug: DOC_SLUG,
+      }
+    })
+    .filter((p) => p.chapterNumber > 0)
+
+  // ── Concepts this week ──────────────────────────────────────────
+  const concepts: ConceptItem[] = currentWeek
+    ? ((introducedTerms || []) as { id: string; term: string; definition: string; first_appearance_week: string | null }[])
+        .filter((t) => t.first_appearance_week === currentWeek.id)
+        .slice(0, 4)
+        .map((t) => ({
+          id: t.id,
+          term: t.term,
+          shortDefinition: firstSentence(t.definition).slice(0, 80),
+        }))
+    : []
+
+  // ── Mobile big-stat tiles ───────────────────────────────────────
   const sectionTile = currentWeek ? `Wk ${currentWeek.week_number}` : '—'
-  const annotationsTile = String(weekAnnotationCount ?? 0)
-  const threadsTile = String(weekThreadCount ?? 0)
+  const annotationsTile = String(sectionsTotalAnnotations)
+  const threadsTile = String(threadsForList.length)
   let sessionTile = '—'
   if (currentWeek?.session_date) {
     const d = new Date(currentWeek.session_date)
     const day = d.toLocaleString('en-NZ', { weekday: 'short', timeZone: 'Pacific/Auckland' })
-    const time = d.toLocaleString('en-NZ', { hour: 'numeric', hour12: true, timeZone: 'Pacific/Auckland' }).replace(/\s/g, '').toLowerCase()
+    const time = d
+      .toLocaleString('en-NZ', { hour: 'numeric', hour12: true, timeZone: 'Pacific/Auckland' })
+      .replace(/\s/g, '')
+      .toLowerCase()
     sessionTile = `${day} ${time}`
+  }
+
+  // ── Recent journal preview ──────────────────────────────────────
+  let recentJournalPreview: {
+    id: string
+    title: string | null
+    excerpt: string
+    timeAgo: string
+  } | null = null
+  const recentJournalData = (recentJournalRes as { data: { id: string; title: string | null; body_text: string; updated_at: string }[] | null }).data
+  if (recentJournalData && recentJournalData[0]) {
+    const r = recentJournalData[0]
+    recentJournalPreview = {
+      id: r.id,
+      title: r.title,
+      excerpt: r.body_text.slice(0, 60),
+      timeAgo: relTimeAgo(new Date(r.updated_at), now),
+    }
   }
 
   return (
     <div className="stagger-children">
-      {/* Greeting — single Lora italic line, no card box (§5.1.2).
-          Trailing period dropped per chunk 1 §5.1: a period reads as
-          terminal, like the platform finished talking. The dashboard is
-          a place the user is entering, not a notice they're reading. */}
-      <div className="mb-8">
-        <p className="text-display-md" style={{ color: 'var(--text-primary)' }}>
-          {user ? `${greeting}, ${displayName}` : 'Welcome to Capital Study Group'}
-        </p>
-      </div>
+      <DashboardHeader
+        greeting={greetingText}
+        groupName={groupName}
+        orientation={orientation}
+      />
 
-      {/* Big-stat row (§5.1.3 + chunk 1 §3) — when the journey IS started,
-          four hairline-divided tiles across the top. When the journey is NOT
-          started, condensed to a single quiet eyebrow line so we don't show
-          four broken-looking em-dash tiles. */}
-      {journeyStarted ? (
+      {/* Mobile-only 2x2 big-stat grid (frame 13D-mobile). */}
+      {currentWeek && (
         <div
-          className="grid grid-cols-2 md:grid-cols-4 mb-10"
+          className="grid grid-cols-2 mb-8 lg:hidden"
           style={{
             borderTop: '1px solid var(--border-subtle)',
             borderBottom: '1px solid var(--border-subtle)',
           }}
         >
-          <div className="md:border-r md:px-4" style={{ borderColor: 'var(--border-subtle)' }}>
-            <BigStatTile
-              value={sectionTile}
-              caption="Current Week"
-              href={currentWeek ? `/reading/capital-vol-1/${currentWeek.week_number}` : undefined}
-            />
+          <div className="border-r border-b" style={{ borderColor: 'var(--border-subtle)' }}>
+            <BigStatTile value={sectionTile} caption="Current Week" />
           </div>
-          <div className="md:border-r md:px-4" style={{ borderColor: 'var(--border-subtle)' }}>
-            <BigStatTile
-              value={annotationsTile}
-              caption="Annotations This Week"
-            />
+          <div className="border-b" style={{ borderColor: 'var(--border-subtle)' }}>
+            <BigStatTile value={annotationsTile} caption="Annotations" />
           </div>
-          <div className="md:border-r md:px-4" style={{ borderColor: 'var(--border-subtle)' }}>
-            <BigStatTile
-              value={threadsTile}
-              caption="Threads This Week"
-              href="/threads"
-            />
+          <div className="border-r" style={{ borderColor: 'var(--border-subtle)' }}>
+            <BigStatTile value={threadsTile} caption="Threads" href="/threads" />
           </div>
-          <div className="md:px-4">
-            <BigStatTile
-              value={sessionTile}
-              caption="Next Session"
-              href="/schedule"
-            />
+          <div>
+            <BigStatTile value={sessionTile} caption="Next Session" href="/schedule" />
           </div>
         </div>
-      ) : (
-        <p className="text-eyebrow mb-10">
-          Reading journey not yet started · once the schedule is set up, key stats will appear here
-        </p>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-8 gap-y-6">
-        {/* Left column — chunk 1 §4 reorder:
-            1. Callout (most alive — single curated quote with clear next step)
-            2. Heatmap (attention by section)
-            3. Recent Discussions (active threads)
-            4. Themes (kept, but moved down — these are static observations,
-               and Themes Being Explored lives inside GroupThinkingOverview
-               so 'reorder themes below recent' is achieved by ordering the
-               whole heatmap component below the callout while keeping
-               recent threads after the heatmap... NO: the brief explicitly
-               wants Recent above Themes, but Themes is bundled with the
-               heatmap. The pragmatic split: split the heatmap component
-               into 'sections only' here, then render Themes separately
-               at the bottom. Done via two passes of GroupThinkingOverview
-               with the showThemes / showSections flags below.) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-8 gap-y-8">
+        {/* Main column */}
         <div className="lg:col-span-2 space-y-8">
-          {/* 1. Group-thinking callout (the amber 'group is thinking about')
-              — moved up per chunk 1 §4. This is the most alive element on
-              the dashboard: a real quote from a real annotation with a
-              direct 'Join the conversation' next step. */}
-          <PassageSpotlight passage={spotlightPassage} />
+          <HeroQuoteCallout passage={heroPassage} />
 
-          {/* 2. Group attention heatmap — sections only. Themes are split
-              out and rendered below Recent Discussions. */}
-          <GroupThinkingOverview annotations={annotations} threads={threads} showThemes={false} />
+          <div style={{ borderTop: '1px solid var(--border-subtle)' }} />
 
-          {/* 3. Recent Discussions — moved up per chunk 1 §4. Active threads
-              are more alive than static themes. Cap at 3, render as
-              compact single-line hairline rows per §5.4. */}
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-eyebrow">Recent Discussions</p>
-              <Link href="/threads" className="text-xs font-medium" style={{ color: 'var(--accent-red)' }}>
-                All threads →
-              </Link>
-            </div>
-            {typedRecentThreads.length > 0 ? (
-              <div style={{ borderTop: '1px solid var(--border-subtle)' }}>
-                {typedRecentThreads.slice(0, 3).map((thread) => (
-                  <Link
-                    key={thread.id}
-                    href={`/threads/${thread.id}`}
-                    className="flex items-center gap-3 px-2 py-2.5 transition-colors hover-bg-themed"
-                    style={{ borderBottom: '1px solid var(--border-subtle)' }}
-                  >
-                    <ThreadTypeBadge type={thread.thread_type as ThreadType} />
-                    <h3
-                      className="flex-1 min-w-0 truncate"
-                      style={{
-                        color: 'var(--text-primary)',
-                        fontFamily: "'Lora', Georgia, serif",
-                        fontStyle: 'italic',
-                        fontWeight: 500,
-                        fontSize: '0.9375rem',
-                      }}
-                    >
-                      {thread.title}
-                    </h3>
-                    <span className="text-xs shrink-0 hidden sm:inline" style={{ color: 'var(--text-secondary)' }}>
-                      {thread.author?.display_name}
-                    </span>
-                    <span className="text-xs shrink-0" style={{ color: 'var(--text-secondary)' }}>
-                      <TimeAgo date={thread.created_at} />
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 px-4" style={{ borderTop: '1px solid var(--border-subtle)', borderBottom: '1px solid var(--border-subtle)' }}>
-                <p className="text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
-                  The conversation starts here
-                </p>
-                <p className="text-xs mb-3 mx-auto" style={{ color: 'var(--text-secondary)', maxWidth: '40ch' }}>
-                  What&apos;s on your mind after this week&apos;s reading?
-                </p>
-                <Link href="/threads/new" className="btn-primary text-sm">
-                  Start a thread
-                </Link>
-              </div>
+          <AttentionMagnitudeBars
+            sections={sections}
+            totalAnnotations={sectionsTotalAnnotations}
+            scopeLabel={scopeLabel}
+            primaryReadingHref={primaryReadingHref}
+          />
+
+          <ThreadsList threads={threadsForList} />
+
+          {/* Mobile-only: collapsed right rail content inline. */}
+          <div className="lg:hidden space-y-6">
+            <RhythmWidget
+              daysUntilSession={daysUntilSession}
+              myRole={myRole}
+              otherRoles={otherRoles}
+            />
+            <WhereStuckWidget paragraphs={stuck} />
+            <ConceptsThisWeekWidget concepts={concepts} />
+            {user && (
+              <CaptureThoughtAffordance
+                userId={user.id}
+                recent={recentJournalPreview}
+              />
             )}
-          </section>
-
-          {/* 4. Themes Being Explored — moved down per chunk 1 §4. These are
-              good (quoted annotations from across the group) but less alive
-              than active threads, so they sit below. Rendered via a second
-              GroupThinkingOverview pass with showSections={false}. */}
-          <GroupThinkingOverview annotations={annotations} threads={threads} showSections={false} showThemes />
-
-          {/* Milestone (only renders when applicable) */}
-          {milestone && <MilestoneCard milestone={milestone} />}
-
-          {/* This week's reading — hairline structure, no thick purple-border card */}
-          {currentWeek && (
-            <section>
-              <p className="text-eyebrow mb-3">This Week&apos;s Reading</p>
-              <div
-                className="px-2 py-4"
-                style={{
-                  borderTop: '1px solid var(--border-subtle)',
-                  borderBottom: '1px solid var(--border-subtle)',
-                }}
-              >
-                <p className="text-eyebrow mb-1">Week {currentWeek.week_number}</p>
-                <h3
-                  className="mb-2"
-                  style={{
-                    color: 'var(--text-primary)',
-                    fontFamily: "'Lora', Georgia, serif",
-                    fontStyle: 'italic',
-                    fontWeight: 500,
-                    fontSize: '1.5rem',
-                  }}
-                >
-                  {currentWeek.title}
-                </h3>
-                {currentWeek.chapter_ref && (
-                  <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
-                    {currentWeek.chapter_ref}
-                    {currentWeek.page_start && currentWeek.page_end && (
-                      <span> (pp. {currentWeek.page_start}–{currentWeek.page_end})</span>
-                    )}
-                  </p>
-                )}
-                <div className="flex items-center gap-3 flex-wrap">
-                  <Link
-                    href={`/reading/capital-vol-1/${currentWeek.week_number}`}
-                    className="btn-primary text-sm"
-                  >
-                    Read &amp; annotate →
-                  </Link>
-                  <ReadingCheckinButton weekId={currentWeek.id} currentStatus={currentReadingStatus} />
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Discussion prompts — same hanging-indent question format as Schedule (§8.1) */}
-          {discussionPrompts.length > 0 && (
-            <section>
-              <p className="text-eyebrow mb-3">Discussion Prompts</p>
-              <div className="space-y-3">
-                {[...discussionPrompts]
-                  .sort((a, b) => a.sort_order - b.sort_order)
-                  .map((prompt) => (
-                    <div
-                      key={prompt.id}
-                      className="text-sm leading-relaxed flex gap-3"
-                      style={{ color: 'var(--text-secondary)' }}
-                    >
-                      <span
-                        aria-hidden="true"
-                        className="shrink-0 select-none"
-                        style={{
-                          color: 'var(--accent-purple)',
-                          fontFamily: "'Lora', Georgia, serif",
-                          fontStyle: 'italic',
-                          fontSize: '1.1em',
-                          lineHeight: 1.4,
-                        }}
-                      >
-                        ?
-                      </span>
-                      <p className="flex-1">{prompt.prompt_text}</p>
-                    </div>
-                  ))}
-              </div>
-            </section>
-          )}
+          </div>
         </div>
 
-        {/* Right column — your roles (when assigned) + reflection journal (§5.1.7).
-            'Your Roles' hides entirely when myRoles is empty — no empty-state
-            message. 'All Roles This Week' widget removed (information lives
-            on the Schedule page already). */}
-        <div className="space-y-8">
-          {myRoles.length > 0 && (
-            <section>
-              <p className="text-eyebrow mb-3">Your Role This Week</p>
-              <div className="space-y-3">
-                {myRoles.map((role: WeeklyRoleRow) => (
-                  <div
-                    key={role.id}
-                    className="p-3 rounded-lg"
-                    style={{ backgroundColor: 'var(--bg-card-alt)' }}
-                  >
-                    <RoleBadge type={role.role_type as WeeklyRoleType} />
-                    <p className="text-xs mt-1.5" style={{ color: 'var(--text-secondary)' }}>
-                      {role.role_type === 'summarizer' && 'Prepare a brief summary of the key arguments.'}
-                      {role.role_type === 'discussion_starter' && 'Come prepared with 2-3 questions to spark discussion.'}
-                      {role.role_type === 'connector' && 'Find connections to current events or other readings.'}
-                      {role.role_type === 'passage_picker' && 'Select 1-2 key passages for close reading.'}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </section>
+        {/* Right rail (lg+ only) */}
+        <aside className="space-y-8 hidden lg:block">
+          <RhythmWidget
+            daysUntilSession={daysUntilSession}
+            myRole={myRole}
+            otherRoles={otherRoles}
+          />
+          <WhereStuckWidget paragraphs={stuck} />
+          <ConceptsThisWeekWidget concepts={concepts} />
+          {user && (
+            <CaptureThoughtAffordance
+              userId={user.id}
+              recent={recentJournalPreview}
+            />
           )}
-
-          {/* Journal quick-capture (chunk 2 part 2) — replaces the previous
-              'Your Reflection' stub. Sized substantially larger than the
-              stub (roughly two big-stat tiles tall), full width of right rail.
-              Renders for any logged-in user, regardless of journey state. */}
-          {user && <QuickCaptureCard userId={user.id} />}
-        </div>
+        </aside>
       </div>
     </div>
   )
+}
+
+// ── Helpers ──────────────────────────────────────────────────────
+
+function firstSentence(s: string): string {
+  const m = s.match(/^[^.!?]+[.!?]/)
+  return m ? m[0].trim() : s
+}
+
+function relTimeAgo(then: Date, now: Date): string {
+  const diff = Math.max(0, now.getTime() - then.getTime())
+  const min = Math.floor(diff / (1000 * 60))
+  if (min < 60) return min < 1 ? 'just now' : `${min}m ago`
+  const hr = Math.floor(min / 60)
+  if (hr < 24) return `${hr}h ago`
+  const d = Math.floor(hr / 24)
+  return `${d}d ago`
 }
