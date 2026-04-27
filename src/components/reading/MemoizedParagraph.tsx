@@ -35,7 +35,7 @@ interface ParagraphProps {
   keywordFilter: { matching: Set<string> }
   showKeywordStats: boolean
   footnotesExpanded: boolean
-  onAnnotationClick: (anns: ChapterAnnotation[]) => void
+  onAnnotationClick: (anns: ChapterAnnotation[], event: React.MouseEvent<HTMLElement>) => void
   onGlossaryTermClick: (term: string, definition: string, event: React.MouseEvent) => void
   /** Open the confusion popover for this paragraph (chunk 3b piece 2b). */
   onOpenConfusion: (paragraphIndex: number, e: React.MouseEvent<HTMLButtonElement>) => void
@@ -155,8 +155,14 @@ const MemoizedParagraph = memo(function Paragraph({
                   transition: 'opacity 200ms ease',
                 }}
                 onClick={(e) => {
+                  // For glossary-and-annotation overlap: a single click goes
+                  // to the glossary popover (legacy behavior). The annotation
+                  // is still reachable via the heatmap or a click on a
+                  // non-glossary part of the highlight.
                   if (e.detail === 1) {
                     onGlossaryTermClick(seg.termData!.term, seg.termData!.definition, e)
+                  } else {
+                    onAnnotationClick(globalAnns, e)
                   }
                 }}
                 title={`${density} annotation${density > 1 ? 's' : ''}; Click to see glossary definition of "${seg.termData.term}"`}
@@ -171,7 +177,7 @@ const MemoizedParagraph = memo(function Paragraph({
             <mark
               key={sIdx}
               className={density > 1 ? 'annotation-highlight-dense' : 'annotation-highlight'}
-              onClick={() => onAnnotationClick(globalAnns)}
+              onClick={(e) => onAnnotationClick(globalAnns, e)}
               title={`${density} annotation${density > 1 ? 's' : ''}`}
               style={{
                 opacity: showKeywordStats && !isMatchingAnnotation ? 0.2 : undefined,

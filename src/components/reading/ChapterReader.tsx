@@ -4,8 +4,9 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import AnnotationPopover from './AnnotationPopover'
-import AnnotationPanel from './AnnotationPanel'
-import SelectionToolbar from './SelectionToolbar'
+import AnnotationModal from './AnnotationModal'
+import AnnotationCreatePopover from './AnnotationCreatePopover'
+import SelectionActionBar from './SelectionActionBar'
 import OnboardingHint from './OnboardingHint'
 import ReadingToolbar from './ReadingToolbar'
 import ChapterTopToolbar from './ChapterTopToolbar'
@@ -105,7 +106,16 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     end: number
     rect: DOMRect
   } | null>(null)
-  const [activeAnnotation, setActiveAnnotation] = useState<Annotation | null>(null)
+  // Chunk 3b piece 2c-i: annotation reading flow uses a paragraph-
+  // anchored popover (preview) + a centered modal (full conversation),
+  // not the old slide-over AnnotationPanel.
+  const annotationAnchorRef = useRef<HTMLElement | null>(null)
+  const [annotationsAtParagraph, setAnnotationsAtParagraph] = useState<Annotation[] | null>(null)
+  const [annotationModal, setAnnotationModal] = useState<{
+    annotation: Annotation
+    paragraphIndex: number
+    focusComposer: boolean
+  } | null>(null)
   const [showAnnotatePopover, setShowAnnotatePopover] = useState(false)
   const [showToolbar, setShowToolbar] = useState(false)
   // Note (chunk 3a): the chapter-local font-size state was removed —
@@ -408,7 +418,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
   const handleMouseUp = useCallback(() => {
     const sel = window.getSelection()
     if (!sel || sel.isCollapsed || !textRef.current) {
-      if (!activeAnnotation && !showAnnotatePopover) {
+      if (!annotationsAtParagraph && !showAnnotatePopover) {
         setSelection(null)
         setShowToolbar(false)
       }
@@ -432,12 +442,14 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     setSelection({ text, start, end, rect })
     setShowToolbar(true)
     setShowAnnotatePopover(false)
-    setActiveAnnotation(null)
-  }, [getCharOffset, activeAnnotation, showAnnotatePopover])
+    setAnnotationsAtParagraph(null)
+  }, [getCharOffset, annotationsAtParagraph, showAnnotatePopover])
 
-  /** Save a new annotation */
+  /** Save a new annotation — chunk 3b piece 2c-i: now takes an
+   *  isPublic flag from the AnnotationCreatePopover's Private/Share
+   *  toggle. Default behaviour is private (toggle off → false). */
   const handleSaveAnnotation = useCallback(
-    async (body: string) => {
+    async (body: string, isPublic: boolean) => {
       if (!selection) {
         if (isDev) console.log('[CCP] No selection for annotation')
         return
@@ -461,6 +473,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         position_end: selection.end,
         quote_prefix: quotePrefix,
         quote_suffix: quoteSuffix,
+        is_public: isPublic,
       }
       if (isDev) console.log('[CCP] Inserting annotation')
 
@@ -489,7 +502,10 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         setShowAnnotatePopover(false)
         setShowToolbar(false)
         window.getSelection()?.removeAllRanges()
-        setToast({ message: 'Annotation saved', type: 'success' })
+        setToast({
+          message: isPublic ? 'Annotation shared with the group' : 'Annotation saved (private)',
+          type: 'success',
+        })
       } else if (error) {
         console.error('[CCP] Annotation save failed', error)
         setToast({ message: 'Failed to save annotation', type: 'error' })
@@ -498,15 +514,35 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     [selection, userId, chapter.id, chapter.content]
   )
 
-  /** Click on an annotated segment */
-  const handleAnnotationClick = useCallback((anns: Annotation[]) => {
-    if (isDev) console.log('[CCP] Annotation clicked', anns.length)
-    if (anns.length > 0) {
-      setActiveAnnotation(anns[0])
+  /** Click on an annotated segment — chunk 3b piece 2c-i.
+   *  Opens AnnotationPopover anchored to the paragraph that contains
+   *  the click. Popover shows the most-recent annotation + "1 of N"
+   *  indicator if the paragraph has more than one. */
+  const handleAnnotationClick = useCallback(
+    (anns: Annotation[], event: React.MouseEvent<HTMLElement>) => {
+      if (isDev) console.log('[CCP] Annotation clicked', anns.length)
+      if (anns.length === 0) return
+      // Walk up to the paragraph element to anchor the popover.
+      const paragraphEl = (event.currentTarget as HTMLElement).closest(
+        '[data-paragraph-index]'
+      ) as HTMLElement | null
+      if (!paragraphEl) return
+      const pIdxAttr = paragraphEl.dataset.paragraphIndex
+      const pIdx = pIdxAttr !== undefined ? parseInt(pIdxAttr, 10) : -1
+      if (pIdx < 0) return
+      // Show ALL annotations on this paragraph, not just the clicked
+      // segment — so the "1 of N" indicator is meaningful.
+      const para = paragraphData[pIdx]
+      const paragraphAnns = annotations.filter(
+        (a) => a.position_start < para.end && a.position_end > para.start
+      )
+      annotationAnchorRef.current = paragraphEl
+      setAnnotationsAtParagraph(paragraphAnns)
       setShowAnnotatePopover(false)
       setSelection(null)
-    }
-  }, [])
+    },
+    [annotations, paragraphData]
+  )
 
   /** Handle glossary term click — opens GlossaryPopover anchored to
       the inline term span (chunk 3b piece 2b). Also dismisses any
@@ -561,20 +597,75 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     setShowAnnotatePopover(true)
   }, [selection])
 
-  /** Navigate to thread creation with selected quote */
-  const handleStartThread = useCallback(() => {
+  /** Resolve the paragraph index that contains a character offset.
+   *  Used when "Annotate" or "Give this its own space" fires from the
+   *  selection action bar — we need to know which paragraph the
+   *  selection sits in so the create popover can anchor (gutter +
+   *  connector) and the lineage params can carry para_index. */
+  const paragraphIndexAt = useCallback(
+    (charOffset: number): number => {
+      for (let i = 0; i < paragraphData.length; i++) {
+        if (charOffset >= paragraphData[i].start && charOffset <= paragraphData[i].end) {
+          return i
+        }
+      }
+      return 0
+    },
+    [paragraphData]
+  )
+
+  /** Ref-object for the AnnotationCreatePopover anchor. The paragraph
+   *  element is resolved via querySelector at access time (paragraphs
+   *  are rendered with data-paragraph-index). The popover primitive
+   *  reads .current at layout time. */
+  const createPopoverParagraphRef = useMemo(
+    () => ({
+      get current(): HTMLElement | null {
+        if (!selection) return null
+        const pIdx = paragraphIndexAt(selection.start)
+        return document.querySelector(
+          `[data-paragraph-index="${pIdx}"]`
+        ) as HTMLElement | null
+      },
+      set current(_el: HTMLElement | null) {
+        // No-op — ref is read-only / derived.
+      },
+    }),
+    [selection, paragraphIndexAt]
+  )
+
+  /** Stable display number for an annotation (e.g. "#3"). Uses the
+   *  chronological index across the whole chapter — order stable as
+   *  new annotations are appended. Cheap O(N). */
+  const getAnnotationDisplayNumber = useCallback(
+    (ann: Pick<Annotation, 'id' | 'created_at'>) => {
+      const sorted = [...annotations].sort((a, b) =>
+        a.created_at.localeCompare(b.created_at)
+      )
+      const idx = sorted.findIndex((a) => a.id === ann.id)
+      return idx >= 0 ? idx + 1 : annotations.length + 1
+    },
+    [annotations]
+  )
+
+  /** Promote the selection into a /threads/new flow with lineage URL
+   *  params (chunk 3b piece 2c-i, Mars's #2 answer). 3c/3d will read
+   *  these params when it builds the lineage chip — for now we just
+   *  capture the data. Different param shape from the annotation
+   *  modal's "Give this its own space" (started_from = selection vs
+   *  annotation). */
+  const handleGiveSelectionItsOwnSpace = useCallback(() => {
     if (!selection) return
-    const quote = selection.text.length > 200
-      ? selection.text.slice(0, 200) + '…'
-      : selection.text
+    const pIdx = paragraphIndexAt(selection.start)
     const params = new URLSearchParams({
+      started_from: 'selection',
+      chapter_id: chapter.id,
+      para_index: String(pIdx),
+      quote: selection.text,
       type: 'passage_pick',
-      quote,
-      chapter: String(chapter.chapter_number),
-      section: chapter.title,
     })
     router.push(`/threads/new?${params.toString()}`)
-  }, [selection, chapter.chapter_number, chapter.title, router])
+  }, [selection, chapter.id, paragraphIndexAt, router])
 
   // Filter annotations in focused mode
   const displayAnnotations = focusedMode ? [] : annotations
@@ -677,12 +768,15 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         )}
       </div>
 
-      {/* Floating selection toolbar */}
+      {/* Selection action bar — chunk 3b piece 2c-i. Replaces the old
+          SelectionToolbar with flip-above/flip-below logic + mobile
+          vertical-stack-with-words variant. Two equal-weight actions:
+          Annotate · Give this its own space. */}
       {showToolbar && selection && !showAnnotatePopover && (
-        <SelectionToolbar
+        <SelectionActionBar
           rect={selection.rect}
           onAnnotate={handleAnnotateFromToolbar}
-          onStartThread={handleStartThread}
+          onGiveItsOwnSpace={handleGiveSelectionItsOwnSpace}
           onClose={() => {
             setShowToolbar(false)
             setSelection(null)
@@ -691,31 +785,75 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         />
       )}
 
-      {/* Annotation creation popover */}
-      {showAnnotatePopover && selection && (
-        <AnnotationPopover
-          rect={selection.rect}
-          selectedText={selection.text}
-          onSave={handleSaveAnnotation}
-          onCancel={() => {
-            setShowAnnotatePopover(false)
-            setShowToolbar(false)
-            setSelection(null)
-            window.getSelection()?.removeAllRanges()
-          }}
-          isGuest={!userId}
-        />
-      )}
+      {/* Annotation creation popover — chunk 3b piece 2c-i. Frame 11D:
+          private by default, with a "Share with group" toggle.
+          Anchored to the paragraph containing the selection via the
+          shared <ParagraphAnchoredPopover> primitive. */}
+      <AnnotationCreatePopover
+        open={showAnnotatePopover && !!selection}
+        onClose={() => {
+          setShowAnnotatePopover(false)
+          setShowToolbar(false)
+          setSelection(null)
+          window.getSelection()?.removeAllRanges()
+        }}
+        paragraphRef={createPopoverParagraphRef}
+        selectedText={selection?.text ?? ''}
+        paragraphNumber={selection ? paragraphIndexAt(selection.start) + 1 : 1}
+        onSave={handleSaveAnnotation}
+        isGuest={!userId}
+      />
 
-      {/* Annotation detail panel */}
-      {activeAnnotation && (
-        <AnnotationPanel
-          annotation={activeAnnotation}
-          userId={userId}
-          chapterId={chapter.id}
-          onClose={() => setActiveAnnotation(null)}
-        />
-      )}
+      {/* Annotation read popover — chunk 3b piece 2c-i. Replaces the
+          old AnnotationPanel slide-over for the inline preview. Shows
+          the most-recent annotation on the clicked paragraph + a
+          "1 of N" indicator if there are multiple. */}
+      <AnnotationPopover
+        open={!!annotationsAtParagraph}
+        onClose={() => setAnnotationsAtParagraph(null)}
+        paragraphRef={annotationAnchorRef}
+        annotations={annotationsAtParagraph ?? []}
+        annotationNumber={getAnnotationDisplayNumber}
+        onReply={(ann) => {
+          // Look up the full Annotation in chapter state — the popover
+          // works with a narrower shape (AnnotationShape) but the
+          // modal needs the full row (chapter_id, author_id, etc.).
+          const full = annotations.find((a) => a.id === ann.id)
+          if (!full) return
+          const pIdx = paragraphIndexAt(full.position_start)
+          setAnnotationsAtParagraph(null)
+          setAnnotationModal({ annotation: full, paragraphIndex: pIdx, focusComposer: true })
+        }}
+        onOpenFull={(ann) => {
+          const full = annotations.find((a) => a.id === ann.id)
+          if (!full) return
+          const pIdx = paragraphIndexAt(full.position_start)
+          setAnnotationsAtParagraph(null)
+          setAnnotationModal({ annotation: full, paragraphIndex: pIdx, focusComposer: false })
+        }}
+      />
+
+      {/* Annotation modal — chunk 3b piece 2c-i. The full sit-with
+          conversation surface (frame 04). Two equal-weight composer
+          destinations (Reply · Give this its own space) per 04R. */}
+      <AnnotationModal
+        open={!!annotationModal}
+        onClose={() => setAnnotationModal(null)}
+        annotation={annotationModal?.annotation ?? null}
+        chapterLabel={`Chapter ${chapter.chapter_number}`}
+        paragraphNumber={(annotationModal?.paragraphIndex ?? 0) + 1}
+        annotationNumber={
+          annotationModal ? getAnnotationDisplayNumber(annotationModal.annotation) : 0
+        }
+        focusComposer={annotationModal?.focusComposer ?? false}
+        userId={userId}
+        onReplyAdded={() => {
+          // Best-effort refresh of the chapter's annotations to pick
+          // up the new reply. Realtime would do this too, but the
+          // explicit refresh avoids races.
+          router.refresh()
+        }}
+      />
 
       {/* Glossary quick-access panel — slides in from left.
           (TEMPORARY in 2b — deleted at end of 2c. Inline tooltip+popover
