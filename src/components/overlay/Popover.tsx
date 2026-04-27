@@ -219,7 +219,7 @@ export default function Popover({
     return createPortal(
       <>
         <div
-          className="fixed inset-0 z-[60] animate-backdrop"
+          className="fixed inset-0 z-[85] animate-backdrop"
           style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
           onClick={onClose}
           aria-hidden="true"
@@ -231,7 +231,7 @@ export default function Popover({
           aria-modal="false"
           className={[
             scopeClass,
-            'fixed left-0 right-0 bottom-0 z-[70] animate-slide-up',
+            'fixed left-0 right-0 bottom-0 z-[90] animate-slide-up',
             className,
           ].filter(Boolean).join(' ')}
           style={{
@@ -266,7 +266,7 @@ export default function Popover({
       aria-modal="false"
       className={[
         scopeClass,
-        'fixed z-[70] animate-scale-in',
+        'fixed z-[90] animate-scale-in',
         className,
       ].filter(Boolean).join(' ')}
       style={{

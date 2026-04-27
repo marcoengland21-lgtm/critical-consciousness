@@ -68,20 +68,24 @@ export function OverlayStackProvider({ children }: { children: React.ReactNode }
     const stack = stackRef.current
     const newWeight = OVERLAY_WEIGHT[handle.kind]
 
-    // Dismiss anything of equal or greater weight — they get replaced.
-    // Lighter overlays stay (they can sit above the new one). The
-    // dismiss callbacks are responsible for cleaning up their own state.
+    // Dismiss only items of the SAME kind (chains forbidden per the
+    // design pack: no popover-on-popover, no modal-on-modal, no
+    // tooltip-on-tooltip). Heavier overlays survive — opening a
+    // popover with a modal already open should leave the modal
+    // visible underneath (frame 10's stacking pattern + the concepts
+    // & notes modal opening a glossary popover above itself).
+    // Lighter overlays also survive (they sit above the new one).
     const toDismiss: OverlayHandle[] = []
     const survivors: OverlayHandle[] = []
     for (const h of stack) {
-      if (OVERLAY_WEIGHT[h.kind] >= newWeight && h.id !== handle.id) {
+      if (h.kind === handle.kind && h.id !== handle.id) {
         toDismiss.push(h)
       } else {
         survivors.push(h)
       }
     }
-    // Insert new at the position matching its weight (sorted ascending —
-    // heaviest at index 0, lightest at the end).
+    // Insert new at the position matching its weight. Stack is sorted
+    // bottom (heaviest, index 0) → top (lightest, index N).
     const insertIdx = survivors.findIndex(
       (s) => OVERLAY_WEIGHT[s.kind] > newWeight
     )

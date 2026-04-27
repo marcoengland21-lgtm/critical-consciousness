@@ -8,12 +8,11 @@ import AnnotationModal from './AnnotationModal'
 import AnnotationCreatePopover from './AnnotationCreatePopover'
 import SelectionActionBar from './SelectionActionBar'
 import OnboardingHint from './OnboardingHint'
-import ReadingToolbar from './ReadingToolbar'
 import ChapterTopToolbar from './ChapterTopToolbar'
+import ConceptsNotesModal from './ConceptsNotesModal'
 import ReadingPresence from './ReadingPresence'
 import GlossaryPopover from './GlossaryPopover'
 import ConfusionPopover from './ConfusionPopover'
-import GlossaryQuickAccess from './GlossaryQuickAccess'
 import Toast from '@/components/ui/Toast'
 import BackToTop from './BackToTop'
 import ReadingGuide from './ReadingGuide'
@@ -855,24 +854,19 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         }}
       />
 
-      {/* Glossary quick-access panel — slides in from left.
-          (TEMPORARY in 2b — deleted at end of 2c. Inline tooltip+popover
-          replace this for in-chapter lookup; /glossary route is the
-          browse entry point.) */}
-      {showGlossaryPanel && !focusedMode && (
-        <GlossaryQuickAccess
-          terms={chapterGlossaryTerms}
-          onTermClick={(term) => {
-            setShowGlossaryPanel(false)
-            // From the panel, anchor the popover to the body center —
-            // there's no inline term to anchor to. The popover handles
-            // a null anchor by centering itself.
-            glossaryAnchorRef.current = null
-            setGlossaryPopover({ term })
-          }}
-          onClose={() => setShowGlossaryPanel(false)}
-        />
-      )}
+      {/* Concepts & notes modal — chunk 3b piece 2c-ii. Replaces the
+          old slide-over Workspace panel. Opened by the notebook icon
+          in ChapterTopToolbar. Two columns at desktop, tabs at mobile.
+          Concept click opens GlossaryPopover stacked above this modal
+          (allowed by the stacking rule: popover-on-modal is fine). */}
+      <ConceptsNotesModal
+        open={isToolsOpen}
+        onClose={() => setIsToolsOpen(false)}
+        chapterId={chapter.id}
+        weekId={chapter.week_id ?? null}
+        chapterLabel={`Chapter ${chapter.chapter_number}, §${chapter.chapter_number}`}
+        userId={userId}
+      />
 
       {/* Glossary popover — chunk 3b piece 2b. Opens on inline term
           click (or panel-pick); supports related-term internal
@@ -948,34 +942,8 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
 
       {/* Floating Workspace button removed in chunk 3b piece 2a — gear /
           notebook icons in ChapterTopToolbar replace it. The slide-over
-          panel below is still rendered (and triggered by the notebook
-          icon) until 2c replaces it with ConceptsNotesModal. */}
-
-      {/* Labeled tools panel — slides in from right (TEMPORARY until 2c). */}
-      <ReadingToolbar
-        chapters={allChapters}
-        currentChapter={chapter.chapter_number}
-        currentIndex={currentIndex}
-        slug={documentSlug}
-        weekId={chapter.week_id ?? null}
-        focusedMode={focusedMode}
-        onFocusedModeChange={setFocusedMode}
-        annotationCount={annotations.length}
-        annotationKeyword={annotationKeyword}
-        onAnnotationKeywordChange={setAnnotationKeyword}
-        matchingAnnotationCount={matchingCount}
-        glossaryTermCount={chapterGlossaryTerms.length}
-        showGlossaryPanel={showGlossaryPanel}
-        onGlossaryPanelToggle={() => setShowGlossaryPanel((prev) => !prev)}
-        isOpen={isToolsOpen}
-        onClose={() => setIsToolsOpen(false)}
-        audioAlignment={audioAlignment}
-        audioIsPlaying={audioIsPlaying}
-        onAudioToggle={() => {
-          // Start audio — expand the inline player
-          setAudioIsPlaying(true)
-        }}
-      />
+          ConceptsNotesModal (above) replaces the old ReadingToolbar
+          slide-over. */}
 
       {/* Back to top */}
       <BackToTop />

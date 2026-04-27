@@ -15,6 +15,12 @@ interface JournalEditorProps {
   initialTitle: string
   /** Tiptap JSON document; pass `{ type: 'doc', content: [] }` for blank. */
   initialBodyJson: object
+  /** Optional chapter context (chunk 3b piece 2c-ii). When set on a new
+      entry, the row gets `chapter_id` so the note appears in the
+      ConceptsNotesModal's right column for that chapter. Existing
+      entries don't have their chapter_id changed by the editor; this
+      is set-once at creation. */
+  initialChapterId?: string | null
   userId: string
   /** Show the title input. Currently aliases `!compactToolbar` — kept for
       explicit-call-site readability and to match the original API. */
@@ -83,6 +89,7 @@ export default function JournalEditor({
   initialId,
   initialTitle,
   initialBodyJson,
+  initialChapterId = null,
   userId,
   showTitle = true,
   compactToolbar = false,
@@ -168,7 +175,13 @@ export default function JournalEditor({
     } else {
       const { data, error } = await supabase
         .from('private_notes')
-        .insert({ ...payload, user_id: userId })
+        .insert({
+          ...payload,
+          user_id: userId,
+          // Set chapter_id only on creation. Existing entries don't
+          // have their chapter_id changed by the editor.
+          ...(initialChapterId ? { chapter_id: initialChapterId } : {}),
+        })
         .select('id')
         .single()
       if (error || !data) {

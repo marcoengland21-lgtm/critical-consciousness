@@ -303,7 +303,7 @@ export default function ParagraphAnchoredPopover({
     return createPortal(
       <>
         <div
-          className="fixed inset-0 z-[60] animate-backdrop"
+          className="fixed inset-0 z-[85] animate-backdrop"
           style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
           onClick={onClose}
           aria-hidden="true"
@@ -315,7 +315,7 @@ export default function ParagraphAnchoredPopover({
           aria-modal="false"
           className={[
             scopeClass,
-            'fixed left-0 right-0 bottom-0 z-[70] animate-slide-up',
+            'fixed left-0 right-0 bottom-0 z-[90] animate-slide-up',
           ].filter(Boolean).join(' ')}
           style={{
             backgroundColor: 'var(--bg-card)',
@@ -346,7 +346,7 @@ export default function ParagraphAnchoredPopover({
       {geom && (
         <div
           aria-hidden="true"
-          className="fixed pointer-events-none z-[68]"
+          className="fixed pointer-events-none z-[88]"
           style={{
             top: `${geom.gutterTop}px`,
             left: `${geom.gutterLeft}px`,
@@ -362,7 +362,7 @@ export default function ParagraphAnchoredPopover({
       {geom && (
         <svg
           aria-hidden="true"
-          className="fixed pointer-events-none z-[68]"
+          className="fixed pointer-events-none z-[88]"
           style={{
             top: `${geom.connector.top}px`,
             left: `${geom.connector.left}px`,
@@ -390,7 +390,7 @@ export default function ParagraphAnchoredPopover({
         aria-modal="false"
         className={[
           scopeClass,
-          'fixed z-[70] animate-scale-in',
+          'fixed z-[90] animate-scale-in',
         ].filter(Boolean).join(' ')}
         style={{
           top: geom ? `${geom.surfaceTop}px` : '-9999px',
