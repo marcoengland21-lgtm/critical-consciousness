@@ -1,617 +1,524 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
-import Link from 'next/link'
-import RoleBadge from '@/components/roles/RoleBadge'
-import SessionNotes from '@/components/schedule/SessionNotes'
-import type { WeeklyRoleType } from '@/types/database'
+import { useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { getChapterLabel } from '@/lib/chapter-utils'
 
-interface WeeklyRoleRow {
-  id: string
-  role_type: string
-  user: { id: string; display_name: string } | null
-}
+/**
+ * Recurring-mode schedule client.
+ *
+ * Renders four sections, all conditional on data state:
+ *   1. Pre-seed empty state — when startedAt is NULL (group hasn't
+ *      started reading yet). Host sees a setup prompt + controls;
+ *      member sees "your host will set things up."
+ *   2. Current state banner — current chapter label, started date,
+ *      "Week N on this chapter" counter. Only when currentChapterId
+ *      and currentChapterStartedAt are both set.
+ *   3. Host controls — chapter dropdown, start date input, schedule
+ *      mode dropdown. Hidden for members.
+ *   4. Completed chapters timeline — group_chapter_history, reverse
+ *      chronological. Empty when no advances have happened yet.
+ */
 
-interface DiscussionPrompt {
+interface ChapterRow {
   id: string
-  prompt_text: string
+  chapter_number: number
+  title: string
   sort_order: number
 }
 
-interface ScheduleWeek {
+interface HistoryRow {
   id: string
-  week_number: number
-  title: string
-  due_date: string
-  session_date: string | null
-  session_location: string | null
-  zoom_link: string | null
-  chapter_ref: string | null
-  page_start: number | null
-  page_end: number | null
-  description: string | null
-  weekly_roles: WeeklyRoleRow[] | null
-  discussion_prompts: DiscussionPrompt[] | null
+  chapter_id: string
+  started_at: string
+  ended_at: string
 }
 
-interface ScheduleClientProps {
-  weeks: ScheduleWeek[]
-  currentWeekId: string | null
-  userId: string | null
-  /** Active group context (L1) — required for SessionNotes scoping. */
+interface Props {
   groupId: string
+  scheduleMode: 'recurring' | 'bounded' | 'specific'
+  startedAt: string | null
+  currentChapterId: string | null
+  currentChapterStartedAt: string | null
+  isHost: boolean
+  chapters: ChapterRow[]
+  history: HistoryRow[]
 }
 
-/**
- * Interactive schedule client component.
- *
- * Handles:
- * - Auto-scroll to current week on mount
- * - Past/future weeks collapsed by default (click to expand)
- * - Current week always expanded
- * - Sticky "Jump to This Week" pill when current week is off-screen
- * - Expand All / Collapse All toggle
- */
-export default function ScheduleClient({ weeks, currentWeekId, userId, groupId }: ScheduleClientProps) {
-  const now = new Date()
+const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000
 
-  // Current week starts expanded, everything else collapsed
-  const [expandedWeeks, setExpandedWeeks] = useState<Set<string>>(() => {
-    const initial = new Set<string>()
-    if (currentWeekId) initial.add(currentWeekId)
-    return initial
+/** Compute week count between two dates, minimum 1.
+ *  A stay always counts as at least one week of attention — even a
+ *  same-day advance "counted" as one week of being on that chapter
+ *  for the group. Rounding to nearest avoids the off-by-one weirdness
+ *  of strict floor/ceil. */
+function weeksBetween(startISO: string, endISO: string | Date): number {
+  const start = new Date(startISO).getTime()
+  const end = (endISO instanceof Date ? endISO : new Date(endISO)).getTime()
+  const diffMs = Math.max(0, end - start)
+  return Math.max(1, Math.round(diffMs / MS_PER_WEEK))
+}
+
+/** Format a date as "Mar 13, 2026" in NZ timezone (per platform convention). */
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-NZ', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'Pacific/Auckland',
   })
-  const [showJumpButton, setShowJumpButton] = useState(false)
-  const currentWeekRef = useRef<HTMLDivElement>(null)
+}
 
-  const toggleWeek = useCallback((weekId: string) => {
-    setExpandedWeeks((prev) => {
-      const next = new Set(prev)
-      if (next.has(weekId)) {
-        next.delete(weekId)
-      } else {
-        next.add(weekId)
-      }
-      return next
+export default function ScheduleClient({
+  groupId,
+  startedAt,
+  currentChapterId,
+  currentChapterStartedAt,
+  isHost,
+  chapters,
+  history,
+}: Props) {
+  const router = useRouter()
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [pendingChapterId, setPendingChapterId] = useState<string | null>(null)
+  const [confirmAdvanceTo, setConfirmAdvanceTo] = useState<ChapterRow | null>(null)
+  const [startDateDraft, setStartDateDraft] = useState<string>(startedAt ?? '')
+
+  // Lookup map for chapter id → row, for rendering history rows.
+  const chapterById = useMemo(() => {
+    const m = new Map<string, ChapterRow>()
+    for (const c of chapters) m.set(c.id, c)
+    return m
+  }, [chapters])
+
+  const currentChapter = currentChapterId ? chapterById.get(currentChapterId) ?? null : null
+
+  // ── Pre-seed empty state ──────────────────────────────────────────
+  // The group hasn't started reading yet. For recurring mode, "started"
+  // means startedAt is set — that's the canonical flag. The host sees a
+  // setup prompt and can use the host controls below. The member sees a
+  // simple message and no controls.
+  const isPreSeed = !startedAt
+
+  // ── Current chapter setting (host action) ─────────────────────────
+  // Picking a chapter from the dropdown stages it; the user confirms in
+  // the inline confirmation prompt before the RPC fires. Confirmation
+  // matters because advancing writes a history row — it's not a casual
+  // toggle. Selecting the already-current chapter is a no-op (button
+  // disabled).
+  async function confirmAdvance() {
+    if (!confirmAdvanceTo || submitting) return
+    setSubmitting(true)
+    setError(null)
+    const supabase = createClient()
+    const { error: rpcError } = await supabase.rpc('advance_chapter', {
+      p_group_id: groupId,
+      p_new_chapter_id: confirmAdvanceTo.id,
     })
-  }, [])
+    setSubmitting(false)
+    if (rpcError) {
+      setError(rpcError.message)
+      return
+    }
+    setConfirmAdvanceTo(null)
+    setPendingChapterId(null)
+    router.refresh()
+  }
 
-  const expandAll = useCallback(() => {
-    setExpandedWeeks(new Set(weeks.map((w) => w.id)))
-  }, [weeks])
+  async function saveStartDate() {
+    if (!startDateDraft || submitting) return
+    if (startDateDraft === startedAt) return
+    setSubmitting(true)
+    setError(null)
+    const supabase = createClient()
+    const { error: rpcError } = await supabase.rpc('set_group_started_at', {
+      p_group_id: groupId,
+      p_started_at: startDateDraft,
+    })
+    setSubmitting(false)
+    if (rpcError) {
+      setError(rpcError.message)
+      return
+    }
+    router.refresh()
+  }
 
-  const collapseAll = useCallback(() => {
-    // Always keep current week expanded
-    const next = new Set<string>()
-    if (currentWeekId) next.add(currentWeekId)
-    setExpandedWeeks(next)
-  }, [currentWeekId])
-
-  const allExpanded = expandedWeeks.size === weeks.length
-
-  // Auto-scroll to current week on mount
-  useEffect(() => {
-    if (!currentWeekRef.current) return
-    // Delay to let layout settle after hydration
-    const timer = setTimeout(() => {
-      requestAnimationFrame(() => {
-        currentWeekRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      })
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [])
-
-  // Intersection Observer for sticky "Jump to This Week" pill
-  useEffect(() => {
-    if (!currentWeekRef.current) return
-    const observer = new IntersectionObserver(
-      ([entry]) => setShowJumpButton(!entry.isIntersecting),
-      { threshold: 0.1 }
-    )
-    observer.observe(currentWeekRef.current)
-    return () => observer.disconnect()
-  }, [])
-
-  const scrollToCurrent = useCallback(() => {
-    currentWeekRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  }, [])
+  // ── Render ─────────────────────────────────────────────────────────
 
   return (
-    <div>
-      {/* Controls row */}
-      <div className="flex items-center justify-between mb-6">
-        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-          {weeks.length} week{weeks.length !== 1 ? 's' : ''}
-        </p>
-        <button
-          onClick={allExpanded ? collapseAll : expandAll}
-          className="text-xs font-medium transition-colors btn-transition px-3 py-1.5 rounded-lg"
+    <div className="space-y-10">
+      {error && (
+        <div
+          className="text-sm rounded-md p-3"
           style={{
-            color: 'var(--accent-purple)',
-            backgroundColor: 'var(--bg-card-alt)',
+            backgroundColor: 'rgba(var(--accent-red-rgb), 0.08)',
+            color: 'var(--accent-red)',
+            border: '1px solid var(--accent-red)',
           }}
         >
-          {allExpanded ? 'Collapse All' : 'Expand All'}
-        </button>
+          {error}
+        </div>
+      )}
+
+      {/* ── 1 + 2. Current state OR pre-seed empty state ───────────── */}
+      {isPreSeed ? (
+        <PreSeedEmptyState isHost={isHost} />
+      ) : (
+        <CurrentStateBanner
+          currentChapter={currentChapter}
+          currentChapterStartedAt={currentChapterStartedAt}
+          startedAt={startedAt}
+        />
+      )}
+
+      {/* ── 3. Host controls (host only) ───────────────────────────── */}
+      {isHost && (
+        <HostControls
+          chapters={chapters}
+          currentChapterId={currentChapterId}
+          startDateDraft={startDateDraft}
+          setStartDateDraft={setStartDateDraft}
+          startedAt={startedAt}
+          saveStartDate={saveStartDate}
+          pendingChapterId={pendingChapterId}
+          setPendingChapterId={setPendingChapterId}
+          submitting={submitting}
+          onAdvanceClick={(chapter) => setConfirmAdvanceTo(chapter)}
+          confirmAdvanceTo={confirmAdvanceTo}
+          onCancelAdvance={() => {
+            setConfirmAdvanceTo(null)
+            setPendingChapterId(null)
+          }}
+          onConfirmAdvance={confirmAdvance}
+        />
+      )}
+
+      {/* ── 4. Completed chapters timeline ─────────────────────────── */}
+      {history.length > 0 && (
+        <CompletedChaptersTimeline history={history} chapterById={chapterById} />
+      )}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Sub-components
+// ─────────────────────────────────────────────────────────────────────
+
+function PreSeedEmptyState({ isHost }: { isHost: boolean }) {
+  return (
+    <div
+      className="rounded-lg p-8"
+      style={{
+        backgroundColor: 'var(--bg-card)',
+        border: '1px solid var(--border-subtle)',
+      }}
+    >
+      <p
+        className="mb-2"
+        style={{
+          fontFamily: "'Lora', Georgia, serif",
+          fontStyle: 'italic',
+          fontSize: '1.25rem',
+          color: 'var(--text-primary)',
+        }}
+      >
+        This group hasn&rsquo;t started reading yet.
+      </p>
+      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+        {isHost
+          ? 'Set the start date and current chapter below to begin.'
+          : 'Your host will set things up here when ready.'}
+      </p>
+    </div>
+  )
+}
+
+function CurrentStateBanner({
+  currentChapter,
+  currentChapterStartedAt,
+  startedAt,
+}: {
+  currentChapter: ChapterRow | null
+  currentChapterStartedAt: string | null
+  startedAt: string | null
+}) {
+  if (!currentChapter || !currentChapterStartedAt) {
+    // Edge case: startedAt is set but the host hasn't picked a current
+    // chapter yet (or the FK target was deleted, very unlikely). The
+    // honest move is to render an in-between state rather than fabricate
+    // a counter from incomplete data — a "Week N on this chapter" line
+    // when there's no chapter would be a small lie, and the empty state
+    // is a calm prompt to the host to finish setup. Keep this branch
+    // explicit; do not silently coerce to chapter_number 1.
+    return (
+      <div
+        className="rounded-lg p-8"
+        style={{
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-subtle)',
+        }}
+      >
+        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+          A current chapter hasn&rsquo;t been set yet.
+        </p>
+      </div>
+    )
+  }
+  const { label } = getChapterLabel(currentChapter.chapter_number)
+  const weeksOnChapter = weeksBetween(currentChapterStartedAt, new Date())
+  return (
+    <div>
+      <p className="text-eyebrow mb-3">Current chapter</p>
+      <h2
+        className="text-display-md mb-3"
+        style={{
+          color: 'var(--text-primary)',
+          fontFamily: "'Lora', Georgia, serif",
+          fontStyle: 'italic',
+        }}
+      >
+        {label}: {currentChapter.title}
+      </h2>
+      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+        {startedAt && (
+          <>
+            Group started reading on {formatDate(startedAt)} ·{' '}
+          </>
+        )}
+        On this chapter since {formatDate(currentChapterStartedAt)} ·{' '}
+        Week {weeksOnChapter} on this chapter
+      </p>
+    </div>
+  )
+}
+
+function HostControls({
+  chapters,
+  currentChapterId,
+  startDateDraft,
+  setStartDateDraft,
+  startedAt,
+  saveStartDate,
+  pendingChapterId,
+  setPendingChapterId,
+  submitting,
+  onAdvanceClick,
+  confirmAdvanceTo,
+  onCancelAdvance,
+  onConfirmAdvance,
+}: {
+  chapters: ChapterRow[]
+  currentChapterId: string | null
+  startDateDraft: string
+  setStartDateDraft: (v: string) => void
+  startedAt: string | null
+  saveStartDate: () => void
+  pendingChapterId: string | null
+  setPendingChapterId: (v: string | null) => void
+  submitting: boolean
+  onAdvanceClick: (chapter: ChapterRow) => void
+  confirmAdvanceTo: ChapterRow | null
+  onCancelAdvance: () => void
+  onConfirmAdvance: () => void
+}) {
+  const startDateChanged = startDateDraft !== '' && startDateDraft !== startedAt
+  const pickedChapter = pendingChapterId
+    ? chapters.find((c) => c.id === pendingChapterId) ?? null
+    : null
+  const pickedIsCurrent = pickedChapter?.id === currentChapterId
+
+  return (
+    <section
+      className="border-t pt-6"
+      style={{ borderColor: 'var(--border-subtle)' }}
+    >
+      <p className="text-eyebrow mb-4" style={{ color: 'var(--text-secondary)' }}>
+        Host controls
+      </p>
+
+      {/* Schedule mode dropdown — recurring enabled, others disabled */}
+      <div className="mb-6">
+        <label
+          htmlFor="schedule-mode"
+          className="block text-xs font-medium mb-1"
+          style={{ color: 'var(--text-secondary)' }}
+        >
+          Schedule mode
+        </label>
+        <select
+          id="schedule-mode"
+          className="input-base text-sm w-full max-w-md"
+          value="recurring"
+          disabled
+          aria-disabled
+        >
+          <option value="recurring">Recurring</option>
+          <option value="bounded" disabled>Bounded (soon)</option>
+          <option value="specific" disabled>Specific weeks (soon)</option>
+        </select>
       </div>
 
-      <div className="relative">
-        {/* Timeline vertical line — hidden on mobile */}
-        <div
-          className="absolute left-4 top-0 bottom-0 w-0.5 hidden sm:block"
-          style={{ backgroundColor: 'var(--border-default)' }}
-        />
-
-        <div className="space-y-3 sm:pl-12">
-          {weeks.map((week) => {
-            const isCurrent = currentWeekId === week.id
-            const isPast = new Date(week.due_date) < now && !isCurrent
-            const isExpanded = expandedWeeks.has(week.id)
-            const dueDate = new Date(week.due_date)
-            const sessionDate = week.session_date ? new Date(week.session_date) : null
-            const prompts = [...(week.discussion_prompts || [])].sort(
-              (a, b) => a.sort_order - b.sort_order
-            )
-
-            return (
-              <div
-                key={week.id}
-                className="relative"
-                ref={isCurrent ? currentWeekRef : undefined}
-              >
-                {/* Timeline node */}
-                <div
-                  className="absolute -left-12 top-3 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold hidden sm:flex z-10"
-                  style={{
-                    backgroundColor: isCurrent
-                      ? 'var(--accent-amber)'
-                      : isPast
-                        ? 'var(--accent-green)'
-                        : 'var(--bg-card)',
-                    color: isCurrent || isPast ? '#fff' : 'var(--text-secondary)',
-                    border: isCurrent
-                      ? '3px solid rgba(var(--accent-amber-rgb), 0.3)'
-                      : isPast
-                        ? 'none'
-                        : '2px dashed var(--border-strong)',
-                    boxShadow: isCurrent
-                      ? '0 0 12px rgba(var(--accent-amber-rgb), 0.3)'
-                      : 'none',
-                  }}
-                >
-                  {isPast ? (
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  ) : (
-                    week.week_number
-                  )}
-                </div>
-
-                {/* Week card */}
-                <div
-                  className="card-base transition-all"
-                  style={{
-                    borderColor: isCurrent
-                      ? 'var(--accent-purple)'
-                      : isPast
-                        ? 'var(--border-strong)'
-                        : undefined,
-                    borderWidth: isCurrent ? '2px' : undefined,
-                    opacity: isPast && !isExpanded ? 0.7 : 1,
-                  }}
-                >
-                  {/* Compact header row — always visible, clickable to expand/collapse */}
-                  <button
-                    onClick={() => !isCurrent && toggleWeek(week.id)}
-                    className={`w-full text-left px-5 py-3 flex items-center justify-between transition-colors ${
-                      !isCurrent ? 'cursor-pointer' : 'cursor-default'
-                    }`}
-                    style={{
-                      backgroundColor: isCurrent
-                        ? 'var(--bg-header)'
-                        : isExpanded
-                          ? 'var(--bg-card-alt)'
-                          : 'var(--bg-card)',
-                    }}
-                    aria-expanded={isExpanded}
-                    aria-label={`Week ${week.week_number}: ${week.title}${isCurrent ? ' (current week)' : ''}`}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span
-                        className="text-xs font-bold tracking-wide shrink-0"
-                        style={{
-                          color: isCurrent
-                            ? 'var(--accent-purple)'
-                            : 'var(--text-secondary)',
-                        }}
-                      >
-                        Week {week.week_number}
-                      </span>
-                      <span
-                        className="text-sm font-semibold truncate"
-                        style={{
-                          color: isCurrent
-                            ? 'var(--text-inverse)'
-                            : 'var(--text-primary)',
-                        }}
-                      >
-                        {week.title}
-                      </span>
-                      {isCurrent && (
-                        <span
-                          className="text-xs font-medium px-2.5 py-1 rounded-full leading-none shrink-0"
-                          style={{
-                            backgroundColor: 'var(--accent-purple)',
-                            color: 'var(--text-inverse)',
-                          }}
-                        >
-                          Current
-                        </span>
-                      )}
-                      {isPast && !isExpanded && (
-                        <span
-                          className="text-xs shrink-0"
-                          style={{ color: 'var(--accent-green)' }}
-                        >
-                          Completed
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0 ml-3">
-                      <span
-                        className="text-xs hidden sm:inline"
-                        style={{
-                          color: isCurrent
-                            ? 'var(--text-inverse)'
-                            : 'var(--text-secondary)',
-                        }}
-                      >
-                        {dueDate.toLocaleDateString('en-NZ', {
-                          day: 'numeric',
-                          month: 'short',
-                          timeZone: 'Pacific/Auckland',
-                        })}
-                      </span>
-                      {!isCurrent && (
-                        <span
-                          style={{
-                            display: 'inline-block',
-                            transform: isExpanded
-                              ? 'rotate(180deg)'
-                              : 'rotate(0deg)',
-                            transition:
-                              'transform var(--duration-normal) var(--ease-out-expo)',
-                            color: isCurrent
-                              ? 'var(--text-inverse)'
-                              : 'var(--text-secondary)',
-                            fontSize: '10px',
-                          }}
-                        >
-                          ▼
-                        </span>
-                      )}
-                    </div>
-                  </button>
-
-                  {/* Expandable detail section */}
-                  <div
-                    className={isCurrent ? '' : 'collapsible-content'}
-                    data-open={isCurrent ? undefined : isExpanded || undefined}
-                    style={isCurrent ? {} : undefined}
-                  >
-                    <div className={isCurrent ? '' : 'collapsible-inner'}>
-                      <div
-                        className="px-5 py-4 space-y-4"
-                        style={{
-                          backgroundColor: isCurrent
-                            ? 'var(--bg-card-alt)'
-                            : 'var(--bg-card)',
-                        }}
-                      >
-                        {/* Date info for current week */}
-                        {isCurrent && (
-                          <div
-                            className="text-sm"
-                            style={{ color: 'var(--text-secondary)' }}
-                          >
-                            <span>
-                              Due:{' '}
-                              {dueDate.toLocaleDateString('en-NZ', {
-                                weekday: 'short',
-                                day: 'numeric',
-                                month: 'short',
-                                timeZone: 'Pacific/Auckland',
-                              })}
-                            </span>
-                            {sessionDate && (
-                              <span className="ml-4">
-                                Session:{' '}
-                                {sessionDate.toLocaleDateString('en-NZ', {
-                                  weekday: 'short',
-                                  day: 'numeric',
-                                  month: 'short',
-                                  timeZone: 'Pacific/Auckland',
-                                })}
-                              </span>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Date info for expanded non-current weeks */}
-                        {!isCurrent && sessionDate && (
-                          <div
-                            className="text-sm"
-                            style={{ color: 'var(--text-secondary)' }}
-                          >
-                            Session:{' '}
-                            {sessionDate.toLocaleDateString('en-NZ', {
-                              weekday: 'short',
-                              day: 'numeric',
-                              month: 'short',
-                              timeZone: 'Pacific/Auckland',
-                            })}
-                          </div>
-                        )}
-
-                        {/* Reading info */}
-                        {(week.chapter_ref || week.description) && (
-                          <div>
-                            {week.chapter_ref && (
-                              <p
-                                className="text-sm font-medium mb-1"
-                                style={{ color: 'var(--text-primary)' }}
-                              >
-                                {week.chapter_ref}
-                                {week.page_start && week.page_end && (
-                                  <span
-                                    style={{ color: 'var(--text-secondary)' }}
-                                  >
-                                    {' '}
-                                    (pp. {week.page_start}–{week.page_end})
-                                  </span>
-                                )}
-                              </p>
-                            )}
-                            {week.description && (
-                              <p
-                                className="text-sm"
-                                style={{ color: 'var(--text-secondary)' }}
-                              >
-                                {week.description}
-                              </p>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Session Info */}
-                        {(week.session_location || week.zoom_link) && (
-                          <div className="flex flex-wrap gap-3 text-sm">
-                            {week.session_location && (
-                              <span
-                                className="flex items-center gap-1"
-                                style={{ color: 'var(--text-secondary)' }}
-                              >
-                                {week.session_location}
-                              </span>
-                            )}
-                            {week.zoom_link && (
-                              <a
-                                href={week.zoom_link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1 underline"
-                                style={{ color: 'var(--accent-red)' }}
-                              >
-                                Join Online
-                              </a>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Roles */}
-                        {week.weekly_roles && week.weekly_roles.length > 0 && (
-                          <div>
-                            <h3
-                              className="text-sm font-semibold mb-2"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              Roles This Week
-                            </h3>
-                            <div className="flex flex-wrap gap-2">
-                              {(
-                                week.weekly_roles as unknown as WeeklyRoleRow[]
-                              ).map((role) => (
-                                <div
-                                  key={role.id}
-                                  className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border"
-                                  style={{
-                                    borderColor: 'var(--border-default)',
-                                    backgroundColor: 'var(--bg-card)',
-                                  }}
-                                >
-                                  <RoleBadge
-                                    type={role.role_type as WeeklyRoleType}
-                                  />
-                                  <span
-                                    style={{ color: 'var(--text-primary)' }}
-                                  >
-                                    {role.user?.display_name}
-                                  </span>
-                                  {role.user?.id === userId && (
-                                    <span
-                                      className="text-xs font-medium"
-                                      style={{ color: 'var(--accent-red)' }}
-                                    >
-                                      (You)
-                                    </span>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Discussion Prompts — prompts are invitations to think,
-                            not a checklist. Render as hanging-indent paragraphs
-                            with a question-mark glyph rather than 1./2./3. per
-                            IMPROVEMENTS_PLAN §8.1. */}
-                        {prompts.length > 0 && (
-                          <div>
-                            <h3
-                              className="text-sm font-semibold mb-3"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              Discussion Prompts
-                            </h3>
-                            <div className="space-y-3">
-                              {prompts.map((prompt) => (
-                                <div
-                                  key={prompt.id}
-                                  className="text-sm leading-relaxed flex gap-3"
-                                  style={{ color: 'var(--text-secondary)' }}
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    className="shrink-0 select-none"
-                                    style={{
-                                      color: 'var(--accent-purple)',
-                                      fontFamily: "'Lora', Georgia, serif",
-                                      fontStyle: 'italic',
-                                      fontSize: '1.1em',
-                                      lineHeight: 1.4,
-                                    }}
-                                  >
-                                    ?
-                                  </span>
-                                  <p className="flex-1">{prompt.prompt_text}</p>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Session Notes */}
-                        <SessionNotes
-                          weekId={week.id}
-                          hasSession={!!sessionDate}
-                          groupId={groupId}
-                        />
-
-                        {/* Action buttons — context dependent.
-                            §8.2: primary (Read and Annotate) keeps red. Secondary
-                            (View Discussions) is btn-secondary. Outer container
-                            switched from red border to a soft amber-tinted bg so
-                            the red on the primary CTA isn't competing with a red
-                            border around it. */}
-                        {isCurrent && (
-                          <div
-                            className="p-4 rounded-lg"
-                            style={{
-                              backgroundColor: 'rgba(var(--accent-amber-rgb), 0.06)',
-                              borderTop: '1px solid var(--border-subtle)',
-                              borderBottom: '1px solid var(--border-subtle)',
-                            }}
-                          >
-                            <div className="flex flex-wrap gap-2">
-                              <Link
-                                href={`/reading/capital-vol-1/${week.week_number}`}
-                                className="btn-primary text-sm"
-                              >
-                                Read and Annotate
-                              </Link>
-                              <Link
-                                href={`/threads?week=${week.id}`}
-                                className="btn-secondary text-sm"
-                              >
-                                View Discussions
-                              </Link>
-                            </div>
-                          </div>
-                        )}
-
-                        {!isCurrent && !isPast && (
-                          <div
-                            className="p-4 rounded-lg border"
-                            style={{
-                              borderColor: 'var(--accent-purple)',
-                              backgroundColor: 'var(--bg-card-alt)',
-                            }}
-                          >
-                            <p
-                              className="text-xs font-semibold tracking-wide mb-1"
-                              style={{ color: 'var(--accent-purple)' }}
-                            >
-                              Get a head start
-                            </p>
-                            <p
-                              className="text-sm mb-3"
-                              style={{ color: 'var(--text-secondary)' }}
-                            >
-                              Start reading early or browse the glossary to
-                              prepare for this week.
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                              <Link
-                                href={`/reading/capital-vol-1/${week.week_number}`}
-                                className="btn-primary text-sm px-3 py-1.5"
-                              >
-                                Start Reading
-                              </Link>
-                              <Link
-                                href="/glossary"
-                                className="btn-secondary text-sm px-3 py-1.5"
-                              >
-                                Browse Key Terms
-                              </Link>
-                            </div>
-                          </div>
-                        )}
-
-                        {isPast && (
-                          <div className="pt-2">
-                            <Link
-                              href={`/threads?week=${week.id}`}
-                              className="text-sm font-medium transition-colors"
-                              style={{ color: 'var(--accent-red)' }}
-                            >
-                              View Week {week.week_number} Threads
-                            </Link>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
+      {/* Set start date */}
+      <div className="mb-6">
+        <label
+          htmlFor="started-at"
+          className="block text-xs font-medium mb-1"
+          style={{ color: 'var(--text-secondary)' }}
+        >
+          Group start date
+        </label>
+        <div className="flex items-center gap-2 max-w-md">
+          <input
+            id="started-at"
+            type="date"
+            className="input-base text-sm flex-1"
+            value={startDateDraft}
+            onChange={(e) => setStartDateDraft(e.target.value)}
+            disabled={submitting}
+          />
+          <button
+            type="button"
+            className="btn-secondary text-xs"
+            onClick={saveStartDate}
+            disabled={!startDateChanged || submitting}
+          >
+            {submitting ? 'Saving…' : 'Save'}
+          </button>
         </div>
       </div>
 
-      {/* Sticky "Jump to This Week" pill */}
-      {showJumpButton && currentWeekId && (
-        <button
-          onClick={scrollToCurrent}
-          className="fixed bottom-20 sm:bottom-6 left-1/2 -translate-x-1/2 z-30 px-4 py-2.5 rounded-full text-sm font-medium animate-fade-in btn-transition"
-          style={{
-            backgroundColor: 'var(--accent-purple)',
-            color: 'var(--text-inverse)',
-            boxShadow: 'var(--shadow-lg)',
-          }}
+      {/* Set/change current chapter */}
+      <div>
+        <label
+          htmlFor="current-chapter"
+          className="block text-xs font-medium mb-1"
+          style={{ color: 'var(--text-secondary)' }}
         >
-          ↕ Jump to This Week
-        </button>
-      )}
-    </div>
+          Current chapter
+        </label>
+        <div className="flex items-center gap-2 max-w-md">
+          <select
+            id="current-chapter"
+            className="input-base text-sm flex-1"
+            value={pendingChapterId ?? currentChapterId ?? ''}
+            onChange={(e) => setPendingChapterId(e.target.value || null)}
+            disabled={submitting}
+          >
+            {!currentChapterId && !pendingChapterId && (
+              <option value="">Select a chapter…</option>
+            )}
+            {chapters.map((c) => {
+              const { label } = getChapterLabel(c.chapter_number)
+              const isCurrent = c.id === currentChapterId
+              return (
+                <option key={c.id} value={c.id}>
+                  {label}
+                  {isCurrent ? ' · current' : ''}
+                </option>
+              )
+            })}
+          </select>
+          <button
+            type="button"
+            className="btn-secondary text-xs"
+            onClick={() => pickedChapter && onAdvanceClick(pickedChapter)}
+            disabled={!pickedChapter || pickedIsCurrent || submitting}
+          >
+            Apply
+          </button>
+        </div>
+        <p className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
+          Advancing the chapter ends the current chapter&rsquo;s stay in
+          the timeline below and starts a new stay on the picked chapter.
+        </p>
+
+        {/* Confirmation prompt — inline below the dropdown */}
+        {confirmAdvanceTo && (
+          <div
+            className="mt-4 rounded-md p-4"
+            style={{
+              backgroundColor: 'rgba(var(--accent-amber-rgb), 0.08)',
+              border: '1px solid var(--accent-amber)',
+            }}
+          >
+            <p className="text-sm mb-3" style={{ color: 'var(--text-primary)' }}>
+              Advance to{' '}
+              <strong>
+                {getChapterLabel(confirmAdvanceTo.chapter_number).label}:{' '}
+                {confirmAdvanceTo.title}
+              </strong>
+              ? This ends the current chapter&rsquo;s stay and starts a new
+              one. The history is permanent.
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="btn-primary text-xs"
+                onClick={onConfirmAdvance}
+                disabled={submitting}
+              >
+                {submitting ? 'Advancing…' : 'Advance'}
+              </button>
+              <button
+                type="button"
+                className="btn-secondary text-xs"
+                onClick={onCancelAdvance}
+                disabled={submitting}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function CompletedChaptersTimeline({
+  history,
+  chapterById,
+}: {
+  history: HistoryRow[]
+  chapterById: Map<string, ChapterRow>
+}) {
+  return (
+    <section
+      className="border-t pt-6"
+      style={{ borderColor: 'var(--border-subtle)' }}
+    >
+      <p className="text-eyebrow mb-4" style={{ color: 'var(--text-secondary)' }}>
+        Completed chapters
+      </p>
+      <ul className="divide-y" style={{ borderColor: 'var(--border-default)' }}>
+        {history.map((row) => {
+          const chapter = chapterById.get(row.chapter_id)
+          if (!chapter) return null
+          const { label } = getChapterLabel(chapter.chapter_number)
+          const weeks = weeksBetween(row.started_at, row.ended_at)
+          return (
+            <li key={row.id} className="py-3">
+              <p
+                style={{
+                  fontFamily: "'Lora', Georgia, serif",
+                  fontStyle: 'italic',
+                  fontSize: '1.05rem',
+                  color: 'var(--text-primary)',
+                }}
+              >
+                {label}: {chapter.title}
+              </p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
+                {weeks} {weeks === 1 ? 'week' : 'weeks'} ·{' '}
+                {formatDate(row.started_at)} – {formatDate(row.ended_at)}
+              </p>
+            </li>
+          )
+        })}
+      </ul>
+    </section>
   )
 }

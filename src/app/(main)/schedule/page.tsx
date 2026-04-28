@@ -3,44 +3,47 @@ import { createClient, getSessionUser } from '@/lib/supabase/server'
 import { getCurrentGroup } from '@/lib/group-resolver'
 import ScheduleClient from '@/components/schedule/ScheduleClient'
 
-// Query-specific join shapes for Supabase responses
-interface WeeklyRoleRow {
-  id: string
-  role_type: string
-  user: { id: string; display_name: string } | null
+export const metadata = {
+  title: 'Reading Schedule | Capital Study Group',
 }
 
-interface DiscussionPrompt {
+/**
+ * Schedule page — recurring mode.
+ *
+ * Per the Schedule modes (recurring v1) brief, this page replaces the
+ * previous date-based weekly schedule UI with a recurring-mode shape:
+ *
+ *   - Current state at top: which chapter is current, when current
+ *     chapter started, how many weeks the group has spent on it
+ *   - Host controls (host only): single dropdown to set/change current
+ *     chapter, date input to set group start date, schedule mode
+ *     dropdown (recurring enabled, bounded/specific disabled)
+ *   - Completed chapters timeline: reverse-chronological list of past
+ *     chapter stays from group_chapter_history
+ *   - Member view (non-host): same content, host controls hidden
+ *   - Pre-seed empty state: when started_at is NULL, host sees a setup
+ *     prompt + controls; member sees "your host will set things up"
+ *
+ * Drops from the previous version: per-week cards, session-notes
+ * textarea, weekly_roles assignment UI, discussion_prompts list. Those
+ * tables stay in the schema (per CLAUDE.md decision log entry, retained
+ * as legacy data), but recurring mode doesn't surface them. Per-session
+ * role rotation is the proper recurring-mode replacement, queued as
+ * future work behind a `sessions` table that doesn't exist yet.
+ */
+
+interface ChapterRow {
   id: string
-  prompt_text: string
+  chapter_number: number
+  title: string
   sort_order: number
 }
 
-interface RawWeeklyRole {
+interface HistoryRow {
   id: string
-  week_id: string
-  role_type: string
-  user_id: string
-}
-
-interface ScheduleWeek {
-  id: string
-  week_number: number
-  title: string
-  due_date: string
-  session_date: string | null
-  session_location: string | null
-  zoom_link: string | null
-  chapter_ref: string | null
-  page_start: number | null
-  page_end: number | null
-  description: string | null
-  weekly_roles: WeeklyRoleRow[] | null
-  discussion_prompts: DiscussionPrompt[] | null
-}
-
-export const metadata = {
-  title: 'Reading Schedule | Capital Study Group',
+  chapter_id: string
+  started_at: string
+  ended_at: string
 }
 
 export default async function SchedulePage() {
@@ -50,127 +53,50 @@ export default async function SchedulePage() {
   const group = await getCurrentGroup(supabase, user.id)
   if (!group) redirect('/login')
 
-  // Flat parallel queries — avoids nested join RLS failures.
-  // Previous approach nested weekly_roles(user:profiles) + discussion_prompts inside
-  // reading_schedule, which fails silently if RLS blocks any joined table.
-  // L1: schedule, weekly_roles, discussion_prompts are group-scoped via group_id;
-  // RLS additionally enforces. Profiles stay unfiltered (display_name lookup).
-  const [weeksResult, rolesResult, promptsResult, profilesResult] = await Promise.all([
-    // Weeks — flat, no joins
+  // Fetch all chapters (shared text, not group-scoped) and the group's
+  // chapter history in parallel. The chapter list drives the host's
+  // current-chapter dropdown; the history list drives the completed-
+  // chapters timeline.
+  const [chaptersResult, historyResult] = await Promise.all([
     supabase
-      .from('reading_schedule')
-      .select('*')
+      .from('text_chapters')
+      .select('id, chapter_number, title, sort_order')
+      .order('sort_order', { ascending: true }),
+    supabase
+      .from('group_chapter_history')
+      .select('id, chapter_id, started_at, ended_at')
       .eq('group_id', group.groupId)
-      .order('week_number', { ascending: true }),
-    // Roles — flat
-    supabase
-      .from('weekly_roles')
-      .select('id, week_id, role_type, user_id')
-      .eq('group_id', group.groupId),
-    // Prompts — flat
-    supabase
-      .from('discussion_prompts')
-      .select('id, week_id, prompt_text, sort_order')
-      .eq('group_id', group.groupId),
-    // Profiles for role user names — global (display_name only, not sensitive)
-    supabase
-      .from('profiles')
-      .select('id, display_name'),
+      .order('ended_at', { ascending: false }),
   ])
 
-  if (weeksResult.error) {
-    console.error('[CCP] Schedule page — reading_schedule query error:', weeksResult.error)
+  if (chaptersResult.error) {
+    console.error('[CCP] Schedule page — text_chapters query error:', chaptersResult.error)
   }
-  if (rolesResult.error) {
-    console.error('[CCP] Schedule page — weekly_roles query error:', rolesResult.error)
-  }
-  if (promptsResult.error) {
-    console.error('[CCP] Schedule page — discussion_prompts query error:', promptsResult.error)
-  }
-  if (profilesResult.error) {
-    console.error('[CCP] Schedule page — profiles query error:', profilesResult.error)
+  if (historyResult.error) {
+    console.error('[CCP] Schedule page — group_chapter_history query error:', historyResult.error)
   }
 
-  // Build profile lookup
-  const profileMap = new Map<string, { id: string; display_name: string }>()
-  if (profilesResult.data) {
-    for (const p of profilesResult.data) {
-      profileMap.set(p.id, { id: p.id, display_name: p.display_name })
-    }
-  }
-
-  // Build roles by week_id
-  const rolesByWeek = new Map<string, WeeklyRoleRow[]>()
-  if (rolesResult.data) {
-    for (const r of rolesResult.data as RawWeeklyRole[]) {
-      const weekRoles = rolesByWeek.get(r.week_id) || []
-      weekRoles.push({
-        id: r.id,
-        role_type: r.role_type,
-        user: profileMap.get(r.user_id) || null,
-      })
-      rolesByWeek.set(r.week_id, weekRoles)
-    }
-  }
-
-  // Build prompts by week_id
-  const promptsByWeek = new Map<string, DiscussionPrompt[]>()
-  if (promptsResult.data) {
-    for (const p of promptsResult.data as (DiscussionPrompt & { week_id: string })[]) {
-      const weekPrompts = promptsByWeek.get(p.week_id) || []
-      weekPrompts.push({ id: p.id, prompt_text: p.prompt_text, sort_order: p.sort_order })
-      promptsByWeek.set(p.week_id, weekPrompts)
-    }
-  }
-
-  // Merge into ScheduleWeek shape
-  const rawWeeks = (weeksResult.data || []) as { id: string; week_number: number; title: string; due_date: string; session_date: string | null; session_location: string | null; zoom_link: string | null; chapter_ref: string | null; page_start: number | null; page_end: number | null; description: string | null }[]
-
-  const typedWeeks: ScheduleWeek[] = rawWeeks.map((w) => ({
-    ...w,
-    weekly_roles: rolesByWeek.get(w.id) || null,
-    discussion_prompts: promptsByWeek.get(w.id) || null,
-  }))
-
-  // Determine current week (closest upcoming due_date)
-  const now = new Date()
-  const currentWeek = typedWeeks.find((w) => new Date(w.due_date) >= now) || typedWeeks[typedWeeks.length - 1]
-
-  if (typedWeeks.length === 0) {
-    return (
-      <div>
-        <div className="mb-8">
-          <p className="text-eyebrow mb-2">Weekly Plan</p>
-          <h1 className="text-display-lg" style={{ color: 'var(--text-primary)' }}>
-            Reading Schedule
-          </h1>
-        </div>
-        <div className="text-center py-16">
-          <p className="text-lg mb-2" style={{ color: 'var(--text-primary)' }}>
-            The schedule is on its way
-          </p>
-          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            The reading schedule will appear here once your facilitator sets it up. In the meantime, explore the platform.
-          </p>
-        </div>
-      </div>
-    )
-  }
+  const chapters = (chaptersResult.data || []) as ChapterRow[]
+  const history = (historyResult.data || []) as HistoryRow[]
 
   return (
     <div>
       <div className="mb-6">
-        <p className="text-eyebrow mb-2">Weekly Plan</p>
+        <p className="text-eyebrow mb-2">Reading Journey</p>
         <h1 className="text-display-lg" style={{ color: 'var(--text-primary)' }}>
           Reading Schedule
         </h1>
       </div>
 
       <ScheduleClient
-        weeks={typedWeeks}
-        currentWeekId={currentWeek?.id || null}
-        userId={user?.id || null}
         groupId={group.groupId}
+        scheduleMode={group.scheduleMode}
+        startedAt={group.startedAt}
+        currentChapterId={group.currentChapterId}
+        currentChapterStartedAt={group.currentChapterStartedAt}
+        isHost={group.role === 'host'}
+        chapters={chapters}
+        history={history}
       />
     </div>
   )

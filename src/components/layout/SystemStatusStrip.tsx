@@ -3,85 +3,84 @@ import { getChapterLabel } from '@/lib/chapter-utils'
 import { getCurrentGroup } from '@/lib/group-resolver'
 
 /**
- * SystemStatusStrip — ambient context line at the top of every authenticated page.
+ * SystemStatusStrip — ambient context line at the top of every
+ * authenticated page (suppressed on /dashboard, which has its own
+ * integrated header carrying the same info).
  *
- * Per IMPROVEMENTS_PLAN §2.6 + §5.1.1. Implements the calm-technology
- * principle: tells you where you are in the journey without notification
- * anxiety, urgency signals, or unread counters.
+ * Implements the calm-technology principle: tells you where you are in
+ * the journey without notification anxiety, urgency signals, or unread
+ * counters.
  *
- * Format examples:
- *   WATERMELON · WEEK 4 OF 32 · CHAPTER 1, §4 · NEXT SESSION TUE 7PM
+ * Recurring-v1 dual-counter format:
+ *   WATERMELON · WEEK 12 · WEEK 3 ON CHAPTER 1, §4
  *   WATERMELON · READING JOURNEY NOT YET STARTED
  *
- * Chunk 3b piece 4 (naming addendum): the FIRST PART of the strip is
- * the GROUP name, fetched from `groups.name` — not the platform brand
- * "Capital Study Group". Mars's note: "Where the design pack PDF
- * shows 'CAPITAL STUDY GROUP' in eyebrow text on dashboard frames,
- * that's implementation-time copy that should be the actual group
- * name from the database. For the launch group: 'Watermelon.'"
+ *   - Group name (e.g. "Watermelon") — from groups.name via the
+ *     resolver, not the platform brand.
+ *   - Total counter (Week N) — weeks since groups.started_at.
+ *   - Chapter counter + section reference (Week M on Chapter X, §Y) —
+ *     weeks since groups.current_chapter_started_at, plus the current
+ *     chapter label.
  *
- * The strip is suppressed on `/dashboard` because the dashboard's own
- * header carries the same information (group-name eyebrow + greeting
- * + orientation line) — rendering both would be redundant.
+ * Empty state:
+ *   - When started_at OR current_chapter_id is unset, render
+ *     "READING JOURNEY NOT YET STARTED" — the host hasn't begun seeding
+ *     and the group hasn't earned the structure of a counter.
  *
- * Renders as a single right-aligned eyebrow line at the top of the main
- * content area. Degrades gracefully when the schedule isn't set up yet.
+ * Session timing intentionally absent in recurring v1 — no schema
+ * field for "next session" in recurring mode (queues for the future
+ * `sessions` table piece). Returns when sessions land:
+ *   "WATERMELON · WEEK 12 · WEEK 3 ON CHAPTER 1, §4 · NEXT SESSION TUE 7PM"
  */
 export default async function SystemStatusStrip() {
   const supabase = await createClient()
   const user = await getSessionUser()
   const now = new Date()
 
-  // Resolve current group via membership (chunk 3b L1). When the user
-  // isn't authenticated or has no memberships, render nothing — the
-  // strip is meaningful only inside a group context.
+  // Resolve current group via membership. When the user isn't
+  // authenticated or has no memberships, render nothing — the strip
+  // is meaningful only inside a group context.
   const group = user ? await getCurrentGroup(supabase, user.id) : null
   if (!group) return null
 
-  const { data: allWeeksData } = await supabase
-    .from('reading_schedule')
-    .select('week_number, session_date, session_location, title, due_date')
-    .eq('group_id', group.groupId)
-    .order('week_number', { ascending: true })
-
   const groupName: string = group.name
 
-  const allWeeks = (allWeeksData || []) as { week_number: number; session_date: string | null; session_location: string | null; title: string; due_date: string }[]
-  const totalWeeks = allWeeks.length
-  const nextWeek =
-    allWeeks.find((w) => new Date(w.due_date) >= now) ||
-    allWeeks[allWeeks.length - 1] ||
-    null
-
-  let chapterLabel: string | null = null
-  if (nextWeek?.week_number) {
-    chapterLabel = getChapterLabel(nextWeek.week_number).label
-  }
-
-  let sessionLabel: string | null = null
-  if (nextWeek?.session_date) {
-    const d = new Date(nextWeek.session_date)
-    const day = d.toLocaleString('en-NZ', {
-      weekday: 'short',
-      timeZone: 'Pacific/Auckland',
-    }).toUpperCase()
-    const time = d.toLocaleString('en-NZ', {
-      hour: 'numeric',
-      hour12: true,
-      timeZone: 'Pacific/Auckland',
-    }).replace(/\s/g, '').toUpperCase()
-    sessionLabel = `${day} ${time}`
-  }
-
-  // Compose the strip parts. First part is GROUP name (per addendum).
+  // Compose the strip parts. First part is GROUP name.
   const parts: string[] = [groupName]
 
-  if (!totalWeeks || totalWeeks === 0 || !nextWeek) {
+  if (!group.startedAt || !group.currentChapterId || !group.currentChapterStartedAt) {
+    // Empty state: group hasn't started, or host hasn't picked a
+    // current chapter. Don't fabricate counters from incomplete data.
     parts.push('Reading journey not yet started')
   } else {
-    parts.push(`Week ${nextWeek.week_number} of ${totalWeeks}`)
-    if (chapterLabel) parts.push(chapterLabel)
-    if (sessionLabel) parts.push(`Next session ${sessionLabel}`)
+    // Compute the dual counter from group state alone — no
+    // reading_schedule queries (recurring mode doesn't use that table).
+    const startedAtMs = new Date(group.startedAt).getTime()
+    const chapterStartedMs = new Date(group.currentChapterStartedAt).getTime()
+    const nowMs = now.getTime()
+    const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000
+    const totalWeeks = Math.max(1, Math.floor((nowMs - startedAtMs) / MS_PER_WEEK) + 1)
+    const chapterWeeks = Math.max(1, Math.floor((nowMs - chapterStartedMs) / MS_PER_WEEK) + 1)
+
+    // Look up the current chapter for its section/chapter label.
+    // Single-row fetch by id; cheap. text_chapters is shared text
+    // (not group-scoped), so no group filter needed.
+    const { data: chapterRow } = await supabase
+      .from('text_chapters')
+      .select('chapter_number')
+      .eq('id', group.currentChapterId)
+      .maybeSingle()
+
+    parts.push(`Week ${totalWeeks}`)
+    if (chapterRow) {
+      const { label } = getChapterLabel((chapterRow as { chapter_number: number }).chapter_number)
+      parts.push(`Week ${chapterWeeks} on ${label}`)
+    } else {
+      // Defensive: if the FK target was deleted (very unlikely),
+      // render the chapter counter without the label rather than
+      // silently dropping it.
+      parts.push(`Week ${chapterWeeks} on current chapter`)
+    }
   }
 
   return (

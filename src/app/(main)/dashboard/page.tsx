@@ -241,46 +241,41 @@ export default async function DashboardPage({
   const chapterById = new Map<string, ChapterRow>()
   for (const c of allChapters) chapterById.set(c.id, c)
 
-  // ── Orientation line ────────────────────────────────────────────
+  // ── Orientation line (recurring v1) ─────────────────────────────
+  // Per Schedule modes (recurring v1) brief — dual counter format:
+  //   "Week 12 · Week 3 on Chapter 1, §4"
+  //
+  //   - Total counter: weeks since groups.started_at. Ticks forever
+  //     from group start.
+  //   - Chapter counter: weeks since groups.current_chapter_started_at.
+  //     Resets when host advances current chapter.
+  //   - Chapter + section reference: getChapterLabel(currentChapter.
+  //     chapter_number) yields "Chapter 1, Section N" / "Chapter N".
+  //
+  // Drops from the previous version: "of 32" framing, "Reading
+  // {title}" qualifier, "X annotations across Y sections" (now in
+  // big-stat tiles), "Z active threads" (also in big-stat tiles),
+  // "Next session ..." (deferred — recurring mode has no session-time
+  // schema field; queues for the future sessions table piece).
+  //
+  // Render only when both started_at AND current_chapter_id are set
+  // (the group has begun and the host has picked a chapter). Otherwise
+  // orientation = null and DashboardHeader skips the line — the
+  // greeting and group-name eyebrow alone carry the page identity.
   let orientation: string | null = null
-  if (currentWeek) {
-    const parts: string[] = [`Week ${currentWeek.week_number} of ${totalWeeks}`]
-    if (currentWeek.title) parts.push(`Reading ${currentWeek.title}`)
+  if (group.startedAt && group.currentChapterId && group.currentChapterStartedAt) {
+    const startedAtMs = new Date(group.startedAt).getTime()
+    const chapterStartedMs = new Date(group.currentChapterStartedAt).getTime()
+    const nowMs = now.getTime()
+    const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000
+    const totalWeeks = Math.max(1, Math.floor((nowMs - startedAtMs) / MS_PER_WEEK) + 1)
+    const chapterWeeks = Math.max(1, Math.floor((nowMs - chapterStartedMs) / MS_PER_WEEK) + 1)
 
-    const weekChapters = allChapters.filter((c) => c.week_id === currentWeek.id)
-    const weekChapterIds = new Set(weekChapters.map((c) => c.id))
-    const weekAnnotations = annotationsList.filter((a) =>
-      weekChapterIds.has(a.chapter_id)
-    )
-    const sectionsTouched = new Set(weekAnnotations.map((a) => a.chapter_id)).size
-    if (weekAnnotations.length > 0) {
-      parts.push(
-        `${weekAnnotations.length} ${weekAnnotations.length === 1 ? 'annotation' : 'annotations'} across ${sectionsTouched} ${sectionsTouched === 1 ? 'section' : 'sections'}`
-      )
+    const currentChapter = chapterById.get(group.currentChapterId)
+    if (currentChapter) {
+      const { label } = getChapterLabel(currentChapter.chapter_number)
+      orientation = `Week ${totalWeeks} · Week ${chapterWeeks} on ${label}`
     }
-    const activeThreadCount = (recentThreads || []).length
-    if (activeThreadCount > 0) {
-      parts.push(`${activeThreadCount} active threads`)
-    }
-    if (currentWeek.session_date) {
-      const d = new Date(currentWeek.session_date)
-      const day = d.toLocaleString('en-NZ', {
-        weekday: 'long',
-        timeZone: 'Pacific/Auckland',
-      })
-      const time = d
-        .toLocaleString('en-NZ', { hour: 'numeric', hour12: true, timeZone: 'Pacific/Auckland' })
-        .replace(/\s/g, '')
-        .toLowerCase()
-      const daysUntil = Math.max(
-        0,
-        Math.ceil((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-      )
-      const countdown =
-        daysUntil === 0 ? 'today' : daysUntil === 1 ? 'tomorrow' : `in ${daysUntil} days`
-      parts.push(`Next session ${day} ${time}, ${countdown}`)
-    }
-    orientation = parts.join(' · ')
   }
 
   // ── Days until session (Rhythm) ─────────────────────────────────

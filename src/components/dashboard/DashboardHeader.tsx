@@ -1,24 +1,33 @@
 /**
- * DashboardHeader — chunk 3b piece 4.
+ * DashboardHeader — chunk 3b piece 4 + Schedule modes (recurring v1)
+ * orientation refresh.
  *
- * The integrated top header for the 13D dashboard. Replaces the
+ * The integrated top header for the dashboard. Replaces the
  * SystemStatusStrip eyebrow + the simple greeting line that the
  * previous dashboard rendered.
  *
  *   ┌──────────────────────────────────────────────────────────┐
  *   │ Good evening, Marco                       [GROUP NAME]   │
- *   │ Week 4 of 32 · Reading Commodities & …                   │
- *   │ … · 38 annotations across 6 sections · 6 active threads  │
- *   │ · Next session Tuesday 7pm, in 4 days                    │
+ *   │ Week 12 · Week 3 on Chapter 1, §4                        │
  *   └──────────────────────────────────────────────────────────┘
  *
  * Group name eyebrow on the right is the GROUP NAME (e.g. "Watermelon"
- * for the seed group), not the platform brand "Capital Study Group" —
- * per Mars's naming addendum.
+ * for the seed group), not the platform brand "Capital Study Group".
  *
- * The orientation line is a single prose line with middle-dot
- * separators. Renders only the parts that have data; degrades
- * gracefully when the schedule isn't set up yet.
+ * Orientation line — recurring-v1 dual counter format:
+ *   "Week N · Week M on Chapter X, §Y"
+ *   - Total counter (Week N): weeks since groups.started_at.
+ *   - Chapter counter (Week M): weeks since groups.current_chapter_started_at.
+ *   - Chapter + section: getChapterLabel(currentChapter.chapter_number).
+ *
+ * Composer (dashboard/page.tsx) returns null when started_at or
+ * current_chapter_id is unset — header skips the line entirely. No
+ * platform-generated structure for groups that haven't started.
+ *
+ * Session timing is intentionally absent in recurring v1 (no schema
+ * field for it; queues for the future `sessions` table piece). When
+ * sessions land, the orientation line gains a third part:
+ * "Week 12 · Week 3 on Chapter 1, §4 · Next session Tuesday 7pm".
  */
 
 interface DashboardHeaderProps {

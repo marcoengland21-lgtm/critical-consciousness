@@ -38,6 +38,25 @@ export interface GroupContext {
   name: string
   /** The user's role in this group. */
   role: 'host' | 'member'
+  /** Schedule mode for this group (006 — schedule modes recurring v1).
+   *  Only `recurring` has UI in the launch build; `bounded` and
+   *  `specific` are schema-supported but not surfaced. */
+  scheduleMode: 'recurring' | 'bounded' | 'specific'
+  /** ISO date the group began reading. NULL until the host sets it.
+   *  When NULL, recurring-mode UI renders honest empty states across
+   *  the dashboard, schedule page, and current-chapter-aware widgets. */
+  startedAt: string | null
+  /** UUID of the current chapter row (text_chapters). NULL until host
+   *  sets a current chapter. Surface code fetches chapter details
+   *  (chapter_number, title) by this id; the resolver does NOT join
+   *  chapter data — keeps resolver focused on group context, avoids
+   *  stale-label-vs-current-data windows during chapter advance. */
+  currentChapterId: string | null
+  /** ISO timestamp when current_chapter_id was last set or changed.
+   *  Used by the dashboard's chapter counter ("Week 3 on Chapter 1")
+   *  and the schedule page's reflective metadata. NULL when
+   *  currentChapterId is NULL. */
+  currentChapterStartedAt: string | null
 }
 
 interface ResolveOptions {
@@ -96,17 +115,26 @@ export async function getCurrentGroup(
   // Step 3: oldest membership fallback.
   const { data: oldestMembership } = await supabase
     .from('group_memberships')
-    .select('group_id, role, group:groups!group_id(id, name, slug)')
+    .select('group_id, role, group:groups!group_id(id, name, slug, schedule_mode, started_at, current_chapter_id, current_chapter_started_at)')
     .eq('user_id', userId)
     .order('joined_at', { ascending: true })
     .limit(1)
     .maybeSingle()
 
   if (!oldestMembership) return null
+  type GroupRow = {
+    id: string
+    name: string
+    slug: string
+    schedule_mode: 'recurring' | 'bounded' | 'specific'
+    started_at: string | null
+    current_chapter_id: string | null
+    current_chapter_started_at: string | null
+  }
   const m = oldestMembership as unknown as {
     group_id: string
     role: 'host' | 'member'
-    group: { id: string; name: string; slug: string } | { id: string; name: string; slug: string }[]
+    group: GroupRow | GroupRow[]
   }
   const g = Array.isArray(m.group) ? m.group[0] : m.group
   if (!g) return null
@@ -122,6 +150,10 @@ export async function getCurrentGroup(
     slug: g.slug,
     name: g.name,
     role: m.role,
+    scheduleMode: g.schedule_mode,
+    startedAt: g.started_at,
+    currentChapterId: g.current_chapter_id,
+    currentChapterStartedAt: g.current_chapter_started_at,
   }
 }
 
@@ -174,18 +206,30 @@ async function fetchGroupByKeyAndMembership(
   // Try slug first.
   const { data: bySlug } = await supabase
     .from('groups')
-    .select('id, name, slug')
+    .select('id, name, slug, schedule_mode, started_at, current_chapter_id, current_chapter_started_at')
     .eq('slug', key)
     .maybeSingle()
   if (bySlug) {
-    const id = (bySlug as { id: string }).id
-    const role = await fetchMembershipRole(supabase, id, userId)
+    const row = bySlug as {
+      id: string
+      name: string
+      slug: string
+      schedule_mode: 'recurring' | 'bounded' | 'specific'
+      started_at: string | null
+      current_chapter_id: string | null
+      current_chapter_started_at: string | null
+    }
+    const role = await fetchMembershipRole(supabase, row.id, userId)
     if (role) {
       return {
-        groupId: id,
-        slug: (bySlug as { slug: string }).slug,
-        name: (bySlug as { name: string }).name,
+        groupId: row.id,
+        slug: row.slug,
+        name: row.name,
         role,
+        scheduleMode: row.schedule_mode,
+        startedAt: row.started_at,
+        currentChapterId: row.current_chapter_id,
+        currentChapterStartedAt: row.current_chapter_started_at,
       }
     }
   }
@@ -203,17 +247,30 @@ async function fetchGroupByIdAndMembership(
 ): Promise<GroupContext | null> {
   const { data: g } = await supabase
     .from('groups')
-    .select('id, name, slug')
+    .select('id, name, slug, schedule_mode, started_at, current_chapter_id, current_chapter_started_at')
     .eq('id', groupId)
     .maybeSingle()
   if (!g) return null
   const role = await fetchMembershipRole(supabase, groupId, userId)
   if (!role) return null
+  const row = g as {
+    id: string
+    name: string
+    slug: string
+    schedule_mode: 'recurring' | 'bounded' | 'specific'
+    started_at: string | null
+    current_chapter_id: string | null
+    current_chapter_started_at: string | null
+  }
   return {
-    groupId: (g as { id: string }).id,
-    slug: (g as { slug: string }).slug,
-    name: (g as { name: string }).name,
+    groupId: row.id,
+    slug: row.slug,
+    name: row.name,
     role,
+    scheduleMode: row.schedule_mode,
+    startedAt: row.started_at,
+    currentChapterId: row.current_chapter_id,
+    currentChapterStartedAt: row.current_chapter_started_at,
   }
 }
 
