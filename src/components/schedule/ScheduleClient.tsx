@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getChapterLabel } from '@/lib/chapter-utils'
+import { formatNextSessionSentence } from '@/lib/session-timing-format'
 
 /**
  * Recurring-mode schedule client.
@@ -14,11 +15,22 @@ import { getChapterLabel } from '@/lib/chapter-utils'
  *      member sees "your host will set things up."
  *   2. Current state banner — current chapter label, started date,
  *      "Week N on this chapter" counter. Only when currentChapterId
- *      and currentChapterStartedAt are both set.
+ *      and currentChapterStartedAt are both set. Also renders session
+ *      timing piece (010 — TRANSITIONAL) when host has set
+ *      next_session_at, so members see group rhythm too.
  *   3. Host controls — chapter dropdown, start date input, schedule
- *      mode dropdown. Hidden for members.
+ *      mode dropdown, session timing (010). Hidden for members.
  *   4. Completed chapters timeline — group_chapter_history, reverse
  *      chronological. Empty when no advances have happened yet.
+ *
+ * Session timing (010) note: stored as `groups.next_session_at`
+ * (TIMESTAMPTZ) and `groups.session_recurrence` (free text). Host UI
+ * uses native `<input type="datetime-local">` which operates in the
+ * BROWSER's local timezone — for a host outside Pacific/Auckland the
+ * stored UTC won't match what they typed when displayed back in NZ.
+ * For the launch use (Mars in NZ), this is fine. A small "Time in
+ * Pacific/Auckland" hint sits next to the input for non-NZ hosts.
+ * Multi-tenant future may want explicit timezone selection.
  */
 
 interface ChapterRow {
@@ -41,6 +53,10 @@ interface Props {
   startedAt: string | null
   currentChapterId: string | null
   currentChapterStartedAt: string | null
+  /** 010 (TRANSITIONAL): next session timestamp + free-text recurrence.
+   *  Both nullable; null when host hasn't set them. */
+  nextSessionAt: string | null
+  sessionRecurrence: string | null
   isHost: boolean
   chapters: ChapterRow[]
   history: HistoryRow[]
@@ -70,11 +86,26 @@ function formatDate(iso: string): string {
   })
 }
 
+/** Convert an ISO timestamp to the value format that <input type="datetime-local">
+ *  expects: "YYYY-MM-DDTHH:MM" in BROWSER local time (no Z, no seconds).
+ *  See JSDoc at top — Mars (NZ) browser-local matches display TZ; for
+ *  hosts in other timezones the saved UTC reflects browser local.
+ *  Returns empty string for null/missing input — that's the unset state
+ *  the input renders natively as "mm/dd/yyyy --:--". */
+function isoToDatetimeLocalValue(iso: string | null): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
 export default function ScheduleClient({
   groupId,
   startedAt,
   currentChapterId,
   currentChapterStartedAt,
+  nextSessionAt,
+  sessionRecurrence,
   isHost,
   chapters,
   history,
@@ -85,6 +116,12 @@ export default function ScheduleClient({
   const [pendingChapterId, setPendingChapterId] = useState<string | null>(null)
   const [confirmAdvanceTo, setConfirmAdvanceTo] = useState<ChapterRow | null>(null)
   const [startDateDraft, setStartDateDraft] = useState<string>(startedAt ?? '')
+  // Session timing drafts (010). Datetime-local input value format,
+  // free text for recurrence. Initial values are the saved server state.
+  const [sessionTimingDraft, setSessionTimingDraft] = useState<string>(
+    isoToDatetimeLocalValue(nextSessionAt)
+  )
+  const [recurrenceDraft, setRecurrenceDraft] = useState<string>(sessionRecurrence ?? '')
 
   // Lookup map for chapter id → row, for rendering history rows.
   const chapterById = useMemo(() => {
@@ -145,6 +182,36 @@ export default function ScheduleClient({
     router.refresh()
   }
 
+  // ── Session timing save (010) ─────────────────────────────────────
+  // Single Save covers both fields atomically via the RPC. Empty
+  // datetime input → null next_session_at (cleared). Empty recurrence
+  // → null (cleared). Either field can be set independently — host
+  // can have a recurrence with no specific next session, or a next
+  // session without a stated recurrence. Both nullable on the schema.
+  async function saveSessionTiming() {
+    if (submitting) return
+    setSubmitting(true)
+    setError(null)
+    const supabase = createClient()
+    // Datetime-local value is browser-local; new Date() converts to UTC ISO.
+    // Null when input is empty (host clearing the field).
+    const isoValue = sessionTimingDraft
+      ? new Date(sessionTimingDraft).toISOString()
+      : null
+    const recurrenceValue = recurrenceDraft.trim() || null
+    const { error: rpcError } = await supabase.rpc('set_group_session_timing', {
+      p_group_id: groupId,
+      p_next_session_at: isoValue,
+      p_recurrence: recurrenceValue,
+    })
+    setSubmitting(false)
+    if (rpcError) {
+      setError(rpcError.message)
+      return
+    }
+    router.refresh()
+  }
+
   // ── Render ─────────────────────────────────────────────────────────
 
   return (
@@ -170,6 +237,8 @@ export default function ScheduleClient({
           currentChapter={currentChapter}
           currentChapterStartedAt={currentChapterStartedAt}
           startedAt={startedAt}
+          nextSessionAt={nextSessionAt}
+          sessionRecurrence={sessionRecurrence}
         />
       )}
 
@@ -192,6 +261,13 @@ export default function ScheduleClient({
             setPendingChapterId(null)
           }}
           onConfirmAdvance={confirmAdvance}
+          nextSessionAt={nextSessionAt}
+          sessionRecurrence={sessionRecurrence}
+          sessionTimingDraft={sessionTimingDraft}
+          setSessionTimingDraft={setSessionTimingDraft}
+          recurrenceDraft={recurrenceDraft}
+          setRecurrenceDraft={setRecurrenceDraft}
+          saveSessionTiming={saveSessionTiming}
         />
       )}
 
@@ -240,10 +316,14 @@ function CurrentStateBanner({
   currentChapter,
   currentChapterStartedAt,
   startedAt,
+  nextSessionAt,
+  sessionRecurrence,
 }: {
   currentChapter: ChapterRow | null
   currentChapterStartedAt: string | null
   startedAt: string | null
+  nextSessionAt: string | null
+  sessionRecurrence: string | null
 }) {
   if (!currentChapter || !currentChapterStartedAt) {
     // Edge case: startedAt is set but the host hasn't picked a current
@@ -269,6 +349,7 @@ function CurrentStateBanner({
   }
   const { label } = getChapterLabel(currentChapter.chapter_number)
   const weeksOnChapter = weeksBetween(currentChapterStartedAt, new Date())
+  const nextSessionFormatted = formatNextSessionSentence(nextSessionAt)
   return (
     <div>
       <p className="text-eyebrow mb-3">Current chapter</p>
@@ -291,6 +372,23 @@ function CurrentStateBanner({
         On this chapter since {formatDate(currentChapterStartedAt)} ·{' '}
         Week {weeksOnChapter} on this chapter
       </p>
+
+      {/* Session timing piece (010 — TRANSITIONAL). Renders only when
+          host has set next_session_at — banner stays clean for groups
+          that haven't set timing yet. Recurrence appended only when
+          also set; "Meets ${recurrence}" reads natural for "weekly",
+          "fortnightly Tuesday evenings", "every other week" etc.
+          Members see this same banner so the rhythm is shared, not
+          host-only knowledge. */}
+      {nextSessionFormatted && (
+        <p
+          className="text-sm mt-1"
+          style={{ color: 'var(--text-secondary)' }}
+        >
+          Next session {nextSessionFormatted}
+          {sessionRecurrence && ` · Meets ${sessionRecurrence}`}
+        </p>
+      )}
     </div>
   )
 }
@@ -309,6 +407,13 @@ function HostControls({
   confirmAdvanceTo,
   onCancelAdvance,
   onConfirmAdvance,
+  nextSessionAt,
+  sessionRecurrence,
+  sessionTimingDraft,
+  setSessionTimingDraft,
+  recurrenceDraft,
+  setRecurrenceDraft,
+  saveSessionTiming,
 }: {
   chapters: ChapterRow[]
   currentChapterId: string | null
@@ -323,12 +428,30 @@ function HostControls({
   confirmAdvanceTo: ChapterRow | null
   onCancelAdvance: () => void
   onConfirmAdvance: () => void
+  nextSessionAt: string | null
+  sessionRecurrence: string | null
+  sessionTimingDraft: string
+  setSessionTimingDraft: (v: string) => void
+  recurrenceDraft: string
+  setRecurrenceDraft: (v: string) => void
+  saveSessionTiming: () => void
 }) {
   const startDateChanged = startDateDraft !== '' && startDateDraft !== startedAt
   const pickedChapter = pendingChapterId
     ? chapters.find((c) => c.id === pendingChapterId) ?? null
     : null
   const pickedIsCurrent = pickedChapter?.id === currentChapterId
+
+  // Session timing dirty-state. Save is enabled when either the
+  // datetime or the recurrence draft differs from the saved server
+  // value. Empty string === null at the schema level (saveSessionTiming
+  // converts blank inputs to null), so equality comparisons normalize
+  // null → ''.
+  const savedDatetimeValue = isoToDatetimeLocalValue(nextSessionAt)
+  const savedRecurrenceValue = sessionRecurrence ?? ''
+  const sessionTimingChanged =
+    sessionTimingDraft !== savedDatetimeValue ||
+    recurrenceDraft !== savedRecurrenceValue
 
   return (
     <section
@@ -473,6 +596,100 @@ function HostControls({
             </div>
           </div>
         )}
+      </div>
+
+      {/* ── Session timing (010 — TRANSITIONAL) ──────────────────────
+          Two inputs (next session datetime + free-text recurrence)
+          and a single Save calling set_group_session_timing RPC
+          atomically. Both fields nullable. Native datetime-local
+          input renders the unset state natively as "mm/dd/yyyy --:--"
+          — that's the honest "[not set]" treatment without a custom
+          placeholder. "Currently:" feedback line below the inputs
+          shows saved state for confirmation. Time-zone hint sits
+          near the input for non-NZ hosts (Mars-in-NZ doesn't need
+          it but it's accurate for everyone).
+      */}
+      <div
+        className="mt-8 pt-6"
+        style={{ borderTop: '1px solid var(--border-subtle)' }}
+      >
+        <p
+          className="text-xs font-medium mb-1"
+          style={{ color: 'var(--text-secondary)' }}
+        >
+          Session timing
+        </p>
+        <p
+          className="text-xs mb-4"
+          style={{ color: 'var(--text-secondary)', opacity: 0.7 }}
+        >
+          When the group meets next, and how often. Both optional. Time
+          shown in Pacific/Auckland.
+        </p>
+
+        {/* Next session datetime */}
+        <div className="mb-4">
+          <label
+            htmlFor="next-session-at"
+            className="block text-xs font-medium mb-1"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            Next session
+          </label>
+          <input
+            id="next-session-at"
+            type="datetime-local"
+            className="input-base text-sm w-full max-w-md"
+            value={sessionTimingDraft}
+            onChange={(e) => setSessionTimingDraft(e.target.value)}
+            disabled={submitting}
+          />
+        </div>
+
+        {/* Recurrence (free text) */}
+        <div className="mb-4">
+          <label
+            htmlFor="session-recurrence"
+            className="block text-xs font-medium mb-1"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            Recurrence
+          </label>
+          <input
+            id="session-recurrence"
+            type="text"
+            className="input-base text-sm w-full max-w-md"
+            placeholder="e.g. weekly, fortnightly Tuesday evenings"
+            value={recurrenceDraft}
+            onChange={(e) => setRecurrenceDraft(e.target.value)}
+            disabled={submitting}
+          />
+        </div>
+
+        {/* Currently-saved feedback + Save */}
+        <div className="flex items-center justify-between gap-2 max-w-md">
+          <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+            Currently:{' '}
+            {nextSessionAt || sessionRecurrence ? (
+              <>
+                {nextSessionAt
+                  ? formatNextSessionSentence(nextSessionAt)
+                  : 'no specific time'}
+                {sessionRecurrence && `, meets ${sessionRecurrence}`}
+              </>
+            ) : (
+              <em style={{ fontStyle: 'italic' }}>not set</em>
+            )}
+          </p>
+          <button
+            type="button"
+            className="btn-secondary text-xs shrink-0"
+            onClick={saveSessionTiming}
+            disabled={!sessionTimingChanged || submitting}
+          >
+            {submitting ? 'Saving…' : 'Save'}
+          </button>
+        </div>
       </div>
     </section>
   )

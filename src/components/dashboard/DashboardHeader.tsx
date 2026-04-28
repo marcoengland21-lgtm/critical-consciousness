@@ -20,14 +20,24 @@
  *   - Chapter counter (Week M): weeks since groups.current_chapter_started_at.
  *   - Chapter + section: getChapterLabel(currentChapter.chapter_number).
  *
+ * With session timing (010 — TRANSITIONAL, when host has set
+ * groups.next_session_at), orientation gains a third piece:
+ *   "Week N · Week M on Chapter X, §Y · Next session Tuesday 7pm"
+ *
+ * Sentence-case prose throughout including the weekday (matches the
+ * dashboard's conversational voice). Compact time format ("7pm" not
+ * "7:00 PM"). Recurrence text (groups.session_recurrence) is NOT
+ * consumed by this line — it's display-only metadata, lives on the
+ * schedule page where it has space to be human-readable. Two fields,
+ * two surfaces, no parsing.
+ *
  * Composer (dashboard/page.tsx) returns null when started_at or
  * current_chapter_id is unset — header skips the line entirely. No
  * platform-generated structure for groups that haven't started.
  *
- * Session timing is intentionally absent in recurring v1 (no schema
- * field for it; queues for the future `sessions` table piece). When
- * sessions land, the orientation line gains a third part:
- * "Week 12 · Week 3 on Chapter 1, §4 · Next session Tuesday 7pm".
+ * Session timing piece (and the underlying 010 columns) get dropped
+ * when the dedicated `sessions` table piece ships and the next-
+ * session timestamp is computed from the next future session row.
  */
 
 interface DashboardHeaderProps {

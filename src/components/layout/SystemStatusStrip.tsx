@@ -1,6 +1,7 @@
 import { createClient, getSessionUser } from '@/lib/supabase/server'
 import { getChapterLabel } from '@/lib/chapter-utils'
 import { getCurrentGroup } from '@/lib/group-resolver'
+import { formatNextSessionSentence } from '@/lib/session-timing-format'
 
 /**
  * SystemStatusStrip — ambient context line at the top of every
@@ -22,15 +23,25 @@ import { getCurrentGroup } from '@/lib/group-resolver'
  *     weeks since groups.current_chapter_started_at, plus the current
  *     chapter label.
  *
+ * With session timing (010 — TRANSITIONAL, when host has set
+ * groups.next_session_at), strip gains a fourth piece:
+ *   WATERMELON · WEEK 12 · WEEK 3 ON CHAPTER 1, §4 · NEXT SESSION TUESDAY 7PM
+ *
+ * Small-caps eyebrow throughout (matches strip's existing visual
+ * register). Compact time format ("7PM" not "7:00 PM"). Recurrence
+ * text (groups.session_recurrence) is NOT consumed by the strip —
+ * it's display-only on the schedule page. Two fields, two surfaces,
+ * no parsing.
+ *
  * Empty state:
  *   - When started_at OR current_chapter_id is unset, render
  *     "READING JOURNEY NOT YET STARTED" — the host hasn't begun seeding
- *     and the group hasn't earned the structure of a counter.
+ *     and the group hasn't earned the structure of a counter. Session
+ *     timing piece is also omitted in this state (no counter, no
+ *     session anchor).
  *
- * Session timing intentionally absent in recurring v1 — no schema
- * field for "next session" in recurring mode (queues for the future
- * `sessions` table piece). Returns when sessions land:
- *   "WATERMELON · WEEK 12 · WEEK 3 ON CHAPTER 1, §4 · NEXT SESSION TUE 7PM"
+ * The session-timing piece (and the underlying 010 columns) get
+ * dropped when the dedicated `sessions` table piece ships.
  */
 export default async function SystemStatusStrip() {
   const supabase = await createClient()
@@ -80,6 +91,19 @@ export default async function SystemStatusStrip() {
       // render the chapter counter without the label rather than
       // silently dropping it.
       parts.push(`Week ${chapterWeeks} on current chapter`)
+    }
+
+    // Session timing piece (010 — TRANSITIONAL). Append only when
+    // host has set groups.next_session_at — omits cleanly otherwise
+    // and pre-seed groups never reach this branch. The piece slots in
+    // after the dual counter so the existing parts stay stable when
+    // session timing is absent. Sentence-case here; the strip's
+    // `.text-eyebrow` wrapper applies the uppercase transform via CSS,
+    // matching how the other parts ("Watermelon", "Week 12") are
+    // pushed. Single source of truth on case.
+    const nextSession = formatNextSessionSentence(group.nextSessionAt)
+    if (nextSession) {
+      parts.push(`Next session ${nextSession}`)
     }
   }
 

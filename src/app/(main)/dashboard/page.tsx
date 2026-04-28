@@ -20,6 +20,7 @@ import ConceptsThisWeekWidget, {
 import CaptureThoughtAffordance from '@/components/dashboard/CaptureThoughtAffordance'
 import BigStatTile from '@/components/dashboard/BigStatTile'
 import { getChapterLabel } from '@/lib/chapter-utils'
+import { formatNextSessionSentence } from '@/lib/session-timing-format'
 import type { ThreadType, WeeklyRoleType } from '@/types/database'
 
 const DOC_SLUG = 'capital-vol-1'
@@ -254,9 +255,15 @@ export default async function DashboardPage({
   //
   // Drops from the previous version: "of 32" framing, "Reading
   // {title}" qualifier, "X annotations across Y sections" (now in
-  // big-stat tiles), "Z active threads" (also in big-stat tiles),
-  // "Next session ..." (deferred — recurring mode has no session-time
-  // schema field; queues for the future sessions table piece).
+  // big-stat tiles), "Z active threads" (also in big-stat tiles).
+  //
+  // Session timing piece (010 — TRANSITIONAL): when host has set
+  // `groups.next_session_at`, orientation gains "· Next session [day]
+  // [time]" appended after the dual counter. Format from
+  // formatNextSessionSentence — "Tuesday 7pm" sentence-case prose.
+  // Recurrence text is NOT consumed here (descriptive-only metadata,
+  // lives on the schedule page). Both columns and the helper get
+  // dropped when the dedicated `sessions` table piece ships.
   //
   // Render only when both started_at AND current_chapter_id are set
   // (the group has begun and the host has picked a chapter). Otherwise
@@ -274,7 +281,11 @@ export default async function DashboardPage({
     const currentChapter = chapterById.get(group.currentChapterId)
     if (currentChapter) {
       const { label } = getChapterLabel(currentChapter.chapter_number)
-      orientation = `Week ${totalWeeks} · Week ${chapterWeeks} on ${label}`
+      const dualCounter = `Week ${totalWeeks} · Week ${chapterWeeks} on ${label}`
+      const nextSession = formatNextSessionSentence(group.nextSessionAt)
+      orientation = nextSession
+        ? `${dualCounter} · Next session ${nextSession}`
+        : dualCounter
     }
   }
 

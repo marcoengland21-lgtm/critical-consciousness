@@ -57,6 +57,20 @@ export interface GroupContext {
    *  and the schedule page's reflective metadata. NULL when
    *  currentChapterId is NULL. */
   currentChapterStartedAt: string | null
+  /** TRANSITIONAL (010 — group session timing): ISO timestamp of the
+   *  group's next scheduled session. NULL when the host hasn't set a
+   *  session time. Used by DashboardHeader and SystemStatusStrip
+   *  orientation lines to render "Next session [day] [time]" when set;
+   *  surfaces are wired to omit cleanly when null. Read directly from
+   *  groups.next_session_at; will switch to a sessions-table query
+   *  when that piece ships and 010's columns are dropped. */
+  nextSessionAt: string | null
+  /** TRANSITIONAL (010): free-text recurrence description set by the
+   *  host (e.g., "weekly", "fortnightly Tuesday evenings"). Display-
+   *  only on the schedule page; deliberately NOT consumed by the
+   *  orientation line, since parsing free text is fragile. Two fields,
+   *  two surfaces, no parsing. NULL when host hasn't set it. */
+  sessionRecurrence: string | null
 }
 
 interface ResolveOptions {
@@ -115,7 +129,7 @@ export async function getCurrentGroup(
   // Step 3: oldest membership fallback.
   const { data: oldestMembership } = await supabase
     .from('group_memberships')
-    .select('group_id, role, group:groups!group_id(id, name, slug, schedule_mode, started_at, current_chapter_id, current_chapter_started_at)')
+    .select('group_id, role, group:groups!group_id(id, name, slug, schedule_mode, started_at, current_chapter_id, current_chapter_started_at, next_session_at, session_recurrence)')
     .eq('user_id', userId)
     .order('joined_at', { ascending: true })
     .limit(1)
@@ -130,6 +144,8 @@ export async function getCurrentGroup(
     started_at: string | null
     current_chapter_id: string | null
     current_chapter_started_at: string | null
+    next_session_at: string | null
+    session_recurrence: string | null
   }
   const m = oldestMembership as unknown as {
     group_id: string
@@ -154,6 +170,8 @@ export async function getCurrentGroup(
     startedAt: g.started_at,
     currentChapterId: g.current_chapter_id,
     currentChapterStartedAt: g.current_chapter_started_at,
+    nextSessionAt: g.next_session_at,
+    sessionRecurrence: g.session_recurrence,
   }
 }
 
@@ -206,7 +224,7 @@ async function fetchGroupByKeyAndMembership(
   // Try slug first.
   const { data: bySlug } = await supabase
     .from('groups')
-    .select('id, name, slug, schedule_mode, started_at, current_chapter_id, current_chapter_started_at')
+    .select('id, name, slug, schedule_mode, started_at, current_chapter_id, current_chapter_started_at, next_session_at, session_recurrence')
     .eq('slug', key)
     .maybeSingle()
   if (bySlug) {
@@ -218,6 +236,8 @@ async function fetchGroupByKeyAndMembership(
       started_at: string | null
       current_chapter_id: string | null
       current_chapter_started_at: string | null
+      next_session_at: string | null
+      session_recurrence: string | null
     }
     const role = await fetchMembershipRole(supabase, row.id, userId)
     if (role) {
@@ -230,6 +250,8 @@ async function fetchGroupByKeyAndMembership(
         startedAt: row.started_at,
         currentChapterId: row.current_chapter_id,
         currentChapterStartedAt: row.current_chapter_started_at,
+        nextSessionAt: row.next_session_at,
+        sessionRecurrence: row.session_recurrence,
       }
     }
   }
@@ -247,7 +269,7 @@ async function fetchGroupByIdAndMembership(
 ): Promise<GroupContext | null> {
   const { data: g } = await supabase
     .from('groups')
-    .select('id, name, slug, schedule_mode, started_at, current_chapter_id, current_chapter_started_at')
+    .select('id, name, slug, schedule_mode, started_at, current_chapter_id, current_chapter_started_at, next_session_at, session_recurrence')
     .eq('id', groupId)
     .maybeSingle()
   if (!g) return null
@@ -261,6 +283,8 @@ async function fetchGroupByIdAndMembership(
     started_at: string | null
     current_chapter_id: string | null
     current_chapter_started_at: string | null
+    next_session_at: string | null
+    session_recurrence: string | null
   }
   return {
     groupId: row.id,
@@ -271,6 +295,8 @@ async function fetchGroupByIdAndMembership(
     startedAt: row.started_at,
     currentChapterId: row.current_chapter_id,
     currentChapterStartedAt: row.current_chapter_started_at,
+    nextSessionAt: row.next_session_at,
+    sessionRecurrence: row.session_recurrence,
   }
 }
 

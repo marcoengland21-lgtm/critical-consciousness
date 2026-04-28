@@ -94,6 +94,8 @@ export default async function SchedulePage() {
         startedAt={group.startedAt}
         currentChapterId={group.currentChapterId}
         currentChapterStartedAt={group.currentChapterStartedAt}
+        nextSessionAt={group.nextSessionAt}
+        sessionRecurrence={group.sessionRecurrence}
         isHost={group.role === 'host'}
         chapters={chapters}
         history={history}
