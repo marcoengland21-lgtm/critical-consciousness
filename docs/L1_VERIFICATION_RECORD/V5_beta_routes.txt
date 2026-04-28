@@ -1,0 +1,108 @@
+L1 V5 — application-layer route walk as user_beta
+Captured against production (https://capitalstudygroup.netlify.app/) via Chrome MCP accessibility-tree reads on 2026-04-28 (post commit d7f8294 deploy).
+Logged in as user_beta@example.test (UUID 46964cf3-8baa-4b00-a73d-deac084090af).
+Profile UI banner everywhere reads "Profile — user_beta@example.test" — auth confirmed.
+
+This is the actual first real V5 beta walk. The pre-deploy attempt
+caught the L1 deploy gap (beta was seeing test-group name with
+Watermelon-scoped data because the production app code still hardcoded
+DEFAULT_GROUP_ID = test-group). After commit d7f8294 deployed, the
+resolver path is exercised correctly for every user.
+
+Expected pattern: every page's SystemStatusStrip and any group-name
+display should read "Watermelon" (beta is a single-group member of
+Watermelon only). All group-scoped data should be empty (Watermelon
+has no content yet — fresh-seeded launch group).
+
+────────────────────────────────────────────────────────────────────────
+/dashboard
+────────────────────────────────────────────────────────────────────────
+Greeting: "Good afternoon, user_beta@example.test"
+Dashboard banner group line: "Watermelon" ✓
+(no orientation sub-line — Watermelon has no reading_schedule rows)
+"What the group is thinking about THIS WEEK": empty state
+  ("No passage has gathered enough annotations yet.")
+"Where the group's attention is": "0 annotations across 6 sections ·
+  Capital Vol 1" — fallback render listing the first 6 sections of
+  Capital Vol 1 with 0 counts. (Pre-existing widget UX issue: with no
+  current-week scope, widget falls back to a 6-section preview rather
+  than rendering an empty state. Surfaced as a separate UX cleanup task,
+  not blocking L1.)
+"Where we're stuck": "No paragraphs flagged in this week's reading yet."
+  ✓ — Watermelon has no confusion_counts rows.
+"Concepts introduced this week": "No new concepts introduced this week."
+  ✓ — Watermelon has no glossary entries.
+
+PASS. Group banner correctly says "Watermelon," not test-group name.
+
+────────────────────────────────────────────────────────────────────────
+/threads
+────────────────────────────────────────────────────────────────────────
+SystemStatusStrip: "Watermelon · Reading journey not yet started" ✓
+"No threads yet" empty state.
+Week filter dropdown options: empty (Watermelon has no
+  reading_schedule rows, so no week filter options).
+
+PASS. Strip group name correct, week filter correctly empty for fresh
+group with no schedule.
+
+────────────────────────────────────────────────────────────────────────
+/glossary
+────────────────────────────────────────────────────────────────────────
+SystemStatusStrip: "Watermelon · Reading journey not yet started" ✓
+"0 terms" with empty state copy.
+"+ Add Term" button visible.
+
+PASS.
+
+────────────────────────────────────────────────────────────────────────
+/reading
+────────────────────────────────────────────────────────────────────────
+SystemStatusStrip: "Watermelon · Reading journey not yet started" ✓
+TOC renders all 33 chapters across 8 Parts (text_documents/text_chapters
+are NOT group-scoped — shared text content per the L1 design).
+NO annotation badges on any chapter — Watermelon has no annotations,
+and RLS prevents beta from seeing the test group's annotations.
+NO "This Week" badge on any chapter — Watermelon has no current week.
+
+PASS. Shared text loads. Beta correctly cannot see test-group
+annotation counts (RLS-blocked, consistent with V4_beta_reads.txt).
+
+────────────────────────────────────────────────────────────────────────
+/schedule
+────────────────────────────────────────────────────────────────────────
+SystemStatusStrip: "Watermelon · Reading journey not yet started" ✓
+"The schedule is on its way" empty state with copy:
+  "The reading schedule will appear here once your facilitator sets it
+  up. In the meantime, explore the platform."
+
+PASS. Honest empty state for fresh group with no schedule.
+
+────────────────────────────────────────────────────────────────────────
+/resources
+────────────────────────────────────────────────────────────────────────
+SystemStatusStrip: "Watermelon · Reading journey not yet started" ✓
+Empty state: "Companion texts, lecture videos, and tools to help with
+  the reading will be collected here."
+Filter buttons: All / Primary Text / Companion / Lecture / Article /
+  Tool / Other.
+"Add Resource" button visible.
+
+PASS. Empty state, all chrome present.
+
+────────────────────────────────────────────────────────────────────────
+Summary
+────────────────────────────────────────────────────────────────────────
+6/6 routes PASS for user_beta against deployed L1 code (commit d7f8294).
+- SystemStatusStrip / dashboard banner consistently reads "Watermelon"
+  (the bug from the pre-deploy walk is fixed).
+- All group-scoped data scoped correctly to Watermelon (empty across
+  the board, since Watermelon is fresh-seeded with no content).
+- Test-group's data does not leak into beta's view (no annotation
+  badges, no schedule, no flags, no glossary terms, no resources).
+- One pre-existing UX issue surfaced (AttentionMagnitudeBars widget
+  fallback when no current week — renders 6 fake section rows instead
+  of empty state). Not blocking L1; queued as separate UX cleanup.
+
+Pairs with V5_alpha_routes_post_deploy.txt to constitute the
+application-layer verification of L1.

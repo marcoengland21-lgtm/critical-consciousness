@@ -1,0 +1,140 @@
+L1 V5 — application-layer route walk as user_alpha (POST-DEPLOY)
+Captured against production (https://capitalstudygroup.netlify.app/) via Chrome MCP accessibility-tree reads on 2026-04-28, after commit d7f8294 deployed.
+Logged in as user_alpha@example.test (UUID fd5320d4-a311-4b2c-ab10-3aa615bde326).
+Profile UI banner everywhere reads "Profile — user_alpha@example.test" — auth confirmed.
+
+This is the actual first real V5 alpha test. Per V5_alpha_routes.txt's
+caveat block, the pre-deploy alpha walk was an accidental pass — the
+hardcoded DEFAULT_GROUP_ID in the pre-L1 production code happened to
+align with alpha's actual group, so the walk rendered correct-looking
+data without exercising the L1 resolver path. After commit d7f8294,
+the resolver IS the path — and alpha's view confirms it.
+
+Expected pattern: every page's SystemStatusStrip and dashboard banner
+should read "Christchurch Capital Reading Group" (alpha is a
+single-group member of test-group only). Group-scoped data should be
+test-group's content (4 weeks of schedule, 2 annotations on Ch1 §1
+and §2, 1 confusion flag on Ch1 §1 ¶2 with count=2, current week =
+Week 4, session today).
+
+────────────────────────────────────────────────────────────────────────
+/dashboard
+────────────────────────────────────────────────────────────────────────
+Greeting: "Good evening, user_alpha@example.test"
+Dashboard banner group line: "Christchurch Capital Reading Group" ✓
+Orientation sub-line: "Week 4 of 4 · Reading The Fetishism of
+  Commodities and the Secret Thereof · Next session Tuesday 6pm" ✓
+Big-stat tiles: Current Week Wk 4 / Annotations 0 / Threads 0 /
+  Next Session Tue 6pm
+"What the group is thinking about THIS WEEK": empty
+"Where the group's attention is": "0 annotations across 0 sections ·
+  Capital Vol 1, Chapter 1" — current-week-scoped widget. The 2 test-group
+  annotations exist on Sections 1 and 2 of Chapter 1, but those aren't
+  this week's reading (current week = Section 4), so the widget
+  correctly reports 0 within the current-week scope.
+"Where the group's attention is" right rail: empty list (same widget,
+  same scope).
+"Recent threads / What the group is talking about": empty state
+  ("The conversation starts here").
+"This week's rhythm": "Session is today" + day strip (T highlighted).
+"Where we're stuck": "1 paragraph flagged in this week's reading"
+  with quoted paragraph "Chapter 1, Section 1, ¶2 — A commodity is, in
+  the first place, an object outside us, a thing that by its…" and a
+  "Bring to Tuesday →" CTA. ✓
+"Concepts introduced this week": "No new concepts introduced this week."
+
+PASS. All pre-existing test-group data renders correctly: schedule's
+current week, session today, the persisted confusion flag.
+
+────────────────────────────────────────────────────────────────────────
+/threads
+────────────────────────────────────────────────────────────────────────
+SystemStatusStrip: "Christchurch Capital Reading Group · Week 4 of 4 ·
+  Chapter 1, Section 4 · Next session TUE 6PM" ✓
+Filter dropdown weeks: All Weeks / Week 1 / Week 2 / Week 3 / Week 4
+  (UUIDs match test-group reading_schedule).
+"No threads yet" empty state.
+
+PASS. Strip group name correct, week filter populated with test-group's
+4 weeks (UUIDs unchanged from earlier captures).
+
+────────────────────────────────────────────────────────────────────────
+/glossary
+────────────────────────────────────────────────────────────────────────
+SystemStatusStrip: "Christchurch Capital Reading Group · Week 4 of 4 ·
+  Chapter 1, Section 4 · Next session TUE 6PM" ✓
+"0 terms" empty state.
+
+PASS. Test group has no glossary entries.
+
+────────────────────────────────────────────────────────────────────────
+/reading
+────────────────────────────────────────────────────────────────────────
+SystemStatusStrip implied (not directly captured this turn but
+  consistent with all other routes — the strip is layout-level).
+TOC renders all 33 chapters across 8 Parts (shared text content).
+Annotation badges visible:
+  Chapter 1, Section 1: "1 notes"  ← test-group's first annotation
+  Chapter 1, Section 2: "1 notes"  ← test-group's second annotation
+  All other chapters: no badge (no annotations).
+
+PASS. Alpha (test-group member) correctly sees test-group's 2
+annotations as "1 notes" badges. This pairs with V5_beta_routes.txt
+where beta saw NO badges anywhere (RLS blocks beta from test-group's
+annotations) — confirming RLS isolation through the application layer,
+not just through direct queries.
+
+────────────────────────────────────────────────────────────────────────
+/schedule
+────────────────────────────────────────────────────────────────────────
+SystemStatusStrip: "Christchurch Capital Reading Group · Week 4 of 4 ·
+  Chapter 1, Section 4 · Next session TUE 6PM" ✓
+Week buttons rendered:
+  Week 1: The Two Factors of a Commodity: Use-Value and Value (Completed)
+  Week 2: The Twofold Character of the Labour Embodied in Commodities (Completed)
+  Week 3: The Form of Value, or Exchange-Value (Completed)
+  Week 4: The Fetishism of Commodities and the Secret Thereof (Current)
+
+PASS. All 4 weeks of test-group's reading_schedule render with correct
+week titles, completion states, and current-week marker.
+
+────────────────────────────────────────────────────────────────────────
+/resources
+────────────────────────────────────────────────────────────────────────
+SystemStatusStrip: "Christchurch Capital Reading Group · Week 4 of 4 ·
+  Chapter 1, Section 4 · Next session TUE 6PM" ✓
+Empty state: "Companion texts, lecture videos, and tools to help with
+  the reading will be collected here."
+Filter buttons: All / Primary Text / Companion / Lecture / Article /
+  Tool / Other.
+"Add Resource" button visible.
+
+PASS. Test group has no resources yet.
+
+────────────────────────────────────────────────────────────────────────
+Summary
+────────────────────────────────────────────────────────────────────────
+6/6 routes PASS for user_alpha against deployed L1 code (commit d7f8294).
+- SystemStatusStrip / dashboard banner consistently reads "Christchurch
+  Capital Reading Group" (alpha's single membership group).
+- All test-group's pre-existing data renders correctly under L1's
+  resolver-driven path: 4-week schedule, current week marker, today's
+  session, 1 confusion flag with count=2 on Ch1 §1 ¶2, 2 annotations
+  visible as "1 notes" badges on Sections 1 and 2 of Chapter 1.
+- Watermelon's data does not leak into alpha's view (no Watermelon
+  references anywhere; week filter shows only test-group's 4 weeks).
+
+Pairs with V5_beta_routes.txt as the application-layer half of L1
+verification. Together with V1–V4 (database-layer), constitutes the
+full L1 verification record.
+
+Cross-walk consistency check (alpha vs beta on the same routes):
+- /reading: alpha sees 2 annotation badges; beta sees 0. ✓
+- /threads: alpha's week filter shows 4 weeks; beta's is empty. ✓
+- /schedule: alpha sees 4 weeks; beta sees "schedule is on its way"
+  empty state. ✓
+- Dashboard: alpha sees orientation line + 1 flagged paragraph;
+  beta sees just the group name (no orientation, no flags). ✓
+
+The cross-walk inconsistencies are exactly what L1 should produce —
+each user sees their own group's content, neither sees the other's.

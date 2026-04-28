@@ -20,20 +20,44 @@ V4 is the load-bearing structural proof: RLS at the database layer
 prevents cross-group reads AND writes in BOTH directions. The
 schema-vs-application gap is closed at the database layer.
 
-## Application-layer verification (V5 — pending)
+## Application-layer verification (complete, post-deploy)
 
-V5 confirms the application correctly scopes its queries through the RLS
-layer. To run:
+V5 confirms the application correctly scopes its queries through the
+resolver path under deployed L1 code. Captured via Chrome MCP
+accessibility-tree reads against the live Netlify deployment.
 
-1. Mars logs in as user_alpha at https://capitalstudygroup.netlify.app
-2. Claude drives Chrome MCP to walk routes (dashboard, threads, glossary,
-   reading, schedule, resources). Confirms SystemStatusStrip shows
-   "Christchurch Capital Reading Group" and only test-group data is
-   visible.
-3. Mars logs out, logs in as user_beta. Same drill. Expected:
-   SystemStatusStrip shows "Watermelon", only Watermelon data visible
-   (currently empty since Watermelon is fresh).
-4. Screenshots saved here.
+| File                                  | What it proves                                                              | Status |
+|---------------------------------------|-----------------------------------------------------------------------------|--------|
+| `V5_alpha_routes.txt`                 | Pre-deploy walk — accidental pass (caveat documented in file)              | Caveat |
+| `V5_alpha_routes_post_deploy.txt`     | Post-deploy walk against L1 code: alpha sees test-group everywhere          | Pass   |
+| `V5_beta_routes.txt`                  | Post-deploy walk: beta sees Watermelon everywhere; bug from pre-deploy fixed | Pass   |
+
+V5 caught a real deploy-sequencing bug: the L1 database migration was
+applied to production before the corresponding L1 application code had
+been pushed. During that gap, the production app still hardcoded
+`DEFAULT_GROUP_ID = test-group`, which produced the symptom "beta sees
+test-group name with Watermelon-scoped data." Captured in the V5_alpha
+caveat block. After commit `d7f8294` deployed, the resolver path is
+exercised correctly for every user, and both V5 walks reflect that.
+
+Cross-walk consistency: alpha and beta on the same routes see different
+data, in the shape L1 promises. /reading shows alpha 2 annotation badges
+on Ch1 §1 and §2, beta zero badges anywhere. /threads shows alpha 4
+weeks in the filter, beta empty. /schedule shows alpha 4 weeks, beta
+"schedule is on its way" empty state. Same dashboard component renders
+different content per user because the inputs are correctly scoped.
+
+## Surfaced UX issue (non-blocking, queued separately)
+
+The `AttentionMagnitudeBars` widget on the dashboard has a misleading
+fallback when there's no current week: it renders 6 fake section rows
+(the first 6 sections of the text as a "preview") rather than an empty
+state. Effect: a fresh empty group (Watermelon) visually looks more
+populated than a group with actual data (test group). Not a data
+problem — the bars are all 0 — but the visual asymmetry is the inverse
+of reality. Queued as part of the Schedule modes (recurring v1) brief
+that ships next, where the widget gets re-scoped to current chapter
+with an honest empty state.
 
 ## Process notes (carry into CLAUDE.md Decision Log post-ship)
 
