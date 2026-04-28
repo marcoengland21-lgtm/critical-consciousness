@@ -7,10 +7,11 @@ import TimeAgo from '@/components/ui/TimeAgo'
 interface SessionNotesProps {
   weekId: string
   hasSession: boolean
+  /** Active group context (L1) — required to scope session notes. */
+  groupId: string
 }
 
 const GUEST_ID = 'ad4ce43f-6a30-484b-8f2c-df66f6b0276b'
-const DEFAULT_GROUP_ID = '00000000-0000-0000-0000-000000000001'
 
 interface SessionNote {
   id: string
@@ -22,7 +23,7 @@ interface SessionNote {
   } | null
 }
 
-export default function SessionNotes({ weekId, hasSession }: SessionNotesProps) {
+export default function SessionNotes({ weekId, hasSession, groupId }: SessionNotesProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [content, setContent] = useState('')
   const [lastEditor, setLastEditor] = useState<{ name: string; time: string } | null>(null)
@@ -41,7 +42,7 @@ export default function SessionNotes({ weekId, hasSession }: SessionNotesProps) 
         .from('session_notes')
         .select('id, content, updated_at, updated_by, updater_profile:profiles!updated_by(display_name)')
         .eq('week_id', weekId)
-        .eq('group_id', DEFAULT_GROUP_ID)
+        .eq('group_id', groupId)
         .single()
 
       if (data) {
@@ -95,7 +96,7 @@ export default function SessionNotes({ weekId, hasSession }: SessionNotesProps) 
     return () => {
       subscription.unsubscribe()
     }
-  }, [isOpen, weekId])
+  }, [isOpen, weekId, groupId])
 
   // Debounced save function
   const saveNotes = useCallback(async (newContent: string) => {
@@ -108,7 +109,7 @@ export default function SessionNotes({ weekId, hasSession }: SessionNotesProps) 
         .from('session_notes')
         .upsert({
           week_id: weekId,
-          group_id: DEFAULT_GROUP_ID,
+          group_id: groupId,
           content: newContent,
           updated_by: GUEST_ID,
         }, {
@@ -121,7 +122,7 @@ export default function SessionNotes({ weekId, hasSession }: SessionNotesProps) 
     } finally {
       setSaving(false)
     }
-  }, [weekId])
+  }, [weekId, groupId])
 
   const handleContentChange = (newContent: string) => {
     setContent(newContent)

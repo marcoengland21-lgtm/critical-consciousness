@@ -1,0 +1,127 @@
+L1 V5 — application-layer route walk as user_alpha
+Captured against production (https://capitalstudygroup.netlify.app/) via Chrome MCP accessibility-tree reads on 2026-04-28.
+Logged in as user_alpha@example.test (UUID fd5320d4-a311-4b2c-ab10-3aa615bde326).
+Profile UI banner everywhere reads "Profile — user_alpha@example.test" — auth confirmed.
+
+────────────────────────────────────────────────────────────────────────
+CAVEAT — this walk was accidentally passing
+────────────────────────────────────────────────────────────────────────
+At the time of this walk, the production application code was still the
+pre-L1 build (commit 32e89f3, deployed yesterday). That code uses the
+hardcoded DEFAULT_GROUP_ID = '00000000-...001' (test group) for every
+group-scoped query. Alpha happens to be a single-group member of the
+test group, so the hardcoded constant aligned with alpha's actual group
+and every page rendered correct-looking data — but this walk did NOT
+exercise the L1 resolver path, the membership lookup, or the per-user
+group filtering. It was an accidental pass against the wrong code.
+
+The bug was caught when V5 beta started: beta saw "Christchurch Capital
+Reading Group" as the group name (returned by the hardcoded query
+against a publicly-readable groups row) but with Watermelon-scoped data
+(every group-scoped read was RLS-rejected because beta isn't a test-
+group member). The mismatch between the name label and the data is the
+fingerprint of pre-L1 code reading post-L1 schema.
+
+This walk needs to be re-run AFTER the L1 application code is deployed.
+The post-deploy alpha walk is the actual first real V5 alpha test.
+The captures below are kept as a record of what we initially observed,
+but they don't constitute V5 alpha verification on their own.
+
+The structural pattern: every page's SystemStatusStrip should show the
+test group ("Christchurch Capital Reading Group") since alpha is a
+single-group member of test group only. Application queries should be
+scoped to that group through the L1 RLS policies.
+
+────────────────────────────────────────────────────────────────────────
+/dashboard
+────────────────────────────────────────────────────────────────────────
+Greeting: "Good afternoon, user_alpha@example.test"
+SystemStatusStrip group line: "Christchurch Capital Reading Group" ✓
+Status sub-line: "Week 4 of 4 · Reading The Fetishism of Commodities and
+the Secret Thereof · Next session Tuesday 6pm"
+Big-stat tiles: Current Week Wk 4 / Annotations 0 / Threads 0 / Next Session Tue 6pm
+"Group is thinking about" widget: "No passage has gathered enough annotations yet"
+"Where the group's attention is": "0 annotations across 0 sections · Capital Vol 1, Chapter 1"
+"What the group is talking about": empty state ("The conversation starts here")
+"Where we're stuck": 1 paragraph flagged in Chapter 1 §1 ¶2 ("A commodity is, in the first place, an object outside us…")
+"Concepts introduced this week": "No new concepts introduced this week."
+
+PASS. Group strip correct. Test-group confusion-flag heatmap visible
+(alpha CAN see test-group confusion data, since they're a member).
+
+────────────────────────────────────────────────────────────────────────
+/threads
+────────────────────────────────────────────────────────────────────────
+SystemStatusStrip: "Christchurch Capital Reading Group · Week 4 of 4 ·
+Chapter 1, Section 4 · Next session TUE 6PM" ✓
+Filter dropdown weeks: Week 1, Week 2, Week 3, Week 4 (all test-group
+reading_schedule rows; UUIDs visible in option values).
+Empty state: "No threads yet · Threads grow out of what people notice
+while reading…"
+
+PASS. Threads list scoped to test group; week filter shows test group's
+4 weeks only.
+
+────────────────────────────────────────────────────────────────────────
+/glossary
+────────────────────────────────────────────────────────────────────────
+SystemStatusStrip: "Christchurch Capital Reading Group · …" ✓
+"0 terms" with empty state: "As we work through Capital together, we'll
+build a shared vocabulary here…"
+"+ Add Term" button present.
+
+PASS. Glossary empty (test group has no glossary entries yet).
+
+────────────────────────────────────────────────────────────────────────
+/reading
+────────────────────────────────────────────────────────────────────────
+SystemStatusStrip: "Christchurch Capital Reading Group · …" ✓
+TOC renders all 33 chapters across 8 Parts (text_documents/text_chapters
+are intentionally NOT group-scoped — they're shared text content per
+the L1 design).
+Annotation badges visible:
+  Chapter 1, Section 1: "1 notes"
+  Chapter 1, Section 2: "1 notes"
+  All other chapters: no badge.
+
+PASS. Shared text loads correctly. Test-group annotations visible to
+alpha (badges) — consistent with V4_alpha_reads.txt where alpha's
+own-group reads succeed.
+
+────────────────────────────────────────────────────────────────────────
+/schedule
+────────────────────────────────────────────────────────────────────────
+4 weeks visible:
+  Week 1: The Two Factors of a Commodity: Use-Value and Value
+  Week 2: The Twofold Character of the Labour Embodied in Commodities
+  Week 3: The Form of Value, or Exchange-Value
+  Week 4: The Fetishism of Commodities and the Secret Thereof (current week)
+Each week has a "Jot down key points…" textarea (session notes).
+"View Week N Threads" links carry the same UUIDs as the threads filter.
+
+PASS. reading_schedule scoped to test group (only 4 weeks for test group;
+Watermelon has none yet).
+
+────────────────────────────────────────────────────────────────────────
+/resources
+────────────────────────────────────────────────────────────────────────
+SystemStatusStrip: "Christchurch Capital Reading Group · …" ✓
+Filter buttons: All / Primary Text / Companion / Lecture / Article / Tool / Other
+"Add Resource" button present.
+Empty state: "Companion texts, lecture videos, and tools to help with
+the reading will be collected here."
+
+PASS. Resources empty (test group has no resources yet).
+
+────────────────────────────────────────────────────────────────────────
+Summary
+────────────────────────────────────────────────────────────────────────
+6/6 routes PASS for user_alpha.
+- SystemStatusStrip consistently shows "Christchurch Capital Reading Group"
+- All group-scoped data (threads list, week filters, schedule, glossary,
+  resources, confusion flags, annotation counts) scoped correctly to
+  the test group.
+- Watermelon's data does not leak into alpha's view.
+
+Next: log out, log in as user_beta, repeat the same walk, expecting
+"Watermelon" everywhere with empty content (since Watermelon is fresh).

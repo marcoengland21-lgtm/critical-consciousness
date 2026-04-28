@@ -40,6 +40,8 @@ interface ReplySectionProps {
   isAdmin: boolean
   /** Branches that originated from a specific reply on this thread. (§4.4) */
   replyBranches?: ReplyBranchIndicator[]
+  /** Active group context (L1) — required to scope reply inserts and branches. */
+  groupId: string
 }
 
 // ── Author Avatar ───────────────────────────────────────────────────────────
@@ -71,6 +73,7 @@ export default function ReplySection({
   currentUserId,
   isAdmin,
   replyBranches = [],
+  groupId,
 }: ReplySectionProps) {
   // Index branches by parent reply id for cheap lookup during render.
   const branchesByReplyId = new Map<string, ReplyBranchIndicator[]>()
@@ -161,6 +164,8 @@ export default function ReplySection({
       parent_reply_id: parentReplyId,
       body: body.trim(),
       author_id: currentUserId,
+      // L1: scope to active group; trigger also enforces parity with parent thread.
+      group_id: groupId,
     })
 
     if (!error) {
@@ -374,6 +379,7 @@ export default function ReplySection({
                 parentReplyId={reply.id}
                 parentExcerpt={{ author: authorName, body: reply.body }}
                 onCancel={() => setBranchingFromId(null)}
+                groupId={groupId}
               />
             )}
 

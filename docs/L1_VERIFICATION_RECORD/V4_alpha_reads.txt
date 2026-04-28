@@ -1,0 +1,26 @@
+L1 V4 — alpha cross-group reads
+Captured against production main branch.
+Source: SQL editor result panel after running L1_V4_rls_alpha_reads_only.sql
+
+Query: cross-group SELECT counts as user_alpha
+       (UUID fd5320d4-a311-4b2c-ab10-3aa615bde326)
+
+test                                              | n
+--------------------------------------------------|---
+alpha sees Watermelon threads:                    | 0
+alpha sees Watermelon annotations:                | 0
+alpha sees Watermelon glossary:                   | 0
+alpha sees Watermelon resources:                  | 0
+alpha sees Watermelon schedule:                   | 0
+alpha sees Watermelon confusion_counts:           | 0
+alpha sees test-group threads (own):              | 0
+
+7 rows.
+
+Interpretation:
+- First 6 rows = 0 → RLS blocks alpha (member of test-group only) from reading
+  any Watermelon data, across every group-scoped table tested. Pass.
+- 7th row = 0 → test group has no threads (database is empty pre-launch).
+  Doesn't prove anything about RLS in this state, but consistent with
+  "alpha can read own group" since the same user reading own-group data
+  succeeded without error.

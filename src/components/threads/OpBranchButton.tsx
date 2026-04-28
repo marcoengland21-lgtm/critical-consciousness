@@ -8,6 +8,8 @@ interface OpBranchButtonProps {
   parentThreadTitle: string
   parentAuthor: string
   parentBody: string
+  /** Active group context (L1) — passed through to BranchThreadForm. */
+  groupId: string
 }
 
 /**
@@ -21,6 +23,7 @@ export default function OpBranchButton({
   parentThreadTitle,
   parentAuthor,
   parentBody,
+  groupId,
 }: OpBranchButtonProps) {
   const [open, setOpen] = useState(false)
 
@@ -44,6 +47,7 @@ export default function OpBranchButton({
           parentReplyId={null}
           parentExcerpt={{ author: parentAuthor, body: parentBody }}
           onCancel={() => setOpen(false)}
+          groupId={groupId}
         />
       )}
     </div>

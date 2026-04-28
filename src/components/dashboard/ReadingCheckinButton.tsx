@@ -7,9 +7,9 @@ import Toast from '@/components/ui/Toast'
 interface ReadingCheckinButtonProps {
   weekId: string
   currentStatus?: 'done' | 'partial' | 'behind' | null
+  /** Active group context (L1) — required to scope the check-in. */
+  groupId: string
 }
-
-const DEFAULT_GROUP_ID = '00000000-0000-0000-0000-000000000001'
 
 const STATUS_OPTIONS = [
   { value: 'done', label: 'Done', activeBg: 'var(--accent-green)', activeColor: 'var(--text-inverse)' },
@@ -17,7 +17,7 @@ const STATUS_OPTIONS = [
   { value: 'behind', label: 'Behind', activeBg: 'var(--text-secondary)', activeColor: 'var(--bg-page)' },
 ] as const
 
-export default function ReadingCheckinButton({ weekId, currentStatus }: ReadingCheckinButtonProps) {
+export default function ReadingCheckinButton({ weekId, currentStatus, groupId }: ReadingCheckinButtonProps) {
   const [status, setStatus] = useState<'done' | 'partial' | 'behind' | null>(currentStatus || null)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
@@ -40,7 +40,7 @@ export default function ReadingCheckinButton({ weekId, currentStatus }: ReadingC
         .upsert({
           user_id: user.id,
           week_id: weekId,
-          group_id: DEFAULT_GROUP_ID,
+          group_id: groupId,
           status: newStatus,
         }, {
           onConflict: 'user_id,week_id',

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { createClient, getSessionUser } from '@/lib/supabase/server'
+import { getCurrentGroup } from '@/lib/group-resolver'
 import JournalEditor from '@/components/journal/JournalEditor'
 import JournalEntryActions from '@/components/journal/JournalEntryActions'
 
@@ -18,6 +19,9 @@ export default async function JournalEntryPage({ params }: JournalEntryPageProps
   if (!user) redirect('/login')
 
   const supabase = await createClient()
+  const group = await getCurrentGroup(supabase, user.id)
+  if (!group) redirect('/login')
+
   // RLS restricts to user's own entries; if someone tries to load another
   // user's entry by id, this returns null and we 404.
   const { data: entry, error } = await supabase
@@ -61,6 +65,7 @@ export default async function JournalEntryPage({ params }: JournalEntryPageProps
         initialTitle={entry.title || ''}
         initialBodyJson={(entry.body_json as object) || { type: 'doc', content: [] }}
         userId={user.id}
+        groupId={group.groupId}
         showTitle
         bodyPlaceholder="…"
         minHeight={500}

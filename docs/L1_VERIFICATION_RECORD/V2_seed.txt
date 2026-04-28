@@ -1,0 +1,59 @@
+L1 V2 — Watermelon seeded, Mars host on both groups
+Captured against production main branch.
+Source: SQL editor result panels for L1_V2a/b/c/d_*.sql files.
+
+────────────────────────────────────────────────────────────────────────
+V2a — Watermelon row exists
+────────────────────────────────────────────────────────────────────────
+
+id                                    | name       | slug
+--------------------------------------|------------|-----------
+00000000-0000-0000-0000-000000000002  | Watermelon | watermelon
+
+1 row. Pass.
+
+
+────────────────────────────────────────────────────────────────────────
+V2b — test group row preserved
+────────────────────────────────────────────────────────────────────────
+
+id                                    | name
+--------------------------------------|----------------------------------
+00000000-0000-0000-0000-000000000001  | Christchurch Capital Reading Group
+
+1 row. Pass.
+- The original test group from migration 001 is intact. L1 did not
+  rename or replace it; it just added Watermelon alongside.
+
+
+────────────────────────────────────────────────────────────────────────
+V2c — Mars is host on BOTH groups
+────────────────────────────────────────────────────────────────────────
+
+name                                | role
+------------------------------------|-----
+Christchurch Capital Reading Group  | host
+Watermelon                          | host
+
+2 rows. Pass.
+- Both rows have role='host'.
+- Order is by group creation (Christchurch Capital Reading Group from
+  migration 001 first, Watermelon from L1 second).
+- The seed inserts in section 6 of the L1 migration looked up Mars
+  by `WHERE p.role = 'admin'` (per CLAUDE.md, "Marco is currently
+  the only user with admin role"); both inserts succeeded.
+
+
+────────────────────────────────────────────────────────────────────────
+V2d — Mars's profiles.current_group_id defaults to Watermelon
+────────────────────────────────────────────────────────────────────────
+
+id                                    | current_group_id
+--------------------------------------|--------------------------------------
+97d2db21-64af-42e9-8765-d7ae30518c17  | 00000000-0000-0000-0000-000000000002
+
+1 row. Pass.
+- Mars's profile points to Watermelon as the default active group.
+  When Mars logs in without a URL override, the resolver lands on
+  Watermelon. The URL override (?group=christchurch-capital) switches
+  to the test group when needed.

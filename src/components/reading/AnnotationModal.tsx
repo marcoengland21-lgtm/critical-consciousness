@@ -87,6 +87,8 @@ interface AnnotationModalProps {
   focusComposer?: boolean
   /** Current user id; null = guest. */
   userId: string | null
+  /** Active group context (L1) — required for the reply insert. */
+  groupId: string
   /** Called after a successful reply insert so the chapter can refresh
       the annotation's reply list. */
   onReplyAdded: () => void
@@ -103,6 +105,7 @@ export default function AnnotationModal({
   annotationNumber,
   focusComposer = false,
   userId,
+  groupId,
   onReplyAdded,
 }: AnnotationModalProps) {
   const router = useRouter()
@@ -131,6 +134,8 @@ export default function AnnotationModal({
       annotation_id: annotation.id,
       author_id: authorId,
       body: body.trim(),
+      // L1: scope reply to active group (trigger also enforces parity with parent annotation)
+      group_id: groupId,
     })
     setSubmitting(false)
     if (!error) {
@@ -139,7 +144,7 @@ export default function AnnotationModal({
     } else {
       console.error('[CCP] Annotation reply failed:', error)
     }
-  }, [annotation, body, userId, onReplyAdded, submitting])
+  }, [annotation, body, userId, groupId, onReplyAdded, submitting])
 
   const handleGiveItsOwnSpace = useCallback(() => {
     if (!annotation) return

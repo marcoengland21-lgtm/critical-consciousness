@@ -1,4 +1,5 @@
 import { createClient, getSessionUser } from '@/lib/supabase/server'
+import { getCurrentGroupOrThrow } from '@/lib/group-resolver'
 import DashboardHeader from '@/components/dashboard/DashboardHeader'
 import HeroQuoteCallout, {
   type HeroQuotePassage,
@@ -21,7 +22,6 @@ import BigStatTile from '@/components/dashboard/BigStatTile'
 import { getChapterLabel } from '@/lib/chapter-utils'
 import type { ThreadType, WeeklyRoleType } from '@/types/database'
 
-const DEFAULT_GROUP_ID = '00000000-0000-0000-0000-000000000001'
 const DOC_SLUG = 'capital-vol-1'
 
 interface WeekRow {
@@ -89,18 +89,38 @@ interface ThreadJoin {
  * "Capital Study Group" platform brand if the row hasn't been
  * seeded.
  */
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  // Next.js 15+ App Router types searchParams as a Promise.
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}) {
   const user = await getSessionUser()
   const supabase = await createClient()
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
 
   const now = new Date()
   const today = new Date(now.toISOString().slice(0, 10) + 'T00:00:00Z')
   const todayISO = today.toISOString()
 
+  // Resolve the user's current group via membership (chunk 3b L1).
+  // For unauthenticated users, fall back to a no-data state — the
+  // (main) layout already redirects to /login pre-render but we
+  // guard defensively so the dashboard doesn't crash mid-build.
+  if (!user) {
+    return (
+      <div className="text-sm text-center py-12" style={{ color: 'var(--text-secondary)' }}>
+        Please sign in.
+      </div>
+    )
+  }
+  const group = await getCurrentGroupOrThrow(supabase, user.id, {
+    searchParams: resolvedSearchParams,
+  })
+
   // ── Parallel batch ──────────────────────────────────────────────
   const [
     { data: profile },
-    { data: groupRow },
     { data: allWeeksData },
     { data: allChaptersData },
     { data: recentThreads },
@@ -113,14 +133,8 @@ export default async function DashboardPage() {
     supabase
       .from('profiles')
       .select('display_name, role')
-      .eq('id', user?.id || '')
+      .eq('id', user.id)
       .single(),
-
-    supabase
-      .from('groups')
-      .select('name')
-      .eq('id', DEFAULT_GROUP_ID)
-      .maybeSingle(),
 
     supabase
       .from('reading_schedule')
@@ -128,6 +142,7 @@ export default async function DashboardPage() {
         id, week_number, title, due_date, session_date,
         weekly_roles(id, role_type, user:profiles!user_id(id, display_name))
       `)
+      .eq('group_id', group.groupId)
       .order('week_number', { ascending: true }),
 
     supabase
@@ -142,14 +157,17 @@ export default async function DashboardPage() {
         author:profiles!author_id(display_name),
         replies:replies(count)
       `)
+      .eq('group_id', group.groupId)
       .order('created_at', { ascending: false })
       .limit(5),
 
-    // Annotations across all chapters. RLS only returns is_public = true
-    // OR author_id = auth.uid() per chunk 3b piece 2c-i.
+    // Annotations across all chapters in this group. RLS additionally
+    // enforces is_public = true OR author_id = auth.uid() per chunk
+    // 3b piece 2c-i — drafts only visible to their author.
     supabase
       .from('annotations')
       .select('id, body, quote_exact, position_start, position_end, created_at, author_id, chapter_id')
+      .eq('group_id', group.groupId)
       .order('created_at', { ascending: false })
       .limit(200),
 
@@ -161,39 +179,41 @@ export default async function DashboardPage() {
         id, created_at, annotation_id,
         author:profiles!author_id(display_name)
       `)
+      .eq('group_id', group.groupId)
       .order('created_at', { ascending: false })
       .limit(50),
 
-    // Confusion counts — paragraph-level. Filtered to current week's
-    // chapters in code below (Mars's #1 refinement: "X paragraphs
-    // flagged in this week's reading", scoped to chapters not flag
-    // timestamps — confusion_counts has none by design).
+    // Confusion counts in this group's chapters. confusion_counts.group_id
+    // added in L1 migration; filter is now native rather than via
+    // post-hoc chapter membership check.
     supabase
       .from('confusion_counts')
       .select('chapter_id, paragraph_index, count')
+      .eq('group_id', group.groupId)
       .gt('count', 0)
       .order('count', { ascending: false }),
 
-    // All glossary entries — filtered to current week below.
+    // Glossary entries for this group — filtered to current week below.
     supabase
       .from('glossary_entries')
-      .select('id, term, definition, first_appearance_week'),
+      .select('id, term, definition, first_appearance_week')
+      .eq('group_id', group.groupId),
 
     // Most-recent journal entry for the user — used by the capture
-    // affordance's preview row.
-    user
-      ? supabase
-          .from('private_notes')
-          .select('id, title, body_text, updated_at')
-          .eq('user_id', user.id)
-          .order('updated_at', { ascending: false })
-          .limit(1)
-      : Promise.resolve({ data: null as { id: string; title: string | null; body_text: string; updated_at: string }[] | null }),
+    // affordance's preview row. private_notes is user-scoped, NOT
+    // group-scoped, so no group filter.
+    supabase
+      .from('private_notes')
+      .select('id, title, body_text, updated_at')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false })
+      .limit(1),
   ])
 
   // ── Group + greeting ────────────────────────────────────────────
-  const groupName: string =
-    (groupRow as { name?: string } | null)?.name || 'Capital Study Group'
+  // Group name comes from the resolver (chunk 3b L1). Fallback only
+  // matters in the no-membership case which is short-circuited above.
+  const groupName: string = group.name
   const displayName = profile?.display_name || 'there'
   const nzHourStr = now.toLocaleString('en-NZ', {
     hour: 'numeric',

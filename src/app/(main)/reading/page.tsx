@@ -1,4 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import { createClient, getSessionUser } from '@/lib/supabase/server'
+import { getCurrentGroup } from '@/lib/group-resolver'
 import Link from 'next/link'
 import CollapsiblePart from '@/components/reading/CollapsiblePart'
 
@@ -94,37 +96,48 @@ interface PartGroup {
 }
 
 export default async function ReadingPage() {
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
   const supabase = await createClient()
+  const group = await getCurrentGroup(supabase, user.id)
+  if (!group) redirect('/login')
 
   const now = new Date().toISOString()
 
   // All queries in parallel — FLAT queries to avoid nested join RLS failures.
   // Previous approach nested reading_schedule inside text_chapters inside text_documents,
   // which fails silently if RLS blocks any level. Now we fetch each table independently.
+  // L1: reading_schedule and annotations are group-scoped via group_id.
+  // text_documents/text_chapters are shared text (NOT group-scoped) — chapter.week_id
+  // links to a specific group's schedule; the weekMap lookup returns null for chapters
+  // whose week belongs to a different group, so they simply show no week label here.
   const [currentWeekResult, documentsResult, chaptersResult, weeksResult, annotationCountsResult] = await Promise.all([
     supabase
       .from('reading_schedule')
       .select('id')
+      .eq('group_id', group.groupId)
       .gte('due_date', now)
       .order('due_date', { ascending: true })
       .limit(1),
-    // Documents — flat, no joins
+    // Documents — flat, no joins, shared text (not group-scoped)
     supabase
       .from('text_documents')
       .select('id, title, slug')
       .order('created_at', { ascending: true }),
-    // Chapters — flat, no nested week join
+    // Chapters — flat, shared text (not group-scoped)
     supabase
       .from('text_chapters')
       .select('id, document_id, chapter_number, title, sort_order, week_id'),
     // Weeks — flat lookup for week labels + due_date (used to identify completed chapters)
     supabase
       .from('reading_schedule')
-      .select('id, week_number, title, due_date'),
+      .select('id, week_number, title, due_date')
+      .eq('group_id', group.groupId),
     // Count annotations per chapter for badges
     supabase
       .from('annotations')
-      .select('chapter_id'),
+      .select('chapter_id')
+      .eq('group_id', group.groupId),
   ])
 
   if (documentsResult.error) {

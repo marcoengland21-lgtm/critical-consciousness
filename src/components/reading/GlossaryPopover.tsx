@@ -51,13 +51,16 @@ interface GlossaryPopoverProps {
   anchor: React.RefObject<HTMLElement | null>
   /** The term the popover initially shows (the one that was clicked). */
   initialTerm: string
+  /** Active group context (L1) — required to scope glossary lookups. */
+  groupId: string
 }
 
 /**
  * Fetches a glossary entry by term name (case-insensitive). Joins
  * `reading_schedule` for the introduction-week label.
+ * L1: scoped to active group; RLS additionally enforces.
  */
-async function fetchEntry(termName: string): Promise<GlossaryEntry | null> {
+async function fetchEntry(termName: string, groupId: string): Promise<GlossaryEntry | null> {
   const supabase = createClient()
   const { data, error } = await supabase
     .from('glossary_entries')
@@ -65,6 +68,7 @@ async function fetchEntry(termName: string): Promise<GlossaryEntry | null> {
       `id, term, definition, related_terms, first_appearance_week,
        schedule:first_appearance_week ( week_number )`
     )
+    .eq('group_id', groupId)
     .ilike('term', termName)
     .limit(1)
     .maybeSingle()
@@ -84,6 +88,7 @@ async function fetchEntry(termName: string): Promise<GlossaryEntry | null> {
       .from('glossary_versions')
       .select('updated_by', { count: 'exact', head: false })
       .eq('entry_id', (data as { id: string }).id)
+      .eq('group_id', groupId)
     if (versionsRes.data) {
       editedBy = new Set(
         (versionsRes.data as { updated_by: string }[]).map((v) => v.updated_by)
@@ -116,6 +121,7 @@ export default function GlossaryPopover({
   onClose,
   anchor,
   initialTerm,
+  groupId,
 }: GlossaryPopoverProps) {
   const [entry, setEntry] = useState<GlossaryEntry | null>(null)
   const [loading, setLoading] = useState(false)
@@ -130,12 +136,12 @@ export default function GlossaryPopover({
       setHistory([])
       setEntry(null)
       setLoading(true)
-      fetchEntry(initialTerm).then((e) => {
+      fetchEntry(initialTerm, groupId).then((e) => {
         setEntry(e)
         setLoading(false)
       })
     }
-  }, [open, initialTerm])
+  }, [open, initialTerm, groupId])
 
   // Reset state on close so the next open starts fresh.
   useEffect(() => {
@@ -149,22 +155,22 @@ export default function GlossaryPopover({
   const navigateTo = useCallback((termName: string) => {
     setLoading(true)
     setHistory((prev) => (entry ? [...prev, entry.term] : prev))
-    fetchEntry(termName).then((e) => {
+    fetchEntry(termName, groupId).then((e) => {
       setEntry(e)
       setLoading(false)
     })
-  }, [entry])
+  }, [entry, groupId])
 
   const goBack = useCallback(() => {
     if (history.length === 0) return
     const prev = history[history.length - 1]
     setHistory((h) => h.slice(0, -1))
     setLoading(true)
-    fetchEntry(prev).then((e) => {
+    fetchEntry(prev, groupId).then((e) => {
       setEntry(e)
       setLoading(false)
     })
-  }, [history])
+  }, [history, groupId])
 
   return (
     <Popover

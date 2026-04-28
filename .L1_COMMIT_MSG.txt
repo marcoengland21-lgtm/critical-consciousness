@@ -1,0 +1,29 @@
+L1 multi-tenancy: resolver + read-query audit + verification record
+
+Database migration (005) closes the schema-vs-application gap by enforcing
+group membership via RLS at the DB layer. Application changes wire group
+context end-to-end:
+
+- src/lib/group-resolver.ts — server-side getCurrentGroup(): URL override
+  (admin only) -> profiles.current_group_id -> oldest membership fallback.
+- Server pages (dashboard, threads, glossary, reading, schedule, resources,
+  profile, concepts, journal/[id], journal/new): scope reads to active
+  group via group.groupId; pass groupId to client children.
+- Client components (~20 files): take groupId prop, scope writes to it.
+  Realtime subscriptions filter to active group.
+- src/lib/confusion-flags.ts: takes groupId; per-group localStorage keys.
+- supabase/migrations/005_l1_multitenancy.sql: forward + rollback +
+  verification doc. confusion_flags policy block wrapped in IF EXISTS
+  conditional (legacy table dropped along the per-user -> counts-only refactor).
+- docs/L1_VERIFICATION_RECORD/: V1 schema, V2 seed, V3 RPCs, V4 RLS both
+  directions, V5 alpha route walk. V5 beta blocked on this deploy.
+
+Sequencing note: the L1 database migration (005) was applied directly to
+production earlier this session. This commit deploys the application code
+that the migration was waiting for. The schema-vs-application gap during
+this window is what V5 caught (beta saw test-group name with Watermelon-
+scoped data — pre-L1 application code reading post-L1 schema). After this
+deploy lands, application and schema are aligned.
+
+Decision log: is_group_member SECURITY DEFINER STABLE helper, denormalized
+group_id with parity triggers, RPC drop+create not additive overload.

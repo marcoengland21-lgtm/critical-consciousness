@@ -1,0 +1,26 @@
+L1 V4 — beta cross-group reads
+Captured against production main branch.
+Source: SQL editor result panel after running L1_V4_rls_reads_only.sql
+        (beta block was the last block in that file, so the editor showed it)
+
+Query: cross-group SELECT counts as user_beta
+       (UUID 46964cf3-8baa-4b00-a73d-deac084090af)
+
+test                                              | n
+--------------------------------------------------|---
+beta sees test-group threads:                     | 0
+beta sees test-group annotations:                 | 0
+beta sees test-group glossary:                    | 0
+beta sees test-group resources:                   | 0
+beta sees test-group schedule:                    | 0
+beta sees test-group confusion_counts:            | 0
+beta sees Watermelon threads (own):               | 0
+
+7 rows.
+
+Interpretation:
+- First 6 rows = 0 → RLS blocks beta (member of Watermelon only) from
+  reading any test-group data, across every group-scoped table tested. Pass.
+- 7th row = 0 → Watermelon has no threads (fresh-seeded, no content).
+- Combined with V4_alpha_reads.txt this proves both directions of
+  cross-group read are blocked.

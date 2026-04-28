@@ -10,6 +10,8 @@ interface GlossaryModalProps {
   isOpen: boolean
   onClose: () => void
   initialQuery?: string
+  /** Active group context (L1) — scopes glossary + schedule lookups. */
+  groupId: string
 }
 
 interface GlossaryRow {
@@ -34,7 +36,7 @@ interface WeekRow {
  *
  * Triggered from: toolbar Glossary button OR `#` character (suggestion plugin).
  */
-export default function GlossaryModal({ editor, isOpen, onClose, initialQuery = '' }: GlossaryModalProps) {
+export default function GlossaryModal({ editor, isOpen, onClose, initialQuery = '', groupId }: GlossaryModalProps) {
   const [query, setQuery] = useState(initialQuery)
   const [entries, setEntries] = useState<GlossaryRow[]>([])
   const [weeks, setWeeks] = useState<Map<string, number>>(new Map())
@@ -46,14 +48,17 @@ export default function GlossaryModal({ editor, isOpen, onClose, initialQuery = 
     let cancelled = false
     setLoading(true)
     const supabase = createClient()
+    // L1: scope glossary + schedule queries to the active group.
     Promise.all([
       supabase
         .from('glossary_entries')
         .select('id, term, definition, related_terms, first_appearance_week')
+        .eq('group_id', groupId)
         .order('term', { ascending: true }),
       supabase
         .from('reading_schedule')
-        .select('id, week_number'),
+        .select('id, week_number')
+        .eq('group_id', groupId),
     ]).then(([entriesRes, weeksRes]) => {
       if (cancelled) return
       setEntries((entriesRes.data || []) as GlossaryRow[])
@@ -63,7 +68,7 @@ export default function GlossaryModal({ editor, isOpen, onClose, initialQuery = 
       setLoading(false)
     })
     return () => { cancelled = true }
-  }, [isOpen])
+  }, [isOpen, groupId])
 
   useEffect(() => { setQuery(initialQuery) }, [initialQuery])
 

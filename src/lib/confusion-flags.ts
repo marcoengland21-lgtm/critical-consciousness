@@ -14,28 +14,34 @@ import { createClient } from '@/lib/supabase/client'
 const STORAGE_KEY = 'ccp-confusion-flags'
 
 // ── localStorage helpers ──────────────────────────────────────────────
+// L1: keys are namespaced by groupId so a user who participates in
+// multiple groups doesn't have flags bleed across them.
 
-/** Get the set of paragraph indices this browser has flagged for a chapter */
-function getLocalFlags(chapterId: string): Set<number> {
+function makeKey(chapterId: string, groupId: string): string {
+  return `${groupId}::${chapterId}`
+}
+
+/** Get the set of paragraph indices this browser has flagged for a chapter (per group) */
+function getLocalFlags(chapterId: string, groupId: string): Set<number> {
   if (typeof window === 'undefined') return new Set()
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (!stored) return new Set()
     const parsed = JSON.parse(stored)
-    const flagged = parsed[chapterId]
+    const flagged = parsed[makeKey(chapterId, groupId)]
     return flagged ? new Set(flagged) : new Set()
   } catch {
     return new Set()
   }
 }
 
-/** Save flagged paragraph indices for a chapter */
-function setLocalFlags(chapterId: string, flags: Set<number>) {
+/** Save flagged paragraph indices for a chapter (per group) */
+function setLocalFlags(chapterId: string, groupId: string, flags: Set<number>) {
   if (typeof window === 'undefined') return
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
     const parsed = stored ? JSON.parse(stored) : {}
-    parsed[chapterId] = Array.from(flags)
+    parsed[makeKey(chapterId, groupId)] = Array.from(flags)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed))
   } catch {
     // Ignore storage errors
@@ -44,13 +50,17 @@ function setLocalFlags(chapterId: string, flags: Set<number>) {
 
 // ── Public API ────────────────────────────────────────────────────────
 
-/** Toggle a confusion flag for a paragraph. Returns new count and flag state. */
+/** Toggle a confusion flag for a paragraph. Returns new count and flag state.
+ *  L1: groupId scopes the flag to the active study group; the RPC enforces
+ *  membership at the DB layer (and is_group_member is in the increment_confusion
+ *  body). */
 export async function toggleConfusionFlag(
   chapterId: string,
-  paragraphIndex: number
+  paragraphIndex: number,
+  groupId: string
 ): Promise<{ count: number; isSet: boolean }> {
   const supabase = createClient()
-  const localFlags = getLocalFlags(chapterId)
+  const localFlags = getLocalFlags(chapterId, groupId)
   const wasSet = localFlags.has(paragraphIndex)
 
   if (wasSet) {
@@ -58,6 +68,7 @@ export async function toggleConfusionFlag(
     const { data, error } = await supabase.rpc('decrement_confusion', {
       p_chapter_id: chapterId,
       p_paragraph_index: paragraphIndex,
+      p_group_id: groupId,
     })
 
     if (error) {
@@ -66,7 +77,7 @@ export async function toggleConfusionFlag(
     }
 
     localFlags.delete(paragraphIndex)
-    setLocalFlags(chapterId, localFlags)
+    setLocalFlags(chapterId, groupId, localFlags)
 
     return { count: data ?? 0, isSet: false }
   } else {
@@ -74,6 +85,7 @@ export async function toggleConfusionFlag(
     const { data, error } = await supabase.rpc('increment_confusion', {
       p_chapter_id: chapterId,
       p_paragraph_index: paragraphIndex,
+      p_group_id: groupId,
     })
 
     if (error) {
@@ -82,15 +94,16 @@ export async function toggleConfusionFlag(
     }
 
     localFlags.add(paragraphIndex)
-    setLocalFlags(chapterId, localFlags)
+    setLocalFlags(chapterId, groupId, localFlags)
 
     return { count: data ?? 1, isSet: true }
   }
 }
 
-/** Get confusion flag counts for all paragraphs in a chapter */
+/** Get confusion flag counts for all paragraphs in a chapter, scoped to a group */
 export async function getConfusionFlagCounts(
-  chapterId: string
+  chapterId: string,
+  groupId: string
 ): Promise<Map<number, number>> {
   const supabase = createClient()
 
@@ -98,6 +111,7 @@ export async function getConfusionFlagCounts(
     .from('confusion_counts')
     .select('paragraph_index, count')
     .eq('chapter_id', chapterId)
+    .eq('group_id', groupId)
 
   if (error) {
     console.error('[CCP] Error fetching confusion counts:', error)
@@ -116,10 +130,11 @@ export async function getConfusionFlagCounts(
   return counts
 }
 
-/** Get which paragraphs this browser has flagged (from localStorage) */
+/** Get which paragraphs this browser has flagged (from localStorage), per group */
 export async function getUserConfusionFlags(
-  chapterId: string
+  chapterId: string,
+  groupId: string
 ): Promise<Set<number>> {
   // Purely client-side — no database query needed
-  return getLocalFlags(chapterId)
+  return getLocalFlags(chapterId, groupId)
 }

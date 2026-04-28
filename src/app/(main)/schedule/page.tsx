@@ -1,4 +1,6 @@
+import { redirect } from 'next/navigation'
 import { createClient, getSessionUser } from '@/lib/supabase/server'
+import { getCurrentGroup } from '@/lib/group-resolver'
 import ScheduleClient from '@/components/schedule/ScheduleClient'
 
 // Query-specific join shapes for Supabase responses
@@ -43,26 +45,34 @@ export const metadata = {
 
 export default async function SchedulePage() {
   const user = await getSessionUser()
+  if (!user) redirect('/login')
   const supabase = await createClient()
+  const group = await getCurrentGroup(supabase, user.id)
+  if (!group) redirect('/login')
 
   // Flat parallel queries — avoids nested join RLS failures.
   // Previous approach nested weekly_roles(user:profiles) + discussion_prompts inside
   // reading_schedule, which fails silently if RLS blocks any joined table.
+  // L1: schedule, weekly_roles, discussion_prompts are group-scoped via group_id;
+  // RLS additionally enforces. Profiles stay unfiltered (display_name lookup).
   const [weeksResult, rolesResult, promptsResult, profilesResult] = await Promise.all([
     // Weeks — flat, no joins
     supabase
       .from('reading_schedule')
       .select('*')
+      .eq('group_id', group.groupId)
       .order('week_number', { ascending: true }),
     // Roles — flat
     supabase
       .from('weekly_roles')
-      .select('id, week_id, role_type, user_id'),
+      .select('id, week_id, role_type, user_id')
+      .eq('group_id', group.groupId),
     // Prompts — flat
     supabase
       .from('discussion_prompts')
-      .select('id, week_id, prompt_text, sort_order'),
-    // Profiles for role user names
+      .select('id, week_id, prompt_text, sort_order')
+      .eq('group_id', group.groupId),
+    // Profiles for role user names — global (display_name only, not sensitive)
     supabase
       .from('profiles')
       .select('id, display_name'),
@@ -160,6 +170,7 @@ export default async function SchedulePage() {
         weeks={typedWeeks}
         currentWeekId={currentWeek?.id || null}
         userId={user?.id || null}
+        groupId={group.groupId}
       />
     </div>
   )

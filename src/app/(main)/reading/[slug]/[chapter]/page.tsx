@@ -1,5 +1,6 @@
 import { createClient, createStaticClient, getSessionUser } from '@/lib/supabase/server'
-import { notFound } from 'next/navigation'
+import { getCurrentGroup } from '@/lib/group-resolver'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { unstable_cache } from 'next/cache'
 import ChapterReader from '@/components/reading/ChapterReader'
@@ -82,13 +83,16 @@ const getFootnotes = unstable_cache(
   { revalidate: 86400 }
 )
 
-// Cache glossary terms — shared across all chapters, revalidate hourly
-// Fetched server-side to avoid client-side auth/RLS issues across browsers
+// Cache glossary terms — group-scoped, revalidate hourly.
+// L1: glossary is per-group, so cache must take groupId. Cache key includes
+// groupId so two groups don't share cached entries.
+// Fetched server-side to avoid client-side auth/RLS issues across browsers.
 const getGlossaryTerms = unstable_cache(
-  async () => {
+  async (groupId: string) => {
     const supabase = createStaticClient()
     const { data } = await supabase.from('glossary_entries')
       .select('id, term, definition')
+      .eq('group_id', groupId)
       .order('term', { ascending: true })
     return data
   },
@@ -106,13 +110,19 @@ export default async function ChapterPage({ params }: Props) {
     getStaticChapterData(slug, chapterNum),
   ])
 
+  if (!user) redirect('/login')
   if (!doc || !chapterData) notFound()
 
-  // Footnotes + glossary (cached) + annotations (dynamic, always fresh) in parallel
+  // Resolve group context (L1).
   const supabase = await createClient()
+  const group = await getCurrentGroup(supabase, user.id)
+  if (!group) redirect('/login')
+
+  // Footnotes + glossary (cached, group-scoped) + annotations (dynamic, group-scoped) in parallel.
+  // RLS additionally enforces group membership at the DB layer for annotations and glossary.
   const [footnotes, glossaryTerms, { data: annotations }] = await Promise.all([
     getFootnotes(chapterData.id),
-    getGlossaryTerms(),
+    getGlossaryTerms(group.groupId),
     supabase.from('annotations')
       .select(`
         *,
@@ -123,6 +133,7 @@ export default async function ChapterPage({ params }: Props) {
         )
       `)
       .eq('chapter_id', chapterData.id)
+      .eq('group_id', group.groupId)
       .order('position_start', { ascending: true }),
   ])
 
@@ -211,6 +222,7 @@ export default async function ChapterPage({ params }: Props) {
         allChapters={chapters}
         currentIndex={currentIndex}
         audioAlignment={getAudioAlignment(chapterNum)}
+        groupId={group.groupId}
       />
 
       {/* Cross-feature prompt */}

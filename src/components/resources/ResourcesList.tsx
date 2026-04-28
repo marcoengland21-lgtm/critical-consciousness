@@ -178,11 +178,14 @@ export default function ResourcesList({
   resources,
   weeks,
   currentUserId,
+  groupId,
 }: {
   resources: ResourceData[]
   weeks: Week[]
   currentUserId: string
   isAdmin: boolean
+  /** Active group context (L1) — required for new-resource inserts. */
+  groupId: string
 }) {
   const router = useRouter()
   const [filter, setFilter] = useState<string>('')
@@ -232,6 +235,8 @@ export default function ResourcesList({
       use_category: useCategory || null,
       week_id: weekId || null,
       created_by: currentUserId,
+      // L1: scope to active group; RLS enforces at DB layer.
+      group_id: groupId,
     })
 
     if (!error) {

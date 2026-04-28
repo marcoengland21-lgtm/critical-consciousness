@@ -1,5 +1,7 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { createClient, getSessionUser } from '@/lib/supabase/server'
+import { getCurrentGroup } from '@/lib/group-resolver'
 import ThreadListClient from '@/components/threads/ThreadListClient'
 import type { ThreadType } from '@/types/database'
 
@@ -63,57 +65,55 @@ export default async function ThreadsPage({
 }) {
   const params = await searchParams
   const user = await getSessionUser()
+  if (!user) redirect('/login')
   const supabase = await createClient()
+  const group = await getCurrentGroup(supabase, user.id, { searchParams: params })
+  if (!group) redirect('/login')
 
   const now = new Date().toISOString()
 
-  // Parallel fetch: threads, weeks, latest replies, prompts, user role,
-  // branch counts (per §4.6 — show branch count alongside reply count).
-  // Capture errors from every query so failures are visible in logs.
+  // Parallel fetch: all queries scoped to the resolved group_id.
+  // RLS additionally enforces membership at the DB layer per L1.
   const [threadsResult, weeksResult, repliesResult, promptWeekResult, userRolesResult, branchesResult] = await Promise.all([
-    // All threads with author + reply count
     supabase
       .from('threads')
       .select('*, author:profiles!author_id(id, display_name), replies:replies(count)')
+      .eq('group_id', group.groupId)
       .order('pinned', { ascending: false })
       .order('created_at', { ascending: false }),
 
-    // All weeks for labels + filter
     supabase
       .from('reading_schedule')
       .select('id, week_number, title, due_date, session_date')
+      .eq('group_id', group.groupId)
       .order('week_number', { ascending: true }),
 
-    // Latest reply per thread (fetch recent replies, dedup client-side)
     supabase
       .from('replies')
       .select('thread_id, created_at, author:profiles!author_id(display_name)')
+      .eq('group_id', group.groupId)
       .order('created_at', { ascending: false })
       .limit(200),
 
-    // Current week with prompts (first upcoming or most recent)
     supabase
       .from('reading_schedule')
       .select('id, week_number, title, discussion_prompts(id, prompt_text, sort_order)')
+      .eq('group_id', group.groupId)
       .gte('due_date', now)
       .order('due_date', { ascending: true })
       .limit(1),
 
-    // Current user's weekly roles
-    user
-      ? supabase
-          .from('weekly_roles')
-          .select('role_type, week:reading_schedule!week_id(id, week_number, title, due_date)')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(5)
-      : Promise.resolve({ data: null, error: null }),
+    supabase
+      .from('weekly_roles')
+      .select('role_type, week:reading_schedule!week_id(id, week_number, title, due_date, group_id)')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5),
 
-    // Branch counts per parent thread — selecting only the parent_thread_id
-    // and tallying client-side. Tiny payload even at scale.
     supabase
       .from('thread_branches')
-      .select('parent_thread_id'),
+      .select('parent_thread_id')
+      .eq('group_id', group.groupId),
   ])
 
   // Log all errors — nested joins can fail silently
@@ -208,6 +208,7 @@ export default async function ThreadsPage({
           }))}
           initialType={params.type || null}
           initialWeek={params.week || null}
+          groupId={group.groupId}
         />
       </div>
 

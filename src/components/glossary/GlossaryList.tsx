@@ -62,13 +62,16 @@ interface GlossaryListProps {
   /** Concept edges across all terms (per IMPROVEMENTS_PLAN §11.6).
       ConceptConnections filters client-side to those touching the selected term. */
   conceptEdges?: ConceptEdgeWithCreator[]
+  /** Active group id (chunk 3b L1). Set on glossary_entries, _versions,
+      and _comments inserts/updates. */
+  groupId: string
 }
 
 type GroupMode = 'alphabetical' | 'chapter'
 
 // ── Component ───────────────────────────────────────────────────────────────
 
-export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, versions, comments, conceptEdges = [] }: GlossaryListProps) {
+export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, versions, comments, conceptEdges = [], groupId }: GlossaryListProps) {
   const weekNumberMap = useMemo(() => {
     const map = new Map<string, number>()
     for (const w of weeks) map.set(w.id, w.week_number)
@@ -194,6 +197,8 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
         related_terms: relatedTerms
           ? relatedTerms.split(',').map((t) => t.trim()).filter(Boolean)
           : null,
+        // Chunk 3b L1: scope to active group
+        group_id: groupId,
       })
       .select('id')
       .single()
@@ -217,12 +222,14 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
 
     const supabase = createClient()
 
-    // Save old definition to version history
+    // Save old definition to version history. Trigger function
+    // populates group_id from the parent entry.
     if (selectedEntry.definition !== editingDef.trim()) {
       await supabase.from('glossary_versions').insert({
         entry_id: selectedEntry.id,
         definition: selectedEntry.definition,
         updated_by: currentUserId,
+        group_id: groupId,
       })
     }
 
@@ -252,6 +259,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
       entry_id: selectedEntry.id,
       author_id: currentUserId,
       body: commentInput.trim(),
+      group_id: groupId,
     })
 
     if (!error) {
@@ -618,6 +626,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
                 allEdges={conceptEdges}
                 currentUserId={currentUserId}
                 onSelectTerm={setSelectedId}
+                groupId={groupId}
               />
 
               {/* ── History & Discussion timeline ── */}

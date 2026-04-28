@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient, getSessionUser } from '@/lib/supabase/server'
+import { getCurrentGroup } from '@/lib/group-resolver'
 import ThreadTypeBadge from '@/components/threads/ThreadTypeBadge'
 import TimeAgo from '@/components/ui/TimeAgo'
 import type { ThreadType, WeeklyRoleType } from '@/types/database'
@@ -52,8 +53,14 @@ export default async function ProfilePage() {
   if (!user) redirect('/login')
 
   const supabase = await createClient()
+  const group = await getCurrentGroup(supabase, user.id)
+  if (!group) redirect('/login')
 
-  // All queries in parallel — follows dashboard pattern
+  // All queries in parallel — follows dashboard pattern.
+  // L1: profile page shows the user's contributions in their *active* group.
+  // L4 will add a cross-group toggle ("show contributions across all my groups").
+  // Until then, every group-scoped table is filtered by group.groupId.
+  // RLS additionally enforces.
   const [
     { data: profile },
     { data: recentAnnotations },
@@ -70,24 +77,24 @@ export default async function ProfilePage() {
     supabase.from('annotations').select(`
       id, body, created_at,
       chapter:text_chapters!chapter_id(chapter_number, title)
-    `).eq('author_id', user.id).order('created_at', { ascending: false }).limit(5),
-    supabase.from('annotations').select('*', { count: 'exact', head: true }).eq('author_id', user.id),
+    `).eq('author_id', user.id).eq('group_id', group.groupId).order('created_at', { ascending: false }).limit(5),
+    supabase.from('annotations').select('*', { count: 'exact', head: true }).eq('author_id', user.id).eq('group_id', group.groupId),
     supabase.from('threads').select(`
       id, title, thread_type, created_at,
       replies:replies(count)
-    `).eq('author_id', user.id).order('created_at', { ascending: false }).limit(5),
-    supabase.from('threads').select('*', { count: 'exact', head: true }).eq('author_id', user.id),
-    supabase.from('replies').select('*', { count: 'exact', head: true }).eq('author_id', user.id),
-    supabase.from('glossary_entries').select('id, term, created_at').eq('created_by', user.id).order('term', { ascending: true }),
-    supabase.from('resources').select('*', { count: 'exact', head: true }).eq('created_by', user.id),
+    `).eq('author_id', user.id).eq('group_id', group.groupId).order('created_at', { ascending: false }).limit(5),
+    supabase.from('threads').select('*', { count: 'exact', head: true }).eq('author_id', user.id).eq('group_id', group.groupId),
+    supabase.from('replies').select('*', { count: 'exact', head: true }).eq('author_id', user.id).eq('group_id', group.groupId),
+    supabase.from('glossary_entries').select('id, term, created_at').eq('created_by', user.id).eq('group_id', group.groupId).order('term', { ascending: true }),
+    supabase.from('resources').select('*', { count: 'exact', head: true }).eq('created_by', user.id).eq('group_id', group.groupId),
     supabase.from('reading_checkins').select(`
       id, status, created_at,
       week:reading_schedule!week_id(week_number, title)
-    `).eq('user_id', user.id).order('created_at', { ascending: false }),
+    `).eq('user_id', user.id).eq('group_id', group.groupId).order('created_at', { ascending: false }),
     supabase.from('weekly_roles').select(`
       id, role_type, created_at,
       week:reading_schedule!week_id(week_number, title)
-    `).eq('user_id', user.id).order('created_at', { ascending: false }),
+    `).eq('user_id', user.id).eq('group_id', group.groupId).order('created_at', { ascending: false }),
   ])
 
   const displayName = profile?.display_name || 'User'

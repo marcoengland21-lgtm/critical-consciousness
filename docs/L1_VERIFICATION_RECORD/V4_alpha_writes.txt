@@ -1,0 +1,22 @@
+L1 V4 — alpha cross-group write
+Captured against production main branch.
+Source: SQL editor result panel after running L1_V4_rls_alpha_writes_only.sql
+
+Query: cross-group INSERT as user_alpha into Watermelon
+       INSERT INTO threads (..., author_id, group_id)
+       VALUES ('rls-test-alpha-into-beta', ..., 'fd5320d4-...', '00000000-...-002');
+
+Result:
+  Error: Failed to run sql query: ERROR: 42501: new row violates row-level
+  security policy for table "threads"
+
+Interpretation:
+- The INSERT was rejected by Postgres RLS at the database layer.
+- Error code 42501 ("insufficient_privilege") is the standard Postgres
+  signal for an RLS WITH CHECK violation.
+- This is the EXPECTED PASS. RLS structurally prevents user_alpha (a member
+  of test-group only) from writing rows scoped to Watermelon, even though
+  alpha set author_id = own UUID (so the only blocker is the group_id
+  membership check, which is exactly the L1 contract).
+- Combined with the symmetric beta-into-test-group rejection captured in
+  V4_beta_writes.txt, both directions of cross-group write are blocked.

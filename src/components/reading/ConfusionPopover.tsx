@@ -45,6 +45,8 @@ interface ConfusionPopoverProps {
   paragraphRef: React.RefObject<HTMLElement | null>
   chapterId: string
   paragraphIndex: number
+  /** Active group context (L1) — required for the toggle RPC. */
+  groupId: string
   /** The current flag count for this paragraph (incl. user's). */
   count: number
   /** Whether the current user/browser has flagged this paragraph. */
@@ -63,6 +65,7 @@ export default function ConfusionPopover({
   paragraphRef,
   chapterId,
   paragraphIndex,
+  groupId,
   count,
   isUserFlagged,
   onCountChange,
@@ -74,14 +77,14 @@ export default function ConfusionPopover({
     if (submitting) return
     setSubmitting(true)
     try {
-      const result = await toggleConfusionFlag(chapterId, paragraphIndex)
+      const result = await toggleConfusionFlag(chapterId, paragraphIndex, groupId)
       onCountChange(result.count, result.isSet)
     } catch (err) {
       console.error('[CCP] Confusion flag toggle failed:', err)
     } finally {
       setSubmitting(false)
     }
-  }, [submitting, chapterId, paragraphIndex, onCountChange])
+  }, [submitting, chapterId, paragraphIndex, groupId, onCountChange])
 
   // Use the amber-tinted accent for the eyebrow (confusion ≠ a hard
   // "this is wrong" red; warmer signal that says "we noticed").

@@ -1,7 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getSessionUser } from '@/lib/supabase/server'
 import { getChapterLabel } from '@/lib/chapter-utils'
-
-const DEFAULT_GROUP_ID = '00000000-0000-0000-0000-000000000001'
+import { getCurrentGroup } from '@/lib/group-resolver'
 
 /**
  * SystemStatusStrip — ambient context line at the top of every authenticated page.
@@ -30,30 +29,22 @@ const DEFAULT_GROUP_ID = '00000000-0000-0000-0000-000000000001'
  */
 export default async function SystemStatusStrip() {
   const supabase = await createClient()
+  const user = await getSessionUser()
   const now = new Date()
 
-  // Fetch group name + ALL weeks in parallel.
-  const [
-    { data: groupRow },
-    { data: allWeeksData },
-  ] = await Promise.all([
-    supabase
-      .from('groups')
-      .select('name')
-      .eq('id', DEFAULT_GROUP_ID)
-      .maybeSingle(),
-    supabase
-      .from('reading_schedule')
-      .select('week_number, session_date, session_location, title, due_date')
-      .order('week_number', { ascending: true }),
-  ])
+  // Resolve current group via membership (chunk 3b L1). When the user
+  // isn't authenticated or has no memberships, render nothing — the
+  // strip is meaningful only inside a group context.
+  const group = user ? await getCurrentGroup(supabase, user.id) : null
+  if (!group) return null
 
-  // Group name fallback chain: groups.name → "Capital Study Group" as
-  // a last resort if the row hasn't been seeded. The platform brand
-  // string is acceptable as a fallback (the worst case is a less-
-  // identifying eyebrow, not broken UI).
-  const groupName: string =
-    (groupRow as { name?: string } | null)?.name || 'Capital Study Group'
+  const { data: allWeeksData } = await supabase
+    .from('reading_schedule')
+    .select('week_number, session_date, session_location, title, due_date')
+    .eq('group_id', group.groupId)
+    .order('week_number', { ascending: true })
+
+  const groupName: string = group.name
 
   const allWeeks = (allWeeksData || []) as { week_number: number; session_date: string | null; session_location: string | null; title: string; due_date: string }[]
   const totalWeeks = allWeeks.length

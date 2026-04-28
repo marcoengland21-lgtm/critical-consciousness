@@ -39,6 +39,10 @@ export default async function ThreadPage({
 }) {
   const { id } = await params
   const user = await getSessionUser()
+  if (!user) {
+    const { redirect } = await import('next/navigation')
+    redirect('/login')
+  }
   const supabase = await createClient()
 
   // ALL queries in parallel
@@ -417,6 +421,7 @@ export default async function ThreadPage({
                 parentThreadTitle={thread.title}
                 parentAuthor={authorName}
                 parentBody={thread.body}
+                groupId={thread.group_id}
               />
             )}
             {(isAuthor || isAdmin) && (
@@ -445,6 +450,7 @@ export default async function ThreadPage({
             childThreadId: b.childThreadId,
             childThreadTitle: b.childThreadTitle,
           }))}
+          groupId={thread.group_id}
         />
       </div>
 

@@ -22,6 +22,10 @@ interface JournalEditorProps {
       is set-once at creation. */
   initialChapterId?: string | null
   userId: string
+  /** Active group context (L1) — passed into GlossaryModal so glossary
+      lookups are scoped to the right group. private_notes themselves are
+      user-scoped, not group-scoped, so the editor's saves don't use this. */
+  groupId: string
   /** Show the title input. Currently aliases `!compactToolbar` — kept for
       explicit-call-site readability and to match the original API. */
   showTitle?: boolean
@@ -91,6 +95,7 @@ export default function JournalEditor({
   initialBodyJson,
   initialChapterId = null,
   userId,
+  groupId,
   showTitle = true,
   compactToolbar = false,
   bodyPlaceholder = 'Start writing…',
@@ -361,6 +366,7 @@ export default function JournalEditor({
             editor={editor}
             isOpen={glossOpen}
             onClose={() => setGlossOpen(false)}
+            groupId={groupId}
           />
         </>
       )}

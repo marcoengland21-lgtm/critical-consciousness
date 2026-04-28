@@ -1,0 +1,71 @@
+L1 V1 — Schema present
+Captured against production main branch.
+Source: SQL editor result panels for L1_V1a/b/c/d_*.sql files.
+
+────────────────────────────────────────────────────────────────────────
+V1a — group_memberships table column shape
+────────────────────────────────────────────────────────────────────────
+
+column_name | data_type
+------------|----------------------------
+id          | uuid
+group_id    | uuid
+user_id     | uuid
+joined_at   | timestamp with time zone
+role        | USER-DEFINED
+
+5 rows. Pass.
+- All UUID columns present (id, user_id, group_id).
+- joined_at is timestamp with time zone.
+- role is USER-DEFINED (Postgres's name for an enum-typed column;
+  V1b confirms the enum values are host and member).
+
+
+────────────────────────────────────────────────────────────────────────
+V1b — group_role enum values
+────────────────────────────────────────────────────────────────────────
+
+enumlabel
+---------
+host
+member
+
+2 rows. Pass.
+
+
+────────────────────────────────────────────────────────────────────────
+V1c — is_group_member function shape
+────────────────────────────────────────────────────────────────────────
+
+proname         | provolatile | prosecdef
+----------------|-------------|----------
+is_group_member | s           | true
+
+1 row. Pass.
+- provolatile = 's' → STABLE (planner can cache per-input within a
+  single query; the design choice documented in the Decision Log).
+- prosecdef = true → SECURITY DEFINER (bypasses RLS on
+  group_memberships during the membership check, avoiding the
+  planner-cycle problem documented in the Decision Log).
+
+
+────────────────────────────────────────────────────────────────────────
+V1d — group_id columns on every inheritor table
+────────────────────────────────────────────────────────────────────────
+
+table_name
+-------------------
+annotation_replies
+concept_edges
+confusion_counts
+glossary_comments
+glossary_versions
+invite_codes
+replies
+thread_branches
+
+8 rows. Pass.
+- Every inherited table has the denormalized group_id column added
+  by section 4 of the L1 migration. The BEFORE INSERT/UPDATE triggers
+  enforce child.group_id = parent.group_id (V4 directly proves these
+  triggers + RLS work in practice).

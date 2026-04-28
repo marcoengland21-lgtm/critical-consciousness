@@ -38,6 +38,8 @@ interface ScheduleClientProps {
   weeks: ScheduleWeek[]
   currentWeekId: string | null
   userId: string | null
+  /** Active group context (L1) — required for SessionNotes scoping. */
+  groupId: string
 }
 
 /**
@@ -50,7 +52,7 @@ interface ScheduleClientProps {
  * - Sticky "Jump to This Week" pill when current week is off-screen
  * - Expand All / Collapse All toggle
  */
-export default function ScheduleClient({ weeks, currentWeekId, userId }: ScheduleClientProps) {
+export default function ScheduleClient({ weeks, currentWeekId, userId, groupId }: ScheduleClientProps) {
   const now = new Date()
 
   // Current week starts expanded, everything else collapsed
@@ -502,6 +504,7 @@ export default function ScheduleClient({ weeks, currentWeekId, userId }: Schedul
                         <SessionNotes
                           weekId={week.id}
                           hasSession={!!sessionDate}
+                          groupId={groupId}
                         />
 
                         {/* Action buttons — context dependent.

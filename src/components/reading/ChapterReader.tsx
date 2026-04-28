@@ -72,6 +72,9 @@ interface Props {
   allChapters: { chapter_number: number; title: string }[]
   currentIndex: number
   audioAlignment?: AudioAlignment | null
+  /** Active group context (L1). Required for any group-scoped writes
+      (annotations, confusion flags). RLS additionally enforces. */
+  groupId: string
 }
 
 // Guest ID for unauthenticated annotation
@@ -93,7 +96,7 @@ const INITIAL_RENDER_COUNT = 25
 // ====================================================================
 // Main ChapterReader component
 // ====================================================================
-export default function ChapterReader({ chapter, annotations: initialAnnotations, footnotes, glossaryTerms: initialGlossaryTerms, userId, documentSlug, allChapters, currentIndex, audioAlignment }: Props) {
+export default function ChapterReader({ chapter, annotations: initialAnnotations, footnotes, glossaryTerms: initialGlossaryTerms, userId, documentSlug, allChapters, currentIndex, audioAlignment, groupId }: Props) {
 
   const router = useRouter()
   useScrollPersistence(chapter.chapter_number)
@@ -291,16 +294,16 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
   useEffect(() => {
     async function loadConfusionFlags() {
       try {
-        const counts = await getConfusionFlagCounts(chapter.id)
+        const counts = await getConfusionFlagCounts(chapter.id, groupId)
         setConfusionFlagCounts(counts)
-        const userFlags = await getUserConfusionFlags(chapter.id)
+        const userFlags = await getUserConfusionFlags(chapter.id, groupId)
         setUserConfusionFlags(userFlags)
       } catch (error) {
         console.error('[CCP] Failed to load confusion flags:', error)
       }
     }
     loadConfusionFlags()
-  }, [chapter.id])
+  }, [chapter.id, groupId])
 
 
 
@@ -374,7 +377,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         async () => {
           if (isDev) console.log('[CCP] Confusion flag change')
           try {
-            const counts = await getConfusionFlagCounts(chapter.id)
+            const counts = await getConfusionFlagCounts(chapter.id, groupId)
             setConfusionFlagCounts(counts)
           } catch (error) {
             console.error('[CCP] Failed to refresh confusion flags:', error)
@@ -386,7 +389,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [chapter.id, router])
+  }, [chapter.id, router, groupId])
 
   // Update annotations when props change (from realtime refresh)
   useEffect(() => {
@@ -473,6 +476,8 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         quote_prefix: quotePrefix,
         quote_suffix: quoteSuffix,
         is_public: isPublic,
+        // L1: scope annotation to active group; RLS enforces at DB layer.
+        group_id: groupId,
       }
       if (isDev) console.log('[CCP] Inserting annotation')
 
@@ -510,7 +515,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         setToast({ message: 'Failed to save annotation', type: 'error' })
       }
     },
-    [selection, userId, chapter.id, chapter.content]
+    [selection, userId, chapter.id, chapter.content, groupId]
   )
 
   /** Click on an annotated segment — chunk 3b piece 2c-i.
@@ -846,6 +851,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         }
         focusComposer={annotationModal?.focusComposer ?? false}
         userId={userId}
+        groupId={groupId}
         onReplyAdded={() => {
           // Best-effort refresh of the chapter's annotations to pick
           // up the new reply. Realtime would do this too, but the
@@ -866,6 +872,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         weekId={chapter.week_id ?? null}
         chapterLabel={`Chapter ${chapter.chapter_number}, §${chapter.chapter_number}`}
         userId={userId}
+        groupId={groupId}
       />
 
       {/* Glossary popover — chunk 3b piece 2b. Opens on inline term
@@ -876,6 +883,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         onClose={() => setGlossaryPopover(null)}
         anchor={glossaryAnchorRef}
         initialTerm={glossaryPopover?.term ?? ''}
+        groupId={groupId}
       />
 
       {/* Confusion popover — chunk 3b piece 2b. Anchored to the
@@ -886,6 +894,7 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         paragraphRef={confusionAnchorRef}
         chapterId={chapter.id}
         paragraphIndex={confusionParagraphIdx ?? 0}
+        groupId={groupId}
         count={confusionParagraphIdx !== null ? confusionFlagCounts.get(confusionParagraphIdx) ?? 0 : 0}
         isUserFlagged={confusionParagraphIdx !== null && userConfusionFlags.has(confusionParagraphIdx)}
         onCountChange={(newCount, newIsSet) => {

@@ -1,17 +1,14 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
-import JournalEditor from '@/components/journal/JournalEditor'
+import { createClient, getSessionUser } from '@/lib/supabase/server'
+import { getCurrentGroup } from '@/lib/group-resolver'
+import NewJournalEntryClient from './NewJournalEntryClient'
 
 /**
  * /journal/new — fresh entry editor.
  *
- * Client component because it needs to swap to /journal/[id] as soon as
- * autosave creates the row (so a refresh doesn't create a duplicate empty
- * entry). The JournalEditor calls onCreatedRedirect with the new id.
+ * Server shell: resolves user + active group, then mounts the client editor
+ * wrapper that owns the onCreatedRedirect / URL-replace dance.
  *
  * Chunk 3b piece 2c-ii: accepts a `?chapter_id=...` URL param. When
  * present, the new note inherits that chapter context (the
@@ -20,27 +17,20 @@ import JournalEditor from '@/components/journal/JournalEditor'
  * on this chapter" CTA so the note shows up in that chapter's notes
  * list, not just the global /journal index.
  */
-export default function NewJournalEntryPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const chapterId = searchParams?.get('chapter_id') ?? null
-  const [userId, setUserId] = useState<string | null>(null)
+export default async function NewJournalEntryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ chapter_id?: string }>
+}) {
+  const params = await searchParams
+  const chapterId = params.chapter_id ?? null
 
-  useEffect(() => {
-    const supabase = createClient()
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) setUserId(data.user.id)
-      else router.replace('/login')
-    })
-  }, [router])
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
 
-  if (!userId) {
-    return (
-      <div className="text-sm py-12 text-center" style={{ color: 'var(--text-secondary)' }}>
-        Loading…
-      </div>
-    )
-  }
+  const supabase = await createClient()
+  const group = await getCurrentGroup(supabase, user.id)
+  if (!group) redirect('/login')
 
   return (
     <div>
@@ -56,19 +46,10 @@ export default function NewJournalEntryPage() {
         <p className="text-eyebrow">New entry · Private</p>
       </div>
 
-      <JournalEditor
-        initialId={null}
-        initialTitle=""
-        initialBodyJson={{ type: 'doc', content: [] }}
-        initialChapterId={chapterId}
-        userId={userId}
-        showTitle
-        bodyPlaceholder="Start writing…"
-        minHeight={500}
-        onCreatedRedirect={(id) => {
-          // Replace URL with the entry id so a refresh doesn't make a new row.
-          window.history.replaceState(null, '', `/journal/${id}`)
-        }}
+      <NewJournalEntryClient
+        userId={user.id}
+        groupId={group.groupId}
+        chapterId={chapterId}
       />
     </div>
   )

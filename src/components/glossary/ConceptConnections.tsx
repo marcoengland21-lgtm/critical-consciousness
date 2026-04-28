@@ -34,6 +34,8 @@ interface ConceptConnectionsProps {
   currentUserId: string
   /** Callback when a term link is clicked (so the parent glossary list can re-select). */
   onSelectTerm: (id: string) => void
+  /** Active group context (L1) — required for new edge inserts. */
+  groupId: string
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -64,6 +66,7 @@ export default function ConceptConnections({
   allEdges,
   currentUserId,
   onSelectTerm,
+  groupId,
 }: ConceptConnectionsProps) {
   const router = useRouter()
   const [adding, setAdding] = useState(false)
@@ -123,6 +126,9 @@ export default function ConceptConnections({
       edge_type: 'builds_on',
       note: note.trim() || null,
       created_by: currentUserId,
+      // L1: scope edge to active group; trigger also enforces parity
+      // between from_term and to_term group_ids.
+      group_id: groupId,
     })
 
     if (insertError) {

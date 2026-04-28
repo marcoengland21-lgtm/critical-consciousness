@@ -36,6 +36,8 @@ interface ThreadListClientProps {
   weeks: WeekData[]
   initialType: string | null
   initialWeek: string | null
+  /** Active group context (L1) — scopes the realtime subscription. */
+  groupId: string
 }
 
 type SortOption = 'newest' | 'active' | 'replies'
@@ -250,6 +252,7 @@ export default function ThreadListClient({
   weeks,
   initialType,
   initialWeek,
+  groupId,
 }: ThreadListClientProps) {
   const [threads, setThreads] = useState<ThreadData[]>(initialThreads)
   const [sortBy, setSortBy] = useState<SortOption>('newest')
@@ -262,14 +265,21 @@ export default function ThreadListClient({
     [weeks]
   )
 
-  // Realtime subscription for new threads
+  // Realtime subscription for new threads — L1: filter to active group so
+  // we don't get firehose events from other groups (RLS would still block
+  // the actual read, but cheaper to never receive the event in the first place).
   useEffect(() => {
     const supabase = createClient()
     const channel = supabase
-      .channel('threads-realtime')
+      .channel(`threads-realtime:${groupId}`)
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'threads' },
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'threads',
+          filter: `group_id=eq.${groupId}`,
+        },
         async (payload) => {
           // Fetch the new thread with author info
           const { data } = await supabase
@@ -298,7 +308,14 @@ export default function ThreadListClient({
       )
       .on(
         'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'threads' },
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'threads',
+          // DELETE events don't carry NEW columns; this filter applies to
+          // OLD row's group_id which Postgres ships in DELETE payloads.
+          filter: `group_id=eq.${groupId}`,
+        },
         (payload) => {
           setThreads((prev) => prev.filter((t) => t.id !== payload.old.id))
         }
@@ -308,7 +325,7 @@ export default function ThreadListClient({
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [groupId])
 
   // Filter + sort
   const displayThreads = useMemo(() => {

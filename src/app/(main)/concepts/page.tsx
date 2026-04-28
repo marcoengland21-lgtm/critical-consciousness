@@ -1,4 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import { createClient, getSessionUser } from '@/lib/supabase/server'
+import { getCurrentGroup } from '@/lib/group-resolver'
 import ConceptMap from '@/components/concepts/ConceptMap'
 import type { ConceptEdgeType } from '@/types/database'
 
@@ -17,19 +19,26 @@ interface ConceptEdgeRow {
 }
 
 export default async function ConceptsPage() {
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
   const supabase = await createClient()
+  const group = await getCurrentGroup(supabase, user.id)
+  if (!group) redirect('/login')
 
   // Parallel fetch — entries (nodes) + concept_edges (links).
   // Per IMPROVEMENTS_PLAN §11.2, concept_edges is the source of truth for the
   // map. The legacy related_terms[] array is no longer consulted here.
+  // L1: scoped to active group via group_id; RLS enforces at DB layer.
   const [{ data: entries }, { data: edges }] = await Promise.all([
     supabase
       .from('glossary_entries')
       .select('id, term, definition, first_appearance_week')
+      .eq('group_id', group.groupId)
       .order('term', { ascending: true }),
     supabase
       .from('concept_edges')
       .select('id, from_term_id, to_term_id, edge_type, note')
+      .eq('group_id', group.groupId)
       .order('created_at', { ascending: true }),
   ])
 

@@ -1,0 +1,34 @@
+L1 V4 — test user wiring (preparation for RLS impersonation)
+Captured against production main branch.
+Source: SQL editor result panel for L1_V4_test_user_wiring.sql query 4a-4.
+
+Setup: created two test users in Supabase Auth → Users:
+  user_alpha@example.test  (UUID fd5320d4-a311-4b2c-ab10-3aa615bde326)
+  user_beta@example.test   (UUID 46964cf3-8baa-4b00-a73d-deac084090af)
+
+Then ran L1_V4_test_user_wiring.sql which:
+  - Inserted alpha → group_memberships(...001, 'member')
+  - Inserted beta  → group_memberships(...002, 'member')
+  - Set alpha's profiles.current_group_id to ...001
+  - Set beta's  profiles.current_group_id to ...002
+  - Confirmed via the SELECT below.
+
+Confirmation query result:
+
+email                    | group_name                          | role   | resolver_landing_matches
+-------------------------|-------------------------------------|--------|--------------------------
+user_alpha@example.test  | Christchurch Capital Reading Group  | member | true
+user_beta@example.test   | Watermelon                          | member | true
+
+2 rows. Pass.
+
+Interpretation:
+- alpha is a single-group member of the test group.
+- beta is a single-group member of Watermelon.
+- For each user, profiles.current_group_id matches their membership group
+  (resolver_landing_matches = true), meaning the server-side group
+  resolver will land them on their own group at login without needing a
+  URL override.
+- This sets up the V4 RLS impersonation tests, which prove that a
+  single-group member cannot read or write data scoped to the OTHER
+  group at the database layer.

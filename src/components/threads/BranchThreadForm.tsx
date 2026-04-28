@@ -21,6 +21,8 @@ interface BranchThreadFormProps {
   onSuccess?: () => void
   /** Called when the user cancels — used by the parent to collapse the form. */
   onCancel: () => void
+  /** Active group context (L1). Required to scope new thread + branch link. */
+  groupId: string
 }
 
 /**
@@ -40,6 +42,7 @@ export default function BranchThreadForm({
   parentExcerpt,
   onSuccess,
   onCancel,
+  groupId,
 }: BranchThreadFormProps) {
   const router = useRouter()
   const titleRef = useRef<HTMLInputElement>(null)
@@ -94,6 +97,9 @@ export default function BranchThreadForm({
         body: body.trim(),
         thread_type: threadType,
         author_id: user.id,
+        // L1: branched thread inherits the parent's group; trigger
+        // additionally enforces parity for thread_branches.
+        group_id: groupId,
       })
       .select('id')
       .single()
@@ -116,6 +122,9 @@ export default function BranchThreadForm({
         parent_reply_id: parentReplyId,
         child_thread_id: newThread.id,
         branched_by: user.id,
+        // L1: scope the link row to the active group; trigger enforces
+        // it matches both parent and child group_id.
+        group_id: groupId,
       })
 
     if (branchError) {

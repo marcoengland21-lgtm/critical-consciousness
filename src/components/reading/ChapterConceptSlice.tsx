@@ -20,6 +20,8 @@ interface ChapterConceptSliceProps {
   /** The reading_schedule.id for the chapter being read. May be null if the
       chapter isn't assigned to a week. */
   weekId: string | null
+  /** Active group context (L1) — scopes the glossary + edge fetch. */
+  groupId: string
 }
 
 /**
@@ -35,12 +37,13 @@ interface ChapterConceptSliceProps {
  * narrow for a meaningful graph rendering, and the list is more useful
  * for orientation anyway. Click any concept → opens it in the glossary.
  */
-export default function ChapterConceptSlice({ weekId }: ChapterConceptSliceProps) {
+export default function ChapterConceptSlice({ weekId, groupId }: ChapterConceptSliceProps) {
   const [terms, setTerms] = useState<Term[]>([])
   const [edges, setEdges] = useState<Edge[]>([])
   const [loading, setLoading] = useState(true)
 
   // Fetch on mount — both queries are small (glossary terms + concept_edges).
+  // L1: scope to active group; RLS additionally enforces.
   useEffect(() => {
     let cancelled = false
     async function load() {
@@ -49,10 +52,12 @@ export default function ChapterConceptSlice({ weekId }: ChapterConceptSliceProps
         supabase
           .from('glossary_entries')
           .select('id, term, first_appearance_week')
+          .eq('group_id', groupId)
           .order('term', { ascending: true }),
         supabase
           .from('concept_edges')
           .select('id, from_term_id, to_term_id')
+          .eq('group_id', groupId)
           .eq('edge_type', 'builds_on'),
       ])
       if (cancelled) return
@@ -64,7 +69,7 @@ export default function ChapterConceptSlice({ weekId }: ChapterConceptSliceProps
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [groupId])
 
   const termById = useMemo(() => {
     const m = new Map<string, Term>()

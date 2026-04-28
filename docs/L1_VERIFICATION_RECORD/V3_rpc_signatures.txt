@@ -1,0 +1,26 @@
+L1 V3 — RPC signatures updated (audit-completeness assertion)
+Captured against production main branch.
+Source: SQL editor result panel for L1_V3_rpc_check.sql.
+
+Query: confirm both confusion RPCs take p_group_id (and that no old
+2-arg version is still callable).
+
+proname             | pg_get_function_arguments
+--------------------|-----------------------------------------------------------
+decrement_confusion | p_chapter_id uuid, p_paragraph_index integer, p_group_id uuid
+increment_confusion | p_chapter_id uuid, p_paragraph_index integer, p_group_id uuid
+
+2 rows. Pass.
+
+Interpretation:
+- Both functions appear exactly once each, with the new 3-arg signature
+  including p_group_id.
+- The old 2-arg signatures (p_chapter_id, p_paragraph_index) are GONE.
+- This is the receipt for the audit-completeness assertion documented
+  in the Decision Log: "the only way to prove every caller has been
+  updated is for the old signature to no longer be callable."
+- Any client code that was missed in the read-query audit and still
+  calls the 2-arg version would fail loud with
+  "function increment_confusion(uuid, integer) does not exist" — exactly
+  the loud-failure mode L1 was designed for, instead of silently writing
+  confusion counts to the wrong group.

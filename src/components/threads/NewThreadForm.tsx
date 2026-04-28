@@ -28,9 +28,11 @@ const DRAFT_KEY = 'ccp-thread-draft'
 interface NewThreadFormProps {
   weeks: Week[]
   currentWeek?: Week | null
+  /** Active group id (chunk 3b L1). Inserted on the new thread row. */
+  groupId: string
 }
 
-export default function NewThreadForm({ weeks, currentWeek }: NewThreadFormProps) {
+export default function NewThreadForm({ weeks, currentWeek, groupId }: NewThreadFormProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const bodyRef = useRef<HTMLTextAreaElement>(null)
@@ -164,6 +166,8 @@ export default function NewThreadForm({ weeks, currentWeek }: NewThreadFormProps
         thread_type: threadType,
         author_id: user.id,
         week_id: weekId || null,
+        // Chunk 3b L1: scope to active group
+        group_id: groupId,
       })
       .select('id')
       .single()

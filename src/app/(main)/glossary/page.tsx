@@ -1,4 +1,6 @@
+import { redirect } from 'next/navigation'
 import { createClient, getSessionUser } from '@/lib/supabase/server'
+import { getCurrentGroup } from '@/lib/group-resolver'
 import GlossaryList from '@/components/glossary/GlossaryList'
 import type { ConceptEdgeType } from '@/types/database'
 
@@ -41,34 +43,43 @@ export const metadata = {
 
 export default async function GlossaryPage() {
   const user = await getSessionUser()
+  if (!user) redirect('/login')
   const supabase = await createClient()
+  const group = await getCurrentGroup(supabase, user.id)
+  if (!group) redirect('/login')
 
-  // All queries in parallel
+  // All queries in parallel, scoped to active group via group_id.
+  // RLS additionally enforces at DB layer.
   const [{ data: entries }, { data: profile }, { data: weeks }, { data: versions }, { data: comments }, { data: conceptEdges }] = await Promise.all([
     supabase
       .from('glossary_entries')
       .select('*, creator:profiles!created_by(display_name)')
+      .eq('group_id', group.groupId)
       .order('term', { ascending: true }),
     supabase
       .from('profiles')
       .select('role')
-      .eq('id', user?.id || '')
+      .eq('id', user.id)
       .single(),
     supabase
       .from('reading_schedule')
       .select('id, week_number')
+      .eq('group_id', group.groupId)
       .order('week_number', { ascending: true }),
     supabase
       .from('glossary_versions')
       .select('id, entry_id, definition, updated_by, created_at, author:profiles!updated_by(display_name)')
+      .eq('group_id', group.groupId)
       .order('created_at', { ascending: true }),
     supabase
       .from('glossary_comments')
       .select('id, entry_id, author_id, body, created_at, updated_at, author:profiles!author_id(display_name)')
+      .eq('group_id', group.groupId)
       .order('created_at', { ascending: true }),
     supabase
       .from('concept_edges')
       .select('id, from_term_id, to_term_id, edge_type, note, created_by, created_at, creator:profiles!created_by(display_name)')
+      .eq('group_id', group.groupId)
       .order('created_at', { ascending: true }),
   ])
 
@@ -110,12 +121,13 @@ export default async function GlossaryPage() {
       </div>
       <GlossaryList
         entries={entries || []}
-        currentUserId={user?.id || ''}
+        currentUserId={user.id}
         isAdmin={profile?.role === 'admin'}
         weeks={weeks || []}
         versions={normalizedVersions}
         comments={normalizedComments}
         conceptEdges={normalizedEdges}
+        groupId={group.groupId}
       />
     </div>
   )

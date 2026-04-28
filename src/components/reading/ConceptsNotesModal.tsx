@@ -58,6 +58,9 @@ interface ConceptsNotesModalProps {
   /** Current user. Notes are filtered by user_id; null = guest, no
       notes column at all. */
   userId: string | null
+  /** Active group context (L1) — scopes glossary + concept_edges queries.
+      private_notes are user-scoped (not group-scoped) so this isn't used there. */
+  groupId: string
 }
 
 interface ConceptRow {
@@ -84,6 +87,7 @@ export default function ConceptsNotesModal({
   weekId,
   chapterLabel,
   userId,
+  groupId,
 }: ConceptsNotesModalProps) {
   const isMobile = useMediaQuery(MOBILE_BREAKPOINT)
   const [activeTab, setActiveTab] = useState<'concepts' | 'notes'>('concepts')
@@ -117,16 +121,19 @@ export default function ConceptsNotesModal({
           .from('glossary_entries')
           .select('id, term')
           .eq('first_appearance_week', weekId)
+          .eq('group_id', groupId)
           .order('term', { ascending: true })
 
         if (termsError) {
           console.error('[CCP] Concepts fetch failed:', termsError)
         } else if (terms && terms.length > 0) {
-          // For each term, count edges (undirected).
+          // For each term, count edges (undirected). L1: scope edges to
+          // the active group; RLS will enforce too.
           const termIds = (terms as { id: string }[]).map((t) => t.id)
           const { data: edges } = await supabase
             .from('concept_edges')
             .select('from_term_id, to_term_id')
+            .eq('group_id', groupId)
             .or(
               `from_term_id.in.(${termIds.join(',')}),to_term_id.in.(${termIds.join(',')})`
             )
@@ -178,7 +185,7 @@ export default function ConceptsNotesModal({
 
     fetchAll()
     return () => { cancelled = true }
-  }, [open, chapterId, weekId, userId])
+  }, [open, chapterId, weekId, userId, groupId])
 
   const handleConceptClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>, term: string) => {
@@ -269,6 +276,7 @@ export default function ConceptsNotesModal({
           onClose={() => setGlossaryOpen(null)}
           anchor={conceptAnchorRef}
           initialTerm={glossaryOpen.term}
+          groupId={groupId}
         />
       )}
     </Modal>

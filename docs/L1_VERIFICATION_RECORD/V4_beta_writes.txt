@@ -1,0 +1,20 @@
+L1 V4 — beta cross-group write
+Captured against production main branch.
+Source: SQL editor result panel after running L1_V4_rls_writes_only.sql
+        beta block
+
+Query: cross-group INSERT as user_beta into test-group
+       INSERT INTO threads (..., author_id, group_id)
+       VALUES ('rls-test-beta-into-alpha', ..., '46964cf3-...', '00000000-...-001');
+
+Result:
+  Error: Failed to run sql query: ERROR: 42501: new row violates row-level
+  security policy for table "threads"
+
+Interpretation:
+- The INSERT was rejected by Postgres RLS at the database layer.
+- This is the EXPECTED PASS. RLS structurally prevents user_beta (a member
+  of Watermelon only) from writing rows scoped to test-group, even though
+  beta set author_id = own UUID.
+- Combined with the symmetric alpha-into-Watermelon rejection captured in
+  V4_alpha_writes.txt, both directions of cross-group write are blocked.
