@@ -6,6 +6,82 @@ doc draft for review.
 
 ---
 
+## SHIP-CLEAN UPDATE (29 April 2026)
+
+The piece SHIPPED. V1–V11 verified. Evidence in
+`docs/SCHEDULE_MODES_VERIFICATION_RECORD/`. Final commits:
+
+- `d1b2289` Schedule modes (recurring v1): schema, resolver,
+  schedule page, dashboard orientation
+- `e78cbee` Group session timing (010 — TRANSITIONAL): schema, RPC,
+  orientation lines, schedule host controls
+- `e4895f3` Schedule modes (recurring v1) sub-batch 5: chapter-
+  anchored content domain
+- `48ee78e` Fix: admin URL override (?group=<slug>) now works on
+  schedule, reading, glossary, threads/new
+- `2b9f141` Schedule modes (recurring v1) verification record:
+  V1-V11 PASSED
+- `07efa4b` Recurring v1 follow-up: WhereStuckWidget chapter copy
+  + /journal/new override gap
+
+What ACTUALLY shipped vs the locked decisions below — the locked
+decisions were largely reverted mid-piece. Mars's call (recorded in
+chat at the time): the original "DECISIONS LOCKED" section below
+optimized for cuts (drop the week filter, drop the discussion-prompts
+sidebar, drop the ConceptsThisWeekWidget, etc.); reality argued for
+swapping to chapter-aware features instead of cutting them. The
+piece's work shape ~doubled. All 8 sites now ship as chapter-aware
+swaps, not as drops. The two exceptions:
+
+- **`weekly_roles` + `discussion_prompts` retained as legacy data** —
+  this scope-out stuck; the threads contextual sidebar surfaces
+  these and was dropped along with them, queued to return when the
+  sessions-table piece lands and adds session-scoped role
+  assignment.
+- **Threads contextual sidebar dropped in recurring v1** (item 7b
+  per Mars) — the two widgets it housed (`This Week's Prompts`,
+  `Your Role This Week`) are tied to the scope-out above. Returns
+  with sessions piece.
+
+Surface-during-build expansions captured during the build (chat-
+recorded, applied under Mars's "ship with your judgment, surface
+only if structural" directive):
+
+1. NewThreadForm banner reflects the SELECTED chapter (live), not
+   the resolver's currentChapterId
+2. ConceptsNotesModal + ChapterConceptSlice swept from
+   first_appearance_week (broken) to first_appearance_chapter
+3. Reading-page item 6 expanded to include completed-chapter
+   signal swap (now from group_chapter_history) + part-group
+   highlight swap
+4. ChapterConceptSlice updated despite being orphaned for
+   code-base consistency
+5. Reading-page chapter.week display dropped (dead-column-driven
+   field)
+
+Bugs surfaced + fixed during verification (full detail in
+`docs/SCHEDULE_MODES_VERIFICATION_RECORD/BUGS_FIXED_DURING_VERIFICATION.md`):
+
+- Admin URL override missing on /schedule, /reading, /glossary,
+  /threads/new (pre-existing gap, not a sub-batch 5 regression)
+- 007 RPCs missing from production schema cache (paired-test loop
+  truncated after rollback without forward re-application)
+
+Known limitations / deferred items:
+
+- Layout-level SystemStatusStrip can't honor URL override (Next.js
+  App Router constraint; L4 multi-group switching UI will solve
+  this post-launch)
+- Broader dashboard sweep (RhythmWidget day-strip, big-stat "Wk N"
+  tile, "Next Session: Tue 6pm" tile) deferred — out of items 7+8
+  scope; future broader dashboard sweep
+
+The "DECISIONS LOCKED" section below remains as the historical
+record of brief-time intent. The actual shipped behavior is in
+the verification record + commits listed above.
+
+---
+
 ## DECISIONS LOCKED (Mars sign-off received)
 
 All six surface points answered. Locked positions:
