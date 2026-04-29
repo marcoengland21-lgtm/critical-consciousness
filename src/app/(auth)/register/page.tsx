@@ -3,90 +3,109 @@
 import { FormEvent, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
-import { validateInviteCode } from './actions'
+import { registerUser } from './actions'
 
+/**
+ * Register page (Brief 1, Sprint A Session 1).
+ *
+ * Form fields per mum's S1-S5 designs (corrected by Brief 1 sign-off):
+ *   - Invite code    (re-added; helper "From the email or message that
+ *                    brought you here")
+ *   - Your name      (helper "How you'd like to be known")
+ *   - Email
+ *   - Password       (helper "At least 8 characters"; min 8 chars)
+ *
+ * Eyebrow "JOINING WATERMELON" + heading "Create your account" +
+ * subhead "You'll be added to Watermelon. Takes a minute." (mum's S1
+ * had "...and land on its dashboard" — dropped post-Brief 1 since the
+ * onboarding scroll comes between signup and dashboard).
+ *
+ * Errors:
+ *   - General (server / network) → red banner above form (mum's S3
+ *     pattern, scope=general)
+ *   - Field-scoped (invite/email/password) → small red helper under
+ *     the field (mum's S4 pattern)
+ *
+ * Calls the single registerUser server action — no client-side
+ * supabase.auth.signUp dance. Membership creation, sign-in, and
+ * use_count increment all run server-side (see actions.ts header).
+ *
+ * On success, navigates to result.redirectTo:
+ *   - /welcome    (normal path — onboarding scroll routes new signups)
+ *   - /login      (rare — registration succeeded but session-set failed)
+ */
 export default function RegisterPage() {
   const router = useRouter()
+  const [inviteCode, setInviteCode] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [inviteCode, setInviteCode] = useState('')
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const [generalError, setGeneralError] = useState('')
+  const [fieldError, setFieldError] = useState<{
+    inviteCode?: string
+    email?: string
+    password?: string
+  }>({})
   const [loading, setLoading] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
 
+  const clearErrors = () => {
+    setGeneralError('')
+    setFieldError({})
+  }
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setError('')
-    setSuccess('')
+    clearErrors()
     setLoading(true)
 
     try {
-      // Validate invite code first
-      const codeResult = await validateInviteCode(inviteCode)
-      if (!codeResult.valid) {
-        setError(codeResult.error || 'Invalid invite code')
+      const result = await registerUser({
+        inviteCode,
+        displayName,
+        email,
+        password,
+      })
+
+      if (!result.ok) {
+        if (result.error.field === 'general') {
+          setGeneralError(result.error.message)
+        } else {
+          setFieldError({ [result.error.field]: result.error.message })
+        }
         setLoading(false)
         return
       }
 
-      // Proceed with signup
-      const supabase = createClient()
-      const { error, data } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            display_name: displayName,
-          },
-        },
-      })
-
-      if (error) {
-        setError(error.message)
-        return
-      }
-
-      if (data?.user?.identities?.length === 0) {
-        setError('An account with this email already exists')
-        return
-      }
-
-      // If email confirmation is disabled, redirect straight to dashboard
-      if (data?.session) {
-        router.refresh()
-        router.push('/dashboard')
-      } else {
-        setSuccess('Account created! Check your email to confirm, then sign in.')
-      }
+      // Success — navigate to /welcome (or /login on the rare
+      // session-set failure). Refresh first so server components
+      // re-fetch with the new session cookies.
+      router.refresh()
+      router.push(result.redirectTo)
     } catch {
-      setError('An unexpected error occurred')
-    } finally {
+      setGeneralError('Something went wrong. Try again.')
       setLoading(false)
     }
   }
 
   return (
     <div>
+      <p className="text-eyebrow mb-3">Joining Watermelon</p>
       <h2
-        className="text-2xl font-bold mb-6"
+        className="text-2xl font-semibold mb-2"
         style={{ color: 'var(--text-primary)' }}
       >
-        Create Account
+        Create your account
       </h2>
+      <p
+        className="text-sm mb-6"
+        style={{ color: 'var(--text-secondary)' }}
+      >
+        You&rsquo;ll be added to Watermelon. Takes a minute.
+      </p>
 
-      {error && (
-        <div className="alert-error mb-4">
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="alert-success mb-4">
-          {success}
-        </div>
+      {generalError && (
+        <div className="alert-error mb-4">{generalError}</div>
       )}
 
       <form
@@ -99,6 +118,7 @@ export default function RegisterPage() {
           }
         }}
         className="space-y-4"
+        noValidate
       >
         <div>
           <label
@@ -106,20 +126,35 @@ export default function RegisterPage() {
             className="block text-sm font-medium mb-2"
             style={{ color: 'var(--text-primary)' }}
           >
-            Invite Code
+            Invite code
           </label>
           <input
             type="text"
             id="inviteCode"
             value={inviteCode}
             onChange={(e) => setInviteCode(e.target.value)}
-            required
-            placeholder="Enter your invite code"
+            placeholder="WATERMELON26"
             className="input-base w-full"
+            aria-invalid={!!fieldError.inviteCode}
+            aria-describedby={fieldError.inviteCode ? 'inviteCode-error' : 'inviteCode-helper'}
           />
-          <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
-            You need an invite code from an existing member to join.
-          </p>
+          {fieldError.inviteCode ? (
+            <p
+              id="inviteCode-error"
+              className="text-xs mt-1"
+              style={{ color: 'var(--accent-red)' }}
+            >
+              {fieldError.inviteCode}
+            </p>
+          ) : (
+            <p
+              id="inviteCode-helper"
+              className="text-xs mt-1"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              From the email or message that brought you here.
+            </p>
+          )}
         </div>
 
         <div>
@@ -128,15 +163,14 @@ export default function RegisterPage() {
             className="block text-sm font-medium mb-2"
             style={{ color: 'var(--text-primary)' }}
           >
-            Your Name
+            Your name
           </label>
           <input
             type="text"
             id="displayName"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            required
-            placeholder="How you want to be known in the group"
+            placeholder="How you&rsquo;d like to be known"
             className="input-base w-full"
           />
         </div>
@@ -154,9 +188,20 @@ export default function RegisterPage() {
             id="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
+            placeholder="you@example.com"
             className="input-base w-full"
+            aria-invalid={!!fieldError.email}
+            aria-describedby={fieldError.email ? 'email-error' : undefined}
           />
+          {fieldError.email && (
+            <p
+              id="email-error"
+              className="text-xs mt-1"
+              style={{ color: 'var(--accent-red)' }}
+            >
+              {fieldError.email}
+            </p>
+          )}
         </div>
 
         <div>
@@ -172,10 +217,28 @@ export default function RegisterPage() {
             id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
+            minLength={8}
             className="input-base w-full"
+            aria-invalid={!!fieldError.password}
+            aria-describedby={fieldError.password ? 'password-error' : 'password-helper'}
           />
+          {fieldError.password ? (
+            <p
+              id="password-error"
+              className="text-xs mt-1"
+              style={{ color: 'var(--accent-red)' }}
+            >
+              {fieldError.password}
+            </p>
+          ) : (
+            <p
+              id="password-helper"
+              className="text-xs mt-1"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              At least 8 characters.
+            </p>
+          )}
         </div>
 
         <button
@@ -183,7 +246,7 @@ export default function RegisterPage() {
           disabled={loading}
           className="w-full btn-primary text-base disabled:opacity-50"
         >
-          {loading ? 'Creating account...' : 'Join the Study Group'}
+          {loading ? 'Joining...' : 'Join Watermelon'}
         </button>
       </form>
 
