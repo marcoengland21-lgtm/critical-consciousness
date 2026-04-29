@@ -2252,11 +2252,19 @@ function ScrollStyles() {
         transform: translateY(0);
       }
 
-      /* Marginalia card in orbit lane (Bucket 2 v1 visual) */
+      /* Marginalia card in orbit lane (Bucket 2 v1 visual).
+         margin-top approximates para 1's vertical position in the chapter
+         (chapter padding + chrome-header height) so the card sits next to
+         the line it's about, not at the top of the orbit lane. */
       .orbit-marginalia {
         padding: 1rem 1.125rem;
         cursor: pointer;
         transition: background-color 200ms, transform 200ms;
+      }
+      @media (min-width: 880px) {
+        .orbit-marginalia {
+          margin-top: 11rem;
+        }
       }
       .orbit-marginalia:hover {
         background-color: rgba(var(--accent-purple-rgb), 0.03);
@@ -3069,33 +3077,28 @@ const READING_AUDIO_URL =
 const READING_AUDIO_DURATION = 1186.6 // 19:46
 
 function ReadingSurface({ sectionRef, reduced }: SurfaceProps) {
-  // Audio
+  // Audio — collapsed-only state per Mars's v5 cut. Single button at
+  // chapter foot toggles real LibriVox playback. No expanded controls
+  // in the scroll mockup; user encounters the full pill on the live
+  // platform when audio is active.
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [audioPlaying, setAudioPlaying] = useState(false)
-  const [audioCurrent, setAudioCurrent] = useState(0)
-  const [audioRate, setAudioRate] = useState(1)
 
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
-    const onTime = () => setAudioCurrent(audio.currentTime)
     const onPause = () => setAudioPlaying(false)
     const onPlay = () => setAudioPlaying(true)
     const onEnded = () => setAudioPlaying(false)
-    audio.addEventListener('timeupdate', onTime)
     audio.addEventListener('pause', onPause)
     audio.addEventListener('play', onPlay)
     audio.addEventListener('ended', onEnded)
     return () => {
-      audio.removeEventListener('timeupdate', onTime)
       audio.removeEventListener('pause', onPause)
       audio.removeEventListener('play', onPlay)
       audio.removeEventListener('ended', onEnded)
     }
   }, [])
-  useEffect(() => {
-    if (audioRef.current) audioRef.current.playbackRate = audioRate
-  }, [audioRate])
   const togglePlay = () => {
     const audio = audioRef.current
     if (!audio) return
@@ -3109,25 +3112,6 @@ function ReadingSurface({ sectionRef, reduced }: SurfaceProps) {
       audio.pause()
     }
   }
-  const skip = (delta: number) => {
-    if (!audioRef.current) return
-    audioRef.current.currentTime = Math.max(0, Math.min(
-      READING_AUDIO_DURATION,
-      audioRef.current.currentTime + delta
-    ))
-  }
-  const cycleSpeed = () => {
-    setAudioRate(r => r === 1 ? 1.25 : r === 1.25 ? 1.5 : r === 1.5 ? 0.75 : 1)
-  }
-  const seekFromTrack = (e: React.MouseEvent<HTMLDivElement>) => {
-    const audio = audioRef.current
-    if (!audio) return
-    const rect = e.currentTarget.getBoundingClientRect()
-    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
-    audio.currentTime = ratio * READING_AUDIO_DURATION
-  }
-  const audioProgress = (audioCurrent / READING_AUDIO_DURATION) * 100
-  const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
 
   // Glossary
   const [glossaryOpen, setGlossaryOpen] = useState(true)
@@ -3148,77 +3132,33 @@ function ReadingSurface({ sectionRef, reduced }: SurfaceProps) {
   }
   const glossaryEntry = definitions[glossaryTerm]
 
-  // Confusion
+  // Confusion — static count per Mars's v5 cut #2 (no animated climb).
+  // Toggle still increments locally (adventure-mode interactivity stays).
   const [confusionOpen, setConfusionOpen] = useState(true)
-  const [confusionCount, setConfusionCount] = useState(0)
   const [confusionFlagged, setConfusionFlagged] = useState(false)
+  const baseCount = 7
+  const confusionCount = baseCount + (confusionFlagged ? 1 : 0)
+  // Static high intensity matches the static count (7+ → high)
+  const intensity = 'high' as const
 
-  // Section visibility tracker for ambient confusion climb
-  const sectionVisRef = useRef<HTMLElement | null>(null)
-  const [sectionVis, setSectionVis] = useState(false)
-  useEffect(() => {
-    if (reduced) {
-      setConfusionCount(7)
-      return
-    }
-    const el = sectionVisRef.current
-    if (!el) return
-    const obs = new IntersectionObserver(([entry]) => setSectionVis(entry.isIntersecting), { threshold: 0.1 })
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [reduced])
-  useEffect(() => {
-    if (!sectionVis || reduced) return
-    const arrivals = [600, 900, 1200, 2100, 2400, 3500, 4800]
-    const timeouts: ReturnType<typeof setTimeout>[] = []
-    const runCycle = () => {
-      setConfusionCount(confusionFlagged ? 1 : 0)
-      arrivals.forEach((delay, i) => {
-        timeouts.push(setTimeout(() => {
-          setConfusionCount(c => Math.max(c, i + 1 + (confusionFlagged ? 1 : 0)))
-        }, delay))
-      })
-      timeouts.push(setTimeout(runCycle, 8500))
-    }
-    runCycle()
-    return () => timeouts.forEach(clearTimeout)
-  }, [sectionVis, reduced, confusionFlagged])
+  const toggleStuck = () => setConfusionFlagged(f => !f)
 
-  const intensity =
-    confusionCount === 0 ? '0' :
-    confusionCount <= 2 ? 'low' :
-    confusionCount <= 5 ? 'mid' : 'high'
-
-  const toggleStuck = () => {
-    setConfusionFlagged(f => {
-      const next = !f
-      setConfusionCount(c => Math.max(0, next ? c + 1 : c - 1))
-      return next
-    })
-  }
-
-  // Selection action bar
-  const [selectionFeedback, setSelectionFeedback] = useState('')
-  const onAnnotate = () => setSelectionFeedback('Opens the annotation composer for this passage.')
-  const onGiveOwnSpace = () => setSelectionFeedback('Opens a new thread, with this passage pre-quoted as the seed.')
+  // Selection action bar — buttons clickable but no follow-up explanation
+  // text per Mars's v5 cut #3. Platform's own copy ("Annotate" / "Give
+  // this its own space") is the teaching.
+  const onAnnotate = () => { /* no-op for the mockup; live opens composer */ }
+  const onGiveOwnSpace = () => { /* no-op for the mockup; live routes to /threads/new */ }
 
   // Marginalia
   const [marginaliaExpanded, setMarginaliaExpanded] = useState(false)
 
-  // Entry visibility for chapter and orbit cards
+  // Entry visibility for chapter + orbit marginalia card
   const [chapterRef, chapterVisible] = usePanelVisible(reduced)
   const [marginaliaRef, marginaliaVisible] = usePanelVisible(reduced)
-  const [audioOrbitRef, audioOrbitVisible] = usePanelVisible(reduced)
-
-  // Combined section ref (for parent-passed sectionRef + ambient visibility tracking)
-  const setCombinedRef = (el: HTMLElement | null) => {
-    sectionRef(el)
-    sectionVisRef.current = el
-  }
 
   return (
     <section
-      ref={setCombinedRef}
+      ref={sectionRef}
       className="welcome-section is-multipanel"
       data-surface="reading"
       aria-label="Reading"
@@ -3377,9 +3317,6 @@ function ReadingSurface({ sectionRef, reduced }: SurfaceProps) {
                 <button type="button" onClick={onAnnotate}>Annotate</button>
                 <button type="button" onClick={onGiveOwnSpace}>Give this its own space</button>
               </div>
-              <p className="selection-feedback" data-shown={selectionFeedback ? 'true' : 'false'}>
-                {selectionFeedback || '\u00A0'}
-              </p>
             </div>
           </div>
 
@@ -3466,41 +3403,6 @@ function ReadingSurface({ sectionRef, reduced }: SurfaceProps) {
             </div>
           </div>
 
-          {/* Audio expanded pill at chapter foot vertical */}
-          <div ref={audioOrbitRef} className="orbit-card orbit-audio" data-visible={audioOrbitVisible ? 'true' : 'false'}>
-            <div className="audio-pill" role="toolbar" aria-label="Audio player">
-              <button type="button" className="pill-skip" onClick={() => skip(-15)} aria-label="Skip back 15 seconds">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M11 17l-5-5 5-5" /><path d="M18 17l-5-5 5-5" />
-                </svg>
-                15s
-              </button>
-              <button
-                type="button"
-                className="pill-play"
-                data-playing={audioPlaying ? 'true' : 'false'}
-                onClick={togglePlay}
-                aria-label={audioPlaying ? 'Pause' : 'Play'}
-              >
-                {audioPlaying
-                  ? <Pause size={14} strokeWidth={2} aria-hidden="true" />
-                  : <Play size={14} strokeWidth={2} aria-hidden="true" />}
-              </button>
-              <button type="button" className="pill-skip" onClick={() => skip(15)} aria-label="Skip forward 15 seconds">
-                15s
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M13 17l5-5-5-5" /><path d="M6 17l5-5-5-5" />
-                </svg>
-              </button>
-              <div className="pill-track" onClick={seekFromTrack} role="slider" aria-label="Audio progress" aria-valuenow={Math.round(audioProgress)} aria-valuemin={0} aria-valuemax={100}>
-                <div className="pill-fill" style={{ width: `${audioProgress}%` }} />
-              </div>
-              <span className="pill-time">{fmt(audioCurrent)} / 19:46</span>
-              <button type="button" className="pill-speed" onClick={cycleSpeed} aria-label={`Playback speed: ${audioRate}x`}>
-                {audioRate}×
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </section>
