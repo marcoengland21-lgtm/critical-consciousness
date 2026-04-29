@@ -869,7 +869,6 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
         open={isToolsOpen}
         onClose={() => setIsToolsOpen(false)}
         chapterId={chapter.id}
-        weekId={chapter.week_id ?? null}
         chapterLabel={`Chapter ${chapter.chapter_number}, §${chapter.chapter_number}`}
         userId={userId}
         groupId={groupId}

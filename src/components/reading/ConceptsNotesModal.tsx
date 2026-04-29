@@ -46,13 +46,14 @@ import GlossaryPopover from './GlossaryPopover'
 interface ConceptsNotesModalProps {
   open: boolean
   onClose: () => void
-  /** UUID of the current chapter — drives the notes filter. */
+  /** UUID of the current chapter — drives BOTH the notes filter AND
+   *  (009 — recurring v1) the concepts filter via
+   *  glossary_entries.first_appearance_chapter. Pre-009 this was a
+   *  weekId → first_appearance_week join, but text_chapters.week_id
+   *  is NULL platform-wide so that path returned empty. Direct
+   *  chapter anchoring fixes both the pre-existing dead-column bug
+   *  and the post-009 half-state where new entries don't show up. */
   chapterId: string
-  /** UUID of the chapter's reading week — drives the concepts filter
-      via `glossary_entries.first_appearance_week`. May be null when
-      the chapter is unscheduled (modal then shows an empty concepts
-      column with a helpful note). */
-  weekId: string | null
   /** "Chapter 1, §1" — used in the modal eyebrow. */
   chapterLabel: string
   /** Current user. Notes are filtered by user_id; null = guest, no
@@ -84,7 +85,6 @@ export default function ConceptsNotesModal({
   open,
   onClose,
   chapterId,
-  weekId,
   chapterLabel,
   userId,
   groupId,
@@ -112,15 +112,16 @@ export default function ConceptsNotesModal({
     const supabase = createClient()
 
     async function fetchAll() {
-      // Concepts: glossary entries where first_appearance_week matches
-      // the current chapter's week_id. Connection counts come from
-      // concept_edges (counted as undirected — either direction).
+      // Concepts: glossary entries where first_appearance_chapter
+      // matches the chapter being read (009 — recurring v1).
+      // Connection counts come from concept_edges (counted as
+      // undirected — either direction).
       let conceptRows: ConceptRow[] = []
-      if (weekId) {
+      {
         const { data: terms, error: termsError } = await supabase
           .from('glossary_entries')
           .select('id, term')
-          .eq('first_appearance_week', weekId)
+          .eq('first_appearance_chapter', chapterId)
           .eq('group_id', groupId)
           .order('term', { ascending: true })
 
@@ -185,7 +186,7 @@ export default function ConceptsNotesModal({
 
     fetchAll()
     return () => { cancelled = true }
-  }, [open, chapterId, weekId, userId, groupId])
+  }, [open, chapterId, userId, groupId])
 
   const handleConceptClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>, term: string) => {

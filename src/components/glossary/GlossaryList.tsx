@@ -4,22 +4,32 @@ import { useState, useEffect, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { findGlossaryTermMatches } from '@/lib/glossary-utils'
+import { getChapterLabel } from '@/lib/chapter-utils'
 import MarkdownBody from '@/components/ui/MarkdownBody'
 import TimeAgo from '@/components/ui/TimeAgo'
 import ConceptConnections, { type ConceptEdgeWithCreator } from './ConceptConnections'
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
-interface Week {
+/** Chapter from text_chapters — the unit of structure recurring v1
+ *  uses for glossary anchoring (009). Replaces the Week shape used
+ *  in the pre-recurring glossary. */
+interface Chapter {
   id: string
-  week_number: number
+  chapter_number: number
+  title: string
+  sort_order: number
 }
 
 interface GlossaryEntry {
   id: string
   term: string
   definition: string
+  /** Legacy / future bounded mode. Not surfaced in recurring v1. */
   first_appearance_week: string | null
+  /** 009 (recurring v1): chapter the term was first introduced in.
+   *  NULL for legacy entries; populated for new entries. */
+  first_appearance_chapter: string | null
   related_terms: string[] | null
   created_by: string
   creator?: { display_name: string }
@@ -56,7 +66,10 @@ interface GlossaryListProps {
   entries: GlossaryEntry[]
   currentUserId: string
   isAdmin: boolean
-  weeks: Week[]
+  /** All text_chapters (009 — recurring v1 anchoring). Drives the
+   *  "First appears" dropdown on new-entry creation, the "By Chapter"
+   *  sort grouping, and the per-entry chapter badges. */
+  chapters: Chapter[]
   versions: GlossaryVersionRow[]
   comments: GlossaryCommentRow[]
   /** Concept edges across all terms (per IMPROVEMENTS_PLAN §11.6).
@@ -71,12 +84,13 @@ type GroupMode = 'alphabetical' | 'chapter'
 
 // ── Component ───────────────────────────────────────────────────────────────
 
-export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, versions, comments, conceptEdges = [], groupId }: GlossaryListProps) {
-  const weekNumberMap = useMemo(() => {
-    const map = new Map<string, number>()
-    for (const w of weeks) map.set(w.id, w.week_number)
+export default function GlossaryList({ entries, currentUserId, isAdmin, chapters, versions, comments, conceptEdges = [], groupId }: GlossaryListProps) {
+  // chapter id → Chapter row, used for badge labels and sort grouping.
+  const chapterMap = useMemo(() => {
+    const map = new Map<string, Chapter>()
+    for (const c of chapters) map.set(c.id, c)
     return map
-  }, [weeks])
+  }, [chapters])
 
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -89,7 +103,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
   const [term, setTerm] = useState('')
   const [definition, setDefinition] = useState('')
   const [relatedTerms, setRelatedTerms] = useState('')
-  const [firstWeek, setFirstWeek] = useState('')
+  const [firstChapter, setFirstChapter] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [editingDef, setEditingDef] = useState('')
   const [isEditing, setIsEditing] = useState(false)
@@ -116,21 +130,34 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
     )
   }, [entries, search])
 
-  // Group entries
+  // Group entries. "chapter" mode (009) groups by
+  // first_appearance_chapter — each group keyed by the chapter's
+  // sort_order so the natural order matches the reading order, with
+  // "Ungrouped" always last for entries that don't have a chapter
+  // anchor (legacy or no-chapter-selected on creation).
   const grouped = useMemo(() => {
     if (groupMode === 'chapter') {
-      const groups: Record<string, GlossaryEntry[]> = {}
+      // Bucket entries by chapter id (or "Ungrouped" for null).
+      const buckets = new Map<string | null, GlossaryEntry[]>()
       for (const entry of filtered) {
-        const weekNum = entry.first_appearance_week ? weekNumberMap.get(entry.first_appearance_week) : null
-        const key = weekNum ? `Week ${weekNum}` : 'Ungrouped'
-        if (!groups[key]) groups[key] = []
-        groups[key].push(entry)
+        const key = entry.first_appearance_chapter ?? null
+        if (!buckets.has(key)) buckets.set(key, [])
+        buckets.get(key)!.push(entry)
       }
-      return Object.entries(groups).sort((a, b) => {
-        if (a[0] === 'Ungrouped') return 1
-        if (b[0] === 'Ungrouped') return -1
-        return a[0].localeCompare(b[0], undefined, { numeric: true })
+      // Resolve each bucket to a [label, entries] pair, sorted by
+      // chapter sort_order (Ungrouped at the end).
+      const resolved = Array.from(buckets.entries()).map(([key, items]) => {
+        if (!key) return { label: 'Ungrouped', sortKey: Number.MAX_SAFE_INTEGER, items }
+        const chapter = chapterMap.get(key)
+        if (!chapter) return { label: 'Ungrouped', sortKey: Number.MAX_SAFE_INTEGER, items }
+        return {
+          label: getChapterLabel(chapter.chapter_number).label,
+          sortKey: chapter.sort_order,
+          items,
+        }
       })
+      resolved.sort((a, b) => a.sortKey - b.sortKey)
+      return resolved.map((r) => [r.label, r.items] as [string, GlossaryEntry[]])
     } else {
       const groups: Record<string, GlossaryEntry[]> = {}
       for (const entry of filtered) {
@@ -140,7 +167,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
       }
       return Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0]))
     }
-  }, [filtered, groupMode, weekNumberMap])
+  }, [filtered, groupMode, chapterMap])
 
   const selectedEntry = selectedId ? entries.find((e) => e.id === selectedId) || null : null
 
@@ -193,7 +220,12 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
         term: term.trim(),
         definition: definition.trim(),
         created_by: currentUserId,
-        first_appearance_week: firstWeek || null,
+        // 009 (recurring v1): write first_appearance_chapter, not
+        // first_appearance_week. Both columns coexist on the schema;
+        // recurring v1 only writes the chapter side. Legacy entries
+        // already in the DB keep whatever value first_appearance_week
+        // had pre-recurring.
+        first_appearance_chapter: firstChapter || null,
         related_terms: relatedTerms
           ? relatedTerms.split(',').map((t) => t.trim()).filter(Boolean)
           : null,
@@ -207,7 +239,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
       setTerm('')
       setDefinition('')
       setRelatedTerms('')
-      setFirstWeek('')
+      setFirstChapter('')
       setShowForm(false)
       setSelectedId(data.id)
       router.refresh()
@@ -334,7 +366,7 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
             className="input-base text-xs px-2 py-2"
           >
             <option value="alphabetical">A–Z</option>
-            <option value="chapter">By Week</option>
+            <option value="chapter">By Chapter</option>
           </select>
           <button
             onClick={() => setShowForm(!showForm)}
@@ -378,14 +410,19 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
           />
           <div className="flex items-center gap-3">
             <select
-              value={firstWeek}
-              onChange={(e) => setFirstWeek(e.target.value)}
+              value={firstChapter}
+              onChange={(e) => setFirstChapter(e.target.value)}
               className="input-base text-xs px-2 py-2"
             >
-              <option value="">First appears: (select week)</option>
-              {weeks.map((w) => (
-                <option key={w.id} value={w.id}>Week {w.week_number}</option>
-              ))}
+              <option value="">First appears: (select chapter)</option>
+              {chapters.map((c) => {
+                const { label } = getChapterLabel(c.chapter_number)
+                return (
+                  <option key={c.id} value={c.id}>
+                    {label}
+                  </option>
+                )
+              })}
             </select>
             <div className="flex-1" />
             <button
@@ -465,14 +502,20 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
                         >
                           <span className="font-medium">{entry.term}</span>
                           <span className="flex items-center gap-1.5 mt-0.5">
-                            {entry.first_appearance_week && weekNumberMap.get(entry.first_appearance_week) && (
-                              <span
-                                className="text-[10px] px-1.5 py-0.5 rounded-full"
-                                style={{ backgroundColor: 'var(--bg-badge)', color: 'var(--text-secondary)' }}
-                              >
-                                W{weekNumberMap.get(entry.first_appearance_week)}
-                              </span>
-                            )}
+                            {(() => {
+                              const ch = entry.first_appearance_chapter
+                                ? chapterMap.get(entry.first_appearance_chapter)
+                                : null
+                              if (!ch) return null
+                              return (
+                                <span
+                                  className="text-[10px] px-1.5 py-0.5 rounded-full"
+                                  style={{ backgroundColor: 'var(--bg-badge)', color: 'var(--text-secondary)' }}
+                                >
+                                  {getChapterLabel(ch.chapter_number).shortLabel}
+                                </span>
+                              )
+                            })()}
                             {activityCount > 0 && (
                               <span
                                 className="text-[10px]"
@@ -516,14 +559,20 @@ export default function GlossaryList({ entries, currentUserId, isAdmin, weeks, v
                     {selectedEntry.term}
                   </h2>
                   <div className="flex flex-wrap gap-2 mt-1.5">
-                    {selectedEntry.first_appearance_week && weekNumberMap.get(selectedEntry.first_appearance_week) && (
-                      <span
-                        className="text-xs px-2 py-0.5 rounded-full"
-                        style={{ backgroundColor: 'var(--bg-badge)', color: 'var(--text-secondary)' }}
-                      >
-                        Week {weekNumberMap.get(selectedEntry.first_appearance_week)}
-                      </span>
-                    )}
+                    {(() => {
+                      const ch = selectedEntry.first_appearance_chapter
+                        ? chapterMap.get(selectedEntry.first_appearance_chapter)
+                        : null
+                      if (!ch) return null
+                      return (
+                        <span
+                          className="text-xs px-2 py-0.5 rounded-full"
+                          style={{ backgroundColor: 'var(--bg-badge)', color: 'var(--text-secondary)' }}
+                        >
+                          {getChapterLabel(ch.chapter_number).label}
+                        </span>
+                      )
+                    })()}
                     <span
                       className="text-xs px-2 py-0.5 rounded-full"
                       style={{ backgroundColor: 'var(--bg-badge)', color: 'var(--text-secondary)' }}

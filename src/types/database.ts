@@ -109,7 +109,13 @@ export interface GlossaryEntry {
   id: string;
   term: string;
   definition: string;
+  /** Legacy / future bounded mode. NULL for entries created in
+   *  recurring v1 — those use first_appearance_chapter instead. */
   first_appearance_week: string | null; // UUID FK to reading_schedule.id
+  /** 009 (recurring v1): chapter the term was first introduced in.
+   *  Populated for entries created via the recurring-v1 GlossaryList
+   *  form; NULL for legacy entries. */
+  first_appearance_chapter: string | null; // UUID FK to text_chapters.id
   related_terms: string[] | null;
   created_by: string;
   updated_by: string | null;

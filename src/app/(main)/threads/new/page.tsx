@@ -7,6 +7,13 @@ export const metadata = {
   title: 'New Thread | Capital Study Group',
 }
 
+interface ChapterRow {
+  id: string
+  chapter_number: number
+  title: string
+  sort_order: number
+}
+
 export default async function NewThreadPage() {
   const user = await getSessionUser()
   if (!user) redirect('/login')
@@ -15,32 +22,33 @@ export default async function NewThreadPage() {
   const group = await getCurrentGroup(supabase, user.id)
   if (!group) redirect('/login')
 
-  const now = new Date().toISOString()
+  // Schedule modes (recurring v1): swap reading_schedule fetch for
+  // text_chapters fetch. Threads anchor to chapters now (008), and the
+  // current chapter (group.currentChapterId from the resolver) is the
+  // default anchor for new threads — the auto-anchor surfaced as the
+  // green banner pill at the top of the form.
+  //
+  // text_chapters is shared text (not group-scoped), so no group
+  // filter on the chapters query.
+  const { data: chapters, error } = await supabase
+    .from('text_chapters')
+    .select('id, chapter_number, title, sort_order')
+    .order('sort_order', { ascending: true })
 
-  // Fetch weeks + current week, scoped to the active group.
-  const [{ data: weeks }, { data: currentWeekData }] = await Promise.all([
-    supabase
-      .from('reading_schedule')
-      .select('id, week_number, title')
-      .eq('group_id', group.groupId)
-      .order('week_number', { ascending: true }),
-    supabase
-      .from('reading_schedule')
-      .select('id, week_number, title')
-      .eq('group_id', group.groupId)
-      .gte('due_date', now)
-      .order('due_date', { ascending: true })
-      .limit(1),
-  ])
-
-  const currentWeek = currentWeekData?.[0] || null
+  if (error) {
+    console.error('[CCP] /threads/new — text_chapters query error:', error)
+  }
 
   return (
     <div className="max-w-3xl mx-auto">
       <h1 className="text-2xl sm:text-3xl font-bold mb-8" style={{ color: 'var(--accent-red)' }}>
         Start a New Thread
       </h1>
-      <NewThreadForm weeks={weeks || []} currentWeek={currentWeek} groupId={group.groupId} />
+      <NewThreadForm
+        chapters={(chapters || []) as ChapterRow[]}
+        currentChapterId={group.currentChapterId}
+        groupId={group.groupId}
+      />
     </div>
   )
 }

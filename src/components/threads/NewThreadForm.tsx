@@ -5,34 +5,40 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import QuoteFromReadingModal from './QuoteFromReadingModal'
 import { threadTypeConfig } from './ThreadTypeBadge'
+import { getChapterLabel } from '@/lib/chapter-utils'
 import type { ThreadType } from '@/types/database'
 
-interface Week {
+interface Chapter {
   id: string
-  week_number: number
+  chapter_number: number
   title: string
+  sort_order: number
 }
 
 // Per-type placeholder text — guides the writer toward the thread type's purpose
 const placeholderByType: Record<ThreadType, string> = {
-  discussion: "What question came up for you during this week's reading?",
+  discussion: "What question came up for you while reading this chapter?",
   reflection: "What stood out to you? What challenged your thinking?",
-  summary: "What were the key points from this week's session?",
+  summary: "What were the key points from this chapter?",
   passage_pick: "Which passage do you want the group to look at closely? Use 'Quote from reading' to insert it.",
-  connection: "How does this week's reading connect to something outside the text?",
+  connection: "How does this chapter connect to something outside the text?",
   general: "What's on your mind?",
 }
 
 const DRAFT_KEY = 'ccp-thread-draft'
 
 interface NewThreadFormProps {
-  weeks: Week[]
-  currentWeek?: Week | null
+  chapters: Chapter[]
+  /** The group's current chapter id, from the resolver. Defaults the
+   *  chapter selector to "auto-anchor" the thread to whatever the
+   *  group is reading right now. NULL when the host hasn't set a
+   *  current chapter yet — selector starts unset in that case. */
+  currentChapterId: string | null
   /** Active group id (chunk 3b L1). Inserted on the new thread row. */
   groupId: string
 }
 
-export default function NewThreadForm({ weeks, currentWeek, groupId }: NewThreadFormProps) {
+export default function NewThreadForm({ chapters, currentChapterId, groupId }: NewThreadFormProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const bodyRef = useRef<HTMLTextAreaElement>(null)
@@ -41,7 +47,11 @@ export default function NewThreadForm({ weeks, currentWeek, groupId }: NewThread
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [threadType, setThreadType] = useState<ThreadType>('discussion')
-  const [weekId, setWeekId] = useState(currentWeek?.id || '')
+  // Auto-anchor: default to the group's current chapter. Host can
+  // override via the chapter selector below if they're starting a
+  // thread about a different chapter (going back to revisit, jumping
+  // ahead, etc.).
+  const [chapterId, setChapterId] = useState<string>(currentChapterId || '')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [draftSaved, setDraftSaved] = useState(false)
@@ -71,8 +81,12 @@ export default function NewThreadForm({ weeks, currentWeek, groupId }: NewThread
       const displayQuote = quoteParam || bodyParam?.slice(0, 60)
       setTitle(`On: "${displayQuote && displayQuote.length > 60 ? displayQuote.slice(0, 60) + '…' : displayQuote}"`)
 
-      // Store chapter_id and annotation_id in sessionStorage for later use during thread creation
-      if (chapterIdParam) sessionStorage.setItem('_temp_chapter_id', chapterIdParam)
+      // Reading page passes the source chapter_id directly — override
+      // the current-chapter auto-anchor with the actual chapter the
+      // user was reading when they started the thread. This handles
+      // the case where the user is reading ahead of the group's
+      // current chapter and starts a thread on the chapter they're in.
+      if (chapterIdParam) setChapterId(chapterIdParam)
       if (annotationIdParam) sessionStorage.setItem('_temp_annotation_id', annotationIdParam)
     } else {
       // Try to restore draft from localStorage
@@ -83,7 +97,7 @@ export default function NewThreadForm({ weeks, currentWeek, groupId }: NewThread
           if (parsed.title) setTitle(parsed.title)
           if (parsed.body) setBody(parsed.body)
           if (parsed.threadType) setThreadType(parsed.threadType)
-          if (parsed.weekId) setWeekId(parsed.weekId)
+          if (parsed.chapterId) setChapterId(parsed.chapterId)
         }
       } catch {
         // ignore parse errors
@@ -97,13 +111,13 @@ export default function NewThreadForm({ weeks, currentWeek, groupId }: NewThread
     const timer = setTimeout(() => {
       localStorage.setItem(
         DRAFT_KEY,
-        JSON.stringify({ title, body, threadType, weekId })
+        JSON.stringify({ title, body, threadType, chapterId })
       )
       setDraftSaved(true)
       setTimeout(() => setDraftSaved(false), 2000)
     }, 1000)
     return () => clearTimeout(timer)
-  }, [title, body, threadType, weekId])
+  }, [title, body, threadType, chapterId])
 
   // Auto-expand textarea
   const autoResize = useCallback(() => {
@@ -165,7 +179,10 @@ export default function NewThreadForm({ weeks, currentWeek, groupId }: NewThread
         body: body.trim(),
         thread_type: threadType,
         author_id: user.id,
-        week_id: weekId || null,
+        // 008: anchor to chapter (NULL if no current chapter and user
+        // hasn't picked one). week_id stays NULL for new recurring-mode
+        // threads — only legacy / future bounded mode populates it.
+        chapter_id: chapterId || null,
         // Chunk 3b L1: scope to active group
         group_id: groupId,
       })
@@ -189,7 +206,6 @@ export default function NewThreadForm({ weeks, currentWeek, groupId }: NewThread
     }
 
     // Clean up temporary storage
-    sessionStorage.removeItem('_temp_chapter_id')
     sessionStorage.removeItem('_temp_annotation_id')
 
     // Clear draft on successful publish
@@ -206,24 +222,35 @@ export default function NewThreadForm({ weeks, currentWeek, groupId }: NewThread
         />
       )}
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Current week context banner */}
-      {currentWeek && (
-        <div
-          className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm"
-          style={{
-            backgroundColor: 'var(--bg-badge)',
-            color: 'var(--text-primary)',
-          }}
-        >
-          <span style={{ color: 'var(--accent-purple)' }}>📖</span>
-          <span>
-            You&apos;re discussing:{' '}
-            <strong>
-              Week {currentWeek.week_number} — {currentWeek.title}
-            </strong>
-          </span>
-        </div>
-      )}
+      {/* Chapter context banner — shown anchor for honesty about
+          platform behavior (the chapter_id getting written gets
+          surfaced here so the user sees what's happening). Updates
+          live as the user changes the chapter selector below. Renders
+          only when a chapter is selected; in the rare pre-seed case
+          (no current_chapter_id, user hasn't picked one) the banner
+          omits cleanly rather than showing a half-state. */}
+      {chapterId && (() => {
+        const selectedChapter = chapters.find((c) => c.id === chapterId)
+        if (!selectedChapter) return null
+        const { label } = getChapterLabel(selectedChapter.chapter_number)
+        return (
+          <div
+            className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm"
+            style={{
+              backgroundColor: 'var(--bg-badge)',
+              color: 'var(--text-primary)',
+            }}
+          >
+            <span style={{ color: 'var(--accent-purple)' }}>📖</span>
+            <span>
+              This thread is about:{' '}
+              <strong>
+                {label}: {selectedChapter.title}
+              </strong>
+            </span>
+          </div>
+        )
+      })()}
 
       {error && (
         <div className="alert-error">
@@ -354,24 +381,32 @@ export default function NewThreadForm({ weeks, currentWeek, groupId }: NewThread
           </div>
         </div>
 
-        {/* Week Association */}
-        {weeks.length > 0 && (
+        {/* Chapter anchor (008). Defaulted to the group's current
+            chapter so the common case is no-decision-required for
+            the user. Override here to anchor to a different chapter
+            (going back to revisit, jumping ahead while reading
+            independently, etc.). The banner above updates live when
+            the selection changes. */}
+        {chapters.length > 0 && (
           <div>
-            <label htmlFor="week" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
-              Related Week
+            <label htmlFor="chapter" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+              Chapter
             </label>
             <select
-              id="week"
-              value={weekId}
-              onChange={(e) => setWeekId(e.target.value)}
+              id="chapter"
+              value={chapterId}
+              onChange={(e) => setChapterId(e.target.value)}
               className="input-base text-sm w-full"
             >
-              <option value="">No specific week</option>
-              {weeks.map((w) => (
-                <option key={w.id} value={w.id}>
-                  Week {w.week_number}: {w.title}
-                </option>
-              ))}
+              <option value="">No specific chapter</option>
+              {chapters.map((c) => {
+                const { label } = getChapterLabel(c.chapter_number)
+                return (
+                  <option key={c.id} value={c.id}>
+                    {label}: {c.title}
+                  </option>
+                )
+              })}
             </select>
           </div>
         )}

@@ -1,11 +1,14 @@
 /**
- * ConceptsThisWeekWidget — chunk 3b piece 4.
+ * ConceptsThisChapterWidget — chunk 3b piece 4 + Schedule modes
+ * (recurring v1) chapter-aware swap.
  *
- * Right-rail widget per frame 13D. Lists glossary terms introduced in
- * this week's reading week (filtered by
- * `glossary_entries.first_appearance_week = current_week.id`).
+ * Right-rail widget per frame 13D. Lists glossary terms introduced
+ * in the group's CURRENT chapter — filtered upstream in
+ * dashboard/page.tsx by
+ * `glossary_entries.first_appearance_chapter = group.currentChapterId`
+ * (009 — recurring v1).
  *
- *   CONCEPTS THIS WEEK
+ *   CONCEPTS THIS CHAPTER
  *   4 terms being introduced                                Glossary →
  *
  *   Use-value         the qualitative side — what a thing is good for
@@ -16,6 +19,10 @@
  *
  * Term names use Lora italic with the placeholder treatment from
  * piece 5 (single-underline; round 5 will refine).
+ *
+ * Renamed from ConceptsThisWeekWidget per Schedule modes (recurring
+ * v1) item 2 — the unit of structure shifted from week to chapter
+ * (host advances when ready, no preset weekly schedule).
  */
 
 import Link from 'next/link'
@@ -27,21 +34,21 @@ export interface ConceptItem {
   shortDefinition: string
 }
 
-interface ConceptsThisWeekWidgetProps {
+interface ConceptsThisChapterWidgetProps {
   concepts: ConceptItem[]
 }
 
-export default function ConceptsThisWeekWidget({ concepts }: ConceptsThisWeekWidgetProps) {
+export default function ConceptsThisChapterWidget({ concepts }: ConceptsThisChapterWidgetProps) {
   return (
-    <section aria-label="Concepts introduced this week">
-      <p className="text-eyebrow mb-2">Concepts this week</p>
+    <section aria-label="Concepts introduced in the current chapter">
+      <p className="text-eyebrow mb-2">Concepts this chapter</p>
 
       {concepts.length === 0 ? (
         <p
           className="text-sm italic"
           style={{ color: 'var(--text-secondary)', lineHeight: 1.55 }}
         >
-          No new concepts introduced this week.
+          No new concepts introduced in this chapter yet.
         </p>
       ) : (
         <>

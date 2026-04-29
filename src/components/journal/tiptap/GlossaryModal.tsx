@@ -4,13 +4,15 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { type Editor } from '@tiptap/react'
 import { Modal } from './ReferenceModal'
+import { getChapterLabel } from '@/lib/chapter-utils'
 
 interface GlossaryModalProps {
   editor: Editor
   isOpen: boolean
   onClose: () => void
   initialQuery?: string
-  /** Active group context (L1) — scopes glossary + schedule lookups. */
+  /** Active group context (L1) — scopes glossary lookups. text_chapters
+   *  is shared text (not group-scoped). */
   groupId: string
 }
 
@@ -19,12 +21,15 @@ interface GlossaryRow {
   term: string
   definition: string
   related_terms: string[] | null
-  first_appearance_week: string | null
+  /** 009 (recurring v1): chapter the term was first introduced in.
+   *  Drives the chapter badge; first_appearance_week is no longer
+   *  surfaced in this modal. */
+  first_appearance_chapter: string | null
 }
 
-interface WeekRow {
+interface ChapterRow {
   id: string
-  week_number: number
+  chapter_number: number
 }
 
 /**
@@ -39,7 +44,8 @@ interface WeekRow {
 export default function GlossaryModal({ editor, isOpen, onClose, initialQuery = '', groupId }: GlossaryModalProps) {
   const [query, setQuery] = useState(initialQuery)
   const [entries, setEntries] = useState<GlossaryRow[]>([])
-  const [weeks, setWeeks] = useState<Map<string, number>>(new Map())
+  // Chapter id → chapter_number, used for the per-entry chapter badge.
+  const [chapterNumbers, setChapterNumbers] = useState<Map<string, number>>(new Map())
   const [loading, setLoading] = useState(true)
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
@@ -48,23 +54,25 @@ export default function GlossaryModal({ editor, isOpen, onClose, initialQuery = 
     let cancelled = false
     setLoading(true)
     const supabase = createClient()
-    // L1: scope glossary + schedule queries to the active group.
+    // L1: scope glossary query to active group. text_chapters is
+    // shared text (not group-scoped), so no group filter on chapters.
+    // 009 (recurring v1): query first_appearance_chapter, not
+    // first_appearance_week — chapters are the unit of structure.
     Promise.all([
       supabase
         .from('glossary_entries')
-        .select('id, term, definition, related_terms, first_appearance_week')
+        .select('id, term, definition, related_terms, first_appearance_chapter')
         .eq('group_id', groupId)
         .order('term', { ascending: true }),
       supabase
-        .from('reading_schedule')
-        .select('id, week_number')
-        .eq('group_id', groupId),
-    ]).then(([entriesRes, weeksRes]) => {
+        .from('text_chapters')
+        .select('id, chapter_number'),
+    ]).then(([entriesRes, chaptersRes]) => {
       if (cancelled) return
       setEntries((entriesRes.data || []) as GlossaryRow[])
-      const wm = new Map<string, number>()
-      for (const w of (weeksRes.data || []) as WeekRow[]) wm.set(w.id, w.week_number)
-      setWeeks(wm)
+      const cm = new Map<string, number>()
+      for (const c of (chaptersRes.data || []) as ChapterRow[]) cm.set(c.id, c.chapter_number)
+      setChapterNumbers(cm)
       setLoading(false)
     })
     return () => { cancelled = true }
@@ -125,7 +133,10 @@ export default function GlossaryModal({ editor, isOpen, onClose, initialQuery = 
         <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
           {matches.map((entry) => {
             const expanded = selectedId === entry.id
-            const week = entry.first_appearance_week ? weeks.get(entry.first_appearance_week) : null
+            const chapterNum = entry.first_appearance_chapter
+              ? chapterNumbers.get(entry.first_appearance_chapter)
+              : null
+            const chapterShortLabel = chapterNum ? getChapterLabel(chapterNum).shortLabel : null
             return (
               <div
                 key={entry.id}
@@ -147,12 +158,12 @@ export default function GlossaryModal({ editor, isOpen, onClose, initialQuery = 
                   >
                     {entry.term}
                   </span>
-                  {week && (
+                  {chapterShortLabel && (
                     <span
                       className="text-[10px] px-1.5 py-0.5 rounded-full leading-none"
                       style={{ backgroundColor: 'var(--bg-badge)', color: 'var(--text-secondary)' }}
                     >
-                      W{week}
+                      {chapterShortLabel}
                     </span>
                   )}
                 </div>

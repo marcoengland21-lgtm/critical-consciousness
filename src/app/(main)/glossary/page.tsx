@@ -49,8 +49,12 @@ export default async function GlossaryPage() {
   if (!group) redirect('/login')
 
   // All queries in parallel, scoped to active group via group_id.
-  // RLS additionally enforces at DB layer.
-  const [{ data: entries }, { data: profile }, { data: weeks }, { data: versions }, { data: comments }, { data: conceptEdges }] = await Promise.all([
+  // RLS additionally enforces at DB layer. Schedule modes (recurring
+  // v1) swaps reading_schedule fetch for text_chapters fetch — sort
+  // groupings + new-entry "first appears in" dropdown anchor to
+  // chapters, not weeks. text_chapters is shared text (not group-
+  // scoped), so no group filter on the chapters query.
+  const [{ data: entries }, { data: profile }, { data: chapters }, { data: versions }, { data: comments }, { data: conceptEdges }] = await Promise.all([
     supabase
       .from('glossary_entries')
       .select('*, creator:profiles!created_by(display_name)')
@@ -62,10 +66,9 @@ export default async function GlossaryPage() {
       .eq('id', user.id)
       .single(),
     supabase
-      .from('reading_schedule')
-      .select('id, week_number')
-      .eq('group_id', group.groupId)
-      .order('week_number', { ascending: true }),
+      .from('text_chapters')
+      .select('id, chapter_number, title, sort_order')
+      .order('sort_order', { ascending: true }),
     supabase
       .from('glossary_versions')
       .select('id, entry_id, definition, updated_by, created_at, author:profiles!updated_by(display_name)')
@@ -123,7 +126,7 @@ export default async function GlossaryPage() {
         entries={entries || []}
         currentUserId={user.id}
         isAdmin={profile?.role === 'admin'}
-        weeks={weeks || []}
+        chapters={chapters || []}
         versions={normalizedVersions}
         comments={normalizedComments}
         conceptEdges={normalizedEdges}

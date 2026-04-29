@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 interface Term {
   id: string
   term: string
-  first_appearance_week: string | null
+  first_appearance_chapter: string | null
 }
 
 interface Edge {
@@ -17,9 +17,11 @@ interface Edge {
 }
 
 interface ChapterConceptSliceProps {
-  /** The reading_schedule.id for the chapter being read. May be null if the
-      chapter isn't assigned to a week. */
-  weekId: string | null
+  /** UUID of the chapter being read. Drives the in-chapter concept
+   *  filter via glossary_entries.first_appearance_chapter (009 —
+   *  recurring v1). May be null in edge cases (chapter not yet
+   *  loaded), in which case the slice renders its empty state. */
+  chapterId: string | null
   /** Active group context (L1) — scopes the glossary + edge fetch. */
   groupId: string
 }
@@ -28,16 +30,21 @@ interface ChapterConceptSliceProps {
  * Per-chapter concept slice — IMPROVEMENTS_PLAN §11.5.
  *
  * Embedded inside the Reading Workspace panel. Shows concepts whose
- * first_appearance_week matches THIS chapter's week, plus their direct
- * one-hop neighbours (concepts those build on, and concepts that build on
- * them). Lets the reader see what's in play AND its lineage without
- * leaving the chapter page.
+ * first_appearance_chapter matches THIS chapter (009 — recurring v1),
+ * plus their direct one-hop neighbours (concepts those build on, and
+ * concepts that build on them). Lets the reader see what's in play
+ * AND its lineage without leaving the chapter page.
+ *
+ * Pre-009: this used a weekId → first_appearance_week path that was
+ * broken because text_chapters.week_id is NULL platform-wide. 009
+ * + this swap fixes both the dead-column bug and the post-009
+ * half-state where new entries don't show up.
  *
  * Renders as a list (not a force-directed canvas) — the panel is too
  * narrow for a meaningful graph rendering, and the list is more useful
  * for orientation anyway. Click any concept → opens it in the glossary.
  */
-export default function ChapterConceptSlice({ weekId, groupId }: ChapterConceptSliceProps) {
+export default function ChapterConceptSlice({ chapterId, groupId }: ChapterConceptSliceProps) {
   const [terms, setTerms] = useState<Term[]>([])
   const [edges, setEdges] = useState<Edge[]>([])
   const [loading, setLoading] = useState(true)
@@ -51,7 +58,7 @@ export default function ChapterConceptSlice({ weekId, groupId }: ChapterConceptS
       const [{ data: t }, { data: e }] = await Promise.all([
         supabase
           .from('glossary_entries')
-          .select('id, term, first_appearance_week')
+          .select('id, term, first_appearance_chapter')
           .eq('group_id', groupId)
           .order('term', { ascending: true }),
         supabase
@@ -77,31 +84,32 @@ export default function ChapterConceptSlice({ weekId, groupId }: ChapterConceptS
     return m
   }, [terms])
 
-  // Concepts whose first_appearance_week matches THIS chapter's week.
-  const inThisWeek = useMemo(() => {
-    if (!weekId) return []
-    return terms.filter((t) => t.first_appearance_week === weekId)
-  }, [terms, weekId])
+  // Concepts whose first_appearance_chapter matches THIS chapter
+  // (009 — recurring v1).
+  const inThisChapter = useMemo(() => {
+    if (!chapterId) return []
+    return terms.filter((t) => t.first_appearance_chapter === chapterId)
+  }, [terms, chapterId])
 
-  // For each in-week term, derive the one-hop neighbour set (in either
-  // direction). De-duplicated. Excludes the in-week terms themselves.
+  // For each in-chapter term, derive the one-hop neighbour set (in either
+  // direction). De-duplicated. Excludes the in-chapter terms themselves.
   const neighbours = useMemo(() => {
-    if (inThisWeek.length === 0) return []
-    const inWeekIds = new Set(inThisWeek.map((t) => t.id))
+    if (inThisChapter.length === 0) return []
+    const inChapterIds = new Set(inThisChapter.map((t) => t.id))
     const neighbourIds = new Set<string>()
     for (const e of edges) {
-      if (inWeekIds.has(e.from_term_id)) neighbourIds.add(e.to_term_id)
-      if (inWeekIds.has(e.to_term_id)) neighbourIds.add(e.from_term_id)
+      if (inChapterIds.has(e.from_term_id)) neighbourIds.add(e.to_term_id)
+      if (inChapterIds.has(e.to_term_id)) neighbourIds.add(e.from_term_id)
     }
-    for (const id of inWeekIds) neighbourIds.delete(id)
+    for (const id of inChapterIds) neighbourIds.delete(id)
     return Array.from(neighbourIds)
       .map((id) => termById.get(id))
       .filter((t): t is Term => t !== undefined)
       .sort((a, b) => a.term.localeCompare(b.term))
-  }, [edges, inThisWeek, termById])
+  }, [edges, inThisChapter, termById])
 
-  // For each in-week term, compute its outgoing 'builds on' destinations
-  // (so we can show 'X → Y, Z' style under each in-week term).
+  // For each in-chapter term, compute its outgoing 'builds on' destinations
+  // (so we can show 'X → Y, Z' style under each in-chapter term).
   function outgoingFor(termId: string): string[] {
     return edges
       .filter((e) => e.from_term_id === termId)
@@ -117,28 +125,28 @@ export default function ChapterConceptSlice({ weekId, groupId }: ChapterConceptS
     )
   }
 
-  // No data either because no week assignment or no terms with that week
-  if (!weekId || (inThisWeek.length === 0 && neighbours.length === 0)) {
+  // No data — either no chapter loaded or no terms anchored to it.
+  if (!chapterId || (inThisChapter.length === 0 && neighbours.length === 0)) {
     return (
       <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
         No glossary concepts attached to this chapter yet. Add a term in the{' '}
         <Link href="/glossary" className="hover:underline" style={{ color: 'var(--accent-purple)' }}>
           glossary
         </Link>{' '}
-        and tag its first appearance to this week.
+        and tag its first appearance to this chapter.
       </p>
     )
   }
 
   return (
     <div className="space-y-3 text-xs">
-      {inThisWeek.length > 0 && (
+      {inThisChapter.length > 0 && (
         <div>
           <p className="text-[11px] font-medium mb-1.5" style={{ color: 'var(--text-primary)' }}>
-            Introduced this week
+            Introduced in this chapter
           </p>
           <ul className="space-y-1">
-            {inThisWeek.map((t) => {
+            {inThisChapter.map((t) => {
               const out = outgoingFor(t.id)
               return (
                 <li key={t.id}>

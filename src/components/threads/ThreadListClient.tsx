@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import ThreadTypeBadge, { threadTypeConfig } from './ThreadTypeBadge'
 import TimeAgo from '@/components/ui/TimeAgo'
+import { getChapterLabel } from '@/lib/chapter-utils'
 import type { ThreadType } from '@/types/database'
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -16,7 +17,13 @@ interface ThreadData {
   thread_type: ThreadType
   pinned: boolean
   created_at: string
+  /** Legacy / future bounded mode. Not displayed in recurring v1. */
   week_id: string | null
+  /** 008: chapter anchor for recurring-mode threads. NULL for legacy
+   *  threads written before 008; populated for new threads going
+   *  forward via NewThreadForm. Drives the per-card chapter badge
+   *  and the chapter filter dropdown. */
+  chapter_id: string | null
   author: { id: string; display_name: string }
   replyCount: number
   /** Number of threads branched FROM this thread (per IMPROVEMENTS_PLAN §4.6).
@@ -25,17 +32,18 @@ interface ThreadData {
   lastReply: { created_at: string; authorName: string } | null
 }
 
-interface WeekData {
+interface ChapterData {
   id: string
-  week_number: number
+  chapter_number: number
   title: string
+  sort_order: number
 }
 
 interface ThreadListClientProps {
   initialThreads: ThreadData[]
-  weeks: WeekData[]
+  chapters: ChapterData[]
   initialType: string | null
-  initialWeek: string | null
+  initialChapter: string | null
   /** Active group context (L1) — scopes the realtime subscription. */
   groupId: string
 }
@@ -112,16 +120,20 @@ function getActivityStatus(thread: ThreadData): 'active' | 'recent' | 'cooling' 
  */
 function ThreadCard({
   thread,
-  weekMap,
+  chapterMap,
 }: {
   thread: ThreadData
-  weekMap: Map<string, WeekData>
+  chapterMap: Map<string, ChapterData>
 }) {
   const activity = getActivityStatus(thread)
   const preview = getTextPreview(thread.body || '')
   const passageQuote =
     thread.thread_type === 'passage_pick' ? getPassageQuote(thread.body || '') : null
-  const week = thread.week_id ? weekMap.get(thread.week_id) : null
+  // Per-card chapter badge (008): surfaced when the thread was written
+  // against a current chapter. Legacy threads (chapter_id NULL) get no
+  // badge — recurring v1 doesn't surface week_id in the UI.
+  const chapter = thread.chapter_id ? chapterMap.get(thread.chapter_id) : null
+  const chapterLabel = chapter ? getChapterLabel(chapter.chapter_number).label : null
 
   // Left accent stripe — communicates pinned/active state without a full border
   const stripeColor = thread.pinned
@@ -139,7 +151,7 @@ function ThreadCard({
         opacity: activity === 'cooling' ? 0.7 : 1,
       }}
     >
-      {/* Top row: type badge + small inline tags (pinned, active, week) */}
+      {/* Top row: type badge + small inline tags (pinned, active, chapter) */}
       <div className="flex items-center gap-2 mb-2 flex-wrap">
         <ThreadTypeBadge type={thread.thread_type} />
         {thread.pinned && (
@@ -152,9 +164,9 @@ function ThreadCard({
             Active
           </span>
         )}
-        {week && (
+        {chapterLabel && (
           <span className="text-eyebrow">
-            Week {week.week_number}
+            {chapterLabel}
           </span>
         )}
       </div>
@@ -249,20 +261,21 @@ function ThreadCard({
 
 export default function ThreadListClient({
   initialThreads,
-  weeks,
+  chapters,
   initialType,
-  initialWeek,
+  initialChapter,
   groupId,
 }: ThreadListClientProps) {
   const [threads, setThreads] = useState<ThreadData[]>(initialThreads)
   const [sortBy, setSortBy] = useState<SortOption>('newest')
   const [typeFilter, setTypeFilter] = useState(initialType || '')
-  const [weekFilter, setWeekFilter] = useState(initialWeek || '')
+  const [chapterFilter, setChapterFilter] = useState(initialChapter || '')
 
-  // Week lookup map
-  const weekMap = useMemo(
-    () => new Map(weeks.map((w) => [w.id, w])),
-    [weeks]
+  // Chapter lookup map — id → ChapterData. Used by ThreadCard for the
+  // per-card chapter badge and by the filter logic below.
+  const chapterMap = useMemo(
+    () => new Map(chapters.map((c) => [c.id, c])),
+    [chapters]
   )
 
   // Realtime subscription for new threads — L1: filter to active group so
@@ -297,6 +310,7 @@ export default function ThreadListClient({
               pinned: data.pinned,
               created_at: data.created_at,
               week_id: data.week_id,
+              chapter_id: data.chapter_id,
               author: data.author || { id: '', display_name: 'Guest' },
               replyCount: data.replies?.[0]?.count ?? 0,
               branchCount: 0, // freshly inserted thread can't have branches yet
@@ -334,8 +348,8 @@ export default function ThreadListClient({
     if (typeFilter) {
       filtered = filtered.filter((t) => t.thread_type === typeFilter)
     }
-    if (weekFilter) {
-      filtered = filtered.filter((t) => t.week_id === weekFilter)
+    if (chapterFilter) {
+      filtered = filtered.filter((t) => t.chapter_id === chapterFilter)
     }
 
     // Sort pinned to top, then by selected sort
@@ -358,7 +372,7 @@ export default function ThreadListClient({
     })
 
     return [...pinned, ...sorted]
-  }, [threads, typeFilter, weekFilter, sortBy])
+  }, [threads, typeFilter, chapterFilter, sortBy])
 
   const threadTypes: { value: string; label: string; color: string }[] = [
     { value: '', label: 'All Types', color: 'var(--text-primary)' },
@@ -427,18 +441,22 @@ export default function ThreadListClient({
             <option value="replies">Most Replies</option>
           </select>
 
-          {weeks.length > 0 && (
+          {chapters.length > 0 && (
             <select
-              value={weekFilter}
-              onChange={(e) => setWeekFilter(e.target.value)}
+              value={chapterFilter}
+              onChange={(e) => setChapterFilter(e.target.value)}
               className="input-base text-xs px-2 py-1"
+              aria-label="Filter by chapter"
             >
-              <option value="">All Weeks</option>
-              {weeks.map((w) => (
-                <option key={w.id} value={w.id}>
-                  Week {w.week_number}
-                </option>
-              ))}
+              <option value="">All chapters</option>
+              {chapters.map((c) => {
+                const { label } = getChapterLabel(c.chapter_number)
+                return (
+                  <option key={c.id} value={c.id}>
+                    {label}
+                  </option>
+                )
+              })}
             </select>
           )}
         </div>
@@ -470,7 +488,7 @@ export default function ThreadListClient({
               key={thread.id}
               style={{ borderBottom: '1px solid var(--border-subtle)' }}
             >
-              <ThreadCard thread={thread} weekMap={weekMap} />
+              <ThreadCard thread={thread} chapterMap={chapterMap} />
             </div>
           ))}
         </div>

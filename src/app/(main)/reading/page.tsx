@@ -64,18 +64,14 @@ function getChapterMapping(chapterNumber: number): MarxChapter | null {
 }
 
 // Query-specific join shapes for Supabase responses
-interface ChapterWeek {
-  week_number: number
-  title: string
-}
-
 interface ChapterRow {
   id: string
   chapter_number: number
   title: string
   sort_order: number
+  /** Legacy column. NULL platform-wide; retained on the row for
+   *  schema parity. Recurring v1 doesn't use it. */
   week_id: string | null
-  week: ChapterWeek | null
 }
 
 interface DocumentWithChapters {
@@ -102,36 +98,40 @@ export default async function ReadingPage() {
   const group = await getCurrentGroup(supabase, user.id)
   if (!group) redirect('/login')
 
-  const now = new Date().toISOString()
-
   // All queries in parallel — FLAT queries to avoid nested join RLS failures.
   // Previous approach nested reading_schedule inside text_chapters inside text_documents,
   // which fails silently if RLS blocks any level. Now we fetch each table independently.
-  // L1: reading_schedule and annotations are group-scoped via group_id.
-  // text_documents/text_chapters are shared text (NOT group-scoped) — chapter.week_id
-  // links to a specific group's schedule; the weekMap lookup returns null for chapters
-  // whose week belongs to a different group, so they simply show no week label here.
-  const [currentWeekResult, documentsResult, chaptersResult, weeksResult, annotationCountsResult] = await Promise.all([
-    supabase
-      .from('reading_schedule')
-      .select('id')
-      .eq('group_id', group.groupId)
-      .gte('due_date', now)
-      .order('due_date', { ascending: true })
-      .limit(1),
+  // L1: annotations and group_chapter_history are group-scoped via group_id.
+  // text_documents/text_chapters are shared text (NOT group-scoped).
+  //
+  // Schedule modes (recurring v1) item 6 + sweep:
+  //   - "Current" badge: chapter.id === group.currentChapterId
+  //     (was chapter.week_id === currentWeekId pre-recurring)
+  //   - Completed markers: chapter.id ∈ historyChapterIds, where
+  //     historyChapterIds is sourced from group_chapter_history rows
+  //     with ended_at set (was pastWeekIds derived from due_date)
+  //   - Per-part highlight: part contains chapter.id === currentChapterId
+  //     (was contains chapter whose week_id matches currentWeekId)
+  // The reading_schedule path is dropped from this page entirely —
+  // recurring v1 doesn't use that table.
+  const [documentsResult, chaptersResult, historyResult, annotationCountsResult] = await Promise.all([
     // Documents — flat, no joins, shared text (not group-scoped)
     supabase
       .from('text_documents')
       .select('id, title, slug')
       .order('created_at', { ascending: true }),
-    // Chapters — flat, shared text (not group-scoped)
+    // Chapters — flat, shared text (not group-scoped). week_id still
+    // selected for legacy/bounded mode display compatibility but no
+    // longer drives current/completed signals in recurring v1.
     supabase
       .from('text_chapters')
       .select('id, document_id, chapter_number, title, sort_order, week_id'),
-    // Weeks — flat lookup for week labels + due_date (used to identify completed chapters)
+    // Group chapter history — completed-stay records (006). Each row
+    // is a chapter the group has finished and moved past. ended_at
+    // is set on every history row by construction.
     supabase
-      .from('reading_schedule')
-      .select('id, week_number, title, due_date')
+      .from('group_chapter_history')
+      .select('chapter_id')
       .eq('group_id', group.groupId),
     // Count annotations per chapter for badges
     supabase
@@ -146,26 +146,20 @@ export default async function ReadingPage() {
   if (chaptersResult.error) {
     console.error('[CCP] Reading page — text_chapters query error:', chaptersResult.error)
   }
-  if (weeksResult.error) {
-    console.error('[CCP] Reading page — reading_schedule query error:', weeksResult.error)
+  if (historyResult.error) {
+    console.error('[CCP] Reading page — group_chapter_history query error:', historyResult.error)
   }
   if (annotationCountsResult.error) {
     console.error('[CCP] Reading page — annotations query error:', annotationCountsResult.error)
   }
 
-  const currentWeekId = currentWeekResult.data?.[0]?.id || null
-
-  // Build week lookup: id -> { week_number, title }
-  // Also build a Set of past-week ids — used to mark chapters as completed (per §6.1).
-  const weekMap = new Map<string, ChapterWeek>()
-  const pastWeekIds = new Set<string>()
-  if (weeksResult.data) {
-    const nowDate = new Date(now)
-    for (const w of weeksResult.data as { id: string; week_number: number; title: string; due_date: string }[]) {
-      weekMap.set(w.id, { week_number: w.week_number, title: w.title })
-      if (w.id !== currentWeekId && new Date(w.due_date) < nowDate) {
-        pastWeekIds.add(w.id)
-      }
+  // Recurring v1 anchors: current chapter from group context, completed
+  // chapters from history. weekMap / pastWeekIds replaced below.
+  const currentChapterId = group.currentChapterId
+  const completedChapterIds = new Set<string>()
+  if (historyResult.data) {
+    for (const row of historyResult.data as { chapter_id: string }[]) {
+      completedChapterIds.add(row.chapter_id)
     }
   }
 
@@ -186,8 +180,11 @@ export default async function ReadingPage() {
     chapters: rawChapters
       .filter((ch) => ch.document_id === doc.id)
       .map((ch) => ({
-        ...ch,
-        week: ch.week_id ? weekMap.get(ch.week_id) || null : null,
+        id: ch.id,
+        chapter_number: ch.chapter_number,
+        title: ch.title,
+        sort_order: ch.sort_order,
+        week_id: ch.week_id,
       })),
   }))
 
@@ -275,9 +272,14 @@ export default async function ReadingPage() {
                   const ch1Sections = partGroup.items.filter((item: ChapterWithMapping) => item.mapping.isSection)
                   const standaloneChapters = partGroup.items.filter((item: ChapterWithMapping) => !item.mapping.isSection)
 
-                  // First 3 parts open by default, rest collapsed
-                  const hasCurrentWeek = partGroup.items.some((item: ChapterWithMapping) => item.week_id === currentWeekId)
-                  const defaultOpen = hasCurrentWeek || partGroup.part <= 3
+                  // First 3 parts open by default, rest collapsed.
+                  // Recurring v1: open the part containing the group's
+                  // current chapter; was the part containing the
+                  // current reading week pre-recurring.
+                  const hasCurrentChapter = partGroup.items.some(
+                    (item: ChapterWithMapping) => item.id === currentChapterId
+                  )
+                  const defaultOpen = hasCurrentChapter || partGroup.part <= 3
 
                   return (
                     <div key={partGroup.part} style={{ borderTop: partIdx > 0 ? '1px solid var(--border-default)' : 'none' }}>
@@ -314,11 +316,16 @@ export default async function ReadingPage() {
 
                           {/* Individual sections of Ch1 */}
                           {ch1Sections.map((chapter: ChapterWithMapping, i: number) => {
-                            // §6.1 fix: only mark as current week if there IS a current week.
-                            // Previously `chapter.week_id === currentWeekId` matched on null===null,
-                            // making every unassigned chapter show "This Week".
-                            const isCurrentWeek = currentWeekId !== null && chapter.week_id === currentWeekId
-                            const isCompleted = chapter.week_id !== null && pastWeekIds.has(chapter.week_id)
+                            // Recurring v1: chapter is current iff it
+                            // matches group.currentChapterId. "Completed"
+                            // means the chapter appears in
+                            // group_chapter_history (a stay finished).
+                            // The group can revisit a completed chapter
+                            // (advance back), in which case it's both
+                            // current AND historically completed —
+                            // current state takes visual priority.
+                            const isCurrent = currentChapterId !== null && chapter.id === currentChapterId
+                            const isCompleted = !isCurrent && completedChapterIds.has(chapter.id)
                             const isLast = i === ch1Sections.length - 1 && standaloneChapters.length === 0
                             const sectionLabel = `Read Chapter 1, Section ${chapter.chapter_number}: ${chapter.title}`
                             return (
@@ -328,7 +335,7 @@ export default async function ReadingPage() {
                                 aria-label={sectionLabel}
                                 className="flex items-center justify-between px-6 pl-16 py-3 transition-all hover-bg-themed group"
                                 style={{
-                                  backgroundColor: isCurrentWeek ? 'var(--bg-soft)' : 'var(--bg-card)',
+                                  backgroundColor: isCurrent ? 'var(--bg-soft)' : 'var(--bg-card)',
                                   borderBottom: isLast ? 'none' : '1px solid var(--border-default)',
                                 }}
                               >
@@ -336,8 +343,8 @@ export default async function ReadingPage() {
                                   <span
                                     className="flex-shrink-0 w-6 h-6 rounded flex items-center justify-center text-xs"
                                     style={{
-                                      backgroundColor: isCurrentWeek ? 'var(--accent-purple)' : 'var(--bg-soft)',
-                                      color: isCurrentWeek ? 'var(--text-inverse)' : 'var(--text-secondary)',
+                                      backgroundColor: isCurrent ? 'var(--accent-purple)' : 'var(--bg-soft)',
+                                      color: isCurrent ? 'var(--text-inverse)' : 'var(--text-secondary)',
                                     }}
                                   >
                                     {chapter.chapter_number}
@@ -356,11 +363,6 @@ export default async function ReadingPage() {
                                     >
                                       {chapter.title}
                                     </h3>
-                                    {chapter.week && (
-                                      <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                                        Week {chapter.week.week_number}: {chapter.week.title}
-                                      </p>
-                                    )}
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -376,15 +378,15 @@ export default async function ReadingPage() {
                                       {annotationCounts.get(chapter.id)} notes
                                     </span>
                                   )}
-                                  {isCurrentWeek && (
+                                  {isCurrent && (
                                     <span
                                       className="text-xs font-medium px-2.5 py-1 rounded-full leading-none"
                                       style={{ backgroundColor: 'var(--accent-purple)', color: 'var(--text-inverse)' }}
                                     >
-                                      This Week
+                                      Current
                                     </span>
                                   )}
-                                  {!isCurrentWeek && isCompleted && (
+                                  {isCompleted && (
                                     <span
                                       title="Completed"
                                       aria-label="Completed"
@@ -411,8 +413,8 @@ export default async function ReadingPage() {
 
                       {/* Standalone chapters (Ch 2+) */}
                       {standaloneChapters.map((chapter: ChapterWithMapping, i: number) => {
-                        const isCurrentWeek = currentWeekId !== null && chapter.week_id === currentWeekId
-                        const isCompleted = chapter.week_id !== null && pastWeekIds.has(chapter.week_id)
+                        const isCurrent = currentChapterId !== null && chapter.id === currentChapterId
+                        const isCompleted = !isCurrent && completedChapterIds.has(chapter.id)
                         const isLast = i === standaloneChapters.length - 1
                         const chapterLabel = `Read Chapter ${chapter.mapping.marxChapter}: ${chapter.title}`
                         return (
@@ -422,7 +424,7 @@ export default async function ReadingPage() {
                             aria-label={chapterLabel}
                             className="flex items-center justify-between px-6 py-4 transition-all hover-bg-themed group"
                             style={{
-                              backgroundColor: isCurrentWeek ? 'var(--bg-soft)' : 'var(--bg-card)',
+                              backgroundColor: isCurrent ? 'var(--bg-soft)' : 'var(--bg-card)',
                               borderBottom: isLast ? 'none' : '1px solid var(--border-default)',
                             }}
                           >
@@ -430,8 +432,8 @@ export default async function ReadingPage() {
                               <span
                                 className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
                                 style={{
-                                  backgroundColor: isCurrentWeek ? 'var(--accent-purple)' : 'var(--bg-soft)',
-                                  color: isCurrentWeek ? 'var(--text-inverse)' : 'var(--text-secondary)',
+                                  backgroundColor: isCurrent ? 'var(--accent-purple)' : 'var(--bg-soft)',
+                                  color: isCurrent ? 'var(--text-inverse)' : 'var(--text-secondary)',
                                 }}
                               >
                                 {chapter.mapping.marxChapter}
@@ -446,11 +448,6 @@ export default async function ReadingPage() {
                                 >
                                   {chapter.title}
                                 </h3>
-                                {chapter.week && (
-                                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                                    Week {chapter.week.week_number}: {chapter.week.title}
-                                  </p>
-                                )}
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -466,15 +463,15 @@ export default async function ReadingPage() {
                                   {annotationCounts.get(chapter.id)} notes
                                 </span>
                               )}
-                              {isCurrentWeek && (
+                              {isCurrent && (
                                 <span
                                   className="text-xs font-medium px-2.5 py-1 rounded-full leading-none"
                                   style={{ backgroundColor: 'var(--accent-purple)', color: 'var(--text-inverse)' }}
                                 >
-                                  This Week
+                                  Current
                                 </span>
                               )}
-                              {!isCurrentWeek && isCompleted && (
+                              {isCompleted && (
                                 <span
                                   title="Completed"
                                   aria-label="Completed"

@@ -14,9 +14,9 @@ import RhythmWidget from '@/components/dashboard/RhythmWidget'
 import WhereStuckWidget, {
   type StuckParagraph,
 } from '@/components/dashboard/WhereStuckWidget'
-import ConceptsThisWeekWidget, {
+import ConceptsThisChapterWidget, {
   type ConceptItem,
-} from '@/components/dashboard/ConceptsThisWeekWidget'
+} from '@/components/dashboard/ConceptsThisChapterWidget'
 import CaptureThoughtAffordance from '@/components/dashboard/CaptureThoughtAffordance'
 import BigStatTile from '@/components/dashboard/BigStatTile'
 import { getChapterLabel } from '@/lib/chapter-utils'
@@ -194,10 +194,14 @@ export default async function DashboardPage({
       .gt('count', 0)
       .order('count', { ascending: false }),
 
-    // Glossary entries for this group — filtered to current week below.
+    // Glossary entries for this group — filtered to the current
+    // chapter below (009 — recurring v1; was first_appearance_week
+    // pre-recurring, swapped to first_appearance_chapter so that
+    // "concepts this chapter" anchors to the unit of structure
+    // recurring mode actually uses).
     supabase
       .from('glossary_entries')
-      .select('id, term, definition, first_appearance_week')
+      .select('id, term, definition, first_appearance_chapter')
       .eq('group_id', group.groupId),
 
     // Most-recent journal entry for the user — used by the capture
@@ -388,10 +392,29 @@ export default async function DashboardPage({
     }
   }
 
-  // ── Magnitude bars: per-section in current week's chapters ──────
-  const sectionsForBars = currentWeek
-    ? allChapters.filter((c) => c.week_id === currentWeek.id)
-    : allChapters.slice(0, 6)
+  // ── Magnitude bars: per-section in current chapter (item 7, recurring v1) ──
+  // Scope: when currentChapterId points at a Ch1 section (chapter_number 1-4),
+  // expand to all 4 Ch1 sections so the bars retain their comparative-attention
+  // visual purpose. When it points at a Ch2+ chapter (5+), the unit is that
+  // single chapter — bars degrade to one bar, but the data is honest.
+  // Empty array (and downstream empty state) when currentChapterId is NULL.
+  const currentChapter = group.currentChapterId
+    ? chapterById.get(group.currentChapterId)
+    : null
+  let sectionsForBars: ChapterRow[] = []
+  if (currentChapter) {
+    if (currentChapter.chapter_number <= 4) {
+      // Ch1 sections — expand to all 4. chapter_number 1-4 is the
+      // section sequence (per CLAUDE.md non-obvious chapter numbering),
+      // so sorting on chapter_number gives the natural order.
+      sectionsForBars = allChapters
+        .filter((c) => c.chapter_number <= 4)
+        .sort((a, b) => a.chapter_number - b.chapter_number)
+    } else {
+      // Ch2+ — just the current chapter.
+      sectionsForBars = [currentChapter]
+    }
+  }
   const sections: SectionAttention[] = sectionsForBars.map((c) => {
     const inSection = annotationsList.filter((a) => a.chapter_id === c.id)
     const todayCount = inSection.filter((a) => a.created_at >= todayISO).length
@@ -412,10 +435,13 @@ export default async function DashboardPage({
   sections.sort((a, b) => b.totalCount - a.totalCount)
   const sectionsTotalAnnotations = sections.reduce((s, x) => s + x.totalCount, 0)
 
-  const scopeLabel = currentWeek
-    ? `Capital Vol 1, ${getChapterLabel(sectionsForBars[0]?.chapter_number ?? 1).label.split(',')[0]}`
+  // Recurring v1: scope label + primary reading link anchor to the
+  // current chapter's first section (Ch1 expands to §1) or the current
+  // chapter itself (Ch2+).
+  const scopeLabel = currentChapter
+    ? `Capital Vol 1, ${getChapterLabel(sectionsForBars[0]?.chapter_number ?? currentChapter.chapter_number).label.split(',')[0]}`
     : 'Capital Vol 1'
-  const primaryReadingHref = currentWeek && sectionsForBars[0]
+  const primaryReadingHref = currentChapter && sectionsForBars[0]
     ? `/reading/${DOC_SLUG}/${sectionsForBars[0].chapter_number}`
     : `/reading`
 
@@ -430,12 +456,13 @@ export default async function DashboardPage({
     reply_count: t.replies?.[0]?.count ?? 0,
   }))
 
-  // ── Where we're stuck — confusion_counts in current week's chapters ──
-  const weekChapterIdSet = currentWeek
-    ? new Set(sectionsForBars.map((c) => c.id))
-    : new Set<string>()
+  // ── Where we're stuck — confusion_counts in the current chapter (item 8, recurring v1) ──
+  // Scope: single currentChapterId only (per surface note point 6 —
+  // singular for stuck, plural sections only for attention). When
+  // currentChapterId is NULL, the filter excludes everything and the
+  // widget renders its honest empty state.
   const stuck: StuckParagraph[] = ((confusionRows || []) as { chapter_id: string; paragraph_index: number; count: number }[])
-    .filter((row) => weekChapterIdSet.size === 0 || weekChapterIdSet.has(row.chapter_id))
+    .filter((row) => group.currentChapterId !== null && row.chapter_id === group.currentChapterId)
     .slice(0, 3)
     .map((row) => {
       const chapter = chapterById.get(row.chapter_id)
@@ -456,10 +483,14 @@ export default async function DashboardPage({
     })
     .filter((p) => p.chapterNumber > 0)
 
-  // ── Concepts this week ──────────────────────────────────────────
-  const concepts: ConceptItem[] = currentWeek
-    ? ((introducedTerms || []) as { id: string; term: string; definition: string; first_appearance_week: string | null }[])
-        .filter((t) => t.first_appearance_week === currentWeek.id)
+  // ── Concepts this chapter ───────────────────────────────────────
+  // 009 (recurring v1): filter glossary entries by
+  // first_appearance_chapter matching group.currentChapterId. When
+  // the host hasn't picked a current chapter (currentChapterId NULL),
+  // concepts list is empty — honest empty state, no fabrication.
+  const concepts: ConceptItem[] = group.currentChapterId
+    ? ((introducedTerms || []) as { id: string; term: string; definition: string; first_appearance_chapter: string | null }[])
+        .filter((t) => t.first_appearance_chapter === group.currentChapterId)
         .slice(0, 4)
         .map((t) => ({
           id: t.id,
@@ -557,7 +588,7 @@ export default async function DashboardPage({
               otherRoles={otherRoles}
             />
             <WhereStuckWidget paragraphs={stuck} />
-            <ConceptsThisWeekWidget concepts={concepts} />
+            <ConceptsThisChapterWidget concepts={concepts} />
             {user && (
               <CaptureThoughtAffordance
                 userId={user.id}
@@ -575,7 +606,7 @@ export default async function DashboardPage({
             otherRoles={otherRoles}
           />
           <WhereStuckWidget paragraphs={stuck} />
-          <ConceptsThisWeekWidget concepts={concepts} />
+          <ConceptsThisChapterWidget concepts={concepts} />
           {user && (
             <CaptureThoughtAffordance
               userId={user.id}
