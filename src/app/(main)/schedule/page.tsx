@@ -46,11 +46,22 @@ interface HistoryRow {
   ended_at: string
 }
 
-export default async function SchedulePage() {
+export default async function SchedulePage({
+  searchParams,
+}: {
+  // Next.js 15+ App Router types searchParams as a Promise.
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
   const user = await getSessionUser()
   if (!user) redirect('/login')
   const supabase = await createClient()
-  const group = await getCurrentGroup(supabase, user.id)
+  // Pass searchParams to enable admin URL override (?group=<slug|uuid>).
+  // Without this, the resolver can't see the override and falls through
+  // to the user's stored current_group_id.
+  const group = await getCurrentGroup(supabase, user.id, {
+    searchParams: resolvedSearchParams,
+  })
   if (!group) redirect('/login')
 
   // Fetch all chapters (shared text, not group-scoped) and the group's

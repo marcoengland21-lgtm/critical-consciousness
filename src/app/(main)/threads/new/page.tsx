@@ -14,12 +14,21 @@ interface ChapterRow {
   sort_order: number
 }
 
-export default async function NewThreadPage() {
+export default async function NewThreadPage({
+  searchParams,
+}: {
+  // Next.js 15+ App Router types searchParams as a Promise.
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
   const user = await getSessionUser()
   if (!user) redirect('/login')
 
   const supabase = await createClient()
-  const group = await getCurrentGroup(supabase, user.id)
+  // Pass searchParams to enable admin URL override (?group=<slug|uuid>).
+  const group = await getCurrentGroup(supabase, user.id, {
+    searchParams: resolvedSearchParams,
+  })
   if (!group) redirect('/login')
 
   // Schedule modes (recurring v1): swap reading_schedule fetch for

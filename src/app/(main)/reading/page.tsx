@@ -91,11 +91,20 @@ interface PartGroup {
   items: ChapterWithMapping[]
 }
 
-export default async function ReadingPage() {
+export default async function ReadingPage({
+  searchParams,
+}: {
+  // Next.js 15+ App Router types searchParams as a Promise.
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
   const user = await getSessionUser()
   if (!user) redirect('/login')
   const supabase = await createClient()
-  const group = await getCurrentGroup(supabase, user.id)
+  // Pass searchParams to enable admin URL override (?group=<slug|uuid>).
+  const group = await getCurrentGroup(supabase, user.id, {
+    searchParams: resolvedSearchParams,
+  })
   if (!group) redirect('/login')
 
   // All queries in parallel — FLAT queries to avoid nested join RLS failures.
