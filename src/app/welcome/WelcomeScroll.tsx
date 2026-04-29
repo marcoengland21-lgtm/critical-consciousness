@@ -1760,7 +1760,680 @@ function ScrollStyles() {
         background-color: var(--bg-page);
       }
 
-      /* Reading-surface specific panel styles */
+      /* ── Reading orbit composition ────────────────────────── */
+      .reading-orbit-grid {
+        max-width: 72rem;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+      }
+      @media (min-width: 880px) {
+        .reading-orbit-grid {
+          grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+          gap: 2rem;
+          align-items: start;
+        }
+      }
+      .reading-chapter {
+        background-color: var(--bg-card, #ffffff);
+        border: 1px solid var(--border-subtle);
+        border-radius: 0.625rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+        position: relative;
+        padding: 1.75rem 1.75rem 1.5rem;
+        opacity: 0;
+        transform: translateY(16px);
+        transition:
+          opacity 700ms var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)),
+          transform 700ms var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1));
+      }
+      .reading-chapter[data-visible="true"] {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .reading-chapter .breadcrumb {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+      .reading-chapter .breadcrumb .accent {
+        color: var(--accent-red);
+        cursor: pointer;
+        transition: opacity 200ms;
+      }
+      .reading-chapter .breadcrumb .accent:hover { opacity: 0.7; }
+      .reading-chapter .chrome-header {
+        text-align: center;
+        margin-bottom: 1.5rem;
+      }
+      .reading-chapter .chrome-eyebrow {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.5625rem;
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+      }
+      .reading-chapter .chapter-title {
+        font-family: 'Lora', Georgia, serif;
+        font-weight: 700;
+        font-size: 1.625rem;
+        color: var(--accent-red);
+        margin: 0 0 0.5rem;
+        line-height: 1.2;
+      }
+      .reading-chapter .chapter-subtitle {
+        font-family: 'Lora', Georgia, serif;
+        font-style: italic;
+        color: var(--text-secondary);
+        font-size: 0.9375rem;
+        margin-bottom: 0.75rem;
+      }
+      .reading-chapter .chrome-rule {
+        width: 4rem;
+        height: 2px;
+        background-color: var(--accent-purple);
+        margin: 0 auto;
+      }
+      .reading-chapter .body {
+        position: relative;
+      }
+      .reading-chapter .body p {
+        font-family: 'Lora', Georgia, serif;
+        font-size: 1.0625rem;
+        line-height: 1.75;
+        color: var(--text-primary);
+        margin: 0 0 1.125rem;
+        position: relative;
+      }
+      /* Annotated mark — purple highlight matching live */
+      .reading-chapter .body mark.annotated {
+        background-color: rgba(var(--accent-purple-rgb), 0.18);
+        color: inherit;
+        padding: 0 2px;
+        border-radius: 2px;
+        cursor: pointer;
+        transition: background-color 200ms;
+      }
+      .reading-chapter .body mark.annotated:hover {
+        background-color: rgba(var(--accent-purple-rgb), 0.32);
+      }
+      /* Glossary inline term — dotted underline */
+      .reading-chapter .glossary-anchor {
+        cursor: pointer;
+        background-image: repeating-linear-gradient(to right,
+          var(--accent-purple) 0,
+          var(--accent-purple) 2px,
+          transparent 2px,
+          transparent 4px);
+        background-size: 100% 1.5px;
+        background-repeat: no-repeat;
+        background-position: 0 100%;
+        padding-bottom: 1px;
+        color: var(--text-primary);
+        position: relative;
+        transition: filter 200ms;
+      }
+      .reading-chapter .glossary-anchor:hover {
+        filter: brightness(0.85);
+      }
+      /* Glossary popover floating from term, overlapping into orbit */
+      .reading-chapter .floating-glossary {
+        position: absolute;
+        top: 1.5em;
+        left: 0;
+        width: 22rem;
+        max-width: calc(100% + 6rem);
+        background-color: var(--bg-card, #ffffff);
+        border: 1px solid var(--border-subtle);
+        border-radius: 0.5rem;
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12);
+        padding: 1rem 1.125rem;
+        z-index: 5;
+        opacity: 0;
+        transform: translateY(-4px);
+        transition: opacity 200ms, transform 200ms;
+        pointer-events: none;
+      }
+      .reading-chapter .floating-glossary[data-open="true"] {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+      @media (min-width: 880px) {
+        .reading-chapter .floating-glossary {
+          width: 24rem;
+        }
+      }
+      .floating-glossary .pop-eyebrow {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.5625rem;
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--accent-purple);
+        margin-bottom: 0.375rem;
+      }
+      .floating-glossary .pop-term {
+        font-family: 'Lora', Georgia, serif;
+        font-style: italic;
+        font-weight: 500;
+        color: var(--text-primary);
+        font-size: 1.375rem;
+        line-height: 1.2;
+        margin-bottom: 0.5rem;
+      }
+      .floating-glossary .pop-def {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.8125rem;
+        line-height: 1.55;
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
+      }
+      .floating-glossary .related-eyebrow {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.5625rem;
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: 0.375rem;
+      }
+      .floating-glossary .related {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.8125rem;
+        margin-bottom: 0.875rem;
+      }
+      .floating-glossary .related-term-btn {
+        color: var(--accent-purple);
+        text-decoration: underline;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 0.18em;
+        background: transparent;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        font: inherit;
+        transition: filter 200ms;
+      }
+      .floating-glossary .related-term-btn:hover {
+        filter: brightness(0.7);
+      }
+      .floating-glossary .pop-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        padding-top: 0.625rem;
+        border-top: 1px solid var(--border-subtle);
+      }
+      .floating-glossary .open-full {
+        font-weight: 500;
+        color: var(--accent-red);
+        background: transparent;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        transition: filter 200ms;
+      }
+      .floating-glossary .open-full:hover { filter: brightness(0.85); }
+      .floating-glossary .pop-close {
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 0.875rem;
+        padding: 0.125rem;
+        transition: color 200ms;
+      }
+      .floating-glossary .pop-close:hover { color: var(--text-primary); }
+
+      /* Confusion flag in chapter (right-anchored to paragraph) */
+      .reading-chapter .body .para-with-flag {
+        padding-right: 2rem;
+        position: relative;
+      }
+      .reading-chapter .flag-anchor {
+        position: absolute;
+        top: 0.125rem;
+        right: 0;
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 50%;
+        font-size: 0.625rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        opacity: 0.55;
+        transition: opacity 200ms, background-color 600ms var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1));
+        border: none;
+      }
+      .reading-chapter .body .para-with-flag:hover .flag-anchor,
+      .reading-chapter .flag-anchor:hover { opacity: 1; }
+      .reading-chapter .flag-anchor[data-intensity="0"] {
+        background-color: var(--bg-card-alt, #f5f0e8);
+        color: var(--text-secondary);
+      }
+      .reading-chapter .flag-anchor[data-intensity="low"] {
+        background-color: #d4c9a8;
+        color: var(--text-primary);
+      }
+      .reading-chapter .flag-anchor[data-intensity="mid"] {
+        background-color: #c9a86b;
+        color: var(--text-primary);
+      }
+      .reading-chapter .flag-anchor[data-intensity="high"] {
+        background-color: #b8863f;
+        color: var(--text-primary);
+      }
+
+      /* Confusion popover floating off paragraph 3, overlapping orbit */
+      .reading-chapter .floating-confusion {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 20rem;
+        max-width: calc(100% + 6rem);
+        background-color: var(--bg-card, #ffffff);
+        border: 1px solid var(--border-subtle);
+        border-radius: 0.5rem;
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12);
+        padding: 1rem 1.125rem;
+        z-index: 5;
+        opacity: 0;
+        transform: translateY(-4px);
+        transition: opacity 200ms, transform 200ms;
+        pointer-events: none;
+      }
+      .reading-chapter .floating-confusion[data-open="true"] {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+      .floating-confusion .pop-eyebrow {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.5625rem;
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--accent-amber);
+        margin-bottom: 0.5rem;
+      }
+      .floating-confusion .pop-headline {
+        font-family: 'Lora', Georgia, serif;
+        font-style: italic;
+        font-weight: 500;
+        color: var(--text-primary);
+        font-size: 1rem;
+        line-height: 1.3;
+        margin-bottom: 0.5rem;
+      }
+      .floating-confusion .pop-explainer {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.6875rem;
+        line-height: 1.55;
+        color: var(--text-secondary);
+        margin-bottom: 0.875rem;
+      }
+      .floating-confusion .stuck-button {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        background-color: var(--bg-card-alt, #f5f0e8);
+        border: 1px solid var(--border-subtle);
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.375rem;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+        transition: background-color 200ms, border-color 200ms;
+      }
+      .floating-confusion .stuck-button:hover {
+        background-color: rgba(var(--accent-amber-rgb), 0.04);
+      }
+      .floating-confusion .stuck-button[data-flagged="true"] {
+        border-color: var(--accent-amber);
+        background-color: rgba(var(--accent-amber-rgb), 0.06);
+      }
+      .floating-confusion .stuck-left {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .floating-confusion .anonymous-tag {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.5625rem;
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+      }
+      .floating-confusion .think-cta {
+        display: block;
+        width: 100%;
+        background-color: var(--accent-red);
+        color: var(--text-inverse);
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.375rem;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        text-align: center;
+        border: none;
+        cursor: pointer;
+        transition: background-color 200ms;
+      }
+      .floating-confusion .think-cta:hover { background-color: var(--accent-red-hover); }
+
+      /* Selection action bar floating above selected text */
+      .reading-chapter .selection-bar-float {
+        position: absolute;
+        background-color: var(--bg-nav);
+        color: var(--text-inverse);
+        border-radius: 0.375rem;
+        padding: 0.25rem;
+        display: flex;
+        gap: 0.125rem;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+        z-index: 6;
+        font-family: 'Inter', sans-serif;
+      }
+      .reading-chapter .selection-bar-float button {
+        background: transparent;
+        color: var(--text-inverse);
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.25rem;
+        border: none;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background-color 200ms;
+      }
+      .reading-chapter .selection-bar-float button:hover {
+        background-color: rgba(255, 255, 255, 0.12);
+      }
+      .reading-chapter .selection-highlight {
+        background-color: rgba(91, 145, 255, 0.22);
+        padding: 0 1px;
+        cursor: pointer;
+      }
+      .reading-chapter .selection-feedback {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        font-style: italic;
+        min-height: 1.2em;
+        margin-top: 0.5rem;
+        opacity: 0;
+        transition: opacity 300ms;
+      }
+      .reading-chapter .selection-feedback[data-shown="true"] { opacity: 1; }
+
+      /* Audio collapsed button at chapter foot */
+      .reading-chapter .audio-foot {
+        margin-top: 1.5rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--border-subtle);
+        display: flex;
+        justify-content: center;
+      }
+      .audio-listen-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background-color: var(--bg-card, #ffffff);
+        color: var(--text-primary);
+        border: 1px solid var(--border-default, #e7e2d5);
+        border-radius: 0.5rem;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 200ms, transform 200ms;
+      }
+      .audio-listen-btn:hover {
+        background-color: var(--bg-soft, #f5f0e8);
+        transform: translateY(-1px);
+      }
+      .audio-listen-btn .listen-meta {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        font-weight: 400;
+      }
+      .audio-listen-btn[data-active="true"] {
+        background-color: rgba(var(--accent-purple-rgb), 0.08);
+        border-color: var(--accent-purple);
+      }
+
+      /* Orbit lane */
+      .reading-orbit {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+      }
+      @media (min-width: 880px) {
+        .reading-orbit {
+          /* Match chapter top, cards anchor to relative vertical position */
+          padding-top: 0;
+          gap: 1.5rem;
+          min-height: 100%;
+          justify-content: space-between;
+        }
+      }
+      .orbit-card {
+        background-color: var(--bg-card, #ffffff);
+        border: 1px solid var(--border-subtle);
+        border-radius: 0.625rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+        opacity: 0;
+        transform: translateY(16px);
+        transition:
+          opacity 700ms var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)),
+          transform 700ms var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1));
+      }
+      .orbit-card[data-visible="true"] {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* Marginalia card in orbit lane (Bucket 2 v1 visual) */
+      .orbit-marginalia {
+        padding: 1rem 1.125rem;
+        cursor: pointer;
+        transition: background-color 200ms, transform 200ms;
+      }
+      .orbit-marginalia:hover {
+        background-color: rgba(var(--accent-purple-rgb), 0.03);
+        transform: translateY(-1px);
+      }
+      .orbit-marginalia .anchor-line {
+        font-family: 'Lora', Georgia, serif;
+        font-size: 0.8125rem;
+        line-height: 1.5;
+        color: var(--text-secondary);
+        padding-bottom: 0.625rem;
+        margin-bottom: 0.625rem;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      .orbit-marginalia .anchor-line mark {
+        background-color: rgba(var(--accent-purple-rgb), 0.16);
+        color: var(--text-primary);
+        padding: 0 1px;
+        border-radius: 1px;
+      }
+      .annot-card-frame {
+        background-color: rgba(var(--accent-purple-rgb), 0.06);
+        border-left: 2px solid var(--accent-purple);
+        padding: 0.625rem 0.75rem;
+        border-radius: 0 0.25rem 0.25rem 0;
+        font-family: 'Inter', sans-serif;
+      }
+      .annot-author-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.375rem;
+      }
+      .annot-avatar {
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: white;
+        font-size: 0.625rem;
+        flex-shrink: 0;
+      }
+      .annot-name {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+      .annot-time {
+        font-size: 0.6875rem;
+        color: var(--text-secondary);
+      }
+      .annot-body {
+        font-size: 0.8125rem;
+        line-height: 1.55;
+        color: var(--text-primary);
+      }
+      .annot-replies {
+        margin-top: 0.625rem;
+        padding-left: 0.75rem;
+        border-left: 1px solid var(--border-subtle);
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+        transition: max-height 400ms var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)), opacity 300ms;
+      }
+      .orbit-marginalia[data-expanded="true"] .annot-replies {
+        max-height: 24rem;
+        opacity: 1;
+      }
+      .annot-reply-toggle {
+        margin-top: 0.625rem;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        color: var(--accent-red);
+        background: transparent;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        transition: filter 200ms;
+      }
+      .annot-reply-toggle:hover { filter: brightness(0.85); }
+
+      /* Audio expanded pill in orbit lane */
+      .orbit-audio {
+        padding: 1.25rem 1rem;
+        text-align: center;
+      }
+      .audio-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        background-color: var(--bg-card, #ffffff);
+        border: 1px solid var(--border-default, #e7e2d5);
+        border-radius: 9999px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        font-family: 'Inter', sans-serif;
+        font-size: 0.6875rem;
+        max-width: 100%;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .audio-pill .pill-skip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.125rem;
+        padding: 0.25rem 0.5rem;
+        background-color: var(--bg-soft, #f5f0e8);
+        color: var(--text-secondary);
+        border-radius: 9999px;
+        font-size: 0.625rem;
+        font-weight: 500;
+        border: none;
+        cursor: pointer;
+        transition: background-color 200ms;
+      }
+      .audio-pill .pill-skip:hover { background-color: var(--border-subtle); }
+      .audio-pill .pill-play {
+        width: 1.875rem;
+        height: 1.875rem;
+        border-radius: 50%;
+        background-color: var(--bg-soft, #f5f0e8);
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: none;
+        transition: background-color 200ms, transform 150ms;
+      }
+      .audio-pill .pill-play:hover { transform: scale(1.05); }
+      .audio-pill .pill-play[data-playing="true"] {
+        background-color: var(--accent-purple);
+        color: var(--text-inverse);
+      }
+      .audio-pill .pill-track {
+        width: 6rem;
+        height: 4px;
+        background-color: var(--bg-soft, #f5f0e8);
+        border-radius: 9999px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: height 200ms;
+      }
+      .audio-pill .pill-track:hover { height: 6px; }
+      .audio-pill .pill-fill {
+        height: 100%;
+        background-color: var(--accent-purple);
+        transition: width 100ms linear;
+      }
+      .audio-pill .pill-time {
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 0.625rem;
+        font-variant-numeric: tabular-nums;
+      }
+      .audio-pill .pill-speed {
+        background-color: var(--bg-soft, #f5f0e8);
+        color: var(--text-secondary);
+        font-family: 'Inter', sans-serif;
+        font-size: 0.625rem;
+        font-weight: 700;
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px;
+        border: none;
+        cursor: pointer;
+        transition: background-color 200ms;
+      }
+      .audio-pill .pill-speed:hover { background-color: var(--border-subtle); }
+
+      /* Reading-surface specific panel styles (legacy v4 — kept for now) */
       .panel-reading-chapter {
         padding: 1.5rem 1.5rem 1.25rem;
       }
@@ -2359,448 +3032,480 @@ function usePanelVisible(reduced: boolean) {
   return [ref, visible] as const
 }
 
-/* Reading surface — multi-panel composition + adventure-mode interactivity.
- * Composition (per Brief 1 sub-batch 6 v4):
- *   1. Chapter view (Lora body, breadcrumb, chrome-scoped header, audio collapsed)
- *   2. Marginalia card (annotation in margin, Bucket 2 v1 visual)
- *   3. Glossary popover (full GlossaryPopover treatment, click-through related terms)
- *   4. Confusion flag + popover (intensity-coloured "?" + full ConfusionPopover)
- *   5. Selection action bar mid-selection (both Annotate + "give this its own space")
- *   6. Audio player expanded (the floating pill with all controls)
- *   7. Annotation depth (one annotation expanded with reply chain)
- * Each panel is a real interactive artefact with local state. No backend, no
- * navigation. Scroll-driven entry animation as base layer; per-panel motion
- * (counter climbing, scrubber moving) where it does pedagogical work.
+/* Reading surface — orbit composition (Brief 1 sub-batch 6 v5).
+ *
+ * Layout: 2-column grid at ≥880px. Chapter at 2/3 width on the left; orbit
+ * lane at 1/3 width on the right. The chapter dominates; smaller elements
+ * orbit it spatially (marginalia anchored to source paragraph, audio
+ * expanded at chapter foot). Popovers float from their chapter anchors,
+ * overlapping into the orbit lane.
+ *
+ * Adventure-mode interactivity: every panel is real and locally responsive.
+ *   - Glossary related-term buttons swap content (commodity → use-value → ...)
+ *   - Confusion "I'm also stuck" toggles flagged state, count climbs ambient
+ *   - Selection action bar buttons surface italic feedback
+ *   - Audio collapsed click + expanded controls play the actual LibriVox MP3
+ *     (chapter 1, capital_vol1_0810_librivox/capitalvol1_04_marx.mp3)
+ *   - Marginalia card click expands to reveal reply chain (Bucket 2 v1 visual)
+ *
+ * No captions, no panel-tag labels, no surface frame copy. Eyebrow only.
+ *
+ * Affordance density: every visible element has a hover state. Cursor pointers,
+ * subtle background tints, transform: scale on play button, brightness filter
+ * on related terms, etc. Panels feel reactive at rest.
+ *
+ * Live-component fidelity: chapter view header (eyebrow + pink Lora-bold
+ * title + italic subtitle + 4rem×2px purple rule), GlossaryPopover (purple
+ * eyebrow + Lora-italic term + def + related terms + footer), ConfusionPopover
+ * (amber eyebrow + Lora-italic count line + anonymous explainer + two CTAs),
+ * SelectionActionBar (Annotate + "give this its own space"), AudioPlayer
+ * (collapsed Headphones-icon button + expanded floating pill).
+ *
+ * Bucket 2 visual exception held: marginalia card v1 styling.
  */
 
+const READING_AUDIO_URL =
+  'https://www.archive.org/download/capital_vol1_0810_librivox/capitalvol1_04_marx.mp3'
+const READING_AUDIO_DURATION = 1186.6 // 19:46
+
 function ReadingSurface({ sectionRef, reduced }: SurfaceProps) {
-  return (
-    <section
-      ref={sectionRef}
-      className="welcome-section is-multipanel"
-      data-surface="reading"
-      aria-label="Reading"
-    >
-      <p className="welcome-section-marker text-eyebrow">02 / Reading</p>
+  // Audio
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [audioPlaying, setAudioPlaying] = useState(false)
+  const [audioCurrent, setAudioCurrent] = useState(0)
+  const [audioRate, setAudioRate] = useState(1)
 
-      <div className="surface-header">
-        <p className="text-eyebrow">Reading</p>
-        <h2>This is where you spend most of your time.</h2>
-        <p>
-          The chapter view is rich. Mark passages, look up terms, signal struggle, branch a thought into a thread, listen along. Try anything below — every panel is real and responds.
-        </p>
-      </div>
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+    const onTime = () => setAudioCurrent(audio.currentTime)
+    const onPause = () => setAudioPlaying(false)
+    const onPlay = () => setAudioPlaying(true)
+    const onEnded = () => setAudioPlaying(false)
+    audio.addEventListener('timeupdate', onTime)
+    audio.addEventListener('pause', onPause)
+    audio.addEventListener('play', onPlay)
+    audio.addEventListener('ended', onEnded)
+    return () => {
+      audio.removeEventListener('timeupdate', onTime)
+      audio.removeEventListener('pause', onPause)
+      audio.removeEventListener('play', onPlay)
+      audio.removeEventListener('ended', onEnded)
+    }
+  }, [])
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.playbackRate = audioRate
+  }, [audioRate])
+  const togglePlay = () => {
+    const audio = audioRef.current
+    if (!audio) return
+    if (audio.paused) {
+      audio.play().catch(err => {
+        // Network / autoplay-policy failures are non-fatal — pause UI state and log
+        console.warn('[CCP] Audio play failed:', err)
+        setAudioPlaying(false)
+      })
+    } else {
+      audio.pause()
+    }
+  }
+  const skip = (delta: number) => {
+    if (!audioRef.current) return
+    audioRef.current.currentTime = Math.max(0, Math.min(
+      READING_AUDIO_DURATION,
+      audioRef.current.currentTime + delta
+    ))
+  }
+  const cycleSpeed = () => {
+    setAudioRate(r => r === 1 ? 1.25 : r === 1.25 ? 1.5 : r === 1.5 ? 0.75 : 1)
+  }
+  const seekFromTrack = (e: React.MouseEvent<HTMLDivElement>) => {
+    const audio = audioRef.current
+    if (!audio) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+    audio.currentTime = ratio * READING_AUDIO_DURATION
+  }
+  const audioProgress = (audioCurrent / READING_AUDIO_DURATION) * 100
+  const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
 
-      <div className="panel-grid">
-        <div className="panel-row">
-          <ReadingChapterPanel reduced={reduced} />
-        </div>
-        <div className="panel-row cols-2">
-          <MarginaliaPanel reduced={reduced} />
-          <GlossaryPanel reduced={reduced} />
-        </div>
-        <div className="panel-row cols-2">
-          <ConfusionPanel reduced={reduced} />
-          <SelectionActionBarPanel reduced={reduced} />
-        </div>
-        <div className="panel-row">
-          <AudioPlayerPanel reduced={reduced} />
-        </div>
-        <div className="panel-row">
-          <AnnotationDepthPanel reduced={reduced} />
-        </div>
-      </div>
-    </section>
-  )
-}
-
-/* ── Panel: chapter view ───────────────────────────────────────── */
-function ReadingChapterPanel({ reduced }: { reduced: boolean }) {
-  const [ref, visible] = usePanelVisible(reduced)
-  return (
-    <div ref={ref} className="panel panel-reading-chapter" data-visible={visible ? 'true' : 'false'}>
-      <span className="panel-tag">The chapter</span>
-      <p className="reading-breadcrumb">
-        <span className="accent">Reading</span>
-        <span>›</span>
-        <span className="accent">Capital, Vol I</span>
-        <span>›</span>
-        <span style={{ color: 'var(--text-primary)' }}>Chapter 1, Section 1</span>
-      </p>
-      <div className="reading-chrome-header">
-        <p className="reading-chrome-eyebrow">01 / Chapter 1, §1 · ~11 Min Read</p>
-        <h1 className="reading-chapter-title">The Two Factors of a Commodity</h1>
-        <p className="reading-chapter-subtitle">Use-value and value</p>
-        <div className="reading-chrome-rule" />
-      </div>
-      <div className="reading-body">
-        <p>
-          The wealth of those societies in which the capitalist mode of production prevails, presents itself as &ldquo;an immense accumulation of <mark className="annotated">commodities</mark>,&rdquo; its unit being a single commodity.
-        </p>
-        <p>
-          Our investigation must therefore begin with the analysis of a commodity. A commodity is, in the first place, an object outside us, a thing that by its properties satisfies human wants of some sort or another.
-        </p>
-        <p>
-          Every useful thing, as iron, paper, etc., may be looked at from the two points of view of quality and quantity. Every such thing is a whole composed of many properties.
-        </p>
-      </div>
-      <div className="audio-collapsed-row">
-        <button type="button" className="audio-listen-button" aria-label="Listen to this chapter">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
-            <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
-          </svg>
-          Listen to this chapter
-          <span className="audio-listen-meta">· 19:46 · Read by Carl Manchester</span>
-        </button>
-      </div>
-      <p className="panel-caption">The chapter view. Lora reading body, narrow column, audio at the foot. Highlighted text marks an annotation — the marginalia panel below shows what one looks like.</p>
-    </div>
-  )
-}
-
-/* ── Panel: marginalia ──────────────────────────────────────────
- * Bucket 2 v1 visual style preserved per Mars's exception.
- * ───────────────────────────────────────────────────────────────── */
-function MarginaliaPanel({ reduced }: { reduced: boolean }) {
-  const [ref, visible] = usePanelVisible(reduced)
-  return (
-    <div ref={ref} className="panel panel-annotation" data-visible={visible ? 'true' : 'false'}>
-      <span className="panel-tag">Marginalia</span>
-      <p className="annotation-anchor-line">
-        Our investigation must therefore begin with the analysis of a <mark>commodity</mark>.
-      </p>
-      <div className="annotation-card">
-        <div className="annotation-author">
-          <span className="annotation-avatar" style={{ backgroundColor: '#7a4f9c' }}>L</span>
-          <div>
-            <div className="annotation-name">Liz</div>
-            <div className="annotation-time">2 days ago</div>
-          </div>
-        </div>
-        <div className="annotation-body">
-          I keep coming back to this opening — the way Marx insists we start with the commodity, not with markets or money. The choice of starting point is the whole argument.
-        </div>
-      </div>
-      <p className="panel-caption">Annotations live in the margin next to the line they&rsquo;re about. Author and timestamp visible. No like buttons, no reaction picker.</p>
-    </div>
-  )
-}
-
-/* ── Panel: glossary popover ─────────────────────────────────── */
-function GlossaryPanel({ reduced }: { reduced: boolean }) {
-  const [ref, visible] = usePanelVisible(reduced)
-  const [currentTerm, setCurrentTerm] = useState<'commodity' | 'use-value' | 'exchange-value'>('commodity')
-
+  // Glossary
+  const [glossaryOpen, setGlossaryOpen] = useState(true)
+  const [glossaryTerm, setGlossaryTerm] = useState<'commodity' | 'use-value' | 'exchange-value'>('commodity')
   const definitions: Record<string, { def: string; related: Array<'commodity' | 'use-value' | 'exchange-value'> }> = {
     'commodity': {
       def: 'An external object whose properties satisfy human wants of some sort. For Marx, the elementary form in which capitalist wealth presents itself.',
       related: ['use-value', 'exchange-value'],
     },
     'use-value': {
-      def: 'The qualitative side of a commodity — what it is good for, what human want it satisfies. Use-value is realised only in use or consumption.',
+      def: 'The qualitative side of a commodity — what it is good for, what human want it satisfies. Realised only in use or consumption.',
       related: ['commodity', 'exchange-value'],
     },
     'exchange-value': {
-      def: 'The quantitative side of a commodity — the proportion in which it exchanges for other commodities. Appears at first sight as something accidental.',
+      def: 'The quantitative side — the proportion in which a commodity exchanges for other commodities. Appears at first sight as something accidental.',
       related: ['commodity', 'use-value'],
     },
   }
-  const entry = definitions[currentTerm]
+  const glossaryEntry = definitions[glossaryTerm]
 
-  return (
-    <div ref={ref} className="panel panel-glossary" data-visible={visible ? 'true' : 'false'}>
-      <span className="panel-tag">Glossary</span>
-      <p className="glossary-anchor-line">
-        Our investigation must therefore begin with the analysis of a <span className="glossary-term-inline">commodity</span>.
-      </p>
-      <div className="glossary-popover-card">
-        <p className="glossary-popover-eyebrow">Glossary · Introduced Week 1</p>
-        <h3 className="glossary-popover-term">{currentTerm}</h3>
-        <p className="glossary-popover-def">{entry.def}</p>
-        <p className="related-terms-eyebrow">Related terms</p>
-        <p className="related-terms">
-          {entry.related.map((t, i) => (
-            <span key={t}>
-              <button
-                type="button"
-                className="related-term"
-                onClick={() => setCurrentTerm(t)}
-                aria-label={`View ${t}`}
-              >
-                {t}
-              </button>
-              {i < entry.related.length - 1 ? ' · ' : ''}
-            </span>
-          ))}
-        </p>
-        <div className="glossary-popover-footer">
-          <span>Edited by 3 members</span>
-          <button type="button" className="open-full-link">Open full entry →</button>
-        </div>
-      </div>
-      <p className="panel-caption">Underlined terms have entries the group has built. Click related terms to navigate the graph. Each entry is editable wiki-style — by anyone in the group.</p>
-    </div>
-  )
-}
+  // Confusion
+  const [confusionOpen, setConfusionOpen] = useState(true)
+  const [confusionCount, setConfusionCount] = useState(0)
+  const [confusionFlagged, setConfusionFlagged] = useState(false)
 
-/* ── Panel: confusion flag + popover ──────────────────────────── */
-function ConfusionPanel({ reduced }: { reduced: boolean }) {
-  const [ref, visible] = usePanelVisible(reduced)
-  const [count, setCount] = useState(0)
-  const [flagged, setFlagged] = useState(false)
-
-  // Ambient irregular-rhythm climb of the count — runs even when user
-  // hasn't engaged. Pattern reflects multiple actors arriving at uneven
-  // intervals (Mars's reading-surface confusion-rhythm lock from earlier).
+  // Section visibility tracker for ambient confusion climb
+  const sectionVisRef = useRef<HTMLElement | null>(null)
+  const [sectionVis, setSectionVis] = useState(false)
   useEffect(() => {
     if (reduced) {
-      setCount(7)
+      setConfusionCount(7)
       return
     }
-    if (!visible) return
+    const el = sectionVisRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(([entry]) => setSectionVis(entry.isIntersecting), { threshold: 0.1 })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [reduced])
+  useEffect(() => {
+    if (!sectionVis || reduced) return
     const arrivals = [600, 900, 1200, 2100, 2400, 3500, 4800]
     const timeouts: ReturnType<typeof setTimeout>[] = []
     const runCycle = () => {
-      setCount(0)
+      setConfusionCount(confusionFlagged ? 1 : 0)
       arrivals.forEach((delay, i) => {
         timeouts.push(setTimeout(() => {
-          setCount(c => Math.max(c, i + 1))
+          setConfusionCount(c => Math.max(c, i + 1 + (confusionFlagged ? 1 : 0)))
         }, delay))
       })
       timeouts.push(setTimeout(runCycle, 8500))
     }
     runCycle()
     return () => timeouts.forEach(clearTimeout)
-  }, [visible, reduced])
+  }, [sectionVis, reduced, confusionFlagged])
 
   const intensity =
-    count === 0 ? '0' :
-    count <= 2 ? 'low' :
-    count <= 5 ? 'mid' : 'high'
+    confusionCount === 0 ? '0' :
+    confusionCount <= 2 ? 'low' :
+    confusionCount <= 5 ? 'mid' : 'high'
 
-  const onToggle = () => {
-    setFlagged(f => {
+  const toggleStuck = () => {
+    setConfusionFlagged(f => {
       const next = !f
-      setCount(c => Math.max(0, next ? c + 1 : c - 1))
+      setConfusionCount(c => Math.max(0, next ? c + 1 : c - 1))
       return next
     })
   }
 
-  return (
-    <div ref={ref} className="panel panel-confusion" data-visible={visible ? 'true' : 'false'}>
-      <span className="panel-tag">Confusion</span>
-      <div className="confusion-anchor-paragraph">
-        <button
-          type="button"
-          className="confusion-flag-button"
-          data-intensity={intensity}
-          aria-label={`${count} ${count === 1 ? 'person has' : 'people have'} flagged this paragraph`}
-          tabIndex={-1}
-        >
-          ?
-        </button>
-        <span>
-          Every useful thing, as iron, paper, etc., may be looked at from the two points of view of quality and quantity. Every such thing is a whole composed of many properties.
-        </span>
-      </div>
-      <div className="confusion-popover-card">
-        <p className="confusion-popover-eyebrow">This passage is confusing</p>
-        <p className="confusion-popover-headline">
-          {count === 0
-            ? 'Nobody has flagged this yet.'
-            : `${count} ${count === 1 ? 'person has' : 'people have'} flagged this paragraph`}
-        </p>
-        <p className="confusion-popover-explainer">
-          Flags are anonymous. Nobody sees who flagged what, only how many.
-        </p>
-        <button
-          type="button"
-          className="stuck-button"
-          data-flagged={flagged ? 'true' : 'false'}
-          onClick={onToggle}
-        >
-          <span className="left">
-            <Flag size={14} strokeWidth={2} aria-hidden="true" style={{ color: 'var(--accent-amber)', fill: flagged ? 'var(--accent-amber)' : 'none' }} />
-            {flagged ? "You're flagged here" : "I'm also stuck here"}
-          </span>
-          <span className="anonymous-tag">Anonymous</span>
-        </button>
-        <button type="button" className="think-together-cta">
-          Start thinking together
-        </button>
-      </div>
-      <p className="panel-caption">The flag colour deepens as more people flag (you watched it climb in the background). Click &ldquo;I&rsquo;m also stuck here&rdquo; — the count includes yours; nobody sees who flagged.</p>
-    </div>
-  )
-}
+  // Selection action bar
+  const [selectionFeedback, setSelectionFeedback] = useState('')
+  const onAnnotate = () => setSelectionFeedback('Opens the annotation composer for this passage.')
+  const onGiveOwnSpace = () => setSelectionFeedback('Opens a new thread, with this passage pre-quoted as the seed.')
 
-/* ── Panel: selection action bar mid-selection ────────────────── */
-function SelectionActionBarPanel({ reduced }: { reduced: boolean }) {
-  const [ref, visible] = usePanelVisible(reduced)
-  const [feedback, setFeedback] = useState<string>('')
+  // Marginalia
+  const [marginaliaExpanded, setMarginaliaExpanded] = useState(false)
 
-  const onAnnotate = () => setFeedback('Opens the annotation composer for this passage.')
-  const onGiveOwnSpace = () => setFeedback('Opens a new thread, with this passage pre-quoted as the seed.')
+  // Entry visibility for chapter and orbit cards
+  const [chapterRef, chapterVisible] = usePanelVisible(reduced)
+  const [marginaliaRef, marginaliaVisible] = usePanelVisible(reduced)
+  const [audioOrbitRef, audioOrbitVisible] = usePanelVisible(reduced)
 
-  return (
-    <div ref={ref} className="panel panel-selection" data-visible={visible ? 'true' : 'false'}>
-      <span className="panel-tag">Selecting text</span>
-      <div style={{ position: 'relative' }}>
-        <p className="selection-anchor">
-          Every useful thing, as iron, paper, etc., may be looked at from the two points of view of <span className="selection-highlight">quality and quantity</span>. Every such thing is a whole composed of many properties.
-        </p>
-        <div className="selection-bar-anchored" style={{ top: '-2.25rem', left: '40%' }}>
-          <button type="button" onClick={onAnnotate}>Annotate</button>
-          <button type="button" onClick={onGiveOwnSpace}>Give this its own space</button>
-        </div>
-      </div>
-      <p className="selection-feedback">{feedback}</p>
-      <p className="panel-caption">Selecting text shows two moves. The platform&rsquo;s phrasing — &ldquo;give this its own space&rdquo; — names that some thoughts deserve their own thread, branched from the passage that sparked them.</p>
-    </div>
-  )
-}
-
-/* ── Panel: audio player expanded ─────────────────────────────── */
-function AudioPlayerPanel({ reduced }: { reduced: boolean }) {
-  const [ref, visible] = usePanelVisible(reduced)
-  const [playing, setPlaying] = useState(false)
-  const [progress, setProgress] = useState(0) // 0-100
-  const [rate, setRate] = useState(1)
-
-  useEffect(() => {
-    if (!playing || reduced) return
-    const interval = setInterval(() => {
-      setProgress(p => (p >= 100 ? 0 : Math.min(100, p + 0.4 * rate)))
-    }, 100)
-    return () => clearInterval(interval)
-  }, [playing, rate, reduced])
-
-  const totalSeconds = 19 * 60 + 46 // 19:46
-  const currentSeconds = Math.floor((progress / 100) * totalSeconds)
-  const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
-
-  const cycleSpeed = () => {
-    const next = rate === 1 ? 1.25 : rate === 1.25 ? 1.5 : rate === 1.5 ? 0.75 : 1
-    setRate(next)
-  }
-
-  const skip = (delta: number) => {
-    setProgress(p => Math.max(0, Math.min(100, p + (delta / totalSeconds) * 100)))
+  // Combined section ref (for parent-passed sectionRef + ambient visibility tracking)
+  const setCombinedRef = (el: HTMLElement | null) => {
+    sectionRef(el)
+    sectionVisRef.current = el
   }
 
   return (
-    <div ref={ref} className="panel panel-audio" data-visible={visible ? 'true' : 'false'}>
-      <span className="panel-tag">Audio</span>
-      <div className="audio-pill" role="toolbar" aria-label="Audio player">
-        <button type="button" className="audio-skip" onClick={() => skip(-15)} aria-label="Skip back 15 seconds">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M11 17l-5-5 5-5" /><path d="M18 17l-5-5 5-5" />
-          </svg>
-          15s
-        </button>
-        <button
-          type="button"
-          className="audio-play-btn"
-          data-playing={playing ? 'true' : 'false'}
-          onClick={() => setPlaying(p => !p)}
-          aria-label={playing ? 'Pause' : 'Play'}
-        >
-          {playing
-            ? <Pause size={14} strokeWidth={2} aria-hidden="true" />
-            : <Play size={14} strokeWidth={2} aria-hidden="true" />}
-        </button>
-        <button type="button" className="audio-skip" onClick={() => skip(15)} aria-label="Skip forward 15 seconds">
-          15s
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M13 17l5-5-5-5" /><path d="M6 17l5-5-5-5" />
-          </svg>
-        </button>
-        <div className="audio-track">
-          <div className="audio-fill" style={{ width: `${progress}%` }} />
-        </div>
-        <span className="audio-time">{fmt(currentSeconds)} / {fmt(totalSeconds)}</span>
-        <button type="button" className="audio-speed" onClick={cycleSpeed} aria-label={`Playback speed: ${rate}x`}>
-          {rate}×
-        </button>
-      </div>
-      <p className="panel-caption" style={{ marginTop: '1rem', borderTop: 'none', backgroundColor: 'transparent', padding: '0' }}>
-        Real LibriVox audio with paragraph-synced highlighting on the live page. Read along, listen instead, both. Click play.
-      </p>
-    </div>
-  )
-}
+    <section
+      ref={setCombinedRef}
+      className="welcome-section is-multipanel"
+      data-surface="reading"
+      aria-label="Reading"
+    >
+      <p className="welcome-section-marker text-eyebrow">02 / Reading</p>
 
-/* ── Panel: annotation depth (reply chain) ────────────────────── */
-function AnnotationDepthPanel({ reduced }: { reduced: boolean }) {
-  const [ref, visible] = usePanelVisible(reduced)
-  const [replyOpen, setReplyOpen] = useState(false)
+      <audio ref={audioRef} src={READING_AUDIO_URL} preload="none" />
 
-  return (
-    <div ref={ref} className="panel panel-annotation panel-annotation-depth" data-visible={visible ? 'true' : 'false'}>
-      <span className="panel-tag">Annotations become conversations</span>
-      <p className="annotation-anchor-line">
-        Our investigation must therefore begin with the analysis of a <mark>commodity</mark>.
-      </p>
-      <div className="annotation-card">
-        <div className="annotation-author">
-          <span className="annotation-avatar" style={{ backgroundColor: '#7a4f9c' }}>L</span>
-          <div>
-            <div className="annotation-name">Liz</div>
-            <div className="annotation-time">2 days ago</div>
-          </div>
-        </div>
-        <div className="annotation-body">
-          I keep coming back to this opening — the way Marx insists we start with the commodity, not with markets or money. The choice of starting point is the whole argument.
-        </div>
-        <div className="annotation-replies">
-          <div className="annotation-reply">
-            <div className="annotation-author">
-              <span className="annotation-avatar" style={{ backgroundColor: '#3f6f4a' }}>D</span>
-              <div>
-                <div className="annotation-name">Daniel</div>
-                <div className="annotation-time">1 day ago</div>
-              </div>
-            </div>
-            <div className="annotation-body">
-              Same. The &lsquo;immense&rsquo; is doing work too — accumulation as the form, before any specific transaction.
-            </div>
-          </div>
-          <div className="annotation-reply">
-            <div className="annotation-author">
-              <span className="annotation-avatar" style={{ backgroundColor: '#a3742d' }}>P</span>
-              <div>
-                <div className="annotation-name">Pita</div>
-                <div className="annotation-time">8h ago</div>
-              </div>
-            </div>
-            <div className="annotation-body">
-              Reading this alongside ch 3 of Heinrich helps — the &lsquo;starts with&rsquo; is methodologically loaded, not just where the book happens to begin.
-            </div>
-          </div>
-        </div>
-        <button
-          type="button"
-          className="reply-affordance"
-          onClick={() => setReplyOpen(o => !o)}
-        >
-          {replyOpen ? '— Cancel reply' : '↩ Reply'}
-        </button>
-        {replyOpen && (
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.375rem', fontStyle: 'italic' }}>
-            On the live platform, this opens a small reply composer right here in the annotation card.
+      <div className="reading-orbit-grid">
+        {/* Chapter column */}
+        <div ref={chapterRef} className="reading-chapter" data-visible={chapterVisible ? 'true' : 'false'}>
+          <p className="breadcrumb">
+            <span className="accent">Reading</span>
+            <span>›</span>
+            <span className="accent">Capital, Vol I</span>
+            <span>›</span>
+            <span style={{ color: 'var(--text-primary)' }}>Chapter 1, Section 1</span>
           </p>
-        )}
+
+          <div className="chrome-header">
+            <p className="chrome-eyebrow">01 / Chapter 1, §1 · ~11 Min Read</p>
+            <h1 className="chapter-title">The Two Factors of a Commodity</h1>
+            <p className="chapter-subtitle">Use-value and value</p>
+            <div className="chrome-rule" />
+          </div>
+
+          <div className="body">
+            {/* Para 1 — annotated highlight (anchor for marginalia in orbit lane) */}
+            <p>
+              The wealth of those societies in which the capitalist mode of production prevails, presents itself as &ldquo;an immense accumulation of <mark className="annotated">commodities</mark>,&rdquo; its unit being a single commodity.
+            </p>
+
+            {/* Para 2 — glossary term + floating popover */}
+            <p style={{ position: 'relative' }}>
+              Our investigation must therefore begin with the analysis of a{' '}
+              <span
+                className="glossary-anchor"
+                onClick={() => setGlossaryOpen(o => !o)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter') setGlossaryOpen(o => !o) }}
+                aria-label="Open glossary entry for commodity"
+              >
+                commodity
+              </span>
+              .
+              <span
+                className="floating-glossary"
+                data-open={glossaryOpen ? 'true' : 'false'}
+                style={{ display: 'block' }}
+              >
+                <span style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem' }}>
+                  <span style={{ flex: 1, minWidth: 0, display: 'block' }}>
+                    <span className="pop-eyebrow" style={{ display: 'block' }}>Glossary · Introduced Week 1</span>
+                    <span className="pop-term" style={{ display: 'block' }}>{glossaryTerm}</span>
+                  </span>
+                  <button
+                    type="button"
+                    className="pop-close"
+                    onClick={(e) => { e.stopPropagation(); setGlossaryOpen(false) }}
+                    aria-label="Close glossary"
+                  >
+                    ✕
+                  </button>
+                </span>
+                <span className="pop-def" style={{ display: 'block' }}>{glossaryEntry.def}</span>
+                <span className="related-eyebrow" style={{ display: 'block' }}>Related terms</span>
+                <span className="related" style={{ display: 'block' }}>
+                  {glossaryEntry.related.map((t, i) => (
+                    <span key={t}>
+                      <button
+                        type="button"
+                        className="related-term-btn"
+                        onClick={(e) => { e.stopPropagation(); setGlossaryTerm(t) }}
+                      >
+                        {t}
+                      </button>
+                      {i < glossaryEntry.related.length - 1 ? ' · ' : ''}
+                    </span>
+                  ))}
+                </span>
+                <span className="pop-footer" style={{ display: 'flex' }}>
+                  <span>Edited by 3 members</span>
+                  <button type="button" className="open-full" onClick={(e) => e.stopPropagation()}>
+                    Open full entry →
+                  </button>
+                </span>
+              </span>
+            </p>
+
+            {/* Para 3 — confusion flag + floating popover */}
+            <div className="para-with-flag" style={{ marginBottom: '1.125rem', position: 'relative' }}>
+              <p style={{ margin: 0 }}>
+                Every useful thing, as iron, paper, etc., may be looked at from the two points of view of quality and quantity. Every such thing is a whole composed of many properties.
+              </p>
+              <button
+                type="button"
+                className="flag-anchor"
+                data-intensity={intensity}
+                onClick={() => setConfusionOpen(o => !o)}
+                aria-label={`${confusionCount} ${confusionCount === 1 ? 'person has' : 'people have'} flagged this paragraph`}
+              >
+                ?
+              </button>
+              <div
+                className="floating-confusion"
+                data-open={confusionOpen ? 'true' : 'false'}
+                style={{ top: '2.5rem', left: '12%' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem' }}>
+                  <p className="pop-eyebrow" style={{ flex: 1, margin: 0 }}>This passage is confusing</p>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setConfusionOpen(false) }}
+                    aria-label="Close confusion details"
+                    style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.875rem', padding: '0.125rem' }}
+                  >
+                    ✕
+                  </button>
+                </div>
+                <p className="pop-headline">
+                  {confusionCount === 0
+                    ? 'Nobody has flagged this yet.'
+                    : `${confusionCount} ${confusionCount === 1 ? 'person has' : 'people have'} flagged this paragraph`}
+                </p>
+                <p className="pop-explainer">
+                  Flags are anonymous. Nobody sees who flagged what, only how many.
+                </p>
+                <button
+                  type="button"
+                  className="stuck-button"
+                  data-flagged={confusionFlagged ? 'true' : 'false'}
+                  onClick={toggleStuck}
+                >
+                  <span className="stuck-left">
+                    <Flag size={14} strokeWidth={2} aria-hidden="true" style={{ color: 'var(--accent-amber)', fill: confusionFlagged ? 'var(--accent-amber)' : 'none' }} />
+                    {confusionFlagged ? "You're flagged here" : "I'm also stuck here"}
+                  </span>
+                  <span className="anonymous-tag">Anonymous</span>
+                </button>
+                <button type="button" className="think-cta">
+                  Start thinking together
+                </button>
+              </div>
+            </div>
+
+            {/* Para 4 — selection highlight + floating action bar */}
+            <p>
+              It is value, rather, that converts every product into a social hieroglyphic. Later on, we try to decipher the hieroglyphic, to get behind the secret of our own social products: for to stamp an object of utility as a value, is just as much a social product as language.
+            </p>
+            <div style={{ position: 'relative' }}>
+              <p>
+                The <span className="selection-highlight">value of a commodity is independent of its physical body</span> and is realised only in exchange.
+              </p>
+              <div className="selection-bar-float" style={{ top: '-2rem', left: '8%' }}>
+                <button type="button" onClick={onAnnotate}>Annotate</button>
+                <button type="button" onClick={onGiveOwnSpace}>Give this its own space</button>
+              </div>
+              <p className="selection-feedback" data-shown={selectionFeedback ? 'true' : 'false'}>
+                {selectionFeedback || '\u00A0'}
+              </p>
+            </div>
+          </div>
+
+          {/* Audio collapsed at chapter foot */}
+          <div className="audio-foot">
+            <button
+              type="button"
+              className="audio-listen-btn"
+              data-active={audioPlaying ? 'true' : 'false'}
+              onClick={togglePlay}
+              aria-label={audioPlaying ? 'Pause audio' : 'Listen to this chapter'}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+                <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
+              </svg>
+              {audioPlaying ? 'Pause' : 'Listen to this chapter'}
+              <span className="listen-meta">· 19:46 · Read by Carl Manchester</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Orbit lane */}
+        <div className="reading-orbit">
+          {/* Marginalia anchored to para 1 vertical, click to expand replies */}
+          <div
+            ref={marginaliaRef}
+            className="orbit-card orbit-marginalia"
+            data-visible={marginaliaVisible ? 'true' : 'false'}
+            data-expanded={marginaliaExpanded ? 'true' : 'false'}
+            onClick={() => setMarginaliaExpanded(e => !e)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter') setMarginaliaExpanded(x => !x) }}
+          >
+            <p className="anchor-line">
+              presents itself as <mark>&ldquo;an immense accumulation of commodities&rdquo;</mark>
+            </p>
+            <div className="annot-card-frame">
+              <div className="annot-author-row">
+                <span className="annot-avatar" style={{ backgroundColor: '#7a4f9c' }}>L</span>
+                <div>
+                  <div className="annot-name">Liz</div>
+                  <div className="annot-time">2 days ago</div>
+                </div>
+              </div>
+              <div className="annot-body">
+                I keep coming back to this opening — the way Marx insists we start with the commodity, not with markets or money. The choice of starting point is the whole argument.
+              </div>
+              <div className="annot-replies">
+                <div>
+                  <div className="annot-author-row" style={{ marginBottom: '0.25rem' }}>
+                    <span className="annot-avatar" style={{ backgroundColor: '#3f6f4a' }}>D</span>
+                    <div>
+                      <div className="annot-name">Daniel</div>
+                      <div className="annot-time">1 day ago</div>
+                    </div>
+                  </div>
+                  <div className="annot-body">
+                    Same. The &lsquo;immense&rsquo; is doing work too — accumulation as the form, before any specific transaction.
+                  </div>
+                </div>
+                <div>
+                  <div className="annot-author-row" style={{ marginBottom: '0.25rem' }}>
+                    <span className="annot-avatar" style={{ backgroundColor: '#a3742d' }}>P</span>
+                    <div>
+                      <div className="annot-name">Pita</div>
+                      <div className="annot-time">8h ago</div>
+                    </div>
+                  </div>
+                  <div className="annot-body">
+                    Reading this alongside ch 3 of Heinrich helps — the &lsquo;starts with&rsquo; is methodologically loaded, not just where the book happens to begin.
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="annot-reply-toggle"
+                onClick={(e) => { e.stopPropagation(); setMarginaliaExpanded(x => !x) }}
+                aria-expanded={marginaliaExpanded}
+              >
+                {marginaliaExpanded ? '— Collapse replies' : '↩ 2 replies'}
+              </button>
+            </div>
+          </div>
+
+          {/* Audio expanded pill at chapter foot vertical */}
+          <div ref={audioOrbitRef} className="orbit-card orbit-audio" data-visible={audioOrbitVisible ? 'true' : 'false'}>
+            <div className="audio-pill" role="toolbar" aria-label="Audio player">
+              <button type="button" className="pill-skip" onClick={() => skip(-15)} aria-label="Skip back 15 seconds">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M11 17l-5-5 5-5" /><path d="M18 17l-5-5 5-5" />
+                </svg>
+                15s
+              </button>
+              <button
+                type="button"
+                className="pill-play"
+                data-playing={audioPlaying ? 'true' : 'false'}
+                onClick={togglePlay}
+                aria-label={audioPlaying ? 'Pause' : 'Play'}
+              >
+                {audioPlaying
+                  ? <Pause size={14} strokeWidth={2} aria-hidden="true" />
+                  : <Play size={14} strokeWidth={2} aria-hidden="true" />}
+              </button>
+              <button type="button" className="pill-skip" onClick={() => skip(15)} aria-label="Skip forward 15 seconds">
+                15s
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M13 17l5-5-5-5" /><path d="M6 17l5-5-5-5" />
+                </svg>
+              </button>
+              <div className="pill-track" onClick={seekFromTrack} role="slider" aria-label="Audio progress" aria-valuenow={Math.round(audioProgress)} aria-valuemin={0} aria-valuemax={100}>
+                <div className="pill-fill" style={{ width: `${audioProgress}%` }} />
+              </div>
+              <span className="pill-time">{fmt(audioCurrent)} / 19:46</span>
+              <button type="button" className="pill-speed" onClick={cycleSpeed} aria-label={`Playback speed: ${audioRate}x`}>
+                {audioRate}×
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-      <p className="panel-caption">Annotations aren&rsquo;t one-offs. They become conversations. Reply, and the thread of thinking grows under the original.</p>
-    </div>
+    </section>
   )
 }
-
-
-/* ─────────────────────────────────────────────────────────────────
- * Group surface — thread view, interactive branching gesture.
- * ───────────────────────────────────────────────────────────────── */
 
 type GroupPromptStep = 'open' | 'submit' | 'done'
 
