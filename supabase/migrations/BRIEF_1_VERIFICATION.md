@@ -117,33 +117,40 @@ Expected page state:
 
 ---
 
-## V6 — Onboarding scroll walkthrough (post-deploy)
+## V6 — Onboarding scroll walkthrough (post-deploy, v2 redesign)
 
 Reach `/welcome` either via signup (V4a) or signin with `has_completed_onboarding=false` user (V5b).
 
+The scroll was rebuilt post-V3-V6 diagnosis as a surfaces-not-sections design. Six sections (down from eight), four animated platform-mockup surfaces with capability beats labelled below each mockup.
+
 Expected:
 
-1. Eight viewport-height sections, scroll-snap proximity (mid-section pause is allowed; snap engages at boundaries).
-2. Each section fades in (~500ms ease-out) as it enters viewport. Primary visual scales 0.96 → 1.0 within the same window. Subtle, not flashy.
-3. Section order: 01 Welcome → 02 The Rhythm → 03 Reading Together → 03·II Confusion Flags → 04 Annotations → 05 The Dashboard → 06 More to Explore → 07 What This Isn't → 08 Ready.
-4. Section 1 hero personalised: "Welcome to Watermelon, [display_name]."
-5. Section 2 copy adapts to recurring-mode reality: "Read at your pace. Meet on Tuesdays." when `next_session_at` is set, "Read at your pace. Meet weekly." otherwise. Same conditional in the OUR PART block ("Meet for an hour, every Tuesday." vs "Meet for an hour, every week.").
-6. EXAMPLE captions present on sections 3, 3·II, 4, 5 — small "EXAMPLE" eyebrow above the mockups.
-7. Section 5 dashboard mockup orientation line shows the dual-counter format: "Week 12 · Week 3 on Chapter 1, §4 · 38 annotations · 6 active threads · Next session Tuesday 7pm" (NOT "Week 4 of 32 · Reading Commodities & Money").
-8. Section 3·II copy uses "the host" not "Mars" — portability fix per investigation.
-9. Section 6 copy uses "The schedule shows when you'll meet next, and where the group is in the reading" — NOT "32-week arc".
-10. Section 8 CTA "Take me to the dashboard →" submits the `completeOnboarding` server action. Expected: flag flips to true in DB, redirect to `/dashboard`. Verify in Supabase dashboard the user's `has_completed_onboarding=true` after.
-11. Subsequent signin for the same user lands on `/dashboard`, not `/welcome` (V5a behavior).
+1. Six viewport-height sections, scroll-snap proximity (mid-section pause allowed). Section order: 01 Opener → 02 Reading → 03 Group → 04 Personal → 05 Dashboard → 06 Ready.
+2. Each section fades in (~600ms ease-out) as it enters viewport. Primary visual scales 0.96 → 1.0 within the same window.
+3. Opener (section 1): personalised hero "Welcome to Watermelon, [display_name]." with two-line subhead "A small group reading Marx's Capital, Volume I together. / Slowly, carefully." Stagger-fade entrance, no platform motion.
+4. Reading surface (section 2): chapter-view mockup with five capability beats over a 7s loop — Marginalia (annotation card fades into right margin), Replies tuck under, Glossary in line (dotted underline draws on "commodity", popover opens), Confusion anonymous (counter climbs 0→7 with **irregular timing** — hand-tuned arrivals at 250/350/500/1200/1400/2200/2900ms reflecting a multi-actor social dynamic), Listen along (audio scrubber starts moving). Beat label cycles below mockup as the loop plays.
+5. Group surface (section 3): thread view with two capability beats — Confusion becomes agenda (the "7" count from Reading surface morphs into a thread title), Branch when it deserves space → Lineage stays visible (highlight in reply, branch affordance, child thread slides in with "← Branched from §1" label). **Held absence: replies have no like buttons.**
+6. Personal surface (section 4): journal editor with one extended motion sequence and three sequential labels — Private journal (typing motion, autosave pulse), Private by default (lock icon glow), The same move, made public (highlight in journal body, identical branch gesture as Group surface, thread spawns from private writing).
+7. Dashboard surface (section 5): full dashboard mockup with two hero beats and ambient elements. Beat 1 — Where we are: orientation strip materialises ("[Group] · Week 12 · Week 3 on Chapter 1, §4 · Next session [day] 7pm") plus a rhythm strip below showing the 7-day weekday row with the meeting day highlighted, "WE MEET WEEKLY" eyebrow. Beat 2 — Where the group's attention is: magnitude bars fill in with non-uniform per-bar delays (multi-actor read). Ambient: Capital quote callout, recent threads list, concept scaffolding panel. **Held absence: no streak counter, no notification badge, no progress percentage.**
+8. CTA (section 6): "Read at your pace. Bring what you've got to the next session." button submits the `completeOnboarding` server action. Expected: flag flips to true in DB, redirect to `/dashboard`. Verify in Supabase dashboard the user's `has_completed_onboarding=true` after.
+9. Subsequent signin for the same user lands on `/dashboard`, not `/welcome` (V5a behavior).
+
+**Pedagogical coherence check:**
+
+- Irregular-rhythm motion on the confusion counter (Reading surface) and the magnitude bars (Dashboard) carries the "multiple actors arriving at irregular intervals" read through motion alone, no avatars or names.
+- Highlight-and-branch motion on Group surface and Personal surface uses identical visual treatment (same affordance, same animation curve, same arrival direction for the resulting thread). The label "the same move, made public" names the parity at the moment it lands on Personal.
+- Two deliberate absences (no like button on Group reply, no engagement-wrappers on Dashboard) teach calm-technology through what's missing rather than declaring it.
 
 **Mobile parity (375px):**
 
 - All sections render correctly; no horizontal scrolling.
-- Section 5 dashboard mockup compresses cleanly; magnitude bars remain readable.
-- Section 2 grid collapses from two-column (Your Part / Our Part) to stacked.
+- Marginalia / reply / child-thread cards reposition inline below their anchor element (vs floating off the right edge on desktop).
+- Confusion flag indicator tucks above the paragraph on mobile.
+- Dashboard ambient grid collapses to single column.
 
 **Reduced-motion check:**
 
-In Chrome DevTools → Rendering → Emulate CSS prefers-reduced-motion: reduce. Reload `/welcome`. Expected: no fade-in, no scale, no scroll-snap. Sections render fully visible from first paint, normal scroll behavior.
+In Chrome DevTools → Rendering → Emulate CSS prefers-reduced-motion: reduce. Reload `/welcome`. Expected: no fade-in, no scale, no scroll-snap, no per-beat motion. Mockups render in their final/visible state from first paint — confusion counter shows 7, magnitude bars filled, popovers open, child threads visible, lock icon glowing.
 
 ---
 

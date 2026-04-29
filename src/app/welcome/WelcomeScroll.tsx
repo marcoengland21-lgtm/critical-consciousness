@@ -1,57 +1,71 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { completeOnboarding } from './actions'
 
 /**
- * WelcomeScroll — eight-section onboarding scroll for new members.
+ * WelcomeScroll v2 — surfaces, not sections.
  *
- * Brief 1, sub-batch 6. Light scroll-driven animation only:
- *   - Sections fade in as they enter viewport (~500ms ease-out)
- *   - Subtle scale-up (0.96 → 1.0) on each section's primary visual
- *   - Proximity scroll-snap for pacing (NOT mandatory — readers can
- *     pause mid-section to study mockups without snap-jolt)
- *   - NO pinning, NO parallax, NO cross-section choreography
- *   - Native CSS + IntersectionObserver, no animation library
+ * Brief 1 sub-batch 6 redesign (post-V3-V6 diagnosis from Mars). Six
+ * sections, four of them platform surfaces with CSS-and-state-driven
+ * animated mockups, bookended by an opener and a CTA.
  *
- * Reduced-motion respect:
- *   - prefers-reduced-motion: reduce → no fade, no scale, no snap.
- *     Static viewport-height sections, normal scroll behavior.
+ * Frame:
+ *   1. Opener            recognition only, no platform motion
+ *   2. Reading surface   chapter view + 5 capability beats
+ *   3. Group surface     thread view + 2 capability beats
+ *   4. Personal surface  journal editor + 1 extended motion (3 labels)
+ *   5. Dashboard         landing surface + 2 hero beats + ambient
+ *   6. CTA               minimal, dashboard precedes it as the visual
  *
- * Section structure (all eight):
- *   1. WELCOME — personalised hero
- *   2. THE RHYTHM — recurring-mode-aware "Your part / Our part"
- *   3. READING TOGETHER — chapter view + glossary popover mockup
- *   3.II. CONFUSION FLAGS — confusion popover mockup
- *   4. ANNOTATIONS — annotation editor mockup
- *   5. THE DASHBOARD — dashboard mockup (dual-counter format)
- *   6. MORE TO EXPLORE — the rest of the platform
- *   7. WHAT THIS ISN'T — calm-technology principles
- *   8. READY — CTA that flips has_completed_onboarding=true
+ * Pedagogy:
+ *   - Mockup IS the platform doing something — anchored, not floating
+ *   - Words name what was just shown, don't describe what to imagine
+ *   - Irregular-rhythm motion conveys multiple actors without naming
+ *     them (confusion counter on Reading; magnitude bars on Dashboard)
+ *   - Gesture parity across surfaces: highlight-and-branch motion is
+ *     visually identical between Group (thread → child thread) and
+ *     Personal (journal → thread). Same affordance, same animation
+ *     curve, same arrival direction. Label "the same move, made public"
+ *     names it explicitly when it happens
+ *   - Two deliberate absence-moments held in framing:
+ *       (a) Group surface — thread reply with no like button
+ *       (b) Dashboard — widgets without streak counters / notification
+ *           badges / progress percentages
+ *     Calm-technology taught through what's missing, not declared
  *
- * EXAMPLE captions: sections 3, 3.II, 4, 5 carry quiet eyebrow
- * captions to prevent confusion that named members are real.
+ * Quality > implementation ease (Mars's lock):
+ *   - Confusion counter uses React state + setTimeout sequence with
+ *     hand-tuned non-uniform intervals — arrivals at 250/350/500ms
+ *     (initial cluster), pause, 1200/1400ms (sympathetic cluster),
+ *     pause, 2200/2900ms (gradual final additions). Pattern reflects
+ *     a real social dynamic (first noticer, sympathetic chime-ins,
+ *     considered additions). CSS keyframes were the lighter option;
+ *     setTimeout chosen for the rhythm freedom and pause control
+ *   - Magnitude-bar fills use CSS keyframes with non-uniform
+ *     animation-delay per bar — §1 starts at 0s, §4 at 0.3s, §5 at
+ *     0.5s overlapping §4, §2 at 0.7s, §3 at 1.2s. Same multi-actor
+ *     read through the texture of the unfolding
  *
- * Section 6 portability fix: mum's PDF v3 had "Mars sees the flag
- * counts on his dashboard" — replaced here with "the host" since
- * the scroll text is platform-facing (visible to every Watermelon
- * member, not Mars-specific).
+ * Mobile parity:
+ *   - Each mockup uses a max-width that compresses cleanly under 600px
+ *   - Reading surface: narrow column natively
+ *   - Dashboard mockup: stacked widgets at <640px, side-by-side above
  *
- * Section 12 (now §6 here) "32-week arc" replaced with the
- * recurring-mode-accurate copy per Brief 1 investigation note.
- *
- * Mockup approach: simplified-but-recognizable. Captures the gist
- * of each feature without pixel-perfect platform replication.
- * Mobile parity at 375px — section 5 dashboard mockup uses a
- * scaled-desktop-aspect layout that compresses cleanly under 600px.
+ * prefers-reduced-motion:
+ *   - All animations disabled, mockups display in their final/visible
+ *     state from first paint
+ *   - Loop intervals don't run; static mockups show counter at 7,
+ *     bars filled, popovers open, etc.
  */
 
 interface Props {
   displayName: string | null
   groupName: string
-  /** "Tuesdays" / "Wednesdays" / etc. — null when host hasn't set
-   *  next_session_at; section 2 collapses to "Meet weekly." in that
-   *  case rather than rendering a fake day. */
+  /** "Tuesdays" / "Wednesdays" / etc. or null when host hasn't set
+   *  next_session_at. Used by section 5's rhythm strip to highlight
+   *  the recurring meeting day. When null, rhythm strip uses a
+   *  generic "we meet weekly" frame without a specific day. */
   sessionDayPlural: string | null
 }
 
@@ -61,14 +75,31 @@ export default function WelcomeScroll({
   sessionDayPlural,
 }: Props) {
   const sectionRefs = useRef<HTMLElement[]>([])
+  const [reduced, setReduced] = useState(false)
+
+  // Per-surface visibility — drives the React-state-managed motion
+  // sequences (counter on Reading, label cycles, etc).
+  const [readingVisible, setReadingVisible] = useState(false)
+  const [groupVisible, setGroupVisible] = useState(false)
+  const [personalVisible, setPersonalVisible] = useState(false)
+  const [dashboardVisible, setDashboardVisible] = useState(false)
 
   useEffect(() => {
-    // Skip the observer entirely if reduced motion is preferred —
-    // sections render fully visible from first paint via the CSS
-    // override below, no JS-toggled state needed.
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)')
-    if (reduced.matches) {
+    const m = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduced(m.matches)
+    const handler = (e: MediaQueryListEvent) => setReduced(e.matches)
+    m.addEventListener('change', handler)
+    return () => m.removeEventListener('change', handler)
+  }, [])
+
+  useEffect(() => {
+    if (reduced) {
+      // All sections rendered visible from first paint, no observer
       sectionRefs.current.forEach(s => s?.setAttribute('data-visible', 'true'))
+      setReadingVisible(true)
+      setGroupVisible(true)
+      setPersonalVisible(true)
+      setDashboardVisible(true)
       return
     }
 
@@ -77,20 +108,20 @@ export default function WelcomeScroll({
         for (const entry of entries) {
           if (entry.isIntersecting) {
             entry.target.setAttribute('data-visible', 'true')
+            const surface = entry.target.getAttribute('data-surface')
+            if (surface === 'reading') setReadingVisible(true)
+            if (surface === 'group') setGroupVisible(true)
+            if (surface === 'personal') setPersonalVisible(true)
+            if (surface === 'dashboard') setDashboardVisible(true)
           }
         }
       },
-      {
-        // Trigger when the section is ~25% in view — ahead of the
-        // user's reading focus, so the fade-in is mostly done by
-        // the time they arrive at the section's centre.
-        threshold: 0.25,
-      }
+      { threshold: 0.25 }
     )
 
     sectionRefs.current.forEach(s => s && observer.observe(s))
     return () => observer.disconnect()
-  }, [])
+  }, [reduced])
 
   const setRef = (i: number) => (el: HTMLElement | null) => {
     if (el) sectionRefs.current[i] = el
@@ -103,8 +134,6 @@ export default function WelcomeScroll({
       className="welcome-scroll"
       style={{ backgroundColor: 'var(--bg-page)' }}
     >
-      {/* Inline styles — scoped, single-consumer, avoids touching
-          globals.css for what's effectively a one-page treatment. */}
       <style>{`
         .welcome-scroll {
           scroll-snap-type: y proximity;
@@ -119,18 +148,23 @@ export default function WelcomeScroll({
           align-items: center;
           justify-content: center;
           padding: 4rem 1.5rem;
+          position: relative;
           opacity: 0;
-          transition: opacity 500ms var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1));
+          transition: opacity 600ms var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1));
         }
-        .welcome-section[data-visible="true"] {
-          opacity: 1;
-        }
+        .welcome-section[data-visible="true"] { opacity: 1; }
+
         .welcome-visual {
           transform: scale(0.96);
-          transition: transform 500ms var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1));
+          transition: transform 600ms var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1));
+          width: 100%;
         }
-        .welcome-section[data-visible="true"] .welcome-visual {
-          transform: scale(1);
+        .welcome-section[data-visible="true"] .welcome-visual { transform: scale(1); }
+
+        .welcome-section-marker {
+          position: absolute;
+          top: 1.5rem;
+          right: 1.5rem;
         }
         .welcome-platform-tag {
           position: absolute;
@@ -140,42 +174,775 @@ export default function WelcomeScroll({
           align-items: center;
           gap: 0.5rem;
         }
-        .welcome-section-marker {
-          position: absolute;
-          top: 1.5rem;
-          right: 1.5rem;
+
+        /* ── Opener stagger ─────────────────────────────────────── */
+        .opener-stagger > * {
+          opacity: 0;
+          transform: translateY(8px);
+          transition: opacity 500ms var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)),
+                      transform 500ms var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1));
         }
+        .welcome-section[data-visible="true"] .opener-stagger > *:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: 0ms; }
+        .welcome-section[data-visible="true"] .opener-stagger > *:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: 150ms; }
+        .welcome-section[data-visible="true"] .opener-stagger > *:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: 300ms; }
+        .welcome-section[data-visible="true"] .opener-stagger > *:nth-child(4) { opacity: 1; transform: translateY(0); transition-delay: 450ms; }
+
+        /* ── Mockup container ───────────────────────────────────── */
         .welcome-mockup {
           background-color: var(--bg-card, #ffffff);
           border: 1px solid var(--border-subtle);
           border-radius: 0.5rem;
-          padding: 1.5rem;
-          max-width: 28rem;
-          width: 100%;
           margin: 1.5rem auto 0;
           box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+          position: relative;
         }
-        .welcome-dashboard-mockup {
-          max-width: 44rem;
+        .mockup-example-tag {
+          position: absolute;
+          top: -0.6rem;
+          right: 1rem;
+          background-color: var(--bg-page);
+          padding: 0 0.5rem;
+        }
+
+        /* ── Reading surface ────────────────────────────────────── */
+        .reading-mockup { max-width: 36rem; padding: 1.25rem; }
+        .reading-eyebrow { color: var(--text-secondary); }
+        .reading-body p {
+          font-family: 'Lora', Georgia, serif;
+          color: var(--text-primary);
+          line-height: 1.8;
+          font-size: 0.95rem;
+          margin: 0;
+          padding: 0.5rem 0;
+        }
+        .reading-paragraph {
+          position: relative;
+        }
+
+        /* Marginalia card — fades in next to the line */
+        .marginalia-card {
+          position: absolute;
+          top: 0;
+          right: -8.5rem;
+          width: 8rem;
+          background-color: rgba(var(--accent-purple-rgb), 0.06);
+          border-left: 2px solid var(--accent-purple);
+          padding: 0.5rem 0.625rem;
+          border-radius: 0.25rem;
+          font-family: 'Inter', sans-serif;
+          font-size: 0.75rem;
+          line-height: 1.4;
+          opacity: 0;
+          transform: translateX(-4px);
+        }
+        [data-rs-active="true"] .marginalia-card {
+          animation: marginalia-fade 7s var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
+        }
+        @keyframes marginalia-fade {
+          0%, 5% { opacity: 0; transform: translateX(-4px); }
+          12%, 90% { opacity: 1; transform: translateX(0); }
+          100% { opacity: 0; transform: translateX(-4px); }
+        }
+        .marginalia-name {
+          color: var(--accent-purple);
+          font-weight: 600;
+          font-size: 0.6875rem;
+          margin-bottom: 0.125rem;
+        }
+        .marginalia-body { color: var(--text-primary); }
+
+        /* Reply card — slides under the marginalia */
+        .reply-card {
+          position: absolute;
+          top: 3.25rem;
+          right: -8.5rem;
+          width: 8rem;
+          background-color: rgba(var(--accent-purple-rgb), 0.04);
+          border-left: 2px solid rgba(var(--accent-purple-rgb), 0.6);
+          padding: 0.5rem 0.625rem;
+          border-radius: 0.25rem;
+          font-family: 'Inter', sans-serif;
+          font-size: 0.75rem;
+          line-height: 1.4;
+          opacity: 0;
+          transform: translateY(-6px);
+        }
+        [data-rs-active="true"] .reply-card {
+          animation: reply-slide 7s var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
+        }
+        @keyframes reply-slide {
+          0%, 16% { opacity: 0; transform: translateY(-6px); }
+          22%, 90% { opacity: 1; transform: translateY(0); }
+          100% { opacity: 0; transform: translateY(-6px); }
+        }
+
+        /* Glossary tooltip — underline draws, popover opens */
+        .glossary-term {
+          position: relative;
+          display: inline;
+          background-image: linear-gradient(to right, var(--accent-purple), var(--accent-purple));
+          background-size: 0% 1.5px;
+          background-repeat: no-repeat;
+          background-position: 0 100%;
+          padding-bottom: 1px;
+        }
+        [data-rs-active="true"] .glossary-term {
+          animation: glossary-underline 7s var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
+        }
+        @keyframes glossary-underline {
+          0%, 28% { background-size: 0% 1.5px; }
+          32%, 90% { background-size: 100% 1.5px; }
+          100% { background-size: 0% 1.5px; }
+        }
+        .glossary-popover {
+          position: absolute;
+          top: -5.5rem;
+          left: 50%;
+          transform: translateX(-50%) scale(0.95);
+          width: 14rem;
+          background-color: var(--bg-card, #ffffff);
+          border: 1px solid var(--border-subtle);
+          border-radius: 0.375rem;
+          padding: 0.625rem 0.75rem;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+          font-family: 'Inter', sans-serif;
+          font-size: 0.75rem;
+          line-height: 1.4;
+          opacity: 0;
+          z-index: 5;
+        }
+        [data-rs-active="true"] .glossary-popover {
+          animation: glossary-pop 7s var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
+        }
+        @keyframes glossary-pop {
+          0%, 35% { opacity: 0; transform: translateX(-50%) scale(0.95); }
+          42%, 88% { opacity: 1; transform: translateX(-50%) scale(1); }
+          100% { opacity: 0; transform: translateX(-50%) scale(0.95); }
+        }
+        .glossary-popover-term { font-weight: 600; color: var(--text-primary); }
+        .glossary-popover-def { color: var(--text-secondary); margin-top: 0.25rem; }
+
+        /* Confusion counter — irregular climb driven by React state */
+        .confusion-flag {
+          position: absolute;
+          top: 0.25rem;
+          right: -2rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.125rem;
+          font-family: 'Inter', sans-serif;
+          opacity: 0;
+        }
+        [data-rs-active="true"] .confusion-flag {
+          animation: confusion-fade-in 7s var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
+        }
+        @keyframes confusion-fade-in {
+          0%, 38% { opacity: 0; }
+          42%, 92% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        .confusion-icon {
+          width: 0.875rem;
+          height: 0.875rem;
+          border-radius: 0.125rem;
+          background-color: rgba(var(--accent-red-rgb), 0.15);
+          border: 1px solid var(--accent-red);
+        }
+        .confusion-count {
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: var(--accent-red);
+          transition: transform 80ms var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1));
+        }
+        .confusion-count.bumped { transform: scale(1.25); }
+
+        /* Audio scrubber */
+        .audio-player {
+          margin-top: 0.75rem;
+          padding: 0.5rem 0.75rem;
+          background-color: var(--bg-page);
+          border-radius: 0.375rem;
+          display: flex;
+          align-items: center;
+          gap: 0.625rem;
+          font-family: 'Inter', sans-serif;
+          font-size: 0.75rem;
+          color: var(--text-secondary);
+        }
+        .audio-play {
+          width: 1.25rem;
+          height: 1.25rem;
+          border-radius: 50%;
+          background-color: var(--accent-purple);
+          color: var(--text-inverse);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.625rem;
+        }
+        .audio-track {
+          flex: 1;
+          height: 2px;
+          background-color: rgba(var(--accent-purple-rgb), 0.2);
+          border-radius: 1px;
+          overflow: hidden;
+        }
+        .audio-fill {
+          height: 100%;
+          background-color: var(--accent-purple);
+          width: 0;
+        }
+        [data-rs-active="true"] .audio-fill {
+          animation: audio-fill 7s linear infinite;
+        }
+        @keyframes audio-fill {
+          0%, 70% { width: 0; }
+          78% { width: 5%; }
+          88% { width: 35%; }
+          92% { width: 60%; }
+          100% { width: 60%; }
+        }
+
+        /* ── Group surface ──────────────────────────────────────── */
+        .group-mockup { max-width: 36rem; padding: 1.25rem; }
+        .group-thread-quote {
+          font-family: 'Lora', Georgia, serif;
+          font-style: italic;
+          color: var(--text-primary);
+          font-size: 0.875rem;
+          line-height: 1.5;
+          padding: 0.5rem 0.75rem;
+          border-left: 3px solid var(--accent-purple);
+          background-color: rgba(var(--accent-purple-rgb), 0.04);
+          border-radius: 0 0.25rem 0.25rem 0;
+          margin-bottom: 0.75rem;
+        }
+        .group-thread-title {
+          font-family: 'Lora', Georgia, serif;
+          font-style: italic;
+          color: var(--text-primary);
+          font-size: 1.125rem;
+          margin-bottom: 0.5rem;
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+        [data-gs-active="true"] .group-thread-title {
+          animation: group-title-in 7s var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
+        }
+        @keyframes group-title-in {
+          0%, 14% { opacity: 0; transform: translateY(-4px); }
+          22%, 95% { opacity: 1; transform: translateY(0); }
+          100% { opacity: 0; transform: translateY(-4px); }
+        }
+        .group-confusion-source {
+          opacity: 0;
+        }
+        [data-gs-active="true"] .group-confusion-source {
+          animation: group-source-fade 7s var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
+        }
+        @keyframes group-source-fade {
+          0%, 5% { opacity: 0; }
+          8%, 18% { opacity: 1; }
+          22%, 100% { opacity: 0; }
+        }
+        .group-reply {
+          padding: 0.625rem 0.75rem;
+          margin-top: 0.5rem;
+          font-family: 'Inter', sans-serif;
+          font-size: 0.8125rem;
+          line-height: 1.45;
+          color: var(--text-primary);
+          border-bottom: 1px solid var(--border-subtle);
+          position: relative;
+        }
+        .group-reply:last-child { border-bottom: none; }
+        .group-reply-meta {
+          font-size: 0.6875rem;
+          color: var(--text-secondary);
+          margin-bottom: 0.25rem;
+        }
+        /* Highlight-and-branch motion */
+        .group-reply-highlight {
+          background-color: rgba(var(--accent-red-rgb), 0);
+          padding: 0 2px;
+          border-radius: 2px;
+          transition: background-color 200ms;
+        }
+        [data-gs-active="true"] .group-reply-highlight {
+          animation: highlight-flash 7s var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
+        }
+        @keyframes highlight-flash {
+          0%, 50% { background-color: rgba(var(--accent-red-rgb), 0); }
+          55%, 78% { background-color: rgba(var(--accent-red-rgb), 0.18); }
+          85%, 100% { background-color: rgba(var(--accent-red-rgb), 0); }
+        }
+        .branch-affordance {
+          position: absolute;
+          font-size: 0.6875rem;
+          background-color: var(--bg-nav);
+          color: var(--text-inverse);
+          padding: 0.25rem 0.5rem;
+          border-radius: 0.25rem;
+          opacity: 0;
+          right: 0.5rem;
+          top: -1.5rem;
+          font-family: 'Inter', sans-serif;
+        }
+        [data-gs-active="true"] .branch-affordance {
+          animation: branch-aff 7s var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
+        }
+        @keyframes branch-aff {
+          0%, 58% { opacity: 0; transform: translateY(-2px); }
+          63%, 75% { opacity: 1; transform: translateY(0); }
+          80%, 100% { opacity: 0; transform: translateY(-2px); }
+        }
+        .child-thread {
+          position: absolute;
+          right: -10rem;
+          top: 1rem;
+          width: 9rem;
+          background-color: var(--bg-card, #ffffff);
+          border: 1px solid var(--border-subtle);
+          border-radius: 0.375rem;
+          padding: 0.5rem 0.625rem;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+          font-family: 'Inter', sans-serif;
+          font-size: 0.75rem;
+          opacity: 0;
+          transform: translateX(8px);
+        }
+        [data-gs-active="true"] .child-thread {
+          animation: child-slide 7s var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
+        }
+        @keyframes child-slide {
+          0%, 76% { opacity: 0; transform: translateX(8px); }
+          82%, 95% { opacity: 1; transform: translateX(0); }
+          100% { opacity: 0; transform: translateX(8px); }
+        }
+        .child-thread-lineage {
+          color: var(--text-secondary);
+          font-size: 0.625rem;
+          margin-bottom: 0.25rem;
+        }
+        .child-thread-title {
+          font-family: 'Lora', Georgia, serif;
+          font-style: italic;
+          font-size: 0.875rem;
+          color: var(--text-primary);
+        }
+
+        /* ── Personal surface ───────────────────────────────────── */
+        .personal-mockup { max-width: 32rem; padding: 1.25rem; }
+        .personal-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 0.75rem;
+        }
+        .personal-lock {
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+          font-family: 'Inter', sans-serif;
+          font-size: 0.6875rem;
+          color: var(--text-secondary);
+          padding: 0.125rem 0.5rem;
+          border-radius: 1rem;
+          background-color: var(--bg-page);
+          transition: box-shadow 400ms var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1));
+        }
+        [data-ps-active="true"] .personal-lock {
+          animation: lock-glow 7s var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
+        }
+        @keyframes lock-glow {
+          0%, 18% { box-shadow: 0 0 0 0 rgba(var(--accent-purple-rgb), 0); }
+          22%, 30% { box-shadow: 0 0 0 4px rgba(var(--accent-purple-rgb), 0.18); }
+          34%, 100% { box-shadow: 0 0 0 0 rgba(var(--accent-purple-rgb), 0); }
+        }
+        .personal-title-field {
+          font-family: 'Lora', Georgia, serif;
+          font-style: italic;
+          color: var(--text-primary);
+          font-size: 1rem;
+          padding: 0.375rem 0.5rem;
+          border-bottom: 1px solid var(--border-subtle);
+          min-height: 1.75rem;
+        }
+        .personal-body-field {
+          font-family: 'Inter', sans-serif;
+          font-size: 0.8125rem;
+          line-height: 1.5;
+          color: var(--text-primary);
+          padding: 0.625rem 0.5rem;
+          min-height: 4.5rem;
+          position: relative;
+        }
+        .personal-body-text {
+          opacity: 0;
+        }
+        [data-ps-active="true"] .personal-body-text {
+          animation: body-type 7s var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
+        }
+        @keyframes body-type {
+          0%, 5% { opacity: 0; }
+          12% { opacity: 0.3; }
+          16% { opacity: 0.6; }
+          20%, 95% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        .personal-autosave {
+          font-family: 'Inter', sans-serif;
+          font-size: 0.6875rem;
+          color: var(--text-secondary);
+          padding: 0.25rem 0.5rem;
+          opacity: 0.7;
+        }
+        .personal-highlight {
+          background-color: rgba(var(--accent-red-rgb), 0);
+          padding: 0 2px;
+          border-radius: 2px;
+        }
+        [data-ps-active="true"] .personal-highlight {
+          animation: personal-flash 7s var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
+        }
+        @keyframes personal-flash {
+          0%, 42% { background-color: rgba(var(--accent-red-rgb), 0); }
+          50%, 75% { background-color: rgba(var(--accent-red-rgb), 0.18); }
+          82%, 100% { background-color: rgba(var(--accent-red-rgb), 0); }
+        }
+        .personal-branch-affordance {
+          position: absolute;
+          font-size: 0.6875rem;
+          background-color: var(--bg-nav);
+          color: var(--text-inverse);
+          padding: 0.25rem 0.5rem;
+          border-radius: 0.25rem;
+          opacity: 0;
+          font-family: 'Inter', sans-serif;
+        }
+        [data-ps-active="true"] .personal-branch-affordance {
+          animation: personal-branch-aff 7s var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
+        }
+        @keyframes personal-branch-aff {
+          0%, 55% { opacity: 0; transform: translateY(-2px); }
+          60%, 75% { opacity: 1; transform: translateY(0); }
+          82%, 100% { opacity: 0; transform: translateY(-2px); }
+        }
+        .personal-thread-out {
+          position: absolute;
+          right: -10rem;
+          top: 0.5rem;
+          width: 9rem;
+          background-color: var(--bg-card, #ffffff);
+          border: 1px solid var(--border-subtle);
+          border-radius: 0.375rem;
+          padding: 0.5rem 0.625rem;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+          font-family: 'Inter', sans-serif;
+          font-size: 0.75rem;
+          opacity: 0;
+          transform: translateX(8px);
+        }
+        [data-ps-active="true"] .personal-thread-out {
+          animation: personal-thread-slide 7s var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
+        }
+        @keyframes personal-thread-slide {
+          0%, 78% { opacity: 0; transform: translateX(8px); }
+          85%, 95% { opacity: 1; transform: translateX(0); }
+          100% { opacity: 0; transform: translateX(8px); }
+        }
+
+        /* ── Dashboard surface ──────────────────────────────────── */
+        .dashboard-mockup { max-width: 44rem; padding: 1.25rem; }
+        .dashboard-greeting {
+          font-family: 'Lora', Georgia, serif;
+          font-style: italic;
+          color: var(--text-primary);
+          font-size: 1rem;
+          margin-bottom: 0.5rem;
+        }
+        .dashboard-orientation {
+          font-family: 'Inter', sans-serif;
+          font-size: 0.625rem;
+          font-weight: 600;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+          color: var(--text-secondary);
+          padding-bottom: 0.5rem;
+          margin-bottom: 0.75rem;
+          border-bottom: 1px solid var(--border-subtle);
+          opacity: 0;
+        }
+        [data-ds-active="true"] .dashboard-orientation {
+          animation: orientation-in 7s var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
+        }
+        @keyframes orientation-in {
+          0%, 5% { opacity: 0; }
+          12%, 95% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+
+        /* Rhythm strip — weekly cadence visualised */
+        .rhythm-strip {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+          margin-bottom: 0.875rem;
+          opacity: 0;
+        }
+        [data-ds-active="true"] .rhythm-strip {
+          animation: rhythm-in 7s var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
+        }
+        @keyframes rhythm-in {
+          0%, 12% { opacity: 0; }
+          18%, 95% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        .rhythm-eyebrow {
+          font-family: 'Inter', sans-serif;
+          font-size: 0.625rem;
+          font-weight: 600;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+          color: var(--text-secondary);
+        }
+        .rhythm-days {
+          display: grid;
+          grid-template-columns: repeat(7, 1fr);
+          gap: 0.25rem;
+        }
+        .rhythm-day {
+          font-family: 'Inter', sans-serif;
+          font-size: 0.625rem;
+          text-align: center;
+          padding: 0.25rem 0;
+          border-radius: 0.25rem;
+          background-color: var(--bg-page);
+          color: var(--text-secondary);
+          font-weight: 500;
+        }
+        .rhythm-day.active {
+          background-color: var(--accent-purple);
+          color: var(--text-inverse);
+        }
+
+        /* Magnitude bars */
+        .dashboard-attention {
+          margin-bottom: 1rem;
+        }
+        .dashboard-attention-label {
+          font-family: 'Inter', sans-serif;
+          font-size: 0.625rem;
+          font-weight: 600;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+          color: var(--text-secondary);
+          margin-bottom: 0.5rem;
+        }
+        .magnitude-row {
+          display: flex;
+          align-items: center;
+          gap: 0.625rem;
+          margin-bottom: 0.25rem;
+          font-family: 'Inter', sans-serif;
+          font-size: 0.75rem;
+          color: var(--text-primary);
+        }
+        .magnitude-count {
+          width: 1.5rem;
+          text-align: right;
+          font-weight: 600;
+        }
+        .magnitude-track {
+          flex: 1;
+          height: 6px;
+          background-color: rgba(var(--accent-purple-rgb), 0.12);
+          border-radius: 3px;
+          overflow: hidden;
+        }
+        .magnitude-bar {
+          height: 100%;
+          background-color: var(--accent-purple);
+          width: 0;
+          border-radius: inherit;
+        }
+        [data-ds-active="true"] .magnitude-bar {
+          animation-name: bar-fill;
+          animation-duration: 7s;
+          animation-iteration-count: infinite;
+          animation-timing-function: var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1));
+        }
+        /* Each bar has a different fill target via inline --target var
+           and a different start delay (animation-delay) — non-uniform
+           timing is the multi-actor read */
+        @keyframes bar-fill {
+          0%, 25% { width: 0; }
+          /* The bar fills from 25% of the loop, with delays applied per bar */
+          35% { width: var(--target, 100%); }
+          90% { width: var(--target, 100%); }
+          100% { width: 0; }
+        }
+        .magnitude-label {
+          flex: 2;
+          font-size: 0.6875rem;
+          color: var(--text-secondary);
+        }
+
+        /* Dashboard ambient — quote callout, threads, concepts */
+        .dashboard-ambient {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 0.75rem;
+        }
+        @media (min-width: 640px) {
+          .dashboard-ambient {
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+        .dashboard-quote {
+          font-family: 'Lora', Georgia, serif;
+          font-style: italic;
+          color: var(--text-primary);
+          font-size: 0.8125rem;
+          line-height: 1.5;
+          padding: 0.5rem 0.75rem;
+          border-left: 2px solid var(--accent-purple);
+        }
+        .dashboard-threads {
+          font-family: 'Inter', sans-serif;
           font-size: 0.75rem;
         }
-        @media (prefers-reduced-motion: reduce) {
-          .welcome-scroll {
-            scroll-snap-type: none;
+        .dashboard-thread-row {
+          padding: 0.375rem 0;
+          border-bottom: 1px solid var(--border-subtle);
+          display: flex;
+          align-items: baseline;
+          gap: 0.5rem;
+        }
+        .dashboard-thread-row:last-child { border-bottom: none; }
+        .dashboard-thread-title {
+          color: var(--text-primary);
+          flex: 1;
+        }
+        .dashboard-thread-time {
+          color: var(--text-secondary);
+          font-size: 0.6875rem;
+        }
+        .dashboard-concepts {
+          font-family: 'Inter', sans-serif;
+          font-size: 0.6875rem;
+          color: var(--text-secondary);
+        }
+        .dashboard-concept-eyebrow {
+          font-weight: 600;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+          margin-bottom: 0.5rem;
+        }
+        .dashboard-concept-row {
+          padding: 0.25rem 0;
+          color: var(--text-primary);
+        }
+
+        /* ── Label cycler (below mockup) ────────────────────────── */
+        .beat-label {
+          font-family: 'Inter', sans-serif;
+          font-size: 0.875rem;
+          color: var(--text-secondary);
+          font-weight: 500;
+          margin-top: 1.25rem;
+          text-align: center;
+          min-height: 1.5em;
+          transition: opacity 400ms var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1));
+        }
+        .beat-label.fading { opacity: 0; }
+
+        /* ── Mobile parity (≤640px) ─────────────────────────────── */
+        @media (max-width: 640px) {
+          /* Marginalia + reply cards reposition inline below their
+             paragraph rather than floating off the right edge. */
+          .marginalia-card,
+          .reply-card {
+            position: relative !important;
+            right: auto !important;
+            top: auto !important;
+            width: 100%;
+            margin-top: 0.5rem;
           }
+          .reply-card { top: auto !important; margin-top: 0.375rem; }
+
+          /* Confusion flag tucks above the paragraph rather than
+             extending off the right edge. */
+          .confusion-flag {
+            position: relative !important;
+            top: auto !important;
+            right: auto !important;
+            flex-direction: row !important;
+            justify-content: flex-end;
+            margin-bottom: 0.25rem;
+          }
+
+          /* Child-thread cards (Group + Personal) drop below the
+             reply / journal body rather than floating right. */
+          .child-thread,
+          .personal-thread-out {
+            position: relative !important;
+            right: auto !important;
+            top: auto !important;
+            width: 100% !important;
+            margin-top: 0.5rem;
+          }
+
+          /* Branch affordances tighten in. */
+          .branch-affordance,
+          .personal-branch-affordance {
+            right: 0 !important;
+          }
+
+          /* Dashboard ambient grid stays single-column on small. */
+          .dashboard-ambient { grid-template-columns: 1fr !important; }
+
+          /* Glossary popover tightens to the visible viewport. */
+          .glossary-popover { width: 12rem; }
+        }
+
+        /* ── Reduced-motion override ────────────────────────────── */
+        @media (prefers-reduced-motion: reduce) {
+          .welcome-scroll { scroll-snap-type: none; }
           .welcome-section,
           .welcome-section .welcome-visual {
             opacity: 1 !important;
             transform: none !important;
             transition: none !important;
           }
+          .opener-stagger > * { opacity: 1 !important; transform: none !important; transition: none !important; }
+          .marginalia-card,
+          .reply-card,
+          .glossary-popover,
+          .confusion-flag,
+          .group-thread-title,
+          .branch-affordance,
+          .child-thread,
+          .personal-thread-out,
+          .personal-branch-affordance,
+          .dashboard-orientation,
+          .rhythm-strip,
+          .group-confusion-source,
+          .personal-body-text { opacity: 1 !important; transform: none !important; animation: none !important; }
+          .glossary-term { background-size: 100% 1.5px !important; animation: none !important; }
+          .group-reply-highlight,
+          .personal-highlight { background-color: rgba(var(--accent-red-rgb), 0.18) !important; animation: none !important; }
+          .magnitude-bar { width: var(--target, 100%) !important; animation: none !important; }
+          .audio-fill { width: 35% !important; animation: none !important; }
+          .personal-lock { box-shadow: 0 0 0 4px rgba(var(--accent-purple-rgb), 0.18) !important; animation: none !important; }
         }
       `}</style>
 
-      {/* ── 1. WELCOME ──────────────────────────────────────────── */}
+      {/* ── 1. OPENER ─────────────────────────────────────────── */}
       <section
         ref={setRef(0)}
-        className="welcome-section relative"
+        className="welcome-section"
         aria-label="Welcome"
       >
         <div className="welcome-platform-tag">
@@ -197,9 +964,8 @@ export default function WelcomeScroll({
             Capital Study Group
           </span>
         </div>
-        <p className="welcome-section-marker text-eyebrow">01 / Welcome</p>
 
-        <div className="welcome-visual text-center max-w-2xl">
+        <div className="opener-stagger text-center max-w-2xl">
           <div
             aria-hidden="true"
             className="inline-flex items-center justify-center mb-8 rounded text-2xl font-bold"
@@ -218,468 +984,57 @@ export default function WelcomeScroll({
             className="text-display-lg mb-6"
             style={{ color: 'var(--text-primary)' }}
           >
-            Welcome to {groupName},
-            <span className="block">{heroName}.</span>
+            Welcome to
+            <span className="block">{groupName}, {heroName}.</span>
           </h1>
           <p
             className="text-base sm:text-lg max-w-xl mx-auto"
             style={{ color: 'var(--text-secondary)' }}
           >
             A small group reading Marx&rsquo;s Capital, Volume I together.
+            <span className="block">Slowly, carefully.</span>
           </p>
         </div>
       </section>
 
-      {/* ── 2. THE RHYTHM ───────────────────────────────────────── */}
-      <section
-        ref={setRef(1)}
-        className="welcome-section relative"
-        aria-label="The rhythm"
-      >
-        <p className="welcome-section-marker text-eyebrow">02 / The rhythm</p>
+      {/* ── 2. READING SURFACE ────────────────────────────────── */}
+      <ReadingSurface
+        sectionRef={setRef(1)}
+        active={readingVisible}
+        reduced={reduced}
+      />
 
-        <div className="welcome-visual w-full max-w-3xl">
-          <p className="text-eyebrow mb-4 text-center">How the week works</p>
-          <h2
-            className="text-display-md text-center mb-6"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            {sessionDayPlural
-              ? <>Read at your pace. Meet on {sessionDayPlural}.</>
-              : <>Read at your pace. Meet weekly.</>}
-          </h2>
-          <p
-            className="text-base sm:text-lg text-center max-w-2xl mx-auto mb-12"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            There&rsquo;s a chapter in front of the group. You read it on your own time, before the next meeting. We meet to work through it together. What&rsquo;s confusing, what&rsquo;s connecting, what the group is making of it.
-          </p>
+      {/* ── 3. GROUP SURFACE ──────────────────────────────────── */}
+      <GroupSurface
+        sectionRef={setRef(2)}
+        active={groupVisible}
+        reduced={reduced}
+      />
 
-          <div className="grid sm:grid-cols-2 gap-8 sm:gap-12 max-w-2xl mx-auto">
-            <div>
-              <p className="text-eyebrow mb-3">Your part</p>
-              <h3
-                className="text-lg font-semibold mb-3"
-                style={{
-                  color: 'var(--text-primary)',
-                  fontFamily: "'Lora', Georgia, serif",
-                  fontStyle: 'italic',
-                }}
-              >
-                Read the chapter when you can.
-              </h3>
-              <p
-                className="text-sm"
-                style={{ color: 'var(--text-secondary)' }}
-              >
-                Annotate what stops you. Flag what confuses you. Bring something. A question, a passage, a half-formed thought.
-              </p>
-            </div>
-            <div>
-              <p className="text-eyebrow mb-3">Our part</p>
-              <h3
-                className="text-lg font-semibold mb-3"
-                style={{
-                  color: 'var(--text-primary)',
-                  fontFamily: "'Lora', Georgia, serif",
-                  fontStyle: 'italic',
-                }}
-              >
-                Meet for an hour, every {sessionDayPlural ?? 'week'}.
-              </h3>
-              <p
-                className="text-sm"
-                style={{ color: 'var(--text-secondary)' }}
-              >
-                We work through whatever chapter we&rsquo;re on. When the group&rsquo;s ready, we move to the next.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ── 4. PERSONAL SURFACE ───────────────────────────────── */}
+      <PersonalSurface
+        sectionRef={setRef(3)}
+        active={personalVisible}
+        reduced={reduced}
+      />
 
-      {/* ── 3. READING TOGETHER ─────────────────────────────────── */}
-      <section
-        ref={setRef(2)}
-        className="welcome-section relative"
-        aria-label="Reading together"
-      >
-        <p className="welcome-section-marker text-eyebrow">03 / Reading together</p>
+      {/* ── 5. DASHBOARD SURFACE ──────────────────────────────── */}
+      <DashboardSurface
+        sectionRef={setRef(4)}
+        active={dashboardVisible}
+        reduced={reduced}
+        sessionDayPlural={sessionDayPlural}
+        groupName={groupName}
+        heroName={heroName}
+      />
 
-        <div className="welcome-visual w-full max-w-3xl text-center">
-          <p className="text-eyebrow mb-4">In the chapter view</p>
-          <h2
-            className="text-display-md mb-6"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            The platform helps you track what&rsquo;s confusing and what&rsquo;s worth discussing.
-          </h2>
-          <p
-            className="text-base max-w-2xl mx-auto mb-2"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            Underlined terms have glossary entries. Tap for a definition, click through for the full entry. The glossary builds across the year as the group works through new concepts.
-          </p>
-          <p className="text-eyebrow mt-8 mb-3">Example</p>
-          <div className="welcome-mockup text-left">
-            <p className="text-eyebrow mb-3">Capital · Chapter 1, §1 · Commodities</p>
-            <p
-              className="mb-4"
-              style={{
-                fontFamily: "'Lora', Georgia, serif",
-                color: 'var(--text-primary)',
-                lineHeight: 1.7,
-              }}
-            >
-              The wealth of those societies in which the capitalist mode of production prevails, presents itself as &ldquo;an immense accumulation of{' '}
-              <span
-                style={{
-                  borderBottom: '2px dotted var(--accent-purple)',
-                  cursor: 'help',
-                }}
-              >
-                commodities
-              </span>
-              ,&rdquo; its unit being a single commodity. Our investigation must therefore begin with the analysis of a commodity.
-            </p>
-            <div
-              className="rounded p-3 text-sm mt-4"
-              style={{
-                backgroundColor: 'rgba(var(--accent-purple-rgb, 92, 61, 143), 0.06)',
-                borderLeft: '3px solid var(--accent-purple)',
-              }}
-            >
-              <p className="text-eyebrow mb-1">Glossary</p>
-              <p
-                className="font-semibold mb-1"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                commodity
-              </p>
-              <p style={{ color: 'var(--text-secondary)' }}>
-                An external object, a thing whose properties satisfy human wants of some sort. For Marx, the elementary form in which capitalist wealth presents itself.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 3.II. CONFUSION FLAGS ───────────────────────────────── */}
-      <section
-        ref={setRef(3)}
-        className="welcome-section relative"
-        aria-label="Confusion flags"
-      >
-        <p className="welcome-section-marker text-eyebrow">03 · II / Confusion flags</p>
-
-        <div className="welcome-visual w-full max-w-3xl text-center">
-          <p className="text-eyebrow mb-4">Stuck, without performance</p>
-          <h2
-            className="text-display-md mb-6"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            &ldquo;I&rsquo;m also stuck here&rdquo; without anyone seeing it was you.
-          </h2>
-          <p
-            className="text-base max-w-2xl mx-auto mb-2"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            When a paragraph confuses you, you can flag it. Flags are anonymous. Nobody sees who flagged what, only how many. The host uses flags to know what to make space for in the session.
-          </p>
-          <p className="text-eyebrow mt-8 mb-3">Example</p>
-          <div className="welcome-mockup text-left">
-            <p
-              className="mb-4 text-sm"
-              style={{
-                fontFamily: "'Lora', Georgia, serif",
-                color: 'var(--text-primary)',
-                lineHeight: 1.7,
-              }}
-            >
-              It is value, rather, that converts every product into a social hieroglyphic. Later on, we try to decipher the hieroglyphic, to get behind the secret of our own social products.
-            </p>
-            <div
-              className="rounded p-3 mt-3"
-              style={{
-                backgroundColor: 'rgba(var(--accent-red-rgb, 163, 21, 69), 0.04)',
-                borderLeft: '3px solid var(--accent-red)',
-              }}
-            >
-              <p className="text-eyebrow mb-2">This passage is confusing</p>
-              <p
-                className="text-sm font-semibold mb-1"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                7 people have flagged this paragraph.
-              </p>
-              <p
-                className="text-xs"
-                style={{ color: 'var(--text-secondary)' }}
-              >
-                Flags are anonymous. Nobody sees who flagged what, only how many.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 4. ANNOTATIONS ──────────────────────────────────────── */}
-      <section
-        ref={setRef(4)}
-        className="welcome-section relative"
-        aria-label="Annotations"
-      >
-        <p className="welcome-section-marker text-eyebrow">04 / Annotations</p>
-
-        <div className="welcome-visual w-full max-w-3xl text-center">
-          <p className="text-eyebrow mb-4">Your thinking, when you&rsquo;re ready</p>
-          <h2
-            className="text-display-md mb-6"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            Annotations are private when you write them. Shared when you choose.
-          </h2>
-          <p
-            className="text-base max-w-2xl mx-auto mb-2"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            Annotations are how you talk about specific passages. Half-formed thoughts, questions, things to bring up at the next meeting. Your draft thinking is yours. Only what you choose to publish is visible to others.
-          </p>
-          <p className="text-eyebrow mt-8 mb-3">Example</p>
-          <div className="welcome-mockup text-left">
-            <p className="text-eyebrow mb-2">Annotation · sit with this</p>
-            <blockquote
-              className="text-sm italic mb-3 pl-3"
-              style={{
-                color: 'var(--text-primary)',
-                fontFamily: "'Lora', Georgia, serif",
-                borderLeft: '2px solid var(--accent-purple)',
-              }}
-            >
-              &ldquo;Use-values become a reality only by use or consumption: they also constitute the substance of all wealth, whatever may be the social form of that wealth.&rdquo;
-            </blockquote>
-            <p
-              className="text-sm mb-3"
-              style={{ color: 'var(--text-primary)' }}
-            >
-              I keep coming back to this. The double character feels obvious in the abstract but I&rsquo;m not sure I&rsquo;d recognise it if I saw it in a real exchange.
-            </p>
-            <div
-              className="text-xs flex items-center justify-between pt-3"
-              style={{
-                borderTop: '1px solid var(--border-subtle)',
-                color: 'var(--text-secondary)',
-              }}
-            >
-              <span>Share with the group</span>
-              <span>On</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 5. THE DASHBOARD ────────────────────────────────────── */}
+      {/* ── 6. CTA ────────────────────────────────────────────── */}
       <section
         ref={setRef(5)}
-        className="welcome-section relative"
-        aria-label="The dashboard"
-      >
-        <p className="welcome-section-marker text-eyebrow">05 / The dashboard</p>
-
-        <div className="welcome-visual w-full max-w-4xl text-center">
-          <p className="text-eyebrow mb-4">Where the group&rsquo;s thinking gathers</p>
-          <h2
-            className="text-display-md mb-6"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            The dashboard collects what the group is working through.
-          </h2>
-          <p
-            className="text-base max-w-2xl mx-auto mb-2"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            What the group is thinking about. Where attention is concentrated this week. What conversations are unfolding. Where people are stuck. Not a metric dashboard. No scores, no rankings. Just the shape of what&rsquo;s being worked through.
-          </p>
-          <p className="text-eyebrow mt-8 mb-3">Example</p>
-
-          {/* Dashboard mockup — dual-counter format per Brief 1
-              investigation lean. Updated from mum's PDF "Week 4 of 32"
-              to the recurring-mode shape that real members will see. */}
-          <div className="welcome-mockup welcome-dashboard-mockup text-left">
-            <div className="flex items-baseline justify-between mb-2">
-              <p
-                style={{
-                  fontFamily: "'Lora', Georgia, serif",
-                  fontStyle: 'italic',
-                  color: 'var(--text-primary)',
-                  fontSize: '1.125rem',
-                }}
-              >
-                Good evening, {heroName}
-              </p>
-              <span
-                className="text-eyebrow"
-                style={{ fontSize: '0.625rem' }}
-              >
-                {groupName}
-              </span>
-            </div>
-            <p
-              className="text-eyebrow mb-4"
-              style={{ fontSize: '0.625rem' }}
-            >
-              Week 12 &middot; Week 3 on Chapter 1, §4 &middot; 38 annotations &middot; 6 active threads &middot; Next session Tuesday 7pm
-            </p>
-
-            <div
-              className="pt-3 mb-4"
-              style={{ borderTop: '1px solid var(--border-subtle)' }}
-            >
-              <p className="text-eyebrow mb-3">Where the group&rsquo;s attention is</p>
-              <div className="space-y-1">
-                {[
-                  { count: 14, label: '§1 The Two Factors of a Commodity', tag: '+2 today' },
-                  { count: 11, label: '§4 The Fetishism of Commodities', tag: '+1 today' },
-                  { count: 6, label: '§2 The Two-fold Character of Labour', tag: null },
-                  { count: 3, label: '§3 The Form of Value', tag: null },
-                ].map(row => (
-                  <div key={row.label} className="flex items-center gap-3">
-                    <span
-                      className="font-semibold"
-                      style={{
-                        color: 'var(--text-primary)',
-                        minWidth: '2rem',
-                        textAlign: 'right',
-                      }}
-                    >
-                      {row.count}
-                    </span>
-                    <div
-                      className="flex-1 rounded-sm"
-                      style={{
-                        height: '6px',
-                        backgroundColor: 'rgba(var(--accent-purple-rgb, 92, 61, 143), 0.2)',
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: `${(row.count / 14) * 100}%`,
-                          height: '100%',
-                          backgroundColor: 'var(--accent-purple)',
-                          borderRadius: 'inherit',
-                        }}
-                      />
-                    </div>
-                    <span
-                      className="text-xs"
-                      style={{ color: 'var(--text-secondary)' }}
-                    >
-                      {row.label}
-                    </span>
-                    {row.tag && (
-                      <span
-                        className="text-xs"
-                        style={{ color: 'var(--accent-red)' }}
-                      >
-                        {row.tag}
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div
-              className="pt-3"
-              style={{ borderTop: '1px solid var(--border-subtle)' }}
-            >
-              <p className="text-eyebrow mb-2">The group is thinking about this week</p>
-              <blockquote
-                className="text-sm italic pl-3"
-                style={{
-                  fontFamily: "'Lora', Georgia, serif",
-                  color: 'var(--text-primary)',
-                  borderLeft: '2px solid var(--accent-purple)',
-                }}
-              >
-                &ldquo;A commodity appears, at first sight, a very trivial thing, and easily understood. Its analysis shows that it is, in reality, a very queer thing.&rdquo;
-              </blockquote>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 6. MORE TO EXPLORE ─────────────────────────────────── */}
-      <section
-        ref={setRef(6)}
-        className="welcome-section relative"
-        aria-label="More to explore"
-      >
-        <p className="welcome-section-marker text-eyebrow">06 / More to explore</p>
-
-        <div className="welcome-visual w-full max-w-2xl text-center">
-          <p className="text-eyebrow mb-4">The rest, briefly</p>
-          <h2
-            className="text-display-md mb-8"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            Other parts of the platform you&rsquo;ll find as you go.
-          </h2>
-          <p
-            className="text-base mb-4"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            The glossary collects every concept the group has worked through. The journal is your private space for longer thinking. Autosaved, only visible to you. The schedule shows when you&rsquo;ll meet next, and where the group is in the reading. Threads are where conversations continue beyond the chapter view. Resources hold the secondary readings the host references during sessions.
-          </p>
-          <p
-            className="text-base"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            You&rsquo;ll find the rest as you go. The platform shows you what&rsquo;s relevant when you arrive.
-          </p>
-        </div>
-      </section>
-
-      {/* ── 7. WHAT THIS ISN'T ──────────────────────────────────── */}
-      <section
-        ref={setRef(7)}
-        className="welcome-section relative"
-        aria-label="What this isn't"
-      >
-        <p className="welcome-section-marker text-eyebrow">07 / What this isn&rsquo;t</p>
-
-        <div className="welcome-visual w-full max-w-2xl text-center">
-          <p className="text-eyebrow mb-4">A platform built to be quiet</p>
-          <h2
-            className="text-display-md mb-8"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            No streaks. No notifications. No leaderboards.
-          </h2>
-          <div
-            className="space-y-4 text-base"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            <p>
-              Nothing is pushing you to read. The chapter is there when you sit down with it.
-            </p>
-            <p>
-              No reward for finishing chapters. No public count of your contributions. No notifications nagging you between sessions. The session itself is the deadline.
-            </p>
-            <p>
-              The platform doesn&rsquo;t measure you. It measures whether the reading is happening, together, and stays out of the way.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 8. READY ───────────────────────────────────────────── */}
-      <section
-        ref={setRef(8)}
-        className="welcome-section relative"
+        className="welcome-section"
         aria-label="Ready"
       >
-        <p className="welcome-section-marker text-eyebrow">08 / Ready</p>
+        <p className="welcome-section-marker text-eyebrow">06 / Ready</p>
 
         <div className="welcome-visual text-center max-w-xl">
           <div
@@ -700,15 +1055,9 @@ export default function WelcomeScroll({
             className="text-display-lg mb-6"
             style={{ color: 'var(--text-primary)' }}
           >
-            {sessionDayPlural ? <>Meet {sessionDayPlural.replace(/s$/, '')}.</> : <>Meet weekly.</>}
-            <span className="block">About 30 pages first.</span>
+            Read at your pace.
+            <span className="block">Bring what you&rsquo;ve got to the next session.</span>
           </h2>
-          <p
-            className="text-base sm:text-lg mb-10 max-w-md mx-auto"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            Read the chapter before the next meeting. Bring what you&rsquo;ve got. Even half-formed is something to work with.
-          </p>
 
           <form action={completeOnboarding}>
             <button
@@ -721,5 +1070,481 @@ export default function WelcomeScroll({
         </div>
       </section>
     </main>
+  )
+}
+
+/* ─────────────────────────────────────────────────────────────────
+ * Sub-components per surface — each manages its own beat-label cycle.
+ * Mockup motion is driven by the [data-XX-active="true"] attribute
+ * on a wrapper, so all CSS keyframes run as one synchronised loop.
+ * Beat labels are React-state-cycled to read in turn underneath.
+ * ───────────────────────────────────────────────────────────────── */
+
+interface SurfaceProps {
+  sectionRef: (el: HTMLElement | null) => void
+  active: boolean
+  reduced: boolean
+}
+
+function ReadingSurface({ sectionRef, active, reduced }: SurfaceProps) {
+  // 5 beats over a 7s loop:
+  //   0.0s marginalia
+  //   1.0s replies
+  //   2.0s glossary
+  //   2.8s confusion (irregular climb to 7 across ~3s — see below)
+  //   5.0s audio
+  // Confusion-counter timing: hand-tuned non-uniform arrivals drive
+  // the multi-actor read. Pattern reflects a real social dynamic —
+  // first noticer (250ms), sympathetic chime-ins (350/500ms close
+  // together), considered pause (jump to 1200ms), small flurry
+  // (1200/1400ms), pause, gradual final additions (2200/2900ms).
+  const beats: Array<{ at: number; label: string }> = [
+    { at: 800, label: 'Marginalia' },
+    { at: 1900, label: 'Replies tuck under' },
+    { at: 2700, label: 'Glossary, in line' },
+    { at: 3300, label: 'Confusion, anonymous' },
+    { at: 5500, label: 'Listen along' },
+  ]
+  // Confusion counter — irregular increments
+  const confusionArrivals = [250, 350, 500, 1200, 1400, 2200, 2900]
+  const [count, setCount] = useState(0)
+  const [bumped, setBumped] = useState(false)
+  const [labelIdx, setLabelIdx] = useState(0)
+
+  useEffect(() => {
+    if (!active || reduced) {
+      if (reduced) {
+        setCount(7)
+        setLabelIdx(0)
+      }
+      return
+    }
+    const timeouts: ReturnType<typeof setTimeout>[] = []
+
+    const runCycle = () => {
+      setCount(0)
+      setLabelIdx(0)
+      // Confusion start offset (matches CSS keyframe 38% → 42%, ~2.94s)
+      const confusionStart = 2940
+      confusionArrivals.forEach((delay, i) => {
+        const t = setTimeout(() => {
+          setCount(i + 1)
+          setBumped(true)
+          const tb = setTimeout(() => setBumped(false), 80)
+          timeouts.push(tb)
+        }, confusionStart + delay)
+        timeouts.push(t)
+      })
+      // Cycle labels
+      beats.forEach((b, i) => {
+        const t = setTimeout(() => setLabelIdx(i), b.at)
+        timeouts.push(t)
+      })
+      // Restart at end of 7s loop
+      const restart = setTimeout(runCycle, 7000)
+      timeouts.push(restart)
+    }
+
+    runCycle()
+    return () => timeouts.forEach(clearTimeout)
+  }, [active, reduced])
+
+  return (
+    <section
+      ref={sectionRef}
+      className="welcome-section"
+      data-surface="reading"
+      aria-label="Reading"
+    >
+      <p className="welcome-section-marker text-eyebrow">02 / Reading</p>
+
+      <div className="welcome-visual" data-rs-active={active && !reduced ? 'true' : 'false'}>
+        <div className="welcome-mockup reading-mockup mx-auto" style={{ position: 'relative' }}>
+          <p className="mockup-example-tag text-eyebrow" style={{ fontSize: '0.5625rem' }}>Example</p>
+          <p className="reading-eyebrow text-eyebrow" style={{ fontSize: '0.625rem', marginBottom: '0.5rem' }}>Capital · Chapter 1, §1 · Commodities</p>
+
+          <div className="reading-body" style={{ position: 'relative' }}>
+            {/* Para 1 — gets marginalia + reply */}
+            <div className="reading-paragraph">
+              <p>
+                The wealth of those societies in which the capitalist mode of production prevails, presents itself as &ldquo;an immense accumulation of commodities,&rdquo; its unit being a single commodity.
+              </p>
+              <div className="marginalia-card" aria-hidden="true">
+                <div className="marginalia-name">Liz</div>
+                <div className="marginalia-body">I keep coming back to this opening.</div>
+              </div>
+              <div className="reply-card" aria-hidden="true">
+                <div className="marginalia-name">Daniel</div>
+                <div className="marginalia-body">Same — the &lsquo;immense&rsquo; is doing work.</div>
+              </div>
+            </div>
+
+            {/* Para 2 — gets glossary tooltip on "commodity" */}
+            <div className="reading-paragraph">
+              <p>
+                Our investigation must therefore begin with the analysis of a{' '}
+                <span className="glossary-term">
+                  commodity
+                  <span className="glossary-popover" aria-hidden="true">
+                    <span className="glossary-popover-term">commodity</span>
+                    <span className="glossary-popover-def">
+                      An external object whose properties satisfy human wants of some sort.
+                    </span>
+                  </span>
+                </span>
+                .
+              </p>
+            </div>
+
+            {/* Para 3 — gets confusion flag */}
+            <div className="reading-paragraph">
+              <p>
+                Every useful thing, as iron, paper, etc., may be looked at from the two points of view of quality and quantity. Every such thing is a whole composed of many properties.
+              </p>
+              <div className="confusion-flag" aria-hidden="true">
+                <span className="confusion-icon" />
+                <span className={`confusion-count${bumped ? ' bumped' : ''}`}>{count}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="audio-player" aria-hidden="true">
+            <span className="audio-play">▶</span>
+            <span className="audio-track">
+              <span className="audio-fill" />
+            </span>
+            <span>Listen along</span>
+          </div>
+        </div>
+
+        <p className="beat-label">
+          {beats[labelIdx]?.label}
+        </p>
+      </div>
+    </section>
+  )
+}
+
+function GroupSurface({ sectionRef, active, reduced }: SurfaceProps) {
+  const beats = [
+    { at: 0, label: 'Confusion becomes agenda' },
+    { at: 4200, label: 'Branch when it deserves space' },
+    { at: 5800, label: 'Lineage stays visible' },
+  ]
+  const [labelIdx, setLabelIdx] = useState(0)
+
+  useEffect(() => {
+    if (!active || reduced) {
+      setLabelIdx(reduced ? 0 : 0)
+      return
+    }
+    const timeouts: ReturnType<typeof setTimeout>[] = []
+
+    const runCycle = () => {
+      setLabelIdx(0)
+      beats.forEach((b, i) => {
+        const t = setTimeout(() => setLabelIdx(i), b.at)
+        timeouts.push(t)
+      })
+      const restart = setTimeout(runCycle, 7000)
+      timeouts.push(restart)
+    }
+
+    runCycle()
+    return () => timeouts.forEach(clearTimeout)
+  }, [active, reduced])
+
+  return (
+    <section
+      ref={sectionRef}
+      className="welcome-section"
+      data-surface="group"
+      aria-label="Group"
+    >
+      <p className="welcome-section-marker text-eyebrow">03 / Group</p>
+
+      <div className="welcome-visual" data-gs-active={active && !reduced ? 'true' : 'false'}>
+        <div className="welcome-mockup group-mockup mx-auto" style={{ position: 'relative' }}>
+          <p className="mockup-example-tag text-eyebrow" style={{ fontSize: '0.5625rem' }}>Example</p>
+
+          {/* The "promote" motion: the source paragraph + count fade
+              briefly at the start, then the thread title arrives. */}
+          <div className="group-confusion-source" aria-hidden="true" style={{
+            fontFamily: "'Lora', Georgia, serif",
+            fontSize: '0.8125rem',
+            color: 'var(--text-secondary)',
+            marginBottom: '0.5rem',
+            display: 'flex',
+            alignItems: 'baseline',
+            gap: '0.5rem',
+          }}>
+            <span style={{ color: 'var(--accent-red)', fontWeight: 600 }}>7</span>
+            <span style={{ fontStyle: 'italic' }}>flagged in §1</span>
+          </div>
+
+          <p className="text-eyebrow" style={{ fontSize: '0.5625rem', marginBottom: '0.25rem' }}>Discussion</p>
+          <h3 className="group-thread-title">What&rsquo;s confusing in §1?</h3>
+
+          <div className="group-thread-quote">
+            &ldquo;Every useful thing, as iron, paper, etc., may be looked at from the two points of view of quality and quantity.&rdquo;
+          </div>
+
+          <div className="group-reply">
+            <div className="group-reply-meta">Pita · 2h</div>
+            The two-points-of-view bit is what landed for me. It feels like he&rsquo;s asking us to hold both at once.
+          </div>
+          <div className="group-reply" style={{ position: 'relative' }}>
+            <div className="group-reply-meta">Eli · 1h</div>
+            But quality and quantity here aren&rsquo;t parallel. The{' '}
+            <span className="group-reply-highlight">quantity is what becomes value, the quality only matters for whether it&rsquo;s wanted at all</span>
+            .
+            <span className="branch-affordance">↗ Branch this</span>
+            <div className="child-thread" aria-hidden="true">
+              <div className="child-thread-lineage">← Branched from &lsquo;§1&rsquo;</div>
+              <div className="child-thread-title">Quality vs quantity here</div>
+            </div>
+          </div>
+        </div>
+
+        <p className="beat-label">
+          {beats[labelIdx]?.label}
+        </p>
+      </div>
+    </section>
+  )
+}
+
+function PersonalSurface({ sectionRef, active, reduced }: SurfaceProps) {
+  const beats = [
+    { at: 0, label: 'Private journal' },
+    { at: 2100, label: 'Private by default' },
+    { at: 4500, label: 'The same move, made public' },
+  ]
+  const [labelIdx, setLabelIdx] = useState(0)
+
+  useEffect(() => {
+    if (!active || reduced) {
+      setLabelIdx(reduced ? 0 : 0)
+      return
+    }
+    const timeouts: ReturnType<typeof setTimeout>[] = []
+
+    const runCycle = () => {
+      setLabelIdx(0)
+      beats.forEach((b, i) => {
+        const t = setTimeout(() => setLabelIdx(i), b.at)
+        timeouts.push(t)
+      })
+      const restart = setTimeout(runCycle, 7000)
+      timeouts.push(restart)
+    }
+
+    runCycle()
+    return () => timeouts.forEach(clearTimeout)
+  }, [active, reduced])
+
+  return (
+    <section
+      ref={sectionRef}
+      className="welcome-section"
+      data-surface="personal"
+      aria-label="Personal"
+    >
+      <p className="welcome-section-marker text-eyebrow">04 / Personal</p>
+
+      <div className="welcome-visual" data-ps-active={active && !reduced ? 'true' : 'false'}>
+        <div className="welcome-mockup personal-mockup mx-auto" style={{ position: 'relative' }}>
+          <p className="mockup-example-tag text-eyebrow" style={{ fontSize: '0.5625rem' }}>Example</p>
+
+          <div className="personal-header">
+            <p className="text-eyebrow" style={{ fontSize: '0.5625rem' }}>Journal</p>
+            <span className="personal-lock">🔒 Only you</span>
+          </div>
+
+          <div className="personal-title-field">
+            Reading the value-form section.
+          </div>
+
+          <div className="personal-body-field" style={{ position: 'relative' }}>
+            <span className="personal-body-text">
+              I keep getting tangled in the relative form. Marx says it&rsquo;s the linen that expresses its value in coats, but my brain keeps flipping which is which.{' '}
+              <span className="personal-highlight">The relative form makes the value visible only by being measured against something else</span>
+              {' '}— that&rsquo;s the move I think.
+            </span>
+            <span className="personal-branch-affordance" style={{ right: '1rem', top: '-1.5rem' }}>↗ Branch this</span>
+            <div className="personal-thread-out" aria-hidden="true">
+              <div className="child-thread-lineage">← From your journal</div>
+              <div className="child-thread-title">Relative form, made visible</div>
+            </div>
+          </div>
+
+          <div className="personal-autosave">Saved just now</div>
+        </div>
+
+        <p className="beat-label">
+          {beats[labelIdx]?.label}
+        </p>
+      </div>
+    </section>
+  )
+}
+
+interface DashboardProps extends SurfaceProps {
+  sessionDayPlural: string | null
+  groupName: string
+  heroName: string
+}
+
+function DashboardSurface({
+  sectionRef,
+  active,
+  reduced,
+  sessionDayPlural,
+  groupName,
+  heroName,
+}: DashboardProps) {
+  const beats = [
+    { at: 0, label: 'Where we are' },
+    { at: 2100, label: 'Where the group\u2019s attention is' },
+  ]
+  const [labelIdx, setLabelIdx] = useState(0)
+
+  useEffect(() => {
+    if (!active || reduced) {
+      setLabelIdx(reduced ? 0 : 0)
+      return
+    }
+    const timeouts: ReturnType<typeof setTimeout>[] = []
+
+    const runCycle = () => {
+      setLabelIdx(0)
+      beats.forEach((b, i) => {
+        const t = setTimeout(() => setLabelIdx(i), b.at)
+        timeouts.push(t)
+      })
+      const restart = setTimeout(runCycle, 7000)
+      timeouts.push(restart)
+    }
+
+    runCycle()
+    return () => timeouts.forEach(clearTimeout)
+  }, [active, reduced])
+
+  // Match the live SystemStatusStrip format. When sessionDayPlural is
+  // null, drop the "Next session" piece and let the rhythm strip carry
+  // the cadence with a generic frame.
+  const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+  // sessionDayPlural like "Tuesdays" → "T" at index 1. Monday is 1 in
+  // ISO; we render M-Sun so map: Mon=0, Tue=1, Wed=2, Thu=3, Fri=4, Sat=5, Sun=6.
+  const dayMap: Record<string, number> = {
+    Monday: 0, Tuesday: 1, Wednesday: 2, Thursday: 3, Friday: 4, Saturday: 5, Sunday: 6,
+  }
+  const activeDayIdx = sessionDayPlural
+    ? dayMap[sessionDayPlural.replace(/s$/, '')] ?? 1
+    : null
+
+  return (
+    <section
+      ref={sectionRef}
+      className="welcome-section"
+      data-surface="dashboard"
+      aria-label="Dashboard"
+    >
+      <p className="welcome-section-marker text-eyebrow">05 / Dashboard</p>
+
+      <div className="welcome-visual" data-ds-active={active && !reduced ? 'true' : 'false'}>
+        <div className="welcome-mockup dashboard-mockup mx-auto" style={{ position: 'relative' }}>
+          <p className="mockup-example-tag text-eyebrow" style={{ fontSize: '0.5625rem' }}>Example</p>
+
+          <p className="dashboard-greeting">Good evening, {heroName}</p>
+          <p className="dashboard-orientation">
+            {groupName} &middot; Week 12 &middot; Week 3 on Chapter 1, §4
+            {sessionDayPlural ? ` · Next session ${sessionDayPlural.replace(/s$/, '')} 7pm` : ''}
+          </p>
+
+          {/* Rhythm strip — weekly cadence visualised */}
+          <div className="rhythm-strip">
+            <p className="rhythm-eyebrow">We meet weekly</p>
+            <div className="rhythm-days">
+              {dayLabels.map((d, i) => (
+                <span
+                  key={`${d}-${i}`}
+                  className={`rhythm-day${activeDayIdx === i ? ' active' : ''}`}
+                >
+                  {d}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Magnitude bars — irregular fill timing per bar. The
+              non-uniform animation-delays produce the multi-actor
+              read. Each bar's --target inline width is the percentage
+              fill. */}
+          <div className="dashboard-attention">
+            <p className="dashboard-attention-label">Where the group&rsquo;s attention is</p>
+            {[
+              { count: 14, label: '§1 The Two Factors of a Commodity', target: '100%', delay: '2.1s' },
+              { count: 11, label: '§4 The Fetishism of Commodities', target: '78%', delay: '2.4s' },
+              { count: 6, label: '§2 The Two-fold Character of Labour', target: '42%', delay: '2.8s' },
+              { count: 3, label: '§3 The Form of Value', target: '21%', delay: '3.3s' },
+              { count: 2, label: '§5 Exchange', target: '14%', delay: '2.6s' },
+              { count: 0, label: '§6 The Money Form', target: '0%', delay: '0s' },
+            ].map(row => (
+              <div key={row.label} className="magnitude-row">
+                <span className="magnitude-count">{row.count}</span>
+                <span className="magnitude-track">
+                  <span
+                    className="magnitude-bar"
+                    style={{
+                      ['--target' as string]: row.target,
+                      animationDelay: row.delay,
+                    } as React.CSSProperties}
+                  />
+                </span>
+                <span className="magnitude-label">{row.label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Ambient — quote callout, recent threads, concept scaffolding.
+              These appear in the dashboard mockup but are not labelled
+              with their own motion beats. Calm-technology absences held
+              in framing: no streak counter, no notification badge,
+              no progress percentages. */}
+          <div className="dashboard-ambient">
+            <div className="dashboard-quote">
+              &ldquo;A commodity appears, at first sight, a very trivial thing, and easily understood.&rdquo;
+            </div>
+            <div className="dashboard-threads">
+              <p className="dashboard-attention-label">Recent threads</p>
+              <div className="dashboard-thread-row">
+                <span className="dashboard-thread-title">What&rsquo;s confusing in §1?</span>
+                <span className="dashboard-thread-time">2h</span>
+              </div>
+              <div className="dashboard-thread-row">
+                <span className="dashboard-thread-title">Quality vs quantity here</span>
+                <span className="dashboard-thread-time">1h</span>
+              </div>
+              <div className="dashboard-thread-row">
+                <span className="dashboard-thread-title">The labour-time equation</span>
+                <span className="dashboard-thread-time">5h</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="dashboard-concepts" style={{ marginTop: '0.875rem' }}>
+            <p className="dashboard-concept-eyebrow">Concepts this week</p>
+            <div className="dashboard-concept-row">use-value &middot; the qualitative side</div>
+            <div className="dashboard-concept-row">exchange-value &middot; the quantitative side</div>
+            <div className="dashboard-concept-row">abstract labour &middot; labour stripped of its particular form</div>
+          </div>
+        </div>
+
+        <p className="beat-label">
+          {beats[labelIdx]?.label}
+        </p>
+      </div>
+    </section>
   )
 }
