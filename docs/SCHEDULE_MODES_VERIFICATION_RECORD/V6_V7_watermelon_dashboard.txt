@@ -1,0 +1,67 @@
+V6a + V7 — Watermelon dashboard (orientation absent, honest empty states)
+==========================================================================
+
+Run: 29 April 2026 (NZ) by Mars driving Cowork via Chrome MCP.
+Logged in: Mars.
+URL: /dashboard (no override; resolver lands on Watermelon — Mars's
+stored current_group_id).
+
+
+V6a — Orientation absent (pre-seed)
+------------------------------------
+Greeting: "Good evening, Marco"
+Group eyebrow: "Watermelon"
+
+Orientation line: ABSENT.
+- `hasOrientation: false`
+- No "Week N · Week M on Chapter X, §Y" string in main content
+- Composer in dashboard/page.tsx correctly returns null when
+  group.startedAt OR group.currentChapterId is NULL.
+- DashboardHeader renders only the greeting + group-name eyebrow,
+  skipping the orientation line entirely.
+
+PASS — pre-seed empty state respects "no fabricated structure for
+groups that haven't started" rule.
+
+
+V7 — Honest empty states on widgets when no current chapter
+-------------------------------------------------------------
+All three target widgets render their honest empty states:
+
+  ConceptsThisChapterWidget:
+    "No new concepts introduced in this chapter yet."
+    (renamed from ConceptsThisWeekWidget per item 2; copy "this
+     chapter" not "this week"; query filters by
+     first_appearance_chapter — empty list because Watermelon has
+     no glossary entries with that field set, AND no current chapter
+     to filter against anyway)
+
+  AttentionMagnitudeBars (item 7):
+    "0 annotations across 0 sections · Capital Vol 1"
+    (sectionsForBars is the empty array when currentChapterId is
+     NULL — no bars rendered)
+
+  WhereStuckWidget (item 8):
+    "No paragraphs flagged in this week's reading yet."
+    (data scope correctly filters by currentChapterId; legacy "this
+     week's reading" copy still in component — flagged for
+     follow-up commit)
+
+PASS data scope; one copy fix queued for follow-up.
+
+
+V6b — christchurch-capital dashboard dual counter
+---------------------------------------------------
+Captured during V5 ripple verification; see V5_advance_ripple.txt
+Step 4 for full evidence.
+
+URL: /dashboard?group=christchurch-capital
+- Greeting: "Good evening, Marco"
+- Group eyebrow: "Christchurch Capital Reading Group"
+- Orientation: "Week 7 · Week 1 on Chapter 2"
+  (after V5 advance; would have been "Chapter 1, Section 4" before
+   the advance)
+
+PASS — dual counter format renders correctly when group has
+started_at + currentChapterId set. Total + chapter counters
+working independently (advance resets chapter counter only).

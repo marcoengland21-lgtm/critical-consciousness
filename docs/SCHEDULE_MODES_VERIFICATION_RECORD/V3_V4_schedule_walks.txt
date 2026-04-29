@@ -1,0 +1,106 @@
+V3a + V3b + V4 — schedule page walks (host pre-seed, host configured, member configured)
+==========================================================================================
+
+Run: 29 April 2026 (NZ) by Mars driving Cowork via Chrome MCP at
+production https://capitalstudygroup.netlify.app.
+
+
+V3a — Watermelon host pre-seed view
+-------------------------------------
+URL: /schedule
+Logged in: Mars (host of Watermelon, admin)
+
+Profile: "Marco" (header link aria "Profile — marcoengland21@gmail.com")
+Strip: "Watermelon · Reading journey not yet started"
+Banner: "This group hasn't started reading yet."
+Setup prompt: "Set the start date and current chapter below to begin."
+
+Host controls section visible:
+  - Schedule mode dropdown
+    * "Recurring" (selected)
+    * "Bounded (soon)" (disabled)
+    * "Specific weeks (soon)" (disabled)
+  - Group start date input (empty, type="date")
+  - Save button
+  - Current chapter dropdown
+    * "Select a chapter…" (selected default)
+    * 36 chapter options (Ch1 §1, Ch1 §2, Ch1 §3, Ch1 §4, Ch2-Ch33)
+  - Apply button + helper copy
+  - Session timing section
+    * Next session datetime-local input (empty)
+    * Recurrence text input with placeholder "e.g. weekly, fortnightly Tuesday evenings"
+    * "Currently: not set"
+    * Save button
+
+Completed chapters timeline: not rendered (no history rows for Watermelon).
+
+PASS — recurring v1 pre-seed empty state with full host controls,
+no fabricated structure.
+
+
+V3b — christchurch-capital host configured view (after override fix)
+---------------------------------------------------------------------
+URL: /schedule?group=christchurch-capital
+Logged in: Mars (host of christchurch-capital, admin)
+Note: ran on a fresh tab after `48ee78e` deployed; original tab held
+stale RSC client cache. See BUGS_FIXED_DURING_VERIFICATION.md.
+
+Eyebrow: "Current chapter"
+Heading (h2): "Chapter 1, Section 4: The Fetishism of Commodities and the Secret Thereof"
+Metadata: "Group started reading on 13 Mar 2026 · On this chapter since 28 Apr 2026 · Week 1 on this chapter"
+
+Host controls visible:
+  - Schedule mode dropdown: "Recurring" (selected); bounded/specific disabled
+  - Group start date input
+  - Save button (start date)
+  - Current chapter dropdown: "Chapter 1, Section 4 · current" (selected)
+  - 36 chapter options including the current row marked "· current"
+  - Apply button + helper copy
+  - Session timing: Currently: not set
+
+Completed chapters timeline: not rendered (no history rows yet).
+
+PASS — configured-state host view, override URL parameter resolved
+correctly to christchurch-capital, host controls fully populated,
+"· current" suffix correctly appended to current chapter option.
+
+
+V4 — Member view (alpha on christchurch-capital, after V5 advance)
+--------------------------------------------------------------------
+URL: /schedule
+Logged in: user_alpha@example.test (member of christchurch-capital)
+Note: ran after V5 advance test created two history rows. Captures
+the configured-state member view with timeline visible.
+
+Profile: aria "Profile — user_alpha@example.test"
+Strip: "Christchurch Capital Reading Group · Week 7 · Week 1 on Chapter 1, Section 4"
+Eyebrow: "Current chapter"
+Heading (h2): "Chapter 1, Section 4: The Fetishism of Commodities and the Secret Thereof"
+Metadata: "Group started reading on 13 Mar 2026 · On this chapter since 29 Apr 2026 · Week 1 on this chapter"
+
+Host controls — ABSENT:
+  - hasHostControls: false (no "Host controls" eyebrow heading)
+  - hasApply: false (no Apply button)
+  - hasScheduleModeDropdown: false (no schedule mode dropdown)
+  - No Save button visible for start date or session timing
+
+Completed chapters timeline (visible to member):
+  1. Chapter 2: The Process of Exchange · 1 week · 29 Apr 2026 – 29 Apr 2026
+  2. Chapter 1, Section 4: The Fetishism of Commodities and the Secret Thereof · 1 week · 28 Apr 2026 – 29 Apr 2026
+
+PASS — member sees current state banner, sees rhythm metadata, sees
+completed chapters timeline (the group's history is shared with all
+members), but cannot mutate. The `isHost && <HostControls />`
+conditional in ScheduleClient.tsx correctly hides controls for
+non-hosts.
+
+Additional capture: user_beta on Watermelon (separate from V4 main):
+- Profile: "user_beta@example.test"
+- Strip: "Watermelon · Reading journey not yet started"
+- Banner: "This group hasn't started reading yet. Your host will set things up here when ready."
+- All host controls absent (same conditional)
+- This is the pre-seed member view — confirms member sees the
+  "your host will set things up" copy variant when group hasn't started.
+
+Together, V4-alpha + V4-beta cover both configured-state and
+pre-seed-state member views on the same conditional render path.

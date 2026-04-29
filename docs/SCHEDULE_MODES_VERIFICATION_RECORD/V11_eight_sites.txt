@@ -1,0 +1,165 @@
+V11 — 8 current-chapter-aware sites recurring-mode-aware
+=========================================================
+
+Run: 29 April 2026 (NZ) by Mars driving Cowork via Chrome MCP.
+Logged in: Mars (host of christchurch-capital + admin).
+All walks on christchurch-capital via `?group=christchurch-capital`
+URL override.
+
+
+Site 1 — /threads chapter filter
+-----------------------------------
+URL: /threads?group=christchurch-capital
+- h1: "Discussion Threads"
+- Chapter filter dropdown present, 37 options total:
+  1. "All chapters" (default)
+  2. "Chapter 1, Section 1"
+  3. "Chapter 1, Section 2"
+  4. "Chapter 1, Section 3"
+  5. "Chapter 1, Section 4"
+  6. "Chapter 2"
+  ... (through Chapter 33, 36 chapters total + 1 "All chapters" = 37)
+- Sidebar dropped: no aside.xl:block element in the DOM
+- Single column max-w-3xl matches /threads/new constraint
+
+PASS — chapter filter replaces week filter; sidebar removed per
+item 7b; UI consistent with /threads/new.
+
+
+Site 2 — /threads/new chapter selector + auto-anchor banner
+-------------------------------------------------------------
+URL: /threads/new?group=christchurch-capital
+- h1: "Start a New Thread"
+- Banner: "📖 This thread is about: Chapter 1, Section 4: The Fetishism of Commodities and the Secret Thereof"
+  (auto-anchored to currentChapterId from resolver)
+- Chapter selector dropdown:
+  - Pre-selected at "Chapter 1, Section 4: The Fetishism of Commodities and the Secret Thereof"
+    (UUID 6f2e20fc-9f40-486e-90cd-a742f02ab691, matches christchurch-capital's current_chapter_id)
+  - First option: "No specific chapter"
+  - 36 chapter options with full titles (e.g., "Chapter 1, Section 1: The Two Factors of a Commodity: Use-Value and Value")
+
+PASS — auto-anchor working; banner reflects selected chapter
+(live-tracking, per surface-during-build expansion #1).
+
+
+Site 3 — /glossary "By Chapter" sort
+--------------------------------------
+URL: /glossary?group=christchurch-capital
+- h1: "Glossary"
+- Sort dropdown options:
+  1. "A–Z"
+  2. "By Chapter"
+- No "By Week" option remnant (hasByWeek: false)
+- Page renders empty (no glossary entries in production per item 9
+  audit)
+
+PASS — sort option swap complete; no week-mode remnant.
+
+
+Site 4 — /journal/new GlossaryModal (chapter labels)
+------------------------------------------------------
+URL: /journal/new?group=christchurch-capital
+- Glossary toolbar button found (aria-label "Reference glossary term")
+- Click opens the modal
+- Modal contains search input with placeholder "Search glossary terms…"
+- Modal renders empty (no glossary entries in production)
+
+CAVEAT: /journal/new was not included in the override-fix commit
+(48ee78e). Page resolves to user's stored group rather than
+?group= URL override. Effect: GlossaryModal queries the wrong
+group's glossary entries when opened with override URL. Functional
+behavior is correct for the resolved group; only the override path
+is broken. Code-level verification (file edit confirms
+first_appearance_chapter query + getChapterLabel(chapter_number).shortLabel
+for badge labels) holds. Visual chapter-label vs week-label
+verification couldn't run from real data because both groups have
+empty glossaries in production.
+
+PASS functionally + code-level; visual verification deferred to
+real-data state. Override gap flagged for follow-up commit.
+
+
+Site 5 — /reading "Current" badge
+-----------------------------------
+Captured during V5 ripple verification; see V5_advance_ripple.txt
+Step 5 for full evidence.
+
+URL: /reading?group=christchurch-capital (during V5 mid-test
+when current chapter was Chapter 2):
+- Exactly 1 "Current" badge on Chapter 2 row (currentCount: 1)
+- Exactly 1 "Completed" marker on Chapter 1, §4 (completedAriaCount: 1)
+- Ch1§4 correctly transitioned: hasCurrent=false, hasCompleted=true
+
+PASS — chapter.id === currentChapterId mark working; completed
+marker sourced from group_chapter_history; "of 32" framing absent.
+
+
+Site 6 — Dashboard ConceptsThisChapter
+----------------------------------------
+Captured during V5 ripple + V7 verification.
+
+On christchurch-capital with current chapter Ch2:
+  Header eyebrow: "Concepts this chapter"
+  Empty state: "No new concepts introduced in this chapter yet."
+  (no glossary entries with first_appearance_chapter set)
+
+On Watermelon (V7):
+  Header eyebrow: "Concepts this chapter"
+  Empty state: same — currentChapterId NULL, query effectively scopes to nothing
+
+PASS — copy "Concepts this chapter" (renamed from "Concepts this
+week"); empty state copy chapter-aware; query filters by
+first_appearance_chapter not first_appearance_week.
+
+
+Site 7 — Dashboard AttentionMagnitudeBars
+-------------------------------------------
+Captured during V6b + V5 ripple.
+
+On christchurch-capital with current chapter Ch1 §4 (initial state):
+  "2 annotations across 4 sections · Capital Vol 1, Chapter 1"
+  (Ch1 sections expand to all 4: §1, §2, §3, §4 — per item 7
+   logic to preserve comparative-attention visual purpose)
+
+On christchurch-capital with current chapter Ch2 (after V5 advance):
+  "0 annotations across 1 section · Capital Vol 1, Chapter 2"
+  (Ch2+ shows just that one chapter as a single bar)
+
+On Watermelon (V7):
+  "0 annotations across 0 sections · Capital Vol 1"
+  (sectionsForBars empty when currentChapterId NULL — honest
+   empty state)
+
+PASS — chapter scoping with Ch1-section-expansion working
+correctly across all three states.
+
+
+Site 8 — Dashboard WhereStuckWidget
+-------------------------------------
+Captured during V7.
+
+On Watermelon and christchurch-capital alike:
+  "No paragraphs flagged in this week's reading yet."
+
+Data scope verified correct: filters confusion_counts by
+chapter_id === group.currentChapterId. Empty result because no
+confusion flags in test data.
+
+CAVEAT: Empty-state copy still reads "this week's reading" —
+legacy copy from pre-recurring; only the data scope was updated
+in sub-batch 4. Flagged for follow-up commit alongside the
+/journal/new override gap.
+
+PASS data scope; copy fix queued.
+
+
+Summary
+========
+
+All 8 V11 sites render correctly per the recurring-v1 spec. Two
+caveats land in a follow-up commit:
+- WhereStuckWidget legacy "this week's reading" empty-state copy
+- /journal/new searchParams override gap
+
+Both are minor — correct data behavior, only presentation/path
+issues. Neither blocks ship-clean.

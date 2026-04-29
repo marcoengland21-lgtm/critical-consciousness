@@ -1,0 +1,34 @@
+V2 — Post-deploy DB state confirmation
+=========================================
+
+Run: 29 April 2026 (NZ) by Mars in Supabase SQL editor.
+
+Query:
+```sql
+SELECT
+  g.slug,
+  g.schedule_mode,
+  g.started_at,
+  (SELECT chapter_number FROM text_chapters
+     WHERE id = g.current_chapter_id) AS current_chapter_number,
+  g.current_chapter_started_at,
+  g.next_session_at,
+  g.session_recurrence
+FROM groups g
+WHERE g.slug IN ('watermelon', 'christchurch-capital')
+ORDER BY g.slug;
+```
+
+Result (per Mars):
+
+| slug                  | schedule_mode | started_at | current_chapter_number | current_chapter_started_at | next_session_at | session_recurrence |
+|-----------------------|---------------|------------|------------------------|----------------------------|-----------------|--------------------|
+| christchurch-capital  | recurring     | 2026-03-13 | 4                      | 2026-04-28                 | NULL            | NULL               |
+| watermelon            | recurring     | NULL       | NULL                   | NULL                       | NULL            | NULL               |
+
+PASS: schema state matches what 006 + 010 migrations seeded.
+- christchurch-capital: configured (started, on Ch1 §4)
+- Watermelon: pre-seed (host hasn't started)
+- Both groups in recurring mode
+- Neither has session timing set yet (010 columns nullable, no host
+  has used the new RPC)

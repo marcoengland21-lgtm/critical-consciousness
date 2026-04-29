@@ -1,0 +1,126 @@
+V5 — Advance current chapter, full ripple verification
+========================================================
+
+Run: 29 April 2026 (NZ) by Mars driving Cowork via Chrome MCP.
+Logged in: Mars (host of christchurch-capital).
+
+Per Mars's runbook: advance Ch1§4 → Ch2 to verify the full ripple,
+then advance back Ch2 → Ch1§4 to restore clean test state. Two
+permanent history rows result; that's the honest record of what
+happened during verification.
+
+
+Step 1 — Select Chapter 2 in dropdown
+---------------------------------------
+form_input on chapter combobox, value="ef9d795b-8ec0-4286-88e3-286f63b0f00e".
+Result: "Selected option ef9d795b-... in dropdown (previous: 6f2e20fc-...)"
+PASS — dropdown selection succeeded.
+
+
+Step 2 — Click Apply
+----------------------
+javascript_tool clicks the Apply button.
+Result: { clicked: true, count: 1 }
+
+Confirmation prompt rendered (read_page interactive output):
+  - "Advance to Chapter 2: The Process of Exchange? This ends the
+    current chapter's stay and starts a new one. The history is
+    permanent."
+  - Advance button + Cancel button visible.
+
+PASS — inline amber-tinted confirmation prompt rendering correctly
+per the §host-controls design.
+
+
+Step 3 — Click Advance (mutation)
+----------------------------------
+First attempt FAILED with error:
+  "Could not find the function public.advance_chapter(p_group_id,
+   p_new_chapter_id) in the schema cache"
+
+Diagnosis: 007 RPCs missing from pg_proc. Diagnostic SQL confirmed
+only `set_group_session_timing` (010) was present. Re-applied 007
+forward via SQL editor + `NOTIFY pgrst, 'reload schema'`. Post-fix
+pg_proc query showed all three custom RPCs present with correct
+signatures and `is_security_definer = true`. See
+BUGS_FIXED_DURING_VERIFICATION.md for the full diagnosis and fix.
+
+Second attempt PASSED.
+
+Post-advance schedule page state:
+  - Heading: "Chapter 2: The Process of Exchange"
+  - Metadata: "Group started reading on 13 Mar 2026 · On this chapter since 29 Apr 2026 · Week 1 on this chapter"
+    * started_at unchanged (13 Mar 2026)
+    * current_chapter_started_at NEW = 29 Apr 2026 (today, NZ)
+    * Chapter counter reset to "Week 1 on this chapter"
+  - Dropdown: "Chapter 2 · current" (selected)
+  - Completed chapters timeline (new):
+    * "Chapter 1, Section 4: The Fetishism of Commodities and the
+       Secret Thereof / 1 week · 28 Apr 2026 – 29 Apr 2026"
+
+History row written by advance_chapter RPC (atomic
+INSERT-then-UPDATE inside the function). "1 week" via
+`weeksBetween(Math.max(1, Math.round(...)))` — same-day stays
+floor to 1.
+
+
+Step 4 — Verify ripple to dashboard
+-------------------------------------
+URL: /dashboard?group=christchurch-capital
+
+  - Greeting: "Good evening, Marco"
+  - Group eyebrow: "Christchurch Capital Reading Group"
+  - Orientation line: "Week 7 · Week 1 on Chapter 2"
+    * Total counter: Week 7 (preserved from groups.started_at)
+    * Chapter counter: Week 1 (reset at advance)
+    * Chapter label: "Chapter 2" via getChapterLabel
+  - "Where the group's attention is": "0 annotations across 1 section · Capital Vol 1, Chapter 2"
+    * Single section because Chapter 2 isn't subdivided (per item 7
+      logic: Ch1 sections expand to 4 bars, Ch2+ shows just that
+      chapter)
+    * Renders "§5 The Process of Exchange" (chapter_number=5)
+
+PASS — dashboard correctly reads new currentChapterId via resolver.
+
+
+Step 5 — Verify ripple to /reading
+------------------------------------
+URL: /reading?group=christchurch-capital
+
+  - Exactly 1 "Current" badge on the entire page (currentCount = 1)
+    * Located on Chapter 2 row
+    * Confirmed via `ch2HasCurrent: true`
+  - Exactly 1 "Completed" marker (completedAriaCount = 1)
+    * Located on Chapter 1, §4 row
+    * Confirmed via `ch1s4HasCompleted: true` AND `ch1s4HasCurrent: false`
+  - The Ch1 §4 row correctly transitioned out of Current state
+    into Completed state.
+
+PASS — reading page Current/Completed signals correctly sourced
+from group.currentChapterId AND group_chapter_history.
+
+
+Step 6 — Advance back Ch2 → Ch1§4 (restore clean test state)
+--------------------------------------------------------------
+URL: /schedule?group=christchurch-capital
+- Selected Ch1§4 from dropdown
+- Apply → confirmation → Advance
+
+Post-state:
+  - Heading: "Chapter 1, Section 4: The Fetishism of Commodities and the Secret Thereof"
+  - Metadata: "Group started reading on 13 Mar 2026 · On this chapter since 29 Apr 2026 · Week 1 on this chapter"
+    * NEW current_chapter_started_at = 29 Apr 2026 (this is a fresh
+      stay on Ch1 §4, hence the new timestamp; correct semantics —
+      revisiting a chapter starts a new stay)
+  - Completed chapters timeline (reverse chronological, 2 rows):
+    1. Chapter 2: The Process of Exchange · 1 week · 29 Apr 2026 – 29 Apr 2026
+    2. Chapter 1, Section 4: The Fetishism of Commodities and the Secret Thereof · 1 week · 28 Apr 2026 – 29 Apr 2026
+
+PASS — second advance writes its own history row, current chapter
+restored, two history rows preserved as honest test record.
+
+
+Verification end-state for christchurch-capital:
+  - current_chapter_id: Ch1 §4
+  - current_chapter_started_at: 29 Apr 2026
+  - group_chapter_history: 2 rows (Ch1§4 28→29 Apr, Ch2 29→29 Apr)
