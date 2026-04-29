@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { Lock, Sprout, Pause, Play, Flag, BookOpen, Cloud } from 'lucide-react'
 import { completeOnboarding } from './actions'
 
 /**
@@ -61,11 +62,20 @@ import { completeOnboarding } from './actions'
  *     class (confusion-high), bars at full target, popovers visible if
  *     the gesture had completed
  *
- * Pending external touch-up (Cowork C platform-wide chrome audit):
- *   - Audio playback may move into a roaming tools affordance
- *   - Emoji button labels (🌱 Branch, 📝 Annotate, 🚩 flag) → lucide-react swaps
- *   - Privacy treatment on Personal surface may shift
- *   Build against current live; touch-up pass after Cowork C lands.
+ * Chrome audit (Cowork C) applied uniformly across the scroll:
+ *   - Lock for the Personal surface privacy pill (audit row 1)
+ *   - Sprout for Branch buttons (rows 19, 20)
+ *   - Pause/Play in audio player (Part One §5)
+ *   - Flag in confusion popover and WhereStuckWidget (matches live SVG)
+ *   - BookOpen in Reference toolbar button (rows 21/22 pattern, --accent-purple)
+ *   - Cloud in autosave indicator (matches live JournalToolbar)
+ *   - ✕ kept on modal close (conventional, audit §5)
+ *
+ * Pending external follow-on:
+ *   - Audio may move into the roaming tools affordance once that
+ *     component ships. The scroll mockup keeps the floating-pill
+ *     treatment until then since that's what the live reading page
+ *     still renders.
  */
 
 interface Props {
@@ -1930,7 +1940,12 @@ function ReadingSurface({ sectionRef, active, reduced }: SurfaceProps) {
                 </p>
                 <div className="confusion-popover-action">
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                    <span style={{ color: 'var(--accent-amber)' }}>⚑</span>
+                    <Flag
+                      size={14}
+                      strokeWidth={2}
+                      style={{ color: 'var(--accent-amber)' }}
+                      aria-hidden="true"
+                    />
                     I&rsquo;m also stuck here
                   </span>
                   <span className="anonymous-tag">Anonymous</span>
@@ -1963,7 +1978,9 @@ function ReadingSurface({ sectionRef, active, reduced }: SurfaceProps) {
               onClick={onAudioToggle}
               aria-label={audioPlaying ? 'Pause' : 'Play'}
             >
-              {audioPlaying ? '⏸' : '▶'}
+              {audioPlaying
+                ? <Pause size={12} strokeWidth={2} aria-hidden="true" />
+                : <Play size={12} strokeWidth={2} aria-hidden="true" />}
             </button>
             <span className="audio-skip">▷ 15s</span>
             <span className="audio-track">
@@ -2019,8 +2036,8 @@ function GroupSurface({ sectionRef, active, reduced }: SurfaceProps) {
   }, [])
 
   const promptText = {
-    open: 'Click 🌱 Branch on a reply to spawn a new thread',
-    submit: 'Click Submit — the new thread keeps the lineage',
+    open: 'Click Branch on a reply to spawn a new thread',
+    submit: 'Click Create thread — the new thread keeps the lineage',
     done: 'Lineage stays visible',
   }
 
@@ -2062,7 +2079,14 @@ function GroupSurface({ sectionRef, active, reduced }: SurfaceProps) {
           </div>
 
           <div className="group-action-row">
-            <button type="button" className="branch-button">🌱 Branch</button>
+            <button
+              type="button"
+              className="branch-button"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}
+            >
+              <Sprout size={14} strokeWidth={2} aria-hidden="true" />
+              Branch
+            </button>
           </div>
 
           <hr className="group-replies-divider" />
@@ -2100,9 +2124,11 @@ function GroupSurface({ sectionRef, active, reduced }: SurfaceProps) {
                 <button
                   type="button"
                   className="branch-button"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}
                   onClick={onBranchClick}
                 >
-                  🌱 Branch
+                  <Sprout size={14} strokeWidth={2} aria-hidden="true" />
+                  Branch
                 </button>
               </div>
 
@@ -2218,7 +2244,7 @@ function PersonalSurface({ sectionRef, active, reduced }: SurfaceProps) {
                 top-right placement per status-indicator framing. Mars
                 handling separate live catch-up. */}
             <span className="personal-lock-pill" aria-label="Privacy">
-              <span aria-hidden="true">🔒</span>
+              <Lock size={12} strokeWidth={2} aria-hidden="true" />
               Only you
             </span>
           </div>
@@ -2234,12 +2260,19 @@ function PersonalSurface({ sectionRef, active, reduced }: SurfaceProps) {
             <button type="button" className="toolbar-btn">H1</button>
             <button type="button" className="toolbar-btn">&ldquo; &rdquo;</button>
             <span className="toolbar-divider" />
-            <button type="button" className="toolbar-btn" onClick={onReferenceClick}>
-              📖 Reference
+            <button
+              type="button"
+              className="toolbar-btn"
+              onClick={onReferenceClick}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', color: 'var(--accent-purple)' }}
+            >
+              <BookOpen size={14} strokeWidth={2} aria-hidden="true" />
+              Reference
             </button>
             <span className="toolbar-spacer" />
             <span className="toolbar-save">
-              <span aria-hidden="true">☁</span> Saved at 14:32
+              <Cloud size={12} strokeWidth={2} aria-hidden="true" />
+              Saved at 14:32
             </span>
             <span className="toolbar-divider" />
             <span className="toolbar-wordcount">147 words</span>
@@ -2445,7 +2478,9 @@ function DashboardSurface({
               <li className="stuck-item">
                 <div className="stuck-item-top">
                   <span className="stuck-ref">Ch 1, §1, ¶7</span>
-                  <span className="stuck-flag-count">5 ⚑</span>
+                  <span className="stuck-flag-count">
+                    5 <Flag size={11} strokeWidth={2} aria-hidden="true" style={{ display: 'inline-block', verticalAlign: 'middle' }} />
+                  </span>
                 </div>
                 <p className="stuck-excerpt">
                   &ldquo;Every useful thing, as iron, paper, etc., may be looked at from the two points of view of quality and quantity…&rdquo;
@@ -2454,7 +2489,9 @@ function DashboardSurface({
               <li className="stuck-item">
                 <div className="stuck-item-top">
                   <span className="stuck-ref">Ch 1, §3, ¶12</span>
-                  <span className="stuck-flag-count">3 ⚑</span>
+                  <span className="stuck-flag-count">
+                    3 <Flag size={11} strokeWidth={2} aria-hidden="true" style={{ display: 'inline-block', verticalAlign: 'middle' }} />
+                  </span>
                 </div>
                 <p className="stuck-excerpt">
                   &ldquo;The relative form of value of one commodity, the linen, expresses…&rdquo;
@@ -2463,7 +2500,9 @@ function DashboardSurface({
               <li className="stuck-item">
                 <div className="stuck-item-top">
                   <span className="stuck-ref">Ch 1, §4, ¶3</span>
-                  <span className="stuck-flag-count">2 ⚑</span>
+                  <span className="stuck-flag-count">
+                    2 <Flag size={11} strokeWidth={2} aria-hidden="true" style={{ display: 'inline-block', verticalAlign: 'middle' }} />
+                  </span>
                 </div>
                 <p className="stuck-excerpt">
                   &ldquo;The mystical character of commodities does not arise from their use-value…&rdquo;
