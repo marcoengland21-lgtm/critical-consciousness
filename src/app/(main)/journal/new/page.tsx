@@ -20,16 +20,24 @@ import NewJournalEntryClient from './NewJournalEntryClient'
 export default async function NewJournalEntryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ chapter_id?: string }>
+  // Recurring v1 ship-clean follow-up: searchParams broadened to
+  // Record<string,...> so the resolver's admin URL override
+  // (?group=<slug|uuid>) works on this page. The narrow chapter_id
+  // type from chunk 3b is preserved by extracting it explicitly.
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const params = await searchParams
-  const chapterId = params.chapter_id ?? null
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
+  const chapterParam = resolvedSearchParams?.['chapter_id']
+  const chapterId = typeof chapterParam === 'string' ? chapterParam : null
 
   const user = await getSessionUser()
   if (!user) redirect('/login')
 
   const supabase = await createClient()
-  const group = await getCurrentGroup(supabase, user.id)
+  // Pass searchParams to enable admin URL override.
+  const group = await getCurrentGroup(supabase, user.id, {
+    searchParams: resolvedSearchParams,
+  })
   if (!group) redirect('/login')
 
   return (

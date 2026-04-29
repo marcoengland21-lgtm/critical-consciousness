@@ -1,18 +1,26 @@
 /**
- * WhereStuckWidget — chunk 3b piece 4.
+ * WhereStuckWidget — chunk 3b piece 4 + recurring-v1 chapter swap
+ * (sub-batch 5 item 8 + recurring-v1 ship-clean follow-up).
  *
  * Right-rail widget per frame 13D. Surfaces the most-flagged
- * paragraphs in this week's reading so the discussion-starter knows
+ * paragraphs in the current chapter so the discussion-starter knows
  * which spots to bring to the next session.
  *
- * Header copy is locked (Mars's refinement on point #1):
- *   "X paragraphs flagged in this week's reading"
- *   NOT "flagged this week" — confusion_counts has no timestamps
- *   (chunk 1 anonymity guarantee). We're scoping to the chapters in
- *   this week's reading, not claiming the flags were filed this week.
+ * Recurring-v1 swap: data scope changed from "current week's
+ * chapters" to "current chapter" in sub-batch 4 item 8 (filter by
+ * confusion_counts.chapter_id === group.currentChapterId, single
+ * chapter). Empty-state copy + count-line copy follow in this
+ * commit — the data swap had landed in sub-batch 4, the
+ * presentation swap was deferred to follow-up.
+ *
+ * Copy intent (preserves the original anonymity-respecting framing
+ * Mars locked at chunk 3b — confusion_counts has no timestamps, so
+ * we scope to the chapter, not claim the flags were filed recently):
+ *   "X paragraphs flagged in this chapter"
+ *   NOT "flagged this chapter" — same anonymity reasoning as before.
  *
  *   WHERE WE'RE STUCK
- *   3 paragraphs flagged in this week's reading       Bring to Tuesday →
+ *   3 paragraphs flagged in this chapter             Bring to Tuesday →
  *
  *   Ch 1 §1, ¶7                                                     5 ⚑
  *   "The use-value of every commodity is conditioned by…"
@@ -39,7 +47,7 @@ export interface StuckParagraph {
 
 interface WhereStuckWidgetProps {
   /** Top N paragraphs sorted by flag count desc. May be empty when
-      no flags exist in this week's reading. */
+      no flags exist in the current chapter. */
   paragraphs: StuckParagraph[]
 }
 
@@ -53,7 +61,7 @@ export default function WhereStuckWidget({ paragraphs }: WhereStuckWidgetProps) 
           className="text-sm italic"
           style={{ color: 'var(--text-secondary)', lineHeight: 1.55 }}
         >
-          No paragraphs flagged in this week&apos;s reading yet.
+          No paragraphs flagged in this chapter yet.
         </p>
       ) : (
         <>
@@ -64,7 +72,7 @@ export default function WhereStuckWidget({ paragraphs }: WhereStuckWidgetProps) 
             >
               {paragraphs.length}{' '}
               {paragraphs.length === 1 ? 'paragraph' : 'paragraphs'} flagged in
-              this week&apos;s reading
+              this chapter
             </p>
             <a
               href="/threads/new?type=discussion"
