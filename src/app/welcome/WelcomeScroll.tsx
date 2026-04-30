@@ -1649,6 +1649,563 @@ function ScrollStyles() {
         overflow: hidden;
       }
 
+      /* ── Group thread composition ────────────────────────── */
+      .group-thread-grid {
+        max-width: 72rem;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+      @media (min-width: 1280px) {
+        .group-thread-grid {
+          grid-template-columns: minmax(0, 1fr) 18rem;
+          gap: 2rem;
+          align-items: start;
+        }
+      }
+      .group-thread {
+        background-color: var(--bg-card, #ffffff);
+        border: 1px solid var(--border-subtle);
+        border-radius: 0.625rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+        padding: 1.75rem 1.75rem 0;
+        position: relative;
+        opacity: 0;
+        transform: translateY(16px);
+        transition:
+          opacity 700ms var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)),
+          transform 700ms var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1));
+      }
+      .group-thread[data-visible="true"] {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .group-back-link {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+        display: inline-block;
+        cursor: pointer;
+        transition: opacity 200ms;
+      }
+      .group-back-link:hover { opacity: 0.7; }
+
+      .branched-from-breadcrumb {
+        margin-bottom: 1.5rem;
+        padding: 0.75rem 1rem;
+        background-color: rgba(var(--accent-purple-rgb), 0.06);
+        border-left: 3px solid var(--accent-purple);
+        border-radius: 0 0.5rem 0.5rem 0;
+        cursor: pointer;
+        transition: background-color 200ms;
+      }
+      .branched-from-breadcrumb:hover {
+        background-color: rgba(var(--accent-purple-rgb), 0.1);
+      }
+      .branched-from-eyebrow {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.5625rem;
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--accent-purple);
+        margin-bottom: 0.25rem;
+      }
+      .branched-from-title {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+      .branched-from-excerpt {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-top: 0.375rem;
+      }
+      .branched-from-excerpt em {
+        color: var(--text-secondary);
+        font-style: italic;
+      }
+
+      .group-badges-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+      }
+      .group-type-pill {
+        display: inline-flex;
+        align-items: center;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 0.25rem 0.625rem;
+        border-radius: 9999px;
+        line-height: 1;
+        background-color: var(--badge-bg-discussion, rgba(var(--accent-purple-rgb), 0.12));
+        color: var(--accent-purple);
+        cursor: pointer;
+        transition: filter 200ms;
+      }
+      .group-type-pill:hover { filter: brightness(0.92); }
+      .group-week-pill {
+        display: inline-flex;
+        align-items: center;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 0.25rem 0.625rem;
+        border-radius: 9999px;
+        background-color: var(--bg-soft, #f5f0e8);
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: background-color 200ms;
+      }
+      .group-week-pill:hover { background-color: var(--border-subtle); }
+
+      .group-thread-title {
+        font-family: 'Lora', Georgia, serif;
+        font-weight: 700;
+        font-size: 1.875rem;
+        color: var(--accent-red);
+        line-height: 1.2;
+        margin: 0 0 1.25rem;
+      }
+
+      .group-author-row {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        margin-bottom: 1.5rem;
+      }
+      .group-author-avatar {
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        color: white;
+        font-size: 0.875rem;
+        flex-shrink: 0;
+      }
+      .group-author-name {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        line-height: 1.2;
+      }
+      .group-author-time {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        line-height: 1.2;
+      }
+
+      .group-thread-body {
+        font-family: 'Lora', Georgia, serif;
+        font-size: 1.0625rem;
+        line-height: 1.7;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+      }
+
+      .group-op-action-row {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-default, #e7e2d5);
+        margin-bottom: 1.5rem;
+      }
+
+      .group-branch-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 0.4rem 0.75rem;
+        border-radius: 0.375rem;
+        border: 1px solid var(--border-default, #e7e2d5);
+        color: var(--text-secondary);
+        background-color: transparent;
+        cursor: pointer;
+        transition: background-color 200ms, color 200ms;
+      }
+      .group-branch-button:hover {
+        background-color: var(--bg-soft, #f5f0e8);
+        color: var(--text-primary);
+      }
+
+      .group-replies-divider {
+        border: none;
+        border-top: 1px solid var(--border-default, #e7e2d5);
+        margin: 0 -1.75rem 1.25rem;
+      }
+
+      .group-reply-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+      }
+      .group-reply {
+        position: relative;
+        padding: 0.75rem 0.875rem;
+        border-radius: 0.5rem;
+        cursor: default;
+        transition: background-color 200ms;
+      }
+      .group-reply:hover {
+        background-color: var(--bg-soft, #f5f0e8);
+      }
+      .group-reply-row {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-start;
+      }
+      .group-reply-avatar {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        color: white;
+        font-size: 0.8125rem;
+        flex-shrink: 0;
+      }
+      .group-reply-content {
+        flex: 1;
+        min-width: 0;
+      }
+      .group-reply-meta {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        margin-bottom: 0.25rem;
+      }
+      .group-reply-meta .group-author-name { font-size: 0.8125rem; }
+      .group-reply-meta .group-author-time { font-size: 0.6875rem; }
+      .group-reply-body {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.875rem;
+        line-height: 1.6;
+        color: var(--text-primary);
+      }
+
+      /* Hover-revealed actions row — matches live opacity-0 → group-hover:opacity-100 */
+      .group-reply-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.875rem;
+        margin-top: 0.5rem;
+        opacity: 0;
+        transition: opacity 200ms;
+      }
+      .group-reply:hover .group-reply-actions,
+      .group-reply.is-active .group-reply-actions {
+        opacity: 1;
+      }
+      @media (hover: none) {
+        .group-reply-actions { opacity: 0.65; }
+      }
+      .group-reply-action {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        background: transparent;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        transition: color 200ms;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+      .group-reply-action:hover { color: var(--text-primary); }
+
+      /* Inline Reply form below a reply */
+      .reply-form-inline {
+        margin-top: 0.625rem;
+        padding: 0.75rem 0;
+      }
+      .replying-to-tag {
+        display: inline-block;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.6875rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        background-color: var(--bg-badge, rgba(var(--accent-purple-rgb), 0.08));
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+      }
+      .reply-form-textarea {
+        width: 100%;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        padding: 0.5rem 0.75rem;
+        background-color: var(--bg-card, #ffffff);
+        border: 1px solid var(--border-subtle);
+        border-radius: 0.375rem;
+        color: var(--text-primary);
+        resize: none;
+        min-height: 3rem;
+        transition: border-color 200ms;
+      }
+      .reply-form-textarea:focus {
+        outline: none;
+        border-color: var(--accent-purple);
+      }
+      .reply-form-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+      }
+      .reply-form-post {
+        background-color: var(--accent-red);
+        color: var(--text-inverse);
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.25rem;
+        border: none;
+        cursor: pointer;
+        transition: background-color 200ms;
+      }
+      .reply-form-post:hover { background-color: var(--accent-red-hover); }
+      .reply-form-cancel {
+        background-color: transparent;
+        color: var(--text-secondary);
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        padding: 0.375rem 0.625rem;
+        border: none;
+        cursor: pointer;
+        transition: color 200ms;
+      }
+      .reply-form-cancel:hover { color: var(--text-primary); }
+
+      /* Inline Branch form below a reply (matches live BranchThreadForm) */
+      .branch-form-inline {
+        margin-top: 0.625rem;
+        padding: 0.875rem;
+        background-color: var(--bg-soft, #f5f0e8);
+        border-radius: 0.5rem;
+        border: 1px solid var(--border-subtle);
+      }
+      .branch-form-eyebrow-new {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.5625rem;
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--accent-purple);
+        margin-bottom: 0.5rem;
+      }
+      .branch-form-title-new {
+        font-family: 'Lora', Georgia, serif;
+        font-weight: 700;
+        font-size: 1.0625rem;
+        color: var(--accent-red);
+        background-color: var(--bg-card, #ffffff);
+        border: 1px solid var(--border-subtle);
+        padding: 0.5rem 0.625rem;
+        border-radius: 0.25rem;
+        margin-bottom: 0.625rem;
+        line-height: 1.3;
+      }
+      .branch-form-quoted-new {
+        font-family: 'Lora', Georgia, serif;
+        font-style: italic;
+        color: var(--text-secondary);
+        font-size: 0.8125rem;
+        line-height: 1.55;
+        padding: 0.5rem 0.75rem;
+        border-left: 2px solid var(--accent-purple);
+        background-color: rgba(var(--accent-purple-rgb), 0.04);
+        margin-bottom: 0.75rem;
+        border-radius: 0 0.25rem 0.25rem 0;
+      }
+      .branch-form-attribution {
+        font-style: normal;
+        color: var(--text-secondary);
+        font-size: 0.6875rem;
+        margin-top: 0.375rem;
+      }
+      .branch-form-actions-new {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+      }
+      .branch-form-create {
+        background-color: var(--accent-red);
+        color: var(--text-inverse);
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 0.4rem 0.875rem;
+        border-radius: 0.25rem;
+        border: none;
+        cursor: pointer;
+        transition: background-color 200ms;
+      }
+      .branch-form-create:hover { background-color: var(--accent-red-hover); }
+
+      /* Branched-into indicator below a reply */
+      .branched-into-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        margin-top: 0.625rem;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: color 200ms;
+      }
+      .branched-into-indicator:hover { color: var(--text-primary); }
+      .branched-into-indicator .child-title {
+        color: var(--accent-purple);
+        text-decoration: underline;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 0.18em;
+      }
+
+      /* Sticky bottom main reply input — at thread foot */
+      .group-main-reply {
+        margin: 0 -1.75rem;
+        padding: 1rem 1.75rem;
+        border-top: 1px solid var(--border-default, #e7e2d5);
+        background-color: var(--bg-page);
+        border-radius: 0 0 0.625rem 0.625rem;
+      }
+      .group-main-reply-context {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.375rem;
+      }
+      .group-main-reply-row {
+        display: flex;
+        align-items: flex-end;
+        gap: 0.5rem;
+      }
+      .group-main-reply-textarea {
+        flex: 1;
+        min-height: 2.75rem;
+        max-height: 12rem;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        padding: 0.625rem 0.75rem;
+        background-color: var(--bg-card, #ffffff);
+        border: 1px solid var(--border-subtle);
+        border-radius: 0.375rem;
+        color: var(--text-primary);
+        resize: none;
+        transition: border-color 200ms;
+      }
+      .group-main-reply-textarea:focus {
+        outline: none;
+        border-color: var(--accent-purple);
+      }
+      .group-main-reply-post {
+        height: 2.75rem;
+        background-color: var(--accent-red);
+        color: var(--text-inverse);
+        font-family: 'Inter', sans-serif;
+        font-size: 0.875rem;
+        font-weight: 500;
+        padding: 0 1rem;
+        border-radius: 0.375rem;
+        border: none;
+        cursor: pointer;
+        transition: background-color 200ms;
+      }
+      .group-main-reply-post:hover { background-color: var(--accent-red-hover); }
+      .group-main-reply-hint {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.6875rem;
+        color: var(--text-secondary);
+        opacity: 0.6;
+        margin-top: 0.375rem;
+      }
+
+      /* Sidebar conversation graph (xl: only) */
+      .group-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        opacity: 0;
+        transform: translateY(16px);
+        transition:
+          opacity 700ms var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)),
+          transform 700ms var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1));
+      }
+      .group-sidebar[data-visible="true"] {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      @media (max-width: 1279px) {
+        .group-sidebar { display: none; }
+      }
+      .conversation-graph {
+        background-color: var(--bg-card, #ffffff);
+        border: 1px solid var(--border-default, #e7e2d5);
+        border-radius: 0.625rem;
+        padding: 1rem 1.125rem;
+      }
+      .conversation-graph-eyebrow {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.5625rem;
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--accent-purple);
+        margin-bottom: 0.75rem;
+      }
+      .conversation-graph-section {
+        margin-bottom: 0.75rem;
+      }
+      .conversation-graph-section:last-child { margin-bottom: 0; }
+      .conversation-graph-label {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.6875rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.375rem;
+      }
+      .conversation-graph-link {
+        display: block;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.8125rem;
+        line-height: 1.45;
+        color: var(--text-primary);
+        cursor: pointer;
+        padding: 0.125rem 0;
+        transition: color 200ms;
+      }
+      .conversation-graph-link:hover {
+        color: var(--accent-purple);
+        text-decoration: underline;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 0.18em;
+      }
+
       /* ── Mobile parity (≤640px) ───────────────────────────── */
       @media (max-width: 640px) {
         /* Marginalia + reply + child-thread cards inline below their
@@ -3512,85 +4069,90 @@ function ReadingSurface({ sectionRef, reduced }: SurfaceProps) {
   )
 }
 
-type GroupPromptStep = 'open' | 'submit' | 'done'
+/* Group surface — vertical flow inside thread page (Brief 1 sub-batch 6 v6).
+ *
+ * Composition: full-fidelity thread page mockup. Branched-from breadcrumb
+ * at top (one-level per live), badges row, pink Lora-bold sans-serif
+ * title, author with hashColor avatar, Lora prose body, OP action row
+ * with Sprout Branch button, hr, replies stack, sticky bottom main
+ * reply input. Conversation graph sidebar at xl: viewports.
+ *
+ * Default state asymmetric (Mars's Q2 lock):
+ *   - Reply 1 (Pita): hover-revealed actions row only
+ *   - Reply 2 (Eli): branched-into indicator visible below it
+ *   - Reply 3 (Daniel): Reply form open inline below it
+ * Branch button on every reply via hover-revealed actions row. Click →
+ * inline BranchThreadForm opens. Submit collapses + reveals branched-into
+ * indicator (Mars's Q1 lock — match live, no inline child card).
+ *
+ * No captions, no panel-tag labels, no surface frame copy. Eyebrow only.
+ */
 
-function GroupSurface({ sectionRef, active, reduced }: SurfaceProps) {
-  const [step, setStep] = useState<GroupPromptStep>('open')
-  const [branchFormOpen, setBranchFormOpen] = useState(false)
-  const [childThreadShown, setChildThreadShown] = useState(false)
+function GroupSurface({ sectionRef, reduced }: SurfaceProps) {
+  const [branchOpenFor, setBranchOpenFor] = useState<string | null>(null)
+  const [branchSubmittedFor, setBranchSubmittedFor] = useState<Set<string>>(new Set())
+  const [replyOpenFor, setReplyOpenFor] = useState<string | null>('daniel')
+  const [activeReply, setActiveReply] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (reduced) {
-      setBranchFormOpen(true)
-      setChildThreadShown(true)
-      setStep('done')
-    }
-  }, [reduced])
-
-  const onBranchClick = useCallback(() => {
-    setBranchFormOpen(true)
-    setStep(s => s === 'open' ? 'submit' : s)
-  }, [])
-
-  const onSubmitBranch = useCallback(() => {
-    setChildThreadShown(true)
-    setStep('done')
-  }, [])
-
-  const onCancelBranch = useCallback(() => {
-    setBranchFormOpen(false)
-    setStep('open')
-  }, [])
-
-  const promptText = {
-    open: 'Click Branch on a reply to spawn a new thread',
-    submit: 'Click Create thread — the new thread keeps the lineage',
-    done: 'Lineage stays visible',
+  const onBranchClick = (replyId: string) => {
+    setBranchOpenFor(prev => (prev === replyId ? null : replyId))
+    setReplyOpenFor(null)
   }
+  const onBranchSubmit = (replyId: string) => {
+    setBranchOpenFor(null)
+    setBranchSubmittedFor(prev => {
+      const next = new Set(prev)
+      next.add(replyId)
+      return next
+    })
+  }
+  const onReplyClick = (replyId: string) => {
+    setReplyOpenFor(prev => (prev === replyId ? null : replyId))
+    setBranchOpenFor(null)
+  }
+
+  const [threadRef, threadVisible] = usePanelVisible(reduced)
+  const [sidebarRef, sidebarVisible] = usePanelVisible(reduced)
 
   return (
     <section
       ref={sectionRef}
-      className="welcome-section"
+      className="welcome-section is-multipanel"
       data-surface="group"
       aria-label="Group"
     >
       <p className="welcome-section-marker text-eyebrow">03 / Group</p>
 
-      <div className="welcome-visual">
-        <div className="welcome-mockup group-mockup mx-auto">
-          <p className="mockup-example-tag text-eyebrow">Example</p>
+      <div className="group-thread-grid">
+        <div ref={threadRef} className="group-thread" data-visible={threadVisible ? 'true' : 'false'}>
+          <a className="group-back-link" role="button" tabIndex={0}>← Back to Threads</a>
 
-          <p className="group-back-link">← Back to Threads</p>
-
-          <div className="group-badges">
-            <span className="thread-type-badge">Discussion</span>
-            <span className="thread-week-pill">Week 12</span>
+          <div className="branched-from-breadcrumb" role="link" tabIndex={0}>
+            <p className="branched-from-eyebrow">Branched from</p>
+            <p className="branched-from-title">Reading §1 — first impressions</p>
           </div>
 
-          <h1 className="group-title">What&rsquo;s confusing in §1?</h1>
+          <div className="group-badges-row">
+            <span className="group-type-pill" role="button" tabIndex={0}>Discussion</span>
+            <span className="group-week-pill" role="button" tabIndex={0}>Week 12: Commodities &amp; Money</span>
+          </div>
+
+          <h1 className="group-thread-title">What&rsquo;s confusing in §1?</h1>
 
           <div className="group-author-row">
-            <span
-              className="author-avatar"
-              style={{ backgroundColor: '#7a4f9c' }}
-            >L</span>
+            <span className="group-author-avatar" style={{ backgroundColor: '#7a4f9c' }}>L</span>
             <div>
-              <div className="author-name">Liz</div>
-              <div className="author-time">2h ago</div>
+              <div className="group-author-name">Liz</div>
+              <div className="group-author-time">2h ago</div>
             </div>
           </div>
 
-          <div className="group-body">
-            I keep getting tangled in the &ldquo;two points of view&rdquo; framing. Quality vs quantity sounds parallel but I don&rsquo;t think it is — what am I missing?
+          <div className="group-thread-body">
+            I keep getting tangled in the &ldquo;two points of view&rdquo; framing — quality and quantity sounds parallel but I don&rsquo;t think it actually is. What am I missing?
           </div>
 
-          <div className="group-action-row">
-            <button
-              type="button"
-              className="branch-button"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}
-            >
+          <div className="group-op-action-row">
+            <button type="button" className="group-branch-button">
               <Sprout size={14} strokeWidth={2} aria-hidden="true" />
               Branch
             </button>
@@ -3598,83 +4160,249 @@ function GroupSurface({ sectionRef, active, reduced }: SurfaceProps) {
 
           <hr className="group-replies-divider" />
 
-          <div className="group-reply">
-            <span
-              className="author-avatar"
-              style={{ backgroundColor: '#3f6f4a' }}
-            >P</span>
-            <div className="group-reply-content">
-              <div className="group-reply-meta">
-                <span className="author-name">Pita</span>
-                <span className="author-time">1h</span>
+          <div className="group-reply-list">
+            {/* Reply 1 — Pita. Default state. */}
+            <div
+              className={`group-reply${activeReply === 'pita' ? ' is-active' : ''}`}
+              onMouseEnter={() => setActiveReply('pita')}
+              onMouseLeave={() => setActiveReply(prev => (prev === 'pita' ? null : prev))}
+            >
+              <div className="group-reply-row">
+                <span className="group-reply-avatar" style={{ backgroundColor: '#3f6f4a' }}>P</span>
+                <div className="group-reply-content">
+                  <div className="group-reply-meta">
+                    <span className="group-author-name">Pita</span>
+                    <span className="group-author-time">1h</span>
+                  </div>
+                  <div className="group-reply-body">
+                    The two-points-of-view bit is what landed for me. It feels like he&rsquo;s asking us to hold both at once.
+                  </div>
+                  <div className="group-reply-actions">
+                    <button type="button" className="group-reply-action" onClick={() => onReplyClick('pita')}>Reply</button>
+                    <button type="button" className="group-reply-action" onClick={() => onBranchClick('pita')}>
+                      <Sprout size={12} strokeWidth={2} aria-hidden="true" />
+                      Branch
+                    </button>
+                  </div>
+                  {branchOpenFor === 'pita' && (
+                    <BranchFormInline
+                      replyAuthor="Pita"
+                      parentBody="The two-points-of-view bit is what landed for me. It feels like he's asking us to hold both at once."
+                      preFilledTitle="Holding both at once"
+                      onCancel={() => setBranchOpenFor(null)}
+                      onSubmit={() => onBranchSubmit('pita')}
+                    />
+                  )}
+                  {replyOpenFor === 'pita' && (
+                    <ReplyFormInline replyAuthor="Pita" onCancel={() => setReplyOpenFor(null)} />
+                  )}
+                  {branchSubmittedFor.has('pita') && (
+                    <BranchedIntoIndicator childTitle="Holding both at once" />
+                  )}
+                </div>
               </div>
-              <div className="group-reply-body">
-                The two-points-of-view bit is what landed for me. It feels like he&rsquo;s asking us to hold both at once.
+            </div>
+
+            {/* Reply 2 — Eli. Branched-into indicator visible by default. */}
+            <div
+              className={`group-reply${activeReply === 'eli' ? ' is-active' : ''}`}
+              onMouseEnter={() => setActiveReply('eli')}
+              onMouseLeave={() => setActiveReply(prev => (prev === 'eli' ? null : prev))}
+            >
+              <div className="group-reply-row">
+                <span className="group-reply-avatar" style={{ backgroundColor: '#a3742d' }}>E</span>
+                <div className="group-reply-content">
+                  <div className="group-reply-meta">
+                    <span className="group-author-name">Eli</span>
+                    <span className="group-author-time">45m</span>
+                  </div>
+                  <div className="group-reply-body">
+                    But quality and quantity here aren&rsquo;t parallel. The quantity is what becomes value; the quality only matters for whether it&rsquo;s wanted at all.
+                  </div>
+                  <div className="group-reply-actions">
+                    <button type="button" className="group-reply-action" onClick={() => onReplyClick('eli')}>Reply</button>
+                    <button type="button" className="group-reply-action" onClick={() => onBranchClick('eli')}>
+                      <Sprout size={12} strokeWidth={2} aria-hidden="true" />
+                      Branch
+                    </button>
+                  </div>
+                  <BranchedIntoIndicator childTitle="Quality vs quantity here" />
+                  {branchOpenFor === 'eli' && (
+                    <BranchFormInline
+                      replyAuthor="Eli"
+                      parentBody="But quality and quantity here aren't parallel. The quantity is what becomes value; the quality only matters for whether it's wanted at all."
+                      preFilledTitle="Eli's distinction"
+                      onCancel={() => setBranchOpenFor(null)}
+                      onSubmit={() => onBranchSubmit('eli')}
+                    />
+                  )}
+                  {replyOpenFor === 'eli' && (
+                    <ReplyFormInline replyAuthor="Eli" onCancel={() => setReplyOpenFor(null)} />
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Reply 3 — Daniel. Reply form open by default. */}
+            <div
+              className={`group-reply${activeReply === 'daniel' ? ' is-active' : ''}`}
+              onMouseEnter={() => setActiveReply('daniel')}
+              onMouseLeave={() => setActiveReply(prev => (prev === 'daniel' ? null : prev))}
+            >
+              <div className="group-reply-row">
+                <span className="group-reply-avatar" style={{ backgroundColor: '#5b4b8a' }}>D</span>
+                <div className="group-reply-content">
+                  <div className="group-reply-meta">
+                    <span className="group-author-name">Daniel</span>
+                    <span className="group-author-time">20m</span>
+                  </div>
+                  <div className="group-reply-body">
+                    I keep thinking about how this connects to commodity fetishism in §4 — the way commodities take on social properties.
+                  </div>
+                  <div className="group-reply-actions">
+                    <button type="button" className="group-reply-action" onClick={() => onReplyClick('daniel')}>Reply</button>
+                    <button type="button" className="group-reply-action" onClick={() => onBranchClick('daniel')}>
+                      <Sprout size={12} strokeWidth={2} aria-hidden="true" />
+                      Branch
+                    </button>
+                  </div>
+                  {replyOpenFor === 'daniel' && (
+                    <ReplyFormInline replyAuthor="Daniel" onCancel={() => setReplyOpenFor(null)} />
+                  )}
+                  {branchOpenFor === 'daniel' && (
+                    <BranchFormInline
+                      replyAuthor="Daniel"
+                      parentBody="I keep thinking about how this connects to commodity fetishism in §4 — the way commodities take on social properties."
+                      preFilledTitle="Commodity fetishism connection"
+                      onCancel={() => setBranchOpenFor(null)}
+                      onSubmit={() => onBranchSubmit('daniel')}
+                    />
+                  )}
+                  {branchSubmittedFor.has('daniel') && (
+                    <BranchedIntoIndicator childTitle="Commodity fetishism connection" />
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="group-reply">
-            <span
-              className="author-avatar"
-              style={{ backgroundColor: '#a3742d' }}
-            >E</span>
-            <div className="group-reply-content">
-              <div className="group-reply-meta">
-                <span className="author-name">Eli</span>
-                <span className="author-time">45m</span>
-              </div>
-              <div className="group-reply-body">
-                But quality and quantity here aren&rsquo;t parallel. The quantity is what becomes value, the quality only matters for whether it&rsquo;s wanted at all.
-              </div>
-              <div className="group-reply-actions">
-                <button
-                  type="button"
-                  className="branch-button"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}
-                  onClick={onBranchClick}
-                >
-                  <Sprout size={14} strokeWidth={2} aria-hidden="true" />
-                  Branch
-                </button>
-              </div>
-
-              {/* BranchThreadForm — opens inline below the reply.
-                  Pre-populated title + quoted body per Mars's G2 lock. */}
-              <div className="branch-form" data-open={branchFormOpen ? 'true' : 'false'}>
-                <p className="branch-form-eyebrow">New thread, branched from this</p>
-                <div className="branch-form-title">
-                  Quality vs quantity here
-                </div>
-                <div className="branch-form-quoted">
-                  &ldquo;The quantity is what becomes value, the quality only matters for whether it&rsquo;s wanted at all.&rdquo;
-                  <br />
-                  — Eli
-                </div>
-                <div className="branch-form-actions">
-                  <button type="button" className="branch-form-cancel" onClick={onCancelBranch}>
-                    Cancel
-                  </button>
-                  <button type="button" className="branch-form-submit" onClick={onSubmitBranch}>
-                    Create thread
-                  </button>
-                </div>
-              </div>
-
-              {/* Child thread result — appears post-submit */}
-              <div className="child-thread-result" data-shown={childThreadShown ? 'true' : 'false'}>
-                <p className="child-thread-lineage">← Branched from &lsquo;What&rsquo;s confusing in §1?&rsquo;</p>
-                <p className="child-thread-title">Quality vs quantity here</p>
-              </div>
+          {/* Sticky bottom main reply input */}
+          <div className="group-main-reply">
+            <p className="group-main-reply-context">Replying to thread</p>
+            <div className="group-main-reply-row">
+              <textarea
+                className="group-main-reply-textarea"
+                placeholder="Join the conversation… (⌘+Enter to send)"
+                rows={1}
+              />
+              <button type="button" className="group-main-reply-post">Post</button>
             </div>
+            <p className="group-main-reply-hint">
+              Supports **bold**, *italic*, &gt; blockquotes
+            </p>
           </div>
         </div>
 
-        <p className={`beat-label${step !== 'done' ? ' prompt' : ''}`}>
-          {promptText[step]}
-        </p>
+        {/* Sidebar — conversation graph, xl: only */}
+        <aside ref={sidebarRef} className="group-sidebar" data-visible={sidebarVisible ? 'true' : 'false'}>
+          <div className="conversation-graph">
+            <p className="conversation-graph-eyebrow">Conversation graph</p>
+            <div className="conversation-graph-section">
+              <p className="conversation-graph-label">Parent thread</p>
+              <a className="conversation-graph-link" role="button" tabIndex={0}>
+                ← Reading §1 — first impressions
+              </a>
+            </div>
+            <div className="conversation-graph-section">
+              <p className="conversation-graph-label">{1 + branchSubmittedFor.size} {1 + branchSubmittedFor.size === 1 ? 'branch' : 'branches'} from this thread</p>
+              <a className="conversation-graph-link" role="button" tabIndex={0}>
+                🌱 Quality vs quantity here
+              </a>
+              {Array.from(branchSubmittedFor).map(id => {
+                const titles: Record<string, string> = {
+                  'pita': 'Holding both at once',
+                  'daniel': 'Commodity fetishism connection',
+                }
+                if (id === 'eli' || !titles[id]) return null
+                return (
+                  <a key={id} className="conversation-graph-link" role="button" tabIndex={0}>
+                    🌱 {titles[id]}
+                  </a>
+                )
+              })}
+            </div>
+          </div>
+        </aside>
       </div>
     </section>
+  )
+}
+
+/* Inline reply form — opens below a reply when Reply clicked */
+function ReplyFormInline({ replyAuthor, onCancel }: { replyAuthor: string; onCancel: () => void }) {
+  return (
+    <div className="reply-form-inline">
+      <span className="replying-to-tag">Replying to {replyAuthor}</span>
+      <textarea
+        className="reply-form-textarea"
+        placeholder={`Reply to ${replyAuthor}…`}
+        rows={2}
+      />
+      <div className="reply-form-actions">
+        <button type="button" className="reply-form-post">Post Reply</button>
+        <button type="button" className="reply-form-cancel" onClick={onCancel}>Cancel</button>
+      </div>
+    </div>
+  )
+}
+
+/* Inline branch form — pre-populates with quoted parent body + author
+   attribution per live BranchThreadForm. Submit collapses + reveals
+   branched-into indicator (Mars's Q1 lock). */
+function BranchFormInline({
+  replyAuthor,
+  parentBody,
+  preFilledTitle,
+  onCancel,
+  onSubmit,
+}: {
+  replyAuthor: string
+  parentBody: string
+  preFilledTitle: string
+  onCancel: () => void
+  onSubmit: () => void
+}) {
+  const [title, setTitle] = useState(preFilledTitle)
+  return (
+    <div className="branch-form-inline">
+      <p className="branch-form-eyebrow-new">New thread, branched from this</p>
+      <input
+        type="text"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="branch-form-title-new"
+        style={{ width: '100%', display: 'block' }}
+      />
+      <div className="branch-form-quoted-new">
+        &ldquo;{parentBody}&rdquo;
+        <p className="branch-form-attribution">— {replyAuthor}</p>
+      </div>
+      <div className="branch-form-actions-new">
+        <button type="button" className="reply-form-cancel" onClick={onCancel}>Cancel</button>
+        <button type="button" className="branch-form-create" onClick={onSubmit}>Create thread</button>
+      </div>
+    </div>
+  )
+}
+
+/* Branched-into indicator — small link below a reply, matches live's
+   per-reply branched-into rendering. */
+function BranchedIntoIndicator({ childTitle }: { childTitle: string }) {
+  return (
+    <div className="branched-into-indicator" role="link" tabIndex={0}>
+      <Sprout size={12} strokeWidth={2} aria-hidden="true" />
+      <span>branched into <span className="child-title">{childTitle}</span></span>
+    </div>
   )
 }
 
