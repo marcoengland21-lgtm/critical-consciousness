@@ -36,7 +36,13 @@ import { registerUser } from './actions'
  */
 export default function RegisterPage() {
   const router = useRouter()
-  const [inviteCode, setInviteCode] = useState('')
+  // Pre-launch: Watermelon's invite code is autofilled so people clicking
+  // through from the email/share link don't have to copy-paste. They can
+  // still edit it (e.g. if a future cohort gets a different code) — the
+  // field isn't readonly, just pre-populated. Helper text below the field
+  // still reads "From the email or message that brought you here." which
+  // covers both the autofilled-correct and edit-it-anyway paths.
+  const [inviteCode, setInviteCode] = useState('WATERMELON26')
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')

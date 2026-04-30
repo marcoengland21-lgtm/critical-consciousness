@@ -64,7 +64,7 @@ export default function MinimalWelcome({ displayName, groupName }: Props) {
           className="text-base sm:text-lg mb-10 max-w-md mx-auto"
           style={{ color: 'var(--text-secondary)' }}
         >
-          A small group reading Capital. Slowly, carefully.
+          A Marx study group. Read together. Think together.
         </p>
 
         <form action={completeOnboarding}>

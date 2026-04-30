@@ -7,6 +7,7 @@ import QuoteFromReadingModal from './QuoteFromReadingModal'
 import { threadTypeConfig } from './ThreadTypeBadge'
 import { getChapterLabel } from '@/lib/chapter-utils'
 import type { ThreadType } from '@/types/database'
+import { BookOpen } from 'lucide-react'
 
 interface Chapter {
   id: string
@@ -241,7 +242,7 @@ export default function NewThreadForm({ chapters, currentChapterId, groupId }: N
               color: 'var(--text-primary)',
             }}
           >
-            <span style={{ color: 'var(--accent-purple)' }}>📖</span>
+            <BookOpen size={16} strokeWidth={2} style={{ color: 'var(--accent-purple)', flexShrink: 0 }} />
             <span>
               This thread is about:{' '}
               <strong>
@@ -323,7 +324,8 @@ export default function NewThreadForm({ chapters, currentChapterId, groupId }: N
           backgroundColor: 'transparent',
         }}
       >
-        📖 Quote from reading — insert a passage
+        <BookOpen size={16} strokeWidth={2} aria-hidden="true" />
+        <span>Quote from reading — insert a passage</span>
       </button>
 
       {/* ── Optional metadata ── */}
@@ -355,6 +357,7 @@ export default function NewThreadForm({ chapters, currentChapterId, groupId }: N
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {threadTypes.map((t) => {
                 const isSelected = threadType === t.value
+                const Icon = t.icon
                 return (
                   <button
                     key={t.value}
@@ -368,7 +371,12 @@ export default function NewThreadForm({ chapters, currentChapterId, groupId }: N
                     }}
                   >
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-base" role="img" aria-hidden="true">{t.icon}</span>
+                      <Icon
+                        size={16}
+                        strokeWidth={2}
+                        aria-hidden="true"
+                        style={{ color: isSelected ? t.color : 'var(--text-secondary)', flexShrink: 0 }}
+                      />
                       <span className="font-medium" style={{ color: isSelected ? t.color : 'var(--text-primary)' }}>
                         {t.label}
                       </span>

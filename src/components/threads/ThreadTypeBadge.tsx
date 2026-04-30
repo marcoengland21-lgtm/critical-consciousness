@@ -1,50 +1,61 @@
 import type { ThreadType } from '@/types/database'
+import {
+  MessageCircle,
+  PenLine,
+  ListChecks,
+  BookOpen,
+  Link2,
+  MessageSquare,
+  type LucideIcon,
+} from 'lucide-react'
 
 export const threadTypeConfig: Record<ThreadType, {
   label: string
-  icon: string
+  /** Lucide icon component (chrome audit: emoji → lucide). Render at
+   *  16px, strokeWidth 2 for badge-grid contexts. */
+  icon: LucideIcon
   color: string
   bgColor: string
   description: string
 }> = {
   discussion: {
     label: 'Discussion',
-    icon: '\u{1F4AC}',
+    icon: MessageCircle,
     color: 'var(--role-discussion)',
     bgColor: 'var(--badge-bg-discussion)',
     description: 'Open-ended discussion on a topic',
   },
   reflection: {
     label: 'Reflection',
-    icon: '\u{1FA9E}',
+    icon: PenLine,
     color: 'var(--role-summarizer)',
     bgColor: 'var(--badge-bg-reflection)',
     description: 'Personal reflection on the reading',
   },
   summary: {
     label: 'Summary',
-    icon: '\u{1F4CB}',
+    icon: ListChecks,
     color: 'var(--role-connector)',
     bgColor: 'var(--badge-bg-summary)',
     description: 'Summary of key points from the reading',
   },
   passage_pick: {
     label: 'Passage Pick',
-    icon: '\u{1F4D6}',
+    icon: BookOpen,
     color: 'var(--role-passage)',
     bgColor: 'var(--badge-bg-passage)',
     description: 'Highlight and discuss a specific passage',
   },
   connection: {
     label: 'Connection',
-    icon: '\u{1F517}',
+    icon: Link2,
     color: 'var(--accent-purple)',
     bgColor: 'var(--badge-bg-connection)',
     description: 'Connect the reading to current events or other texts',
   },
   general: {
     label: 'General',
-    icon: '\u{1F4AD}',
+    icon: MessageSquare,
     color: 'var(--text-secondary)',
     bgColor: 'var(--bg-badge)',
     description: 'General conversation or announcements',
