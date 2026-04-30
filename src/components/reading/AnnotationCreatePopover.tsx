@@ -6,16 +6,19 @@
  * Triggered when the reader picks "Annotate" from the SelectionActionBar.
  * Per frame 11D: the create flow is paragraph-anchored (gutter +
  * connector via the shared <ParagraphAnchoredPopover> primitive) and
- * defaults annotations to PRIVATE. The author publishes deliberately
- * by toggling "Share with group when you're ready."
+ * now defaults annotations to PUBLIC (Mars 30 April 2026 — Freirean
+ * reading: dialogue between equals as the default; private-by-default
+ * leaked toward "secret notes that *could* be shared with the expert"
+ * banking-model flavour). The author keeps a thought to themselves
+ * deliberately by toggling the switch off into "Private to you."
  *
  *   ✏ NEW ANNOTATION                                              ¶ N
  *   "But this utility is not a thing of air…"                  (quote)
  *
  *   {textarea — body}
  *
- *   ⚙ Private to you            Share with group when you're ready  ◯
- *      Only you'll see this. Share later.
+ *   ⚙ Shared with the group         The group will see this on save  ●
+ *      Toggle off to keep this private.
  *
  *   Cancel                                            [ Save annotation ]
  *
@@ -26,10 +29,9 @@
  * journal-weight writing has the rich editor; annotations are quick.
  *
  * Privacy framing: this is DRAFT-STATE privacy (saved-but-not-sent
- * email-draft level). Not structural anonymity. Toggle copy says
- * "Only you'll see this. Share later when you're ready." — same voice
- * as the design pack. Don't drift toward suggesting database-level
- * privacy guarantees this schema doesn't provide.
+ * email-draft level). Not structural anonymity. Toggle copy stays
+ * voice-aligned with the design pack — don't drift toward suggesting
+ * database-level privacy guarantees this schema doesn't provide.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -63,7 +65,10 @@ export default function AnnotationCreatePopover({
   isGuest,
 }: AnnotationCreatePopoverProps) {
   const [body, setBody] = useState('')
-  const [isPublic, setIsPublic] = useState(false)
+  // Default: PUBLIC. See header comment for the Freirean reasoning.
+  // Author toggles off into private-draft state for thoughts they
+  // want to keep to themselves (or polish first).
+  const [isPublic, setIsPublic] = useState(true)
   const [saving, setSaving] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -71,7 +76,7 @@ export default function AnnotationCreatePopover({
   useEffect(() => {
     if (!open) return
     setBody('')
-    setIsPublic(false)
+    setIsPublic(true)
     setSaving(false)
     // Focus the textarea after mount.
     const t = setTimeout(() => textareaRef.current?.focus(), 50)
@@ -239,7 +244,10 @@ export default function AnnotationCreatePopover({
           }}
         />
 
-        {/* Privacy toggle row — frame 11D. Default: private. */}
+        {/* Privacy toggle row — frame 11D. Default: PUBLIC (Mars 30 Apr 2026
+            — see header comment). Toggle resized to standard 44×24 track
+            with 20px knob — previous 36×20 / 16px knob proportions left
+            the white knob looking off-axis even when the math was right. */}
         <div
           className="flex items-start justify-between gap-3 rounded-md p-3"
           style={{
@@ -250,9 +258,11 @@ export default function AnnotationCreatePopover({
           <div className="flex items-start gap-2 min-w-0">
             <span
               className="mt-0.5 flex-shrink-0"
-              style={{ color: 'var(--text-secondary)' }}
+              style={{
+                color: isPublic ? 'var(--accent-purple)' : 'var(--text-secondary)',
+              }}
             >
-              <LockIcon />
+              {isPublic ? <UsersIcon /> : <LockIcon />}
             </span>
             <div className="min-w-0">
               <div
@@ -266,7 +276,7 @@ export default function AnnotationCreatePopover({
                 style={{ color: 'var(--text-secondary)', lineHeight: 1.45 }}
               >
                 {isPublic
-                  ? 'The group will see this when you save.'
+                  ? 'The group will see this when you save. Toggle off to keep it private.'
                   : "Only you'll see this. Share later when you're ready."}
               </div>
             </div>
@@ -277,18 +287,24 @@ export default function AnnotationCreatePopover({
             aria-checked={isPublic}
             aria-label="Share with group"
             onClick={() => setIsPublic((v) => !v)}
-            className="relative shrink-0 w-9 h-5 rounded-full transition-colors duration-200 mt-1"
+            className="relative shrink-0 rounded-full transition-colors duration-200 mt-1"
             style={{
+              width: '44px',
+              height: '24px',
               backgroundColor: isPublic
                 ? 'var(--accent-purple)'
                 : 'var(--border-strong)',
             }}
           >
             <span
-              className="absolute top-[2px] w-4 h-4 rounded-full transition-transform duration-200 shadow-sm"
+              className="absolute rounded-full transition-transform duration-200 shadow-sm"
               style={{
+                top: '2px',
+                left: '0',
+                width: '20px',
+                height: '20px',
                 backgroundColor: '#fff',
-                transform: isPublic ? 'translateX(18px)' : 'translateX(2px)',
+                transform: isPublic ? 'translateX(22px)' : 'translateX(2px)',
               }}
             />
           </button>
@@ -359,6 +375,17 @@ function LockIcon() {
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  )
+}
+
+function UsersIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </svg>
   )
 }
