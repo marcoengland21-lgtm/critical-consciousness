@@ -128,17 +128,12 @@ export default async function MembersPage() {
                           you
                         </span>
                       )}
-                      {m.role === 'host' && (
-                        <span
-                          className="text-[10px] font-medium px-2 py-0.5 rounded-full leading-none"
-                          style={{
-                            backgroundColor: 'rgba(var(--accent-purple-rgb), 0.12)',
-                            color: 'var(--accent-purple)',
-                          }}
-                        >
-                          host
-                        </span>
-                      )}
+                      {/* Host role badge intentionally hidden for now per Mars
+                          (Rule 21 — dialogue between equals; visible host
+                          badge in the member list pulls toward hierarchy
+                          framing). Membership.role is still fetched + tracked
+                          in state in case it's needed later (host-specific
+                          actions, etc.) — only the visual is dropped. */}
                     </div>
                   </div>
 

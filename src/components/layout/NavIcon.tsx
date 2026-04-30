@@ -49,6 +49,17 @@ const icons: Record<string, (size: number) => React.ReactElement> = {
       <circle cx="12" cy="7" r="4" />
     </svg>
   ),
+  // users — two-people silhouette for the /members page (lucide Users
+  // shape, hand-rendered to match the rest of the inline-SVG nav set
+  // rather than introducing a lucide-react import here just for nav).
+  members: (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  ),
   // notebook-pen — for the private journal (chunk 2)
   journal: (s) => (
     <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

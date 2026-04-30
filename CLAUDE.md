@@ -551,7 +551,7 @@ Warmth doesn't come from slapping earth tones on a generic layout. It comes from
 
 These are hard-won. Follow them always.
 
-1. **Nav order is ALWAYS:** Dashboard, Reading, Threads, Glossary, Journal, Schedule, Resources. Profile is NOT in the sidebar nav — it's accessed via the user avatar block at the sidebar bottom (the row with the user's initial + name + chevron). Mobile tab bar still has Profile (mobile users need a tap target). On every page. No exceptions.
+1. **Nav order is ALWAYS:** Dashboard, Reading, Threads, Members, Glossary, Journal, Schedule, Resources. Profile is NOT in the sidebar nav — it's accessed via the user avatar block at the sidebar bottom (the row with the user's initial + name + chevron). Mobile tab bar still has Profile (mobile users need a tap target). On every page. No exceptions. (Members sits between Threads and Glossary — pairs with Threads as group-context "who/what we said"; Glossary onward becomes reference material.)
 2. **No likes, reactions, upvotes, engagement metrics, or gamification.** Ever.
 3. **Confusion flags are ANONYMOUS.** No names attached, ever.
 4. **Animations on everything** that opens/closes/appears/disappears. Nothing should snap. 150-250ms, ease-out.
