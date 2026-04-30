@@ -726,11 +726,17 @@ export default function ChapterReader({ chapter, annotations: initialAnnotations
             onParagraphChange={handleAudioParagraphChange}
             onPlayStateChange={(playing) => {
               setAudioIsPlaying(playing)
-              // Auto-expand footnotes when audio starts playing
-              if (playing) setFootnotesExpanded(true)
+              // Auto-expand footnotes during playback so the user reads
+              // them in sync with the recording. Track audio state in
+              // BOTH directions — the previous version only flipped to
+              // true on play and never back, which made forceOpen on
+              // FootnoteInline sticky-true after playback ended and
+              // blocked the marker click from collapsing footnotes
+              // (forceOpen wins over isLocalOpen). Binding to `playing`
+              // means audio-stop releases the force, and per-footnote
+              // marker clicks work again.
+              setFootnotesExpanded(playing)
             }}
-            footnotesExpanded={footnotesExpanded}
-            onFootnotesToggle={() => setFootnotesExpanded(prev => !prev)}
           />
         </div>
       )}

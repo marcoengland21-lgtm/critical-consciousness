@@ -7,6 +7,15 @@ import TimeAgo from '@/components/ui/TimeAgo'
 import type { ThreadType, WeeklyRoleType } from '@/types/database'
 import RoleBadge from '@/components/roles/RoleBadge'
 import { getChapterLabel } from '@/lib/chapter-utils'
+import {
+  Pencil,
+  MessageCircle,
+  CornerDownLeft,
+  BookOpen,
+  Library,
+  Paperclip,
+  type LucideIcon,
+} from 'lucide-react'
 
 // Query-specific join shapes for Supabase responses
 interface AnnotationWithChapter {
@@ -202,28 +211,28 @@ export default async function ProfilePage() {
       {/* Contribution Stats Grid — visual cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
         <StatCard
-          icon="✏️"
+          icon={Pencil}
           value={totalAnnotations}
           label="Annotations"
           color="var(--accent-purple)"
           bgColor="rgba(var(--accent-purple-rgb), 0.08)"
         />
         <StatCard
-          icon="💬"
+          icon={MessageCircle}
           value={totalThreads}
           label="Threads"
           color="var(--accent-red)"
           bgColor="rgba(var(--accent-red-rgb), 0.08)"
         />
         <StatCard
-          icon="↩️"
+          icon={CornerDownLeft}
           value={totalReplies}
           label="Replies"
           color="var(--accent-amber)"
           bgColor="rgba(var(--accent-amber-rgb), 0.08)"
         />
         <StatCard
-          icon="📖"
+          icon={BookOpen}
           value={totalTerms + totalResources}
           label="Terms & Resources"
           color="var(--accent-green)"
@@ -277,7 +286,9 @@ export default async function ProfilePage() {
                 </div>
               ) : (
                 <div className="p-8 text-center">
-                  <div className="text-3xl mb-3">✏️</div>
+                  <div className="flex justify-center mb-3" style={{ color: 'var(--text-secondary)' }}>
+                    <Pencil size={28} strokeWidth={1.5} aria-hidden="true" />
+                  </div>
                   <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
                     No annotations yet — highlight a passage while reading to leave your first note
                   </p>
@@ -327,7 +338,7 @@ export default async function ProfilePage() {
                               <ThreadTypeBadge type={thread.thread_type as ThreadType} />
                               {replies > 0 && (
                                 <span className="inline-flex items-center gap-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                                  <span className="text-[10px]">💬</span> {replies} {replies === 1 ? 'reply' : 'replies'}
+                                  <MessageCircle size={11} strokeWidth={2} aria-hidden="true" /> {replies} {replies === 1 ? 'reply' : 'replies'}
                                 </span>
                               )}
                             </div>
@@ -345,7 +356,9 @@ export default async function ProfilePage() {
                 </div>
               ) : (
                 <div className="p-8 text-center">
-                  <div className="text-3xl mb-3">💬</div>
+                  <div className="flex justify-center mb-3" style={{ color: 'var(--text-secondary)' }}>
+                    <MessageCircle size={28} strokeWidth={1.5} aria-hidden="true" />
+                  </div>
                   <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
                     No threads yet — share a reflection or start a discussion
                   </p>
@@ -442,7 +455,9 @@ export default async function ProfilePage() {
                 </div>
               ) : (
                 <div className="text-center py-4">
-                  <div className="text-2xl mb-2">📚</div>
+                  <div className="flex justify-center mb-2" style={{ color: 'var(--text-secondary)' }}>
+                    <Library size={24} strokeWidth={1.5} aria-hidden="true" />
+                  </div>
                   <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                     No reading check-ins yet — check in from the dashboard each week
                   </p>
@@ -535,10 +550,10 @@ export default async function ProfilePage() {
             >
               <div className="flex items-center gap-3">
                 <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-lg"
-                  style={{ backgroundColor: 'rgba(var(--accent-amber-rgb), 0.1)' }}
+                  className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: 'rgba(var(--accent-amber-rgb), 0.1)', color: 'var(--accent-amber)' }}
                 >
-                  📎
+                  <Paperclip size={18} strokeWidth={2} aria-hidden="true" />
                 </div>
                 <div>
                   <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
@@ -557,15 +572,15 @@ export default async function ProfilePage() {
   )
 }
 
-/** Visual stat card for the contribution grid */
+/** Visual stat card for the contribution grid (chrome audit: emoji → lucide). */
 function StatCard({
-  icon,
+  icon: Icon,
   value,
   label,
   color,
   bgColor,
 }: {
-  icon: string
+  icon: LucideIcon
   value: number
   label: string
   color: string
@@ -576,10 +591,10 @@ function StatCard({
       className="card-base p-4 flex flex-col items-center text-center"
     >
       <div
-        className="w-10 h-10 rounded-full flex items-center justify-center text-lg mb-2"
-        style={{ backgroundColor: bgColor }}
+        className="w-10 h-10 rounded-full flex items-center justify-center mb-2"
+        style={{ backgroundColor: bgColor, color }}
       >
-        {icon}
+        <Icon size={18} strokeWidth={2} aria-hidden="true" />
       </div>
       <div
         className="text-2xl font-bold mb-0.5"

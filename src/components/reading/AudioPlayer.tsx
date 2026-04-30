@@ -48,8 +48,6 @@ interface AudioPlayerProps {
   alignment: AudioAlignment | null
   onParagraphChange?: (paragraphIndex: number | null) => void
   onPlayStateChange?: (playing: boolean) => void
-  footnotesExpanded?: boolean
-  onFootnotesToggle?: () => void
 }
 
 const PROGRESS_KEY_PREFIX = 'ccp-audio-progress-'
@@ -68,7 +66,7 @@ function saveProgress(chapterNumber: number, time: number, rate: number) {
   } catch { /* ignore */ }
 }
 
-export default function AudioPlayer({ alignment, onParagraphChange, onPlayStateChange, footnotesExpanded, onFootnotesToggle }: AudioPlayerProps) {
+export default function AudioPlayer({ alignment, onParagraphChange, onPlayStateChange }: AudioPlayerProps) {
   // Restore saved progress for this chapter
   const savedProgress = alignment ? getSavedProgress(alignment.chapter_number) : null
 
