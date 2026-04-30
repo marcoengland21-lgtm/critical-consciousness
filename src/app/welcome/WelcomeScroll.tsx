@@ -2331,14 +2331,11 @@ function ScrollStyles() {
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
-        max-height: 0;
-        opacity: 0;
-        overflow: hidden;
-        transition: max-height 400ms var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)), opacity 300ms;
+        animation: annot-replies-in 350ms var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1));
       }
-      .orbit-marginalia[data-expanded="true"] .annot-replies {
-        max-height: 24rem;
-        opacity: 1;
+      @keyframes annot-replies-in {
+        from { opacity: 0; transform: translateY(-4px); }
+        to { opacity: 1; transform: translateY(0); }
       }
       .annot-reply-toggle {
         margin-top: 0.625rem;
@@ -3077,34 +3074,57 @@ const READING_AUDIO_URL =
 const READING_AUDIO_DURATION = 1186.6 // 19:46
 
 function ReadingSurface({ sectionRef, reduced }: SurfaceProps) {
-  // Audio — collapsed-only state per Mars's v5 cut. Single button at
-  // chapter foot toggles real LibriVox playback. No expanded controls
-  // in the scroll mockup; user encounters the full pill on the live
-  // platform when audio is active.
+  // Audio — single position at chapter foot, two states. Default: collapsed
+  // "Listen to this chapter" button (matches live AudioPlayer's collapsed
+  // state). On click: transitions in place to the full controls (skip / play
+  // / skip / scrubber / time / speed) and starts real LibriVox playback.
+  // Once expanded, stays expanded — same as the live behaviour where the
+  // user's session has audio active.
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [audioPlaying, setAudioPlaying] = useState(false)
+  const [audioExpanded, setAudioExpanded] = useState(false)
+  const [audioCurrent, setAudioCurrent] = useState(0)
+  const [audioRate, setAudioRate] = useState(1)
 
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
+    const onTime = () => setAudioCurrent(audio.currentTime)
     const onPause = () => setAudioPlaying(false)
     const onPlay = () => setAudioPlaying(true)
     const onEnded = () => setAudioPlaying(false)
+    audio.addEventListener('timeupdate', onTime)
     audio.addEventListener('pause', onPause)
     audio.addEventListener('play', onPlay)
     audio.addEventListener('ended', onEnded)
     return () => {
+      audio.removeEventListener('timeupdate', onTime)
       audio.removeEventListener('pause', onPause)
       audio.removeEventListener('play', onPlay)
       audio.removeEventListener('ended', onEnded)
     }
   }, [])
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.playbackRate = audioRate
+  }, [audioRate])
+
+  const handleListenClick = () => {
+    // Collapsed → expanded transition. Start playback at the same time so
+    // the user's gesture has immediate effect.
+    setAudioExpanded(true)
+    const audio = audioRef.current
+    if (audio && audio.paused) {
+      audio.play().catch(err => {
+        console.warn('[CCP] Audio play failed:', err)
+        setAudioPlaying(false)
+      })
+    }
+  }
   const togglePlay = () => {
     const audio = audioRef.current
     if (!audio) return
     if (audio.paused) {
       audio.play().catch(err => {
-        // Network / autoplay-policy failures are non-fatal — pause UI state and log
         console.warn('[CCP] Audio play failed:', err)
         setAudioPlaying(false)
       })
@@ -3112,6 +3132,25 @@ function ReadingSurface({ sectionRef, reduced }: SurfaceProps) {
       audio.pause()
     }
   }
+  const skip = (delta: number) => {
+    if (!audioRef.current) return
+    audioRef.current.currentTime = Math.max(0, Math.min(
+      READING_AUDIO_DURATION,
+      audioRef.current.currentTime + delta
+    ))
+  }
+  const cycleSpeed = () => {
+    setAudioRate(r => r === 1 ? 1.25 : r === 1.25 ? 1.5 : r === 1.5 ? 0.75 : 1)
+  }
+  const seekFromTrack = (e: React.MouseEvent<HTMLDivElement>) => {
+    const audio = audioRef.current
+    if (!audio) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+    audio.currentTime = ratio * READING_AUDIO_DURATION
+  }
+  const audioProgress = (audioCurrent / READING_AUDIO_DURATION) * 100
+  const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
 
   // Glossary
   const [glossaryOpen, setGlossaryOpen] = useState(true)
@@ -3320,28 +3359,68 @@ function ReadingSurface({ sectionRef, reduced }: SurfaceProps) {
             </div>
           </div>
 
-          {/* Audio collapsed at chapter foot */}
+          {/* Audio at chapter foot. Default: collapsed Listen button.
+              On click: transitions to full pill controls in place (skip /
+              play / skip / scrubber / time / speed) and starts playback. */}
           <div className="audio-foot">
-            <button
-              type="button"
-              className="audio-listen-btn"
-              data-active={audioPlaying ? 'true' : 'false'}
-              onClick={togglePlay}
-              aria-label={audioPlaying ? 'Pause audio' : 'Listen to this chapter'}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
-                <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
-              </svg>
-              {audioPlaying ? 'Pause' : 'Listen to this chapter'}
-              <span className="listen-meta">· 19:46 · Read by Carl Manchester</span>
-            </button>
+            {!audioExpanded ? (
+              <button
+                type="button"
+                className="audio-listen-btn"
+                onClick={handleListenClick}
+                aria-label="Listen to this chapter"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+                  <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
+                </svg>
+                Listen to this chapter
+                <span className="listen-meta">· 19:46 · Read by Carl Manchester</span>
+              </button>
+            ) : (
+              <div className="audio-pill" role="toolbar" aria-label="Audio player">
+                <button type="button" className="pill-skip" onClick={() => skip(-15)} aria-label="Skip back 15 seconds">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M11 17l-5-5 5-5" /><path d="M18 17l-5-5 5-5" />
+                  </svg>
+                  15s
+                </button>
+                <button
+                  type="button"
+                  className="pill-play"
+                  data-playing={audioPlaying ? 'true' : 'false'}
+                  onClick={togglePlay}
+                  aria-label={audioPlaying ? 'Pause' : 'Play'}
+                >
+                  {audioPlaying
+                    ? <Pause size={14} strokeWidth={2} aria-hidden="true" />
+                    : <Play size={14} strokeWidth={2} aria-hidden="true" />}
+                </button>
+                <button type="button" className="pill-skip" onClick={() => skip(15)} aria-label="Skip forward 15 seconds">
+                  15s
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M13 17l5-5-5-5" /><path d="M6 17l5-5-5-5" />
+                  </svg>
+                </button>
+                <div className="pill-track" onClick={seekFromTrack} role="slider" aria-label="Audio progress" aria-valuenow={Math.round(audioProgress)} aria-valuemin={0} aria-valuemax={100}>
+                  <div className="pill-fill" style={{ width: `${audioProgress}%` }} />
+                </div>
+                <span className="pill-time">{fmt(audioCurrent)} / 19:46</span>
+                <button type="button" className="pill-speed" onClick={cycleSpeed} aria-label={`Playback speed: ${audioRate}x`}>
+                  {audioRate}×
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Orbit lane */}
         <div className="reading-orbit">
-          {/* Marginalia anchored to para 1 vertical, click to expand replies */}
+          {/* Marginalia anchored to para 1 vertical, click to expand replies.
+             Conditional rendering of replies (cleaner than CSS max-height
+             transition; v5.1 walked as not-expanding because the CSS-driven
+             approach didn't reliably show the chain). X close visible only
+             when expanded, top-right. */}
           <div
             ref={marginaliaRef}
             className="orbit-card orbit-marginalia"
@@ -3355,7 +3434,29 @@ function ReadingSurface({ sectionRef, reduced }: SurfaceProps) {
             <p className="anchor-line">
               presents itself as <mark>&ldquo;an immense accumulation of commodities&rdquo;</mark>
             </p>
-            <div className="annot-card-frame">
+            <div className="annot-card-frame" style={{ position: 'relative' }}>
+              {marginaliaExpanded && (
+                <button
+                  type="button"
+                  className="annot-close-x"
+                  onClick={(e) => { e.stopPropagation(); setMarginaliaExpanded(false) }}
+                  aria-label="Collapse replies"
+                  style={{
+                    position: 'absolute',
+                    top: '0.5rem',
+                    right: '0.5rem',
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    padding: '0.125rem 0.25rem',
+                    lineHeight: 1,
+                  }}
+                >
+                  ✕
+                </button>
+              )}
               <div className="annot-author-row">
                 <span className="annot-avatar" style={{ backgroundColor: '#7a4f9c' }}>L</span>
                 <div>
@@ -3366,32 +3467,34 @@ function ReadingSurface({ sectionRef, reduced }: SurfaceProps) {
               <div className="annot-body">
                 I keep coming back to this opening — the way Marx insists we start with the commodity, not with markets or money. The choice of starting point is the whole argument.
               </div>
-              <div className="annot-replies">
-                <div>
-                  <div className="annot-author-row" style={{ marginBottom: '0.25rem' }}>
-                    <span className="annot-avatar" style={{ backgroundColor: '#3f6f4a' }}>D</span>
-                    <div>
-                      <div className="annot-name">Daniel</div>
-                      <div className="annot-time">1 day ago</div>
+              {marginaliaExpanded && (
+                <div className="annot-replies">
+                  <div>
+                    <div className="annot-author-row" style={{ marginBottom: '0.25rem' }}>
+                      <span className="annot-avatar" style={{ backgroundColor: '#3f6f4a' }}>D</span>
+                      <div>
+                        <div className="annot-name">Daniel</div>
+                        <div className="annot-time">1 day ago</div>
+                      </div>
+                    </div>
+                    <div className="annot-body">
+                      Same. The &lsquo;immense&rsquo; is doing work too — accumulation as the form, before any specific transaction.
                     </div>
                   </div>
-                  <div className="annot-body">
-                    Same. The &lsquo;immense&rsquo; is doing work too — accumulation as the form, before any specific transaction.
-                  </div>
-                </div>
-                <div>
-                  <div className="annot-author-row" style={{ marginBottom: '0.25rem' }}>
-                    <span className="annot-avatar" style={{ backgroundColor: '#a3742d' }}>P</span>
-                    <div>
-                      <div className="annot-name">Pita</div>
-                      <div className="annot-time">8h ago</div>
+                  <div>
+                    <div className="annot-author-row" style={{ marginBottom: '0.25rem' }}>
+                      <span className="annot-avatar" style={{ backgroundColor: '#a3742d' }}>P</span>
+                      <div>
+                        <div className="annot-name">Pita</div>
+                        <div className="annot-time">8h ago</div>
+                      </div>
+                    </div>
+                    <div className="annot-body">
+                      Reading this alongside ch 3 of Heinrich helps — the &lsquo;starts with&rsquo; is methodologically loaded, not just where the book happens to begin.
                     </div>
                   </div>
-                  <div className="annot-body">
-                    Reading this alongside ch 3 of Heinrich helps — the &lsquo;starts with&rsquo; is methodologically loaded, not just where the book happens to begin.
-                  </div>
                 </div>
-              </div>
+              )}
               <button
                 type="button"
                 className="annot-reply-toggle"
